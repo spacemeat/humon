@@ -150,11 +150,11 @@ int main(int argc, char ** argv)
     { cout << "hu/voltron%victory ... FAIL" << endl; }
 
   if (hu / "voltron" % "vehicle force" == false)
-    { cout << "hu/voltron%\"vehicle force\" ... PASS" << endl; }
+    { cout << "hu/voltron%%\"vehicle force\" ... PASS" << endl; }
   else
-    { cout << "hu/voltron%\"vehicle force\" ... FAIL" << endl; }
+    { cout << "hu/voltron%%\"vehicle force\" ... FAIL" << endl; }
   
-  if ((hu % 0 && hu % 1 && !hu % 2))
+  if ((hu % 0 && hu % 1 && hu % 2 == false))
     { cout << "hu%0, hu%1, ! hu%2 ... PASS" << endl; }
   else
     { cout << "hu%0, hu%1, ! hu%2 ... FAIL" << endl; }
