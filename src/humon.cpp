@@ -1,67 +1,12 @@
 #include "humon.h"
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 
 using namespace std;
 using namespace humon;
 
 using ss = stringstream;
-
-/*
-bool operator ==(node_t const & lhs, node_t const & rhs)
-{
-  if (lhs->isList() && rhs->isList())
-  {
-    // Normally these static casts would be in violation, but we know 
-    // what we're doing here.
-    auto lhsl = static_cast<HumonList const *>(lhs.get());
-    auto rhsl = static_cast<HumonList const *>(rhs.get());
-    auto numElements = lhsl->getNumElements();
-    if (numElements == rhsl->getNumElements())
-    {
-      for (int i = 0; i < numElements; ++i)
-      {
-        if ((*lhsl)[i] != (*rhsl)[i])
-        { return false; }
-      }
-
-      return true;
-    }
-
-    return false;
-  }
-
-  if (lhs->isDict() == rhs->isDict())
-  {
-    auto lhsd = static_cast<HumonDict const *>(lhs.get());
-    auto rhsd = static_cast<HumonDict const *>(rhs.get());
-    auto numElements = lhsd->getNumElements();
-    if (numElements == rhsd->getNumElements())
-    {
-      for (int i = 0; i < numElements; ++i)
-      {
-        auto key = lhsd->keyAt(i);
-        if (rhsd->hasKey(key) == false)
-        { return false; }
-
-        if ((*lhsd)[key] != (*rhsd)[key])
-        { return false; }
-      }
-
-      return true;
-    }
-
-    return false;
-  }
-
-  if (lhs->isValue() == rhs->isValue())
-  {
-    auto lhsv = static_cast<HumonValue const *>(lhs.get());
-    auto rhsv = static_cast<HumonValue const *>(rhs.get());
-    return lhsv->getString() == rhsv->getString();
-  }
-}
-*/
 
 // ----------- parsing love
 
@@ -188,6 +133,7 @@ pair<TokenType, string> getToken(char const *& str, size_t & len)
           else
           {
             // eat the last "
+            switching = false;
             str += 1;
             len -= 1;
             break;
@@ -198,22 +144,44 @@ pair<TokenType, string> getToken(char const *& str, size_t & len)
     else
     {
       tokenType = TokenType::value;
+      bool switching = false;
       while (len > 0)
       {
-        if (isspace(str[0]) == false && 
-            str[0] != '[' &&
-            str[0] != ']' &&
-            str[0] != '{' &&
-            str[0] != '}' &&
-            str[0] != ':')
+        if (str[0] == '\\')
         {
-          token.push_back(str[0]);
+          switching = true;
           str += 1;
           len -= 1;
         }
         else
-        { break; }
-      }      
+        {
+          if (switching ||
+              (isspace(str[0]) == false && 
+                str[0] != ',' &&
+                str[0] != '[' &&
+                str[0] != ']' &&
+                str[0] != '{' &&
+                str[0] != '}' &&
+                str[0] != ':'))
+          {
+            switching = false;
+            token.push_back(str[0]);
+            str += 1;
+            len -= 1;
+          }
+          else
+          { 
+            switching = false;
+            break;
+          }
+        }
+      }
+
+      // if last char is a '\\'
+      if (switching)
+      {
+        token.push_back('\\');
+      }
     }
   }
 
@@ -243,22 +211,22 @@ string fmt(T ... t)
 }
 
 
-node_t humon::fromString(string const & humonString)
+nodePtr_t humon::fromString(string const & humonString)
 {
-  return Humon::fromString(humonString);
+  return HuNode::fromString(humonString);
 }
 
 
-std::ostream & humon::operator << (std::ostream & stream, Humon const & rhs)
+std::ostream & humon::operator <<(std::ostream & stream, HuNode const & rhs)
 {
   rhs.print(stream, 0);
   return stream;
 }
 
 
-// ----------- Humon class
+// ----------- HuNode class
 
-node_t Humon::fromString(string const & humonString)
+nodePtr_t HuNode::fromString(string const & humonString)
 {
   char const * str = humonString.c_str();
   size_t len = humonString.length();
@@ -267,21 +235,21 @@ node_t Humon::fromString(string const & humonString)
 }
 
 
-node_t Humon::fromParsing(char const *& str, size_t & len)
+nodePtr_t HuNode::fromParsing(char const *& str, size_t & len)
 {
   auto token = peekToken(str, len);
   
   if (token.first == TokenType::listBegin)
   {
-    return make_unique<HumonList>(str, len);
+    return make_unique<HuList>(str, len);
   }
   else if (token.first == TokenType::dictBegin)
   {
-    return make_unique<HumonDict>(str, len);
+    return make_unique<HuDict>(str, len);
   }
   else if (token.first == TokenType::value)
   {
-    return make_unique<HumonValue>(str, len);
+    return make_unique<HuValue>(str, len);
   }
   else
   {
@@ -290,26 +258,98 @@ node_t Humon::fromParsing(char const *& str, size_t & len)
 }
 
 
-Humon::Humon()
+HuNode::HuNode()
 {
 }
 
 
-Humon::~Humon()
+HuNode::~HuNode()
 {
 }
 
 
-node_t Humon::clone() const
+nodePtr_t HuNode::clone() const
 {
   return clone_impl();
 }
 
 
-// ----------- HumonList class
+bool HuNode::operator %(std::string const & key) const
+{
+  return asDict().hasKey(key);
+}
 
-HumonList::HumonList(char const *& str, size_t & len)
-: Humon()
+
+HuNode const & HuNode::operator /(std::string const & key) const
+{
+  return asDict().at(key);
+}
+
+
+HuNode const & HuNode::operator >>(bool & rhs) const
+{
+  rhs = asValue().getBool();
+  return *this;
+}
+
+
+HuNode const & HuNode::operator >>(long & rhs) const
+{
+  rhs = asValue().getLong();
+  return *this;
+}
+
+
+HuNode const & HuNode::operator >>(float & rhs) const
+{
+  rhs = asValue().getFloat();
+  return *this;
+}
+
+
+HuNode const & HuNode::operator >>(std::string & rhs) const
+{
+  rhs = asValue().getString();
+  return *this;
+}
+
+
+HuNode::operator bool() const
+{
+  return asValue().getBool();
+}
+
+
+HuNode::operator long() const
+{
+  return asValue().getLong();
+}
+
+
+HuNode::operator float() const
+{
+  return asValue().getFloat();
+}
+
+
+HuNode::operator std::string() const
+{
+  return asValue().getString();
+}
+
+
+string HuNode::getReport() const
+{
+  stringstream ss;
+  print(ss);
+  return ss.str();
+}
+
+
+// ----------- HuList class
+
+HuList::HuList(char const *& str, size_t & len)
+: HuNode()
 {
   auto token = getToken(str, len);
   if (token.first != TokenType::listBegin)
@@ -326,7 +366,7 @@ HumonList::HumonList(char const *& str, size_t & len)
         token.first != TokenType::value)
     { throw runtime_error(fmt("Invalid token on line ", line)); }
 
-    elems.push_back(Humon::fromParsing(str, len));
+    elems.emplace_back(HuNode::fromParsing(str, len));
 
     token = peekToken(str, len);
   }
@@ -336,17 +376,17 @@ HumonList::HumonList(char const *& str, size_t & len)
 }
 
 
-HumonList::HumonList()
+HuList::HuList()
 {
 }
 
 
-HumonList::~HumonList()
+HuList::~HuList()
 {
 }
 
 
-void HumonList::print(std::ostream & out, int depth, bool indentFirstLine) const
+void HuList::print(std::ostream & out, int depth, bool indentFirstLine) const
 {
   auto indent = string(depth * 2, ' ');
   if (indentFirstLine)
@@ -360,24 +400,18 @@ void HumonList::print(std::ostream & out, int depth, bool indentFirstLine) const
 }
 
 
-bool HumonList::operator == (Humon const & rhs) const
+bool HuList::operator ==(HuNode const & rhs) const
 {
   if (rhs.isList())
   {
-    return elems == static_cast<HumonList const &>(rhs).elems;
+    return elems == static_cast<HuList const &>(rhs).elems;
   }
   else
   { return false; }
 }
 
 
-node_t const & HumonList::operator [](size_t idx) const
-{
-  return elems[idx];
-}
-
-
-size_t HumonList::indexOf(node_t node) const
+size_t HuList::indexOf(nodePtr_t node) const
 {
   for (size_t i = 0; i < elems.size(); ++i)
   {
@@ -391,27 +425,27 @@ size_t HumonList::indexOf(node_t node) const
 }
 
 
-void HumonList::append(node_t node)
+void HuList::append(nodePtr_t node)
 {
   elems.push_back(node->clone());
 }
 
 
-void HumonList::addAt(size_t index, node_t node)
+void HuList::addAt(size_t index, nodePtr_t node)
 {
   elems.insert(elems.begin() + index, node->clone());
 }
 
 
-void HumonList::removeAt(size_t index)
+void HuList::removeAt(size_t index)
 {
   elems.erase(elems.begin() + index);
 }
 
 
-node_t HumonList::clone_impl() const
+nodePtr_t HuList::clone_impl() const
 {
-  auto newThis = make_unique<HumonList>();
+  auto newThis = make_unique<HuList>();
   newThis->elems.reserve(elems.size());
   for (auto & elem : elems)
   {
@@ -422,9 +456,9 @@ node_t HumonList::clone_impl() const
 }
 
 
-// ----------- HumonDict class
+// ----------- HuDict class
 
-HumonDict::HumonDict(char const *& str, size_t & len)
+HuDict::HuDict(char const *& str, size_t & len)
 {
   auto token = getToken(str, len);
   if (token.first != TokenType::dictBegin)
@@ -449,7 +483,8 @@ HumonDict::HumonDict(char const *& str, size_t & len)
         token.first != TokenType::value)
     { throw runtime_error(fmt("Invalid token on line ", line)); }
 
-    elems[key] = Humon::fromParsing(str, len);
+    elems.emplace(key, HuNode::fromParsing(str, len));
+    keys.push_back(key);
 
     token = peekToken(str, len);
   }
@@ -459,81 +494,85 @@ HumonDict::HumonDict(char const *& str, size_t & len)
 }
 
 
-HumonDict::HumonDict()
+HuDict::HuDict()
 {
 }
 
 
-HumonDict::~HumonDict()
+HuDict::~HuDict()
 {
 }
 
 
-void HumonDict::print(std::ostream & out, int depth, bool indentFirstLine) const
+void HuDict::print(std::ostream & out, int depth, bool indentFirstLine) const
 {
   auto indent = string(depth * 2, ' ');
   if (indentFirstLine)
     { out << indent; }
   out << '{' << endl;
-  for (auto & elem : elems)
+  for (auto & key : keys)
   {
-    out << string((depth + 1) * 2, ' ') << elem.first << ": ";
-    elem.second->print(out, depth + 1, false);
+    bool quote = any_of(key.begin(), key.end(), 
+      [] (char ch) { return isspace(ch); });
+
+    out << string((depth + 1) * 2, ' ');
+    if (quote)
+      { out << "\"" << key << "\": "; }
+    else
+      { out << key << ": "; }
+    elems.at(key)->print(out, depth + 1, false);
   }
   out << indent << "}" << endl;
 }
 
 
-bool HumonDict::operator == (Humon const & rhs) const
+bool HuDict::operator ==(HuNode const & rhs) const
 {
   if (rhs.isDict())
   {
-    return elems == static_cast<HumonDict const &>(rhs).elems;
+    return elems == static_cast<HuDict const &>(rhs).elems;
   }
   else
   { return false; }
 }
 
 
-bool HumonDict::hasKey(string const & key) const
+bool HuDict::hasKey(string const & key) const
 {
   return elems.find(key) != elems.end();
 }
 
 
-node_t const & HumonDict::operator [](string const & key) const
-{
-  return elems.at(key);
-}
-
-
-void HumonDict::add(string const & key, node_t node)
+void HuDict::add(string const & key, nodePtr_t node)
 {
   elems.insert(make_pair(key, node->clone()));
+  keys.push_back(key);
 }
 
 
-void HumonDict::removeAt(string const & key)
+void HuDict::removeAt(string const & key)
 {
   elems.erase(key);
+  keys.erase(find(keys.begin(), keys.end(), key));
 }
 
 
-node_t HumonDict::clone_impl() const
+nodePtr_t HuDict::clone_impl() const
 {
-  auto newThis = make_unique<HumonDict>();
-  for (auto & elem : elems)
+  auto newThis = make_unique<HuDict>();
+  for (auto & key : keys)
   {
-    newThis->elems.insert({elem.first, elem.second->clone()});
+    newThis->elems.insert({key, elems.at(key)->clone()});
+    newThis->keys.push_back(key);
   }
 
   return newThis;
 }
 
 
-// ----------- HumonValue class
+// ----------- HuValue class
 
-HumonValue::HumonValue(char const *& str, size_t & len)
+HuValue::HuValue(char const *& str, size_t & len)
 {
   auto token = getToken(str, len);
   if (token.first != TokenType::value)
@@ -543,39 +582,48 @@ HumonValue::HumonValue(char const *& str, size_t & len)
 }
 
 
-HumonValue::HumonValue()
+HuValue::HuValue()
 {
 }
 
 
-HumonValue::~HumonValue()
+HuValue::~HuValue()
 {
 }
 
 
-void HumonValue::print(std::ostream & out, int depth, bool indentFirstLine) const
+void HuValue::print(std::ostream & out, int depth, bool indentFirstLine) const
 {
   if (indentFirstLine)
   {
     auto indent = string(depth * 2, ' ');
     out << indent;
   }
-  out << value << endl;
+  if (any_of(value.begin(), value.end(), 
+    [] (char ch) { return isspace(ch); }))
+  {
+    out << '\"' << value << '\"' << endl;
+  }
+  else
+  {
+    out << value << endl;
+  }
+  
 }
 
 
-bool HumonValue::operator == (Humon const & rhs) const
+bool HuValue::operator ==(HuNode const & rhs) const
 {
   if (rhs.isValue())
   {
-    return value == static_cast<HumonValue const &>(rhs).value;
+    return value == static_cast<HuValue const &>(rhs).value;
   }
   else
   { return false; }
 }
 
 
-bool HumonValue::tryGet(bool & rv) const
+bool HuValue::tryGet(bool & rv) const
 {
   if (value == "true")
   {
@@ -594,7 +642,7 @@ bool HumonValue::tryGet(bool & rv) const
 }
 
 
-bool HumonValue::tryGet(long & rv) const
+bool HuValue::tryGet(long & rv) const
 {
   size_t matches = 0;
   rv = stol(value, & matches);
@@ -602,7 +650,7 @@ bool HumonValue::tryGet(long & rv) const
 }
 
 
-bool HumonValue::tryGet(float & rv) const
+bool HuValue::tryGet(float & rv) const
 {
   size_t matches = 0;
   rv = stof(value, & matches);
@@ -610,7 +658,7 @@ bool HumonValue::tryGet(float & rv) const
 }
 
 
-bool HumonValue::getBool() const
+bool HuValue::getBool() const
 {
   if (value == "true")
   { return true; }
@@ -622,35 +670,66 @@ bool HumonValue::getBool() const
 }
 
 
-long HumonValue::getLong() const
+long HuValue::getLong() const
 {
   size_t matches = 0;
   auto val = stol(value, & matches);
-  if (matches == value.size())
+  if (matches != value.size())
   { throw runtime_error("Not a long value"); }
   return val;
 }
 
 
-float HumonValue::getFloat() const
+float HuValue::getFloat() const
 {
   size_t matches = 0;
   auto val = stof(value, & matches);
-  if (matches == value.size())
+  if (matches != value.size())
   { throw runtime_error("Not a float value"); }
   return val;
 }
 
 
-string const & HumonValue::getString() const
+string const & HuValue::getString() const
 {
   return value;
 }
 
 
-node_t HumonValue::clone_impl() const
+void HuValue::setValue(bool val)
 {
-  auto newThis = make_unique<HumonValue>();
+  if (val)
+  {
+    value = "true";
+  }
+  else
+  {
+    value = "false";
+  }
+}
+
+
+void HuValue::setValue(long val)
+{
+  value = to_string(val);
+}
+
+
+void HuValue::setValue(float val)
+{
+  value = to_string(val);
+}
+
+
+void HuValue::setValue(std::string const & val)
+{
+  value = val;
+}
+
+
+nodePtr_t HuValue::clone_impl() const
+{
+  auto newThis = make_unique<HuValue>();
   newThis->value = value;
   return newThis;
 }
