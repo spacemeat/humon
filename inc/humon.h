@@ -97,6 +97,10 @@ namespace humon
     operator float() const;
     operator std::string() const;
 
+    std::string const & keyAt(size_t idx) const;
+
+    size_t size() const;
+
     std::string getReport() const;
     virtual void print(std::ostream & stream, int depth = 0,
       bool indentFirstLine = true) const = 0;
@@ -179,7 +183,7 @@ namespace humon
     size_t size() const { return elems.size(); }
     bool hasKey(std::string const & key) const;
 
-    std::string const & keyAt(size_t idx)
+    std::string const & keyAt(size_t idx) const
     {
       return keys.at(idx);
     }

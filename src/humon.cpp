@@ -338,6 +338,22 @@ HuNode::operator std::string() const
 }
 
 
+string const & HuNode::keyAt(size_t idx) const
+{
+  return asDict().keyAt(idx);  
+}
+
+
+size_t HuNode::size() const
+{
+  if (isList())
+    { return asList().size(); }
+  else if (isDict())
+    { return asDict().size(); }
+  return 1;
+}
+
+
 string HuNode::getReport() const
 {
   stringstream ss;
