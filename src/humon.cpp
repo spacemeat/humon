@@ -12,6 +12,31 @@ using ss = stringstream;
 
 int line = 1;
 
+unsigned stos(std::string const & str, size_t * idx = 0, int base = 10) {
+  long result = stol(str, idx, base);
+  if (result < std::numeric_limits<short>::min() ||
+      result > std::numeric_limits<short>::max())
+    { throw out_of_range("stos"); }
+  return result;
+}
+
+
+unsigned stous(std::string const & str, size_t * idx = 0, int base = 10) {
+  unsigned long result = stoul(str, idx, base);
+  if (result > std::numeric_limits<unsigned short>::max())
+    { throw out_of_range("stous"); }
+  return result;
+}
+
+
+unsigned stoui(std::string const & str, size_t * idx = 0, int base = 10) {
+  unsigned long result = stoul(str, idx, base);
+  if (result > std::numeric_limits<unsigned>::max()) 
+    { throw out_of_range("stous"); }
+  return result;
+}
+
+
 // Nom whitespace.
 void eatWs(char const *& str, size_t & len)
 {
@@ -293,20 +318,6 @@ HuNode const & HuNode::operator >>(bool & rhs) const
 }
 
 
-HuNode const & HuNode::operator >>(long & rhs) const
-{
-  rhs = asValue().getLong();
-  return *this;
-}
-
-
-HuNode const & HuNode::operator >>(float & rhs) const
-{
-  rhs = asValue().getFloat();
-  return *this;
-}
-
-
 HuNode const & HuNode::operator >>(std::string & rhs) const
 {
   rhs = asValue().getString();
@@ -320,15 +331,69 @@ HuNode::operator bool() const
 }
 
 
+HuNode::operator short() const
+{
+  return asValue().getInt();
+}
+
+
+HuNode::operator unsigned short() const
+{
+  return asValue().getUint();
+}
+
+
+HuNode::operator int() const
+{
+  return asValue().getInt();
+}
+
+
+HuNode::operator unsigned int() const
+{
+  return asValue().getUint();
+}
+
+
 HuNode::operator long() const
 {
   return asValue().getLong();
 }
 
 
+HuNode::operator unsigned long() const
+{
+  return asValue().getUlong();
+}
+
+
+HuNode::operator long long() const
+{
+  return asValue().getLonglong();
+}
+
+
+HuNode::operator unsigned long long() const
+{
+  return asValue().getUlonglong();
+}
+
+
 HuNode::operator float() const
 {
   return asValue().getFloat();
+}
+
+
+HuNode::operator double() const
+{
+  return asValue().getDouble();
+}
+
+
+HuNode::operator long double() const
+{
+  return asValue().getLongdouble();
 }
 
 
@@ -658,6 +723,38 @@ bool HuValue::tryGet(bool & rv) const
 }
 
 
+bool HuValue::tryGet(short & rv) const
+{
+  size_t matches = 0;
+  rv = stoi(value, & matches);
+  return matches == value.size();
+}
+
+
+bool HuValue::tryGet(unsigned short & rv) const
+{
+  size_t matches = 0;
+  rv = stoui(value, & matches);
+  return matches == value.size();
+}
+
+
+bool HuValue::tryGet(int & rv) const
+{
+  size_t matches = 0;
+  rv = stoi(value, & matches);
+  return matches == value.size();
+}
+
+
+bool HuValue::tryGet(unsigned int & rv) const
+{
+  size_t matches = 0;
+  rv = stoui(value, & matches);
+  return matches == value.size();
+}
+
+
 bool HuValue::tryGet(long & rv) const
 {
   size_t matches = 0;
@@ -666,10 +763,50 @@ bool HuValue::tryGet(long & rv) const
 }
 
 
+bool HuValue::tryGet(unsigned long & rv) const
+{
+  size_t matches = 0;
+  rv = stoul(value, & matches);
+  return matches == value.size();
+}
+
+
+bool HuValue::tryGet(long long & rv) const
+{
+  size_t matches = 0;
+  rv = stoll(value, & matches);
+  return matches == value.size();
+}
+
+
+bool HuValue::tryGet(unsigned long long & rv) const
+{
+  size_t matches = 0;
+  rv = stoull(value, & matches);
+  return matches == value.size();
+}
+
+
 bool HuValue::tryGet(float & rv) const
 {
   size_t matches = 0;
   rv = stof(value, & matches);
+  return matches == value.size();
+}
+
+
+bool HuValue::tryGet(double & rv) const
+{
+  size_t matches = 0;
+  rv = stod(value, & matches);
+  return matches == value.size();
+}
+
+
+bool HuValue::tryGet(long double & rv) const
+{
+  size_t matches = 0;
+  rv = stold(value, & matches);
   return matches == value.size();
 }
 
@@ -686,23 +823,113 @@ bool HuValue::getBool() const
 }
 
 
+short HuValue::getShort() const
+{
+  short v = 0;
+  if (tryGet(v))
+    { return v; }
+
+  throw runtime_error("Not a boolean value");
+}
+
+
+unsigned short HuValue::getUshort() const
+{
+  unsigned short v = 0;
+  if (tryGet(v))
+    { return v; }
+
+  throw runtime_error("Not a boolean value");
+}
+
+
+int HuValue::getInt() const
+{
+  int v = 0;
+  if (tryGet(v))
+    { return v; }
+
+  throw runtime_error("Not a boolean value");
+}
+
+
+unsigned int HuValue::getUint() const
+{
+  unsigned int v = 0;
+  if (tryGet(v))
+    { return v; }
+
+  throw runtime_error("Not a boolean value");
+}
+
+
 long HuValue::getLong() const
 {
-  size_t matches = 0;
-  auto val = stol(value, & matches);
-  if (matches != value.size())
-  { throw runtime_error("Not a long value"); }
-  return val;
+  long v = 0;
+  if (tryGet(v))
+    { return v; }
+
+  throw runtime_error("Not a boolean value");
+}
+
+
+unsigned long HuValue::getUlong() const
+{
+  unsigned long v = 0;
+  if (tryGet(v))
+    { return v; }
+
+  throw runtime_error("Not a boolean value");
+}
+
+
+long long HuValue::getLonglong() const
+{
+  long long v = 0;
+  if (tryGet(v))
+    { return v; }
+
+  throw runtime_error("Not a boolean value");
+}
+
+
+unsigned long long HuValue::getUlonglong() const
+{
+  unsigned long long v = 0;
+  if (tryGet(v))
+    { return v; }
+
+  throw runtime_error("Not a boolean value");
 }
 
 
 float HuValue::getFloat() const
 {
-  size_t matches = 0;
-  auto val = stof(value, & matches);
-  if (matches != value.size())
-  { throw runtime_error("Not a float value"); }
-  return val;
+  float v = 0;
+  if (tryGet(v))
+    { return v; }
+
+  throw runtime_error("Not a boolean value");
+}
+
+
+double HuValue::getDouble() const
+{
+  double v = 0;
+  if (tryGet(v))
+    { return v; }
+
+  throw runtime_error("Not a boolean value");
+}
+
+
+long double HuValue::getLongdouble() const
+{
+  long double v = 0;
+  if (tryGet(v))
+    { return v; }
+
+  throw runtime_error("Not a boolean value");
 }
 
 
@@ -712,6 +939,7 @@ string const & HuValue::getString() const
 }
 
 
+/*
 void HuValue::setValue(bool val)
 {
   if (val)
@@ -737,6 +965,26 @@ void HuValue::setValue(float val)
 }
 
 
+void HuValue::setValue(std::string const & val)
+{
+  value = val;
+}
+*/
+template <>
+void HuValue::setValue(bool val)
+{
+  if (val)
+  {
+    value = "true";
+  }
+  else
+  {
+    value = "false";
+  }
+}
+
+
+template <>
 void HuValue::setValue(std::string const & val)
 {
   value = val;

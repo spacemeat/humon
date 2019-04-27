@@ -162,11 +162,14 @@ int main(int argc, char ** argv)
   string leadLion = hu / "voltron" / "lion force" / 0;
   cout << "Lead lion: " << leadLion << " ... " << (leadLion == "black" ? "PASS" : "FAIL") << endl;
 
-  long numPilots = hu / "voltron" / "puny human pilots";
+  int numPilots = hu / "voltron" / "puny human pilots";
   cout << "numPilots: " << numPilots << " ... " << (numPilots == 5 ? "PASS" : "FAIL") << endl;
 
   float howAwesome = hu / "devastator" / "score";
   cout << "howAwesome: " << howAwesome << " ... " << (howAwesome == 4.5 ? "PASS" : "FAIL") << endl;
+
+  bool devastation = hu / "devastator" / "danger to humanity";
+  cout << "devastation: " << devastation << " ... " << (devastation == true ? "PASS" : "FAIL") << endl;
 
   hu / "voltron" / "lion force" / 3 >> leadLion;
   cout << "Nerdy lion: " << leadLion << " ... " << (leadLion == "green" ? "PASS" : "FAIL") << endl;

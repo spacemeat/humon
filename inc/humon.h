@@ -69,8 +69,14 @@ namespace humon
     template <class IntType, REQUIRES(std::is_integral<IntType>())>
     HuNode const & operator /(IntType idx) const;
     HuNode const & operator >>(bool & rhs) const;
-    HuNode const & operator >>(long & rhs) const;
-    HuNode const & operator >>(float & rhs) const;
+
+    template <class Type>
+    HuNode const & operator >>(Type & rhs) const
+    {
+      rhs = *this;
+      return *this;
+    }
+
     HuNode const & operator >>(std::string & rhs) const;
 
     bool operator %(std::string const & key)
@@ -85,16 +91,26 @@ namespace humon
       { return const_cast<HuNode &>(std::as_const(*this) / idx); }
     HuNode & operator >>(bool & rhs)
       { return const_cast<HuNode &>(std::as_const(*this) >> rhs); }
-    HuNode & operator >>(long & rhs)
+
+    template <class Type>
+    HuNode & operator >>(Type & rhs)
       { return const_cast<HuNode &>(std::as_const(*this) >> rhs); }
-    HuNode & operator >>(float & rhs)
-      { return const_cast<HuNode &>(std::as_const(*this) >> rhs); }
+
     HuNode & operator >>(std::string & rhs)
       { return const_cast<HuNode &>(std::as_const(*this) >> rhs); }
 
     operator bool() const;
+    operator short() const;
+    operator unsigned short() const;
+    operator int() const;
+    operator unsigned int() const;
     operator long() const;
+    operator unsigned long() const;
+    operator long long() const;
+    operator unsigned long long() const;
     operator float() const;
+    operator double() const;
+    operator long double() const;
     operator std::string() const;
 
     std::string const & keyAt(size_t idx) const;
@@ -262,18 +278,39 @@ namespace humon
     virtual bool isValue() const override { return true; };
 
     bool tryGet(bool & rv) const;
+    bool tryGet(short & rv) const;
+    bool tryGet(unsigned short & rv) const;
+    bool tryGet(int & rv) const;
+    bool tryGet(unsigned int & rv) const;
     bool tryGet(long & rv) const;
+    bool tryGet(unsigned long & rv) const;
+    bool tryGet(long long & rv) const;
+    bool tryGet(unsigned long long & rv) const;
     bool tryGet(float & rv) const;
+    bool tryGet(double & rv) const;
+    bool tryGet(long double & rv) const;
 
-    bool getBool() const;
-    long getLong() const;
-    float getFloat() const;
+    bool                getBool() const;
+    short               getShort() const;
+    unsigned short      getUshort() const;
+    int                 getInt() const;
+    unsigned int        getUint() const;
+    long                getLong() const;
+    unsigned long       getUlong() const;
+    long long           getLonglong() const;
+    unsigned long long  getUlonglong() const;
+    float               getFloat() const;
+    double              getDouble() const;
+    long double         getLongdouble() const;
     std::string const & getString() const;
 
-    void setValue(bool val);
-    void setValue(long val);
-    void setValue(float val);
-    void setValue(std::string const & val);
+    template <class Type>
+    void setValue(Type val);
+
+//    void setValue(bool val);
+//    void setValue(long val);
+//    void setValue(float val);
+//    void setValue(std::string const & val);
 
   private:
     virtual nodePtr_t clone_impl() const override;
@@ -299,6 +336,13 @@ namespace humon
       { return asList().at(idx); }
     else
       { return asDict().at(idx); }
+  }
+
+
+  template <class Type>
+  void HuValue::setValue(Type val)
+  {
+    value = to_string(val);
   }
 }
 
