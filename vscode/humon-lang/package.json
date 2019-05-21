@@ -1,0 +1,25 @@
+{
+    "name": "humon-lang",
+    "displayName": "Humon Lang",
+    "description": "Syntax highlighting for humon lang",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.34.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "humon",
+            "aliases": ["Humon", "humon"],
+            "extensions": [".hu"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "humon",
+            "scopeName": "source.humon",
+            "path": "./syntaxes/humon.tmLanguage.json"
+        }]
+    }
+}

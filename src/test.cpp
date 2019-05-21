@@ -98,7 +98,7 @@ int main(int argc, char ** argv)
   testReport("[\"xxx\"]", "[ xxx ] ");
   testReport("{\"xxx\":'chocobo'}", "{ xxx: chocobo } ");
 
-  testReport("\n{\n  cats: rule // meow\n  dogs: drool // roof\n}\n", "{ cats: rule dogs: drool } ");
+  testReport("\n{\n  cats: rule # meow\n  dogs: drool # roof\n}\n", "{ cats: rule dogs: drool } ");
 
   auto hup = fromString(R"(
   {

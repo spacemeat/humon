@@ -40,7 +40,6 @@ unsigned stoui(std::string const & str, size_t * idx = 0, int base = 10) {
 // Nom whitespace.
 void eatWs(char const *& str, size_t & len)
 {
-  bool slashing = false;
   bool commenting = false;
   while (len > 0)
   {
@@ -61,15 +60,11 @@ void eatWs(char const *& str, size_t & len)
       { line += 1; }
       str += 1;
       len -= 1;
-      slashing = false;
     }
 
-    else if (str[0] == '/')
+    else if (str[0] == '#')
     { 
-      if (slashing)
-      { slashing = false; commenting = true; }
-      else
-      { slashing = true; }
+      commenting = true;
     }
 
     else break;
