@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <ostream>
 
@@ -63,11 +63,15 @@ namespace humon
     HuValue & asValue() { return as<HuValue>(); }
 
     bool operator %(std::string const & key) const;
+    
     template <class IntType, REQUIRES(std::is_integral<IntType>())>
     bool operator %(IntType idx) const;
+    
     HuNode const & operator /(std::string const & key) const;
+    
     template <class IntType, REQUIRES(std::is_integral<IntType>())>
     HuNode const & operator /(IntType idx) const;
+    
     HuNode const & operator >>(bool & rhs) const;
 
     template <class Type>
@@ -81,14 +85,18 @@ namespace humon
 
     bool operator %(std::string const & key)
       { return std::as_const(*this) % key; }
+
     template <class IntType, REQUIRES(std::is_integral<IntType>())>
     bool operator %(IntType idx)
       { return std::as_const(*this) % idx; }
+
     HuNode & operator /(std::string const & key)
       { return const_cast<HuNode &>(std::as_const(*this) / key); }
+
     template <class IntType, REQUIRES(std::is_integral<IntType>())>
     HuNode & operator /(IntType idx)
       { return const_cast<HuNode &>(std::as_const(*this) / idx); }
+
     HuNode & operator >>(bool & rhs)
       { return const_cast<HuNode &>(std::as_const(*this) >> rhs); }
 
@@ -121,6 +129,7 @@ namespace humon
     virtual void print(std::ostream & stream, int depth = 0,
       bool indentFirstLine = true) const = 0;
     virtual bool operator ==(HuNode const & rhs) const = 0;
+    virtual bool operator !=(HuNode const & rhs) const = 0;
 
   private:
     virtual nodePtr_t clone_impl() const = 0;
@@ -140,6 +149,7 @@ namespace humon
       bool indentFirstLine = true) const override;
 
     virtual bool operator ==(HuNode const & rhs) const override;
+    virtual bool operator !=(HuNode const & rhs) const override;
 
     virtual bool isList() const override { return true; };
 
@@ -193,6 +203,7 @@ namespace humon
       bool indentFirstLine = true) const override;
 
     virtual bool operator ==(HuNode const & rhs) const override;
+    virtual bool operator !=(HuNode const & rhs) const override;
 
     virtual bool isDict() const override { return true; };
 
@@ -256,7 +267,7 @@ namespace humon
   private:
     virtual nodePtr_t clone_impl() const override;
 
-    std::map<std::string, nodePtr_t> elems;
+    std::unordered_map<std::string, nodePtr_t> elems;
     std::vector<std::string> keys;
   };
 
@@ -274,6 +285,7 @@ namespace humon
       bool indentFirstLine = true) const override;
 
     virtual bool operator ==(HuNode const & rhs) const override;
+    virtual bool operator !=(HuNode const & rhs) const override;
 
     virtual bool isValue() const override { return true; };
 

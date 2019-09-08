@@ -487,6 +487,12 @@ bool HuList::operator ==(HuNode const & rhs) const
 }
 
 
+bool HuList::operator !=(HuNode const & rhs) const
+{
+  return (*this == rhs) == false;
+}
+
+
 size_t HuList::indexOf(nodePtr_t node) const
 {
   for (size_t i = 0; i < elems.size(); ++i)
@@ -613,6 +619,12 @@ bool HuDict::operator ==(HuNode const & rhs) const
 }
 
 
+bool HuDict::operator !=(HuNode const & rhs) const
+{
+  return (*this == rhs) == false;
+}
+
+
 bool HuDict::hasKey(string const & key) const
 {
   return elems.find(key) != elems.end();
@@ -696,6 +708,12 @@ bool HuValue::operator ==(HuNode const & rhs) const
   }
   else
   { return false; }
+}
+
+
+bool HuValue::operator !=(HuNode const & rhs) const
+{
+  return (*this == rhs) == false;
 }
 
 
