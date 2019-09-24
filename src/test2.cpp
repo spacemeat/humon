@@ -2,20 +2,28 @@
 #include <algorithm>
 #include <cctype>
 #include <string>
+#include <charconv>
 #include "humon2.h"
-#include "../../ansiTermCpp/inc/ansiTerm.h"
-#include "../../../balls/fmt/fmt-5.3.0/include/fmt/core.h"
+#include "ansiTerm.h"
+#include "fmt/core.h"
 
 
 using namespace std;
 using namespace humon;
+namespace h = humon;
 
 
-vector<vector<string>> tests = {
+vector<vector<string>> tokenizeTests = {
   // input    minimal                     pretty
   { "x #y", 
     "x#y", "x", 
     "x #y", "x" },
+  { "\"x y z z y\"",
+    "\"x y z z y\"", "\"x y z z y\"",
+    "\"x y z z y\"", "\"x y z z y\"" },
+  { "'x y z z y'",
+    "'x y z z y'", "'x y z z y'",
+    "'x y z z y'", "'x y z z y'" },
   { "[x]", 
     "[x]", "[x]", 
     "[\n  x\n]", "[\n  x\n]" },
@@ -132,16 +140,19 @@ l:m}})", R"({a:{b:c@{d:e f:g}h:i@j:k l:m}})",
 };
 
 
-void testReport(string inp, OutputFormat format, bool includeComments, string expect)
+using sz = int16_t;
+
+void testReport(int testId, string inp, OutputFormat format, bool includeComments, string expect)
 {
   cout << fmt::format(
-    R"(Trying with format {}{}{}, comments {}{}{}.... )",
+    R"(Trying tokenize test {} with format {}{}{}, comments {}{}{}.... )",
+      testId,
       ansi::lightYellow, to_string(format), ansi::off, 
       ansi::lightYellow, includeComments ? "on" : "off", ansi::off
    );
 
-  auto h = HumonObj::fromString(inp, "test");
-  auto rep = h.to_string(format, includeComments);
+  auto hu = Trove<sz>::fromString(inp, "test");
+  auto rep = hu.to_string(format, includeComments);
   bool pass = rep == expect;
 
   if (pass)
@@ -161,11 +172,15 @@ Expected output:
 {}{}{}
 Actual output:
 {}{}{}
+Num tokens: {}{}{}
+Num nodes: (){}{}
 )",
       ansi::lightRed, ansi::off,
       ansi::darkDarkBlueBg, inp, ansi::off, 
       ansi::darkDarkYellowBg, expect, ansi::off, 
-      ansi::darkDarkMagentaBg, rep, ansi::off);
+      ansi::darkDarkMagentaBg, rep, ansi::off,
+      ansi::darkDarkMagentaBg, hu.getTokens().size(), ansi::off,
+      ansi::darkDarkMagentaBg, hu.getNodes().size(), ansi::off);
   }
 }
 
@@ -174,63 +189,86 @@ int main(int argc, char ** argv)
 {
   // These test reporting, but also general parsing and construction.
 
-  for (auto & testCase : tests)
+  for (size_t i = 0; i < tokenizeTests.size(); ++i)
   {
-    testReport(testCase[0], OutputFormat::preserved, true, testCase[0]);
-    testReport(testCase[0], OutputFormat::minimal, true, testCase[1]);
-    testReport(testCase[0], OutputFormat::minimal, false, testCase[2]);
-    testReport(testCase[0], OutputFormat::pretty, true, testCase[3]);
-    testReport(testCase[0], OutputFormat::pretty, false, testCase[4]);
+    auto & testCase = tokenizeTests[i];
+
+    testReport(i, testCase[0], OutputFormat::preserved, true, testCase[0]);
+    testReport(i, testCase[0], OutputFormat::minimal, true, testCase[1]);
+    testReport(i, testCase[0], OutputFormat::minimal, false, testCase[2]);
+    testReport(i, testCase[0], OutputFormat::pretty, true, testCase[3]);
+    testReport(i, testCase[0], OutputFormat::pretty, false, testCase[4]);
   }
 
-/*
-  auto const & hu = * hup.get();
+  auto hup = Trove<sz>::fromString(R"(
+  {
+    voltron: {
+      "lion force": [
+        black @ 3: "#000"
+        red @ 3:    "#f00"
+        blue @ { 3: "#f00" 6: "#ff0000" }
+        green @ { 3: "#f00" } @ { 6: "#ff0000" }
+        yellow
+      ]
+      victory: assured
+      score: 4.25
+      "danger to humanity": false
+      "puny human pilots": 5
+    }
+    devastator: {
+      constructicons: [
+        scrapper
+        bonecrusher
+        scavenger
+        mixmaster
+        hook
+        "long haul"
+      ]
+      victory: assured
+      score: 4.5
+      "danger to humanity": true
+      "puny human pilots": 0
+    }
+  })");
+
+  auto & hu = hup.getRoot();
 
   if (hu % "voltron")
-    { cout << "hu%voltron ... PASS" << endl; }
+    { cout << "hu % voltron ... PASS" << endl; }
   else
-    { cout << "hu%voltron ... FAIL" << endl; }
+    { cout << "hu % voltron ... FAIL" << endl; }
 
   if (hu % "devastator")
-    { cout << "hu%devastator ... PASS" << endl; }
+    { cout << "hu % devastator ... PASS" << endl; }
   else
-    { cout << "hu%devastator ... FAIL" << endl; }
+    { cout << "hu % devastator ... FAIL" << endl; }
 
   if (hu / "voltron" % "victory")
-    { cout << "hu/voltron%victory ... PASS" << endl; }
+    { cout << "hu / voltron % victory ... PASS" << endl; }
   else
-    { cout << "hu/voltron%victory ... FAIL" << endl; }
+    { cout << "hu / voltron % victory ... FAIL" << endl; }
 
   if (hu / "voltron" % "vehicle force" == false)
-    { cout << "hu/voltron%%\"vehicle force\" ... PASS" << endl; }
+    { cout << "hu / voltron % \"vehicle force\" ... PASS" << endl; }
   else
-    { cout << "hu/voltron%%\"vehicle force\" ... FAIL" << endl; }
+    { cout << "hu / voltron % \"vehicle force\" ... FAIL" << endl; }
   
   if ((hu % 0 && hu % 1 && hu % 2 == false))
     { cout << "hu%0, hu%1, ! hu%2 ... PASS" << endl; }
   else
     { cout << "hu%0, hu%1, ! hu%2 ... FAIL" << endl; }
 
-  string leadLion = hu / "voltron" / "lion force" / 0;
+  string_view const leadLion = hu / "voltron" / "\"lion force\"" / 0 / h::value<string_view> {};
   cout << "Lead lion: " << leadLion << " ... " << (leadLion == "black" ? "PASS" : "FAIL") << endl;
 
-  int numPilots = hu / "voltron" / "puny human pilots";
+  auto numPilots = hu / "voltron" / "\"puny human pilots\"" / h::value<int> {};
   cout << "numPilots: " << numPilots << " ... " << (numPilots == 5 ? "PASS" : "FAIL") << endl;
 
-  float howAwesome = hu / "devastator" / "score";
+  float howAwesome = hu / "devastator" / "score" / h::value<float> {};
   cout << "howAwesome: " << howAwesome << " ... " << (howAwesome == 4.5 ? "PASS" : "FAIL") << endl;
 
-  bool devastation = hu / "devastator" / "danger to humanity";
+  bool devastation = hu / "devastator" / "\"danger to humanity\"" / h::value<bool> {};
   cout << "devastation: " << devastation << " ... " << (devastation == true ? "PASS" : "FAIL") << endl;
 
-  hu / "voltron" / "lion force" / 3 >> leadLion;
-  cout << "Nerdy lion: " << leadLion << " ... " << (leadLion == "green" ? "PASS" : "FAIL") << endl;
-
-  hu / "devastator" / "puny human pilots" >> numPilots;
-  cout << "numPilots: " << numPilots << " ... " << (numPilots == 0 ? "PASS" : "FAIL") << endl;
-
-  hu / "voltron" / "score" >> howAwesome;
-  cout << "howAwesome: " << howAwesome << " ... " << (howAwesome == 4.25 ? "PASS" : "FAIL") << endl;
-*/
   return 0;
 }

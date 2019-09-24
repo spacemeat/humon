@@ -7,15 +7,12 @@
 #include <unordered_map>
 #include <limits>
 #include <initializer_list>
-
-
-#define REQUIRES(...) typename std::enable_if<(__VA_ARGS__), int>::type = 0
-#define REQUIRES_DEF(...) typename std::enable_if<(__VA_ARGS__), int>::type
+#include <charconv>
 
 
 namespace humon
 {  
-  enum class NodeType
+  enum class NodeKind
   {
     null,    
     error,
@@ -25,22 +22,22 @@ namespace humon
     comment
   };
 
-  inline std::string to_string(NodeType rhs)
+  inline std::string to_string(NodeKind rhs)
   {
     switch(rhs)
     {
-    case NodeType::null: return "null";
-    case NodeType::error: return "error";
-    case NodeType::list: return "list";
-    case NodeType::dict: return "dict";
-    case NodeType::value: return "value";
-    case NodeType::comment: return "comment";
+    case NodeKind::null: return "null";
+    case NodeKind::error: return "error";
+    case NodeKind::list: return "list";
+    case NodeKind::dict: return "dict";
+    case NodeKind::value: return "value";
+    case NodeKind::comment: return "comment";
     default: return "!!unknown!!";
     }
   }
 
 
-  enum class TokenType
+  enum class TokenKind
   {
     eof,
     startDict,
@@ -53,174 +50,262 @@ namespace humon
     comment
   };
 
-  inline std::string to_string(TokenType rhs)
+  inline std::string to_string(TokenKind rhs)
   {
     switch(rhs)
     {
-    case TokenType::eof: return "eof";
-    case TokenType::startDict: return "startDict";
-    case TokenType::endDict: return "endDict";
-    case TokenType::startList: return "startList";
-    case TokenType::endList: return "endList";
-    case TokenType::keyValueSep: return "keyValueSep";
-    case TokenType::annotate: return "annotate";
-    case TokenType::word: return "word";
-    case TokenType::comment: return "comment";
+    case TokenKind::eof: return "eof";
+    case TokenKind::startDict: return "startDict";
+    case TokenKind::endDict: return "endDict";
+    case TokenKind::startList: return "startList";
+    case TokenKind::endList: return "endList";
+    case TokenKind::keyValueSep: return "keyValueSep";
+    case TokenKind::annotate: return "annotate";
+    case TokenKind::word: return "word";
+    case TokenKind::comment: return "comment";
     default: return "!!unknown!!";
     }
   }
 
-  /*
-      {
-        berries: [black blue crunch]
-        papers: {
-          important: notReally
-          relevant: notRemotely
-          recycled: notAnymore
-        }
-      }
 
-        HuObj hu;
-        auto huRoot = hu.setRootType(NodeType::dict);
-        auto huBerries = huRoot.add("berries", NodeType::list);
-        huBerries.add("black", "blue", "crunch");
-        auto huPapers = huRoot.add("papers", NodeType::dict);
-        huPapers.add({"important", "notReally"},
-                     {"relevant", "notRemotely"},
-                     {"recycled", "notAnymore"});
-
-        HuObj hu;
-        hu.root = "{}";
-        hu.root += ("berries", "{}");        
-        hu.root / "berries" += {"black", "blue", "crunch" };
-
-        hu.root += ("papers", "{}");
-        hu.root / "papers" += {
-          {"important", "notReally"},
-          {"relevant", "notRemotely"},
-          {"recycled", "notAnymore"}
-        };
-
-        hu.root += "papers: {"
-          "important: notReally "
-          "relevant: notRemotely "
-          "recycled: notAnymore"
-          "}";                      // one arg
+  // NOTE: This is really cool. If you provide an overload of std::from_chars that fills in a custom type T, you can extract a T directly from the value node like any of the specializations. You can alternately provide your own specialization on value<T>.
+  template <typename T>
+  struct value
+  {
+    inline T extract(std::string_view valStr) noexcept
+    {
+      T val;
+      auto [p, ec] = std::from_chars(valStr.data(), valStr.data() + valStr.size(), val);
+      if (ec == std::errc())
+        { return val; }
+      else
+        { return -1; }
+    }
+  };
 
 
-        hu.root += ("papers", 
-          "important: notReally "
-          "relevant: notRemotely "
-          "recycled: notAnymore");  // two args
+  template <>
+  struct value<float>
+  {
+    inline float extract(std::string_view valStr)
+    {
+      // TODO: (gcc): Once from_chars(..float&) is complete, use it instead. We're making a useless string here and it maketh me to bite metal. Also make noexcept.
+#if 0
+      float val;
+      auto [p, ec] = std::from_chars(valStr.data(), valStr.data() + valStr.size(), val, std::chars_format::general);
+      if (ec == std::errc())
+        { return val; }
+      else
+        { return -1; }
+#endif
+      return std::stof(std::string(valStr));
+    }
+  };
 
-        hu.root += ("papers", 
-          "important: notReally", 
-          "relevant: notRemotely", 
-          "recycled: notAnymore"); //  four args
 
-        hu.root += ("papers", 
-          {"important", "notReally"}, 
-          {"relevant", "notRemotely"}, 
-          {"recycled", "notAnymore"}); // four args
-  */
+  template <>
+  struct value<double>
+  {
+    inline double extract(std::string_view valStr)
+    {
+      // TODO: (gcc): Once from_chars(..float&) is complete, use it instead. We're making a useless string here and it maketh me to bite metal. Also make noexcept.
+#if 0
+      double val;
+      auto [p, ec] = std::from_chars(valStr.data(), valStr.data() + valStr.size(), val, std::chars_format::general);
+      if (ec == std::errc())
+        { return val; }
+      else
+        { return -1; }
+#endif
+      return std::stod(std::string(valStr));
+    }
+  };
 
 
-  class HumonObj;
+  template <>
+  struct value<std::string_view>
+  {
+    inline std::string_view extract(std::string_view valStr)
+    {
+      return valStr;
+    }
+  };
 
-  class HuNode
+
+  template <>
+  struct value<std::string>
+  {
+    inline std::string extract(std::string_view valStr) noexcept
+    {
+      return std::string(valStr);
+    }
+  };
+
+
+  template <>
+  struct value<bool>
+  {
+    inline bool extract(std::string_view valStr) noexcept
+    {
+      if (valStr[0] != 't' && valStr[0] != 'T')
+        { return false; }
+      
+      if (valStr.size() == 1)
+        { return true; }
+      
+      if (valStr.size() != 4)
+        { return false; }
+
+      return valStr == "true" || 
+             valStr == "True" || 
+             valStr == "TRUE";
+    }
+  };
+
+
+  template <typename T>
+  struct string_view_reloc
+  {
+    T loc;
+    T size;
+
+    string_view_reloc() = default;
+    string_view_reloc(std::string_view rhsStr, std::string_view rhsView)
+      : loc(rhsView.data() - rhsStr.data()),
+        size(rhsView.size())
+      { }
+
+    inline std::string_view on(std::string_view str) const noexcept
+    {
+      return { str.data() + loc, size };
+    }
+  };
+
+
+  template <typename T>
+  struct token_t
+  {
+    TokenKind kind;
+    string_view_reloc<T> value;
+    T line;
+    T col;
+
+    token_t() = default;
+    token_t(
+      TokenKind kind,
+      std::string_view str,
+      std::string_view value,
+      T line,
+      T col)
+    : kind(kind), value(str, value), line(line), col(col)
+      { }
+    token_t(const token_t<T> &) = default;
+    token_t(token_t<T> &&) = default;
+    ~token_t() = default;
+
+    token_t<T> & operator =(const token_t<T> &) = default;
+    token_t<T> & operator =(token_t<T> &&) = default;
+  };
+
+
+  template <typename T>
+  class Trove;
+
+  template <typename T>
+  class Node
   {
   public:
-    HuNode(HumonObj * obj, size_t nodeIdx) noexcept;
-    inline HumonObj * getObj() const noexcept;
-    inline size_t getNodeIdx() const noexcept;
-    inline NodeType getType() const noexcept;
+    using idx_t = typename std::make_unsigned<T>::type;
+    static const idx_t nullIdx = std::numeric_limits<idx_t>::max();
 
-    inline size_t getFirstTokenIdx() const noexcept;
-    inline size_t getNumTokens() const noexcept;
+    Node(Trove<T> * trove, idx_t nodeIdx) noexcept;
+    Node() = default;
 
-    inline size_t getParentNodeIdx() const noexcept;
-    inline HuNode const & getParentNode() const noexcept;
-    inline HuNode & getParentNode() noexcept;
-    inline size_t getNumChildren() const noexcept;
-    inline size_t getChildNodeIdx(size_t idx) const noexcept;
-    inline HuNode const & getChildNode(size_t idx) const noexcept;
-    inline HuNode & getChildNode(size_t idx) noexcept;
+    void print() const noexcept;
+
+    inline Trove<T> * getObj() const noexcept;
+    inline idx_t getNodeIdx() const noexcept;
+    inline NodeKind getKind() const noexcept;
+
+    inline idx_t getFirstTokenIdx() const noexcept;
+    inline idx_t getNumTokens() const noexcept;
+
+    inline idx_t getCollectionIdx() const noexcept; // TODO: kill?
+    inline idx_t getParentNodeIdx() const noexcept;
+    inline Node<T> const & getParentNode() const noexcept;
+    inline Node<T> & getParentNode() noexcept;
+    inline idx_t getNumChildren() const noexcept;
+    inline idx_t getChildNodeIdx(idx_t idx) const noexcept;
+    inline Node<T> const & getChildNode(idx_t idx) const noexcept;
+    inline Node<T> & getChildNode(idx_t idx) noexcept;
 
     inline bool hasKey() const noexcept;
     inline std::string_view getKey() const noexcept;
 
-    inline size_t getIndex() const noexcept;
+    inline idx_t getIndex() const noexcept;
 
     inline std::string_view getValue() const noexcept;
 
-    inline std::vector<size_t>::const_iterator begin() const noexcept;
-    inline std::vector<size_t>::const_iterator end() const noexcept;
+    inline typename std::vector<idx_t>::const_iterator begin() const noexcept;
+    inline typename std::vector<idx_t>::const_iterator end() const noexcept;
 
     inline bool operator %(std::string_view key) const noexcept;
 
-    template <class IntType, REQUIRES(std::is_integral<IntType>())>
+    template <class IntType, 
+      typename std::enable_if<
+        std::is_integral<IntType>::value, IntType>::type * = nullptr>
     inline bool operator %(IntType idx) const noexcept;
     
-    inline HuNode const & operator /(std::string_view key) const;
+    inline Node<T> const & operator /(std::string_view key) const;
 
-    template <class IntType, REQUIRES(std::is_integral<IntType>())>
-    inline HuNode const & operator /(IntType idx) const noexcept;
+    template <class IntType, 
+      typename std::enable_if<
+        std::is_integral<IntType>::value, IntType>::type * = nullptr>
+    inline Node<T> const & operator /(IntType idx) const noexcept;
 
-    inline HuNode const & nextSibling() const noexcept;
+    template <class U>
+    inline U operator /(value<U> ve) const noexcept;
+
+    inline Node<T> const & nextSibling() const noexcept;
 
     inline operator bool() const noexcept;
 
-    // mutators
-    HuNode & operator = (std::string_view humonString);
-    HuNode & operator += (std::initializer_list<std::string_view> humonStrings);
-    HuNode & insertAt (size_t idx, std::initializer_list<std::string_view> humonStrings);
-    HuNode & operator -= (std::initializer_list<size_t> idxs);
-    HuNode & operator -= (std::initializer_list<std::string_view> keys);
-
     // mutators for internal Humon use only
-    void setError(std::string_view msg);
-    void setType(NodeType type);
-    void setParentNodeIdx(size_t parentNodeIdx);
-    void addChildNodeIdx(size_t newChildIdx);
-    void setAnnotation(std::string_view key, size_t valueIdx);
-    void adjustTokenIdxs(long long offset) noexcept;
+    void _setKeyIdx(idx_t idx) noexcept;
+    void _setFirstTokenIdx(idx_t idx) noexcept;
+    void _setNumTokens(idx_t numTokens) noexcept;
+    void _setKind(NodeKind kind);
+    void _setParentNodeIdx(idx_t parentNodeIdx);
+    void _setCollectionIdx(idx_t collectionIdx);
+    void _addChildNodeIdx(idx_t newChildIdx);
+    void _setCollectionAppendTokenIdx(idx_t appendIdx) noexcept;
+    void _setAnnotation(std::string_view key, idx_t valueIdx);
+    void _setAnnotationAppendTokenIdx(idx_t appendIdx) noexcept;
 
     // pseudo-mutator
   private:
-    void ensureKeysMapped();
+    void ensureKeysMapped() const;
 
-    HumonObj * obj = nullptr;
-    size_t nodeIdx = std::numeric_limits<size_t>::max();
+    Trove<T> * trove = nullptr;
     std::string errorMsg;
-    size_t firstTokenIdx = std::numeric_limits<size_t>::max();
-    size_t numTokens = 0;
-    NodeType type = NodeType::null;
-    size_t collectionNodeIdx = std::numeric_limits<size_t>::max();
-    size_t parentNodeIdx = std::numeric_limits<size_t>::max();
-    std::vector<size_t> childNodeIdxs;
-    std::unordered_map<std::string, size_t> childDictIdxs;
-    size_t appendTokenIdx = 0;
-    std::unordered_map<std::string, size_t> annotationTokenIdxs;
+
+    idx_t nodeIdx = nullIdx;
+    idx_t keyIdx = nullIdx;
+    idx_t firstTokenIdx = nullIdx;
+    idx_t numTokens = 0;
+
+    idx_t collectionIdx = nullIdx;
+    idx_t parentNodeIdx = nullIdx;
+    idx_t collectionAppendTokenIdx = nullIdx;
+    idx_t annotationAppendTokenIdx = nullIdx;
+
+    NodeKind kind = NodeKind::null;
+    std::vector<idx_t> childNodeIdxs;
+    mutable std::unordered_map<std::string, idx_t> childDictIdxs;
+    std::unordered_map<std::string, idx_t> annotationTokenIdxs;
   };
 
 
-  struct token_t
-  {
-    TokenType type;
-    std::string_view value;
-    size_t line;
-    size_t col;
-
-    token_t(
-      TokenType type,
-      std::string_view value,
-      size_t line,
-      size_t col)
-    : type(type), value(value), line(line), col(col)
-      { }
-  };
-
-  
   enum class OutputFormat
   {
     preserved,
@@ -240,19 +325,23 @@ namespace humon
   }
 
 
-  class HumonObj
+  template <typename T>
+  class Trove
   {
   public:
-    static inline HumonObj fromString(std::string_view humonString, std::string_view name = "");
+    using idx_t = typename std::make_unsigned<T>::type;
+    static const idx_t nullIdx = std::numeric_limits<idx_t>::max();
 
-    HumonObj() = default;
-    HumonObj(std::string_view humonString)
+    static inline Trove<T> fromString(std::string_view humonString, std::string_view name = "");
+
+    Trove() = default;
+    Trove(std::string_view humonString)
       { setRoot(humonString); }
-    ~HumonObj() = default;
-    HumonObj(HumonObj const & rhs) = default;
-    HumonObj(HumonObj && rhs) = default;
-    HumonObj & operator = (HumonObj const & rhs) = default;
-    HumonObj & operator = (HumonObj && rhs) = default;
+    ~Trove() = default;
+    Trove(Trove<T> const & rhs) = default;
+    Trove(Trove<T> && rhs) = default;
+    Trove<T> & operator = (Trove<T> const & rhs) = default;
+    Trove<T> & operator = (Trove<T> && rhs) = default;
 
     inline std::string const & getName() const noexcept
       { return name; }
@@ -260,34 +349,34 @@ namespace humon
     inline std::string const & getData() const noexcept
       { return data; }
 
-    inline token_t getToken(size_t tokenIdx) const noexcept
+    inline token_t<idx_t> const & getToken(idx_t tokenIdx) const noexcept
       { return tokens[tokenIdx]; }
     
-    inline std::vector<token_t> const & getTokens() const noexcept
+    inline std::vector<token_t<idx_t>> const & getTokens() const noexcept
       { return tokens; }
 
-    inline std::vector<token_t> & getTokens() noexcept
+    inline std::vector<token_t<idx_t>> & getTokens() noexcept
       { return tokens; }
 
-    inline HuNode const & getRoot() const noexcept
+    inline Node<T> const & getRoot() const noexcept
       { return getNode(0); }
 
-    inline HuNode & getRoot() noexcept
+    inline Node<T> & getRoot() noexcept
       { ensureParsed(); return getNode(0); }
 
-    inline HuNode const & getNode(size_t nodeIdx) const noexcept
+    inline Node<T> const & getNode(idx_t nodeIdx) const noexcept
       { return nodes[nodeIdx]; }
     
-    inline HuNode & getNode(size_t nodeIdx) noexcept
+    inline Node<T> & getNode(idx_t nodeIdx) noexcept
       { ensureParsed(); return nodes[nodeIdx]; }
 
-    inline std::vector<HuNode> const & getNodes() const noexcept
+    inline std::vector<Node<T>> const & getNodes() const noexcept
       { return nodes; }
     
-    inline std::vector<HuNode> & getNodes() noexcept
+    inline std::vector<Node<T>> & getNodes() noexcept
       { ensureParsed(); return nodes; }
     
-    inline HuNode const & getNull() const noexcept
+    inline Node<T> const & getNull() const noexcept
       { return nullNode; }
 
     std::string to_string(OutputFormat format, bool includeComments) const;
@@ -298,10 +387,11 @@ namespace humon
 
     void setRoot(std::string_view rhs);
 
-    HuNode & addErrorNode(std::string_view errorMsg, token_t const * token, size_t parentNodeIdx);
+    void addError(std::string_view errorMsg, token_t<idx_t> const * token);
 
-    void removeSubtree(size_t nodeIdx);
-    void insertSubtrees(std::initializer_list<std::string_view> humonStrings, size_t parentNodeIdx, size_t insertTokenIdx);
+    void removeSubtree(idx_t nodeIdx);
+    void replaceSubtree(std::string_view humonString, idx_t nodeIdx);
+    void insertSubtrees(std::initializer_list<std::string_view> humonStrings, idx_t parentNodeIdx, idx_t insertTokenIdx);
 
     void ensureParsed()
     {
@@ -313,189 +403,32 @@ namespace humon
   private:
     void tokenize();
     void parse();
-    HuNode & parseRec(token_t const * cur, size_t parentNodeIdx);
+    Node<T> & parseRec(token_t<idx_t> const *& cur);
     
-    static HuNode nullNode;
-    bool error = false;
+    static inline Node<T> nullNode;
     std::string name;
     std::string data;
-    std::vector<token_t> tokens;
-    mutable std::vector<HuNode> nodes;
+    std::vector<token_t<idx_t>> tokens;
+    std::vector<Node<T>> nodes;
+    std::vector<std::pair<std::string, idx_t>> errors;
 
-    size_t inputTabSize = 2;
-    size_t outputTabSize = 2;
+    idx_t inputTabSize = 2;
+    idx_t outputTabSize = 2;
   };
 
 
-  inline HumonObj HumonObj::fromString(std::string_view humonString, std::string_view name)
+  template <typename T>
+  inline Trove<T> Trove<T>::fromString(std::string_view humonString, std::string_view name)
   {
-    HumonObj ho;
+    Trove<T> ho;
     ho.setName(name);
     ho.setRoot(humonString);
     return ho;
   }
-
-
-  // HuNode inline impl
-
-  inline HumonObj * HuNode::getObj() const noexcept
-    { return obj; }
-  
-
-  inline size_t HuNode::getNodeIdx() const noexcept
-    { return nodeIdx; }
-  
-
-  inline NodeType HuNode::getType() const noexcept
-    { return type; }
-
-
-  inline size_t HuNode::getFirstTokenIdx() const noexcept
-    { return firstTokenIdx; }
-
-
-  inline size_t HuNode::getNumTokens() const noexcept
-    { return numTokens; }
-
-
-  inline size_t HuNode::getParentNodeIdx() const noexcept
-    { return parentNodeIdx; }
-
-
-  inline HuNode const & HuNode::getParentNode() const noexcept
-    { return obj->getNode(parentNodeIdx); }
-
-
-  inline HuNode & HuNode::getParentNode() noexcept
-    { return obj->getNode(parentNodeIdx); }
-
-
-  inline size_t HuNode::getNumChildren() const noexcept
-  {
-    return childNodeIdxs.size();
-  }
-
-
-  inline size_t HuNode::getChildNodeIdx(size_t idx) const noexcept
-  {
-    return childNodeIdxs[idx];
-  }
-
-
-  inline HuNode const & HuNode::getChildNode(size_t idx) const noexcept
-  {
-    return obj->getNode(childNodeIdxs[idx]);
-  }
-
-
-  inline HuNode & HuNode::getChildNode(size_t idx) noexcept
-  {
-    return obj->getNode(childNodeIdxs[idx]);
-  }
-
-
-  inline bool HuNode::hasKey() const noexcept
-  {
-    return obj->getNode(parentNodeIdx).type ==
-      NodeType::dict;
-  }
-
-
-  inline std::string_view HuNode::getKey() const noexcept
-  {
-    if (obj->getNode(parentNodeIdx).type == 
-        NodeType::dict)
-      { return obj->getToken(firstTokenIdx).value; }
-    else
-      { return {}; }
-  }
-
-
-  inline size_t HuNode::getIndex() const noexcept
-  {
-    return collectionNodeIdx;
-  }
-
-
-  inline std::string_view HuNode::getValue() const noexcept
-  {
-    if (type == NodeType::value)
-      { return obj->getToken(firstTokenIdx).value; }
-    else
-      { return {}; }
-  }
-
-
-  inline std::vector<size_t>::const_iterator
-    HuNode::begin() const noexcept
-  {
-    return childNodeIdxs.begin();
-  }
-
-
-  inline std::vector<size_t>::const_iterator
-    HuNode::end() const noexcept
-  {
-    return childNodeIdxs.end();
-  }
-
-
-  inline bool HuNode::operator %(std::string_view key) const noexcept
-  {
-    if (type == NodeType::dict)
-      { return childDictIdxs.find(std::string(key)) != childDictIdxs.end(); }
-    
-    return false;
-  }
-
-
-  template <class IntType, REQUIRES_DEF(std::is_integral<IntType>())>
-  inline bool HuNode::operator %(IntType idx) const noexcept
-  {
-    if (type == NodeType::dict || type == NodeType::list)
-      { return idx >= 0 && idx < childNodeIdxs.size(); }
-    return false;
-  }
-  
-  
-  inline HuNode const & HuNode::operator /(std::string_view key) const
-  {
-    if (type == NodeType::dict)
-    {
-      auto const & idx = childDictIdxs.find(std::string(key));
-      if (idx != childDictIdxs.end())
-        { return obj->getNode(idx->second); }
-    }
-
-    return obj->getNull();
-  }
-
-
-  template <class IntType, REQUIRES_DEF(std::is_integral<IntType>())>
-  inline HuNode const & HuNode::operator /(IntType idx) const noexcept
-  {
-    if (type == NodeType::list || type == NodeType::dict)
-    {
-      if (idx >= 0 && idx < childNodeIdxs.size())
-        { return obj->getNode(childNodeIdxs[idx]); }
-    }
-
-    return obj->getNull();
-  }
-
-
-  inline HuNode const & HuNode::nextSibling() const noexcept
-  {
-    auto const & parent = obj->getNode(parentNodeIdx);
-    if (collectionNodeIdx + 1 < parent.getNumChildren())
-      { return parent / (collectionNodeIdx + 1); }
-    
-    return obj->getNull();
-  }
-
-
-  inline HuNode::operator bool() const noexcept
-  {
-    return obj != nullptr;
-  }
 }
+
+
+#include "impl/node.inl"
+#include "impl/trove.inl"
+#include "impl/tokenize.inl"
+#include "impl/parse.inl"

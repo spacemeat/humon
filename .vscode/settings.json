@@ -45,7 +45,18 @@
     "stdexcept": "cpp",
     "streambuf": "cpp",
     "typeinfo": "cpp",
-    "variant": "cpp"
+    "variant": "cpp",
+    "cstring": "cpp",
+    "chrono": "cpp",
+    "condition_variable": "cpp",
+    "ctime": "cpp",
+    "list": "cpp",
+    "map": "cpp",
+    "ratio": "cpp",
+    "mutex": "cpp",
+    "thread": "cpp",
+    "cinttypes": "cpp",
+    "charconv": "cpp"
   },
   "C_Cpp.errorSquiggles": "Enabled"
 }
