@@ -1,5 +1,6 @@
 #pragma once
 
+#include "humon2c.h"
 #include <string>
 #include <vector>
 #include <optional>
@@ -11,7 +12,7 @@
 
 
 namespace humon
-{  
+{
   enum class NodeKind
   {
     null,    
@@ -227,30 +228,32 @@ namespace humon
     inline idx_t getNodeIdx() const noexcept;
     inline NodeKind getKind() const noexcept;
 
+    // All comments and annotations are included. Everything in a humon file belongs to a node.
     inline idx_t getFirstTokenIdx() const noexcept;
     inline idx_t getNumTokens() const noexcept;
 
-    inline idx_t getCollectionIdx() const noexcept; // TODO: kill?
+    inline idx_t getChildIdx() const noexcept;
     inline idx_t getParentNodeIdx() const noexcept;
     inline Node<T> const & getParentNode() const noexcept;
     inline Node<T> & getParentNode() noexcept;
+
     inline idx_t getNumChildren() const noexcept;
-    inline idx_t getChildNodeIdx(idx_t idx) const noexcept;
-    inline Node<T> const & getChildNode(idx_t idx) const noexcept;
-    inline Node<T> & getChildNode(idx_t idx) noexcept;
+    inline idx_t getChildNodeIdx(idx_t childIdx) const noexcept;
+    inline Node<T> const & getChildNode(idx_t childIdx) const noexcept;
+    inline Node<T> & getChildNode(idx_t childIdx) noexcept;
 
     inline bool hasKey() const noexcept;
     inline std::string_view getKey() const noexcept;
-
-    inline idx_t getIndex() const noexcept;
 
     inline std::string_view getValue() const noexcept;
 
     inline typename std::vector<idx_t>::const_iterator begin() const noexcept;
     inline typename std::vector<idx_t>::const_iterator end() const noexcept;
 
+    // return "this node is a dict and contains this key"
     inline bool operator %(std::string_view key) const noexcept;
 
+    // return "this node is a dict or list and contains a node at this index"
     template <class IntType, 
       typename std::enable_if<
         std::is_integral<IntType>::value, IntType>::type * = nullptr>
@@ -263,11 +266,15 @@ namespace humon
         std::is_integral<IntType>::value, IntType>::type * = nullptr>
     inline Node<T> const & operator /(IntType idx) const noexcept;
 
+    // Lets you say:
+    // auto sv = valueNode / h::value<string_view> {};
+    // auto f = valueNode / h::value<float> {};
     template <class U>
     inline U operator /(value<U> ve) const noexcept;
 
     inline Node<T> const & nextSibling() const noexcept;
 
+    // Is this a valid node?
     inline operator bool() const noexcept;
 
     // mutators for internal Humon use only
@@ -276,9 +283,9 @@ namespace humon
     void _setNumTokens(idx_t numTokens) noexcept;
     void _setKind(NodeKind kind);
     void _setParentNodeIdx(idx_t parentNodeIdx);
-    void _setCollectionIdx(idx_t collectionIdx);
+    void _setChildIdx(idx_t childIdx);
     void _addChildNodeIdx(idx_t newChildIdx);
-    void _setCollectionAppendTokenIdx(idx_t appendIdx) noexcept;
+    void _setChildAppendTokenIdx(idx_t appendIdx) noexcept;
     void _setAnnotation(std::string_view key, idx_t valueIdx);
     void _setAnnotationAppendTokenIdx(idx_t appendIdx) noexcept;
 
@@ -294,15 +301,15 @@ namespace humon
     idx_t firstTokenIdx = nullIdx;
     idx_t numTokens = 0;
 
-    idx_t collectionIdx = nullIdx;
+    idx_t childIdx = nullIdx;
     idx_t parentNodeIdx = nullIdx;
-    idx_t collectionAppendTokenIdx = nullIdx;
+    idx_t childAppendTokenIdx = nullIdx;
     idx_t annotationAppendTokenIdx = nullIdx;
 
     NodeKind kind = NodeKind::null;
     std::vector<idx_t> childNodeIdxs;
-    mutable std::unordered_map<std::string, idx_t> childDictIdxs;
-    std::unordered_map<std::string, idx_t> annotationTokenIdxs;
+    mutable std::unordered_map<std::string_view, idx_t> childDictIdxs;
+    std::unordered_map<std::string_view, idx_t> annotationTokenIdxs;
   };
 
 

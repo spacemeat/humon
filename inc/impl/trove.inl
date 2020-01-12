@@ -2,8 +2,8 @@
 
 // This #include won't resolve because this file is actually inclued from humon2.h, but it's nice for the editor.
 #include <sstream>
-#include "humon2.h"
-#include "fmt/core.h"
+#include "humon2cpp.h"
+#include <fmt/core.h>
 #include "ansiTerm.h"
 
 

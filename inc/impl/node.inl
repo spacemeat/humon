@@ -1,7 +1,7 @@
 #pragma once
 
 // This #include won't resolve because this file is actually inclued from humon2.h, but it's nice for the editor.
-#include "humon2.h"
+#include "humon2cpp.h"
 #include "fmt/core.h"
 #include "ansiTerm.h"
 
@@ -54,91 +54,6 @@ R"(
 
 
   template <typename T>
-  void Node<T>::_setKeyIdx(idx_t idx) noexcept
-  {
-    keyIdx = idx;
-  }
-
-
-  template <typename T>
-  void Node<T>::_setFirstTokenIdx(idx_t idx) noexcept
-  {
-    firstTokenIdx = idx;
-  }
-
-
-  template <typename T>
-  void Node<T>::_setNumTokens(idx_t numTokens) noexcept
-  {
-    this->numTokens = numTokens;
-  }
-
-
-  template <typename T>
-  void Node<T>::_setKind(NodeKind kind)
-  {
-    this->kind = kind;
-  }
-
-
-  template <typename T>
-  void Node<T>::_setParentNodeIdx(idx_t parentNodeIdx)
-  {
-    this->parentNodeIdx = parentNodeIdx;
-  }
-
-
-  template <typename T>
-  void Node<T>::_setCollectionIdx(idx_t collectionIdx)
-  {
-    this->collectionIdx = collectionIdx;
-  }
-
-
-  template <typename T>
-  void Node<T>::_addChildNodeIdx(idx_t newChildIdx)
-  {
-    childNodeIdxs.push_back(newChildIdx);
-  }
-
-
-  template <typename T>
-  void Node<T>::_setCollectionAppendTokenIdx(idx_t appendIdx) noexcept
-  {
-    collectionAppendTokenIdx = appendIdx;
-  }
-
-
-  template <typename T>
-  void Node<T>::_setAnnotation(std::string_view key, idx_t valueIdx)
-  {
-    annotationTokenIdxs.emplace(key, valueIdx);
-  }
-
-
-  template <typename T>
-  void Node<T>::_setAnnotationAppendTokenIdx(idx_t appendIdx) noexcept
-  {
-    annotationAppendTokenIdx = appendIdx;
-  }
-
-
-  template <typename T>
-  void Node<T>::ensureKeysMapped() const
-  {
-    if (childDictIdxs.size() == 0)
-    {
-      for (auto chIdx : childNodeIdxs)
-      {
-        auto & chNode = trove->getNode(chIdx);
-        auto key = chNode.getKey();
-        childDictIdxs.emplace(key, chIdx);
-      }
-    }
-  }
-
-
-  template <typename T>
   inline Trove<T> * Node<T>::getObj() const noexcept
     { return trove; }
   
@@ -164,8 +79,8 @@ R"(
 
 
   template <typename T>
-  inline typename Node<T>::idx_t Node<T>::getCollectionIdx() const noexcept
-    { return collectionIdx; }
+  inline typename Node<T>::idx_t Node<T>::getChildIdx() const noexcept
+    { return childIdx; }
     
 
   template <typename T>
@@ -230,13 +145,6 @@ R"(
 
 
   template <typename T>
-  inline typename Node<T>::idx_t Node<T>::getIndex() const noexcept
-  {
-    return collectionIdx;
-  }
-
-
-  template <typename T>
   inline std::string_view Node<T>::getValue() const noexcept
   {
     if (kind == NodeKind::value)
@@ -268,7 +176,7 @@ R"(
     ensureKeysMapped();
 
     if (kind == NodeKind::dict)
-      { return childDictIdxs.find(std::string(key)) != childDictIdxs.end(); }
+      { return childDictIdxs.find(key) != childDictIdxs.end(); }
     
     return false;
   }
@@ -278,7 +186,6 @@ R"(
   template <class IntType, 
     typename std::enable_if<
     std::is_integral<IntType>::value, IntType>::type *>
-
   inline bool Node<T>::operator %(IntType idx) const noexcept
   {
     auto idxc = static_cast<idx_t>(idx);
@@ -295,7 +202,7 @@ R"(
     ensureKeysMapped();
     if (kind == NodeKind::dict)
     {
-      auto idx = childDictIdxs.find(std::string(key));
+      auto idx = childDictIdxs.find(key);
       if (idx != childDictIdxs.end())
         { return trove->getNode(idx->second); }
     }
@@ -338,8 +245,8 @@ R"(
   inline Node<T> const & Node<T>::nextSibling() const noexcept
   {
     auto const & parent = trove->getNode(parentNodeIdx);
-    if (collectionIdx + 1 < parent.getNumChildren())
-      { return parent / (collectionIdx + 1); }
+    if (childIdx + 1 < parent.getNumChildren())
+      { return parent / (childIdx + 1); }
     
     return trove->getNull();
   }
@@ -349,5 +256,89 @@ R"(
   inline Node<T>::operator bool() const noexcept
   {
     return trove != nullptr;
+  }
+
+  template <typename T>
+  void Node<T>::_setKeyIdx(idx_t idx) noexcept
+  {
+    keyIdx = idx;
+  }
+
+
+  template <typename T>
+  void Node<T>::_setFirstTokenIdx(idx_t idx) noexcept
+  {
+    firstTokenIdx = idx;
+  }
+
+
+  template <typename T>
+  void Node<T>::_setNumTokens(idx_t numTokens) noexcept
+  {
+    this->numTokens = numTokens;
+  }
+
+
+  template <typename T>
+  void Node<T>::_setKind(NodeKind kind)
+  {
+    this->kind = kind;
+  }
+
+
+  template <typename T>
+  void Node<T>::_setParentNodeIdx(idx_t parentNodeIdx)
+  {
+    this->parentNodeIdx = parentNodeIdx;
+  }
+
+
+  template <typename T>
+  void Node<T>::_setChildIdx(idx_t childIdx)
+  {
+    this->childIdx = childIdx;
+  }
+
+
+  template <typename T>
+  void Node<T>::_addChildNodeIdx(idx_t newChildIdx)
+  {
+    childNodeIdxs.push_back(newChildIdx);
+  }
+
+
+  template <typename T>
+  void Node<T>::_setChildAppendTokenIdx(idx_t appendIdx) noexcept
+  {
+    childAppendTokenIdx = appendIdx;
+  }
+
+
+  template <typename T>
+  void Node<T>::_setAnnotation(std::string_view key, idx_t valueIdx)
+  {
+    annotationTokenIdxs.emplace(key, valueIdx);
+  }
+
+
+  template <typename T>
+  void Node<T>::_setAnnotationAppendTokenIdx(idx_t appendIdx) noexcept
+  {
+    annotationAppendTokenIdx = appendIdx;
+  }
+
+
+  template <typename T>
+  void Node<T>::ensureKeysMapped() const
+  {
+    if (childDictIdxs.size() == 0)
+    {
+      for (auto chIdx : childNodeIdxs)
+      {
+        auto & chNode = trove->getNode(chIdx);
+        auto key = chNode.getKey();
+        childDictIdxs.emplace(key, chIdx);
+      }
+    }
   }
 }
