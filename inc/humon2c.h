@@ -11,48 +11,28 @@ extern "C"
   typedef struct huVector
   {
     void * buffer;
-    int size;
-    int capacity;
+    int elementSize;
+    int numElements;
+    int elementCapacity;
   } huVector_t;
 
-  void huInitVector(huVector_t * vector);
-
-  void huDestroyVector(huVector_t * vector);
-
-  void huResetVector(huVector_t * vector);
-
-  void huGrowVector(huVector_t * vector, int numBytes);
-
+  int huGetVectorSize(huVector_t * vector);
+  void * huGetElement(huVector_t * vector, int idx);
 
   enum huTokenKind
   {
     HU_TOKENKIND_EOF,
-    HU_TOKENKIND_STARTDICT,
-    HU_TOKENKIND_ENDDICT,
     HU_TOKENKIND_STARTLIST,
     HU_TOKENKIND_ENDLIST,
+    HU_TOKENKIND_STARTDICT,
+    HU_TOKENKIND_ENDDICT,
     HU_TOKENKIND_KEYVALUESEP,
     HU_TOKENKIND_ANNOTATE,
     HU_TOKENKIND_WORD,
     HU_TOKENKIND_COMMENT
   };
 
-  char const * huTokenKindToString(int rhs)
-  {
-    switch(rhs)
-    {
-    case HU_TOKENKIND_EOF: return "eof";
-    case HU_TOKENKIND_STARTDICT: return "startDict";
-    case HU_TOKENKIND_ENDDICT: return "endDict";
-    case HU_TOKENKIND_STARTLIST: return "startList";
-    case HU_TOKENKIND_ENDLIST: return "endList";
-    case HU_TOKENKIND_KEYVALUESEP: return "keyValueSep";
-    case HU_TOKENKIND_ANNOTATE: return "annotate";
-    case HU_TOKENKIND_WORD: return "word";
-    case HU_TOKENKIND_COMMENT: return "comment";
-    default: return "!!unknown!!";
-    }
-  }
+  char const * huTokenKindToString(int rhs);
 
 
   enum huNodeKind
@@ -65,19 +45,7 @@ extern "C"
     HU_NODEKIND_COMMENT
   };
 
-  char const * huNodeKindToString(int rhs)
-  {
-    switch(rhs)
-    {
-    case HU_NODEKIND_NULL: return "null";
-    case HU_NODEKIND_ERROR: return "error";
-    case HU_NODEKIND_LIST: return "list";
-    case HU_NODEKIND_DICT: return "dict";
-    case HU_NODEKIND_VALUE: return "value";
-    case HU_NODEKIND_COMMENT: return "comment";
-    default: return "!!unknown!!";
-    }
-  }
+  char const * huNodeKindToString(int rhs);
 
 
   enum huOutputFormat
@@ -87,17 +55,17 @@ extern "C"
     HU_OUTPUTFORMAT_PRETTY
   };
 
-  char const * huOutputFormatToString(int rhs)
-  {
-    switch(rhs)
-    {
-    case HU_OUTPUTFORMAT_PRESERVED: return "preserved";
-    case HU_OUTPUTFORMAT_MINIMAL: return "minimal";
-    case HU_OUTPUTFORMAT_PRETTY: return "pretty";
-    default: return "!!unknown!!";
-    }
-  }
+  char const * huOutputFormatToString(int rhs);
 
+
+  enum huErrorCode
+  {
+    HU_ERROR_UNEXPECTED_EOF,
+    HU_ERROR_SYNTAX_ERROR,
+    HU_ERROR_START_END_MISMATCH
+  };
+
+  char const * huOutputErrorToString(int rhs);
 
   typedef struct huSubstring
   {
@@ -124,16 +92,25 @@ extern "C"
 
   typedef struct huDictEntry
   {
-    huStringView_t key;
+    huToken_t * key;
     int idx;
   } huDictEntry_t;
 
 
-  typedef struct huAnnotationEntry
+  typedef struct huAnnotation
   {
-    int keyTokenIdx;
-    int valueTokenIdx;
-  } huAnnotationEntry_t;
+    huToken_t * key;
+    huToken_t * value;
+  } huAnnotation_t;
+
+
+  typedef struct huNode huNode_t;
+
+  typedef struct huComment
+  {
+    huToken_t * comment;
+    huNode_t * owner; // NULL = trove
+  } huComment_t;
 
 
   typedef struct huTrove huTrove_t;
@@ -145,34 +122,24 @@ extern "C"
     int nodeIdx;
     int kind;
 
-    int keyTokenIdx;
+    huToken_t * firstToken;
+    huToken_t * lastToken;
 
-    int firstTokenIdx;
-    int numTokens;
+    huToken_t * keyToken;
+    huToken_t * valueToken;
 
-    int valueTokenIdx;
+    int childIdx;   // Among its siblings, to its parent.
 
-    int childIdx;
     int parentNodeIdx;
-    int childAppendTokenIdx;
-    int annotationAppendTokenIdx;
 
-    int numChildren;
-    int * childNodeIdxs;
-    huDictEntry_t * childDictKeys;
-
-    int numAnnotations;
-    huAnnotationEntry_t * annotations;
-
-    int numComments;
-    huSubstring_t * comments;
+    huVector_t childNodeIdxs;   // int []
+    huVector_t childDictKeys;   // huDictEntry_t []
+    huVector_t annotations;     // huAnnotationEntry_t []
+    huVector_t comments;   // huComment_t []
   } huNode_t;
 
-  void huInitNode(huNode_t * node);
-  void huResetNode(huNode_t * node);
-  void huDestroyNode(huNode_t * node);
-
   huNode_t * huGetParentNode(huNode_t * node);
+  int huGetNumChildren(huNode_t * node);
   huNode_t * huGetChildNodeByIndex(huNode_t * node, int childIdx);
   huNode_t * huGetChildNodeByKey(huNode_t * node, char const * key);
 
@@ -183,11 +150,17 @@ extern "C"
   huToken_t * huGetValue(huNode_t * node);
   huNode_t * huNextSibling(huNode_t * node);
 
+  int huGetNumAnnotations(huNode_t * node);
+  huAnnotation_t * huGetAnnotation(huNode_t * node, int errorIdx);
+  
+  int huGetNumComments(huNode_t * node);
+  huComment_t * huGetComment(huNode_t * node, int errorIdx);
+  
+
   typedef struct huError
   {
-    char const * msg;
-    int line;
-    int col;
+    int errorCode;
+    huToken_t * errorToken;
   } huError_t;
 
 
@@ -202,28 +175,33 @@ extern "C"
     huVector_t errors;
     int inputTabSize; // for error column #s mostly
     int outputTabSize;
+    huVector_t annotations;     // huAnnotationEntry_t []
+    huVector_t comments;   // huToken_t * []
   } huTrove_t;
 
 
-  int huMakeTroveFromString(char const * name, char const * data, int inputTabSize, int outputTabSize, huTrove_t ** dst);
-  int huMakeTroveFromFile(char const * name, FILE * fp, int inputTabSize, int outputTabSize, huTrove_t ** dst);
+  huTrove_t * huMakeTroveFromString(char const * name, char const * data, int inputTabSize, int outputTabSize);
+
+  huTrove_t * huMakeTroveFromFile(char const * name, FILE * fp, int inputTabSize, int outputTabSize);
 
   void huDestroyTrove(huTrove_t * trove);
 
+  int huGetNumTokens(huTrove_t * trove);
   huToken_t * huGetToken(huTrove_t * trove, int tokenIdx);
-  huToken_t * huAllocNewToken(huTrove_t * trove, int tokenKind, char const * str, int size, int line, int col);
 
+  int huGetNumNodes(huTrove_t * trove);
   huNode_t * huGetRootNode(huTrove_t * trove);
   huNode_t * huGetNode(huTrove_t * trove, int nodeIdx);
-  huNode_t * huAllocNewNode(huTrove_t * trove);
+
+  int huGetNumErrors(huTrove_t * trove);
+  huError_t * huGetError(huTrove_t * trove, int errorIdx);
+
+  int huGetNumTroveComments(huTrove_t * trove);
+  huError_t * huGetTroveComment(huTrove_t * trove, int errorIdx);
   
   // User must free(*serializedTrove);
   int huTroveToString(huTrove_t * trove, int outputFormat, bool includeComments, char ** serializedTrove);
   int huTroveToFile(huTrove_t * trove, int outputFormat, bool includeComments, FILE * fp);
-
-  void huTokenizeTrove(huTrove_t * trove);
-  void huParseTrove(huTrove_t * trove);
-  
 
 
 #ifdef __cplusplus
