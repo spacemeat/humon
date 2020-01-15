@@ -110,15 +110,14 @@ void * huGrowVector(huVector_t * vector, int numElements)
   }
   else
   {
-    numElements += vector->numElements;
+    vector->numElements += numElements;
     int cap = vector->elementCapacity;
-    while (numElements > cap)
+    while (vector->numElements > cap)
       { cap *= 2; }
 
     if (cap > vector->elementCapacity)
     {
       vector->elementCapacity = cap;
-      vector->numElements = numElements;
       vector->buffer = realloc(vector->buffer, vector->elementCapacity);
     }
 

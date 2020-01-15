@@ -35,6 +35,9 @@ huTrove_t * huMakeTroveFromString(char const * name, char const * data, int inpu
   t->inputTabSize = inputTabSize;
   t->outputTabSize = outputTabSize;
 
+  huInitVector(& t->annotations, sizeof(huAnnotation_t));
+  huInitVector(& t->comments, sizeof(huComment_t));
+
   huTokenizeTrove(t);
   huParseTrove(t);
 
@@ -135,7 +138,7 @@ huToken_t * huGetToken(huTrove_t * trove, int tokenIdx)
 }
 
 
-huToken_t * huAllocNewToken(huTrove_t * trove, int tokenKind, 
+huToken_t * allocNewToken(huTrove_t * trove, int tokenKind, 
   char const * str, int size, int line, int col)
 {
   huToken_t * newToken = huGrowVector(& trove->tokens, 1);
@@ -145,6 +148,11 @@ huToken_t * huAllocNewToken(huTrove_t * trove, int tokenKind,
   newToken->value.size = size;
   newToken->line = line;
   newToken->col = col;
+
+  printf ("token: line: %d  col: %d  len: %d  %s\n",
+    line, col, size, huTokenKindToString(tokenKind));
+  
+  printf ("  (numTokens: %d)\n", trove->tokens.numElements);
 
   return newToken;
 }
@@ -171,13 +179,51 @@ huNode_t * huGetNode(huTrove_t * trove, int nodeIdx)
 }
 
 
-huNode_t * huAllocNewNode(huTrove_t * trove, huToken_t * firstToken)
+int huGetNumErrors(huTrove_t * trove)
+{
+  return trove->errors.numElements;
+}
+
+
+huError_t * huGetError(huTrove_t * trove, int errorIdx)
+{
+  if (errorIdx < huGetNumErrors(trove))
+  {
+    return (huError_t *) trove->errors.buffer + errorIdx;
+  }
+
+  return NULL;
+}
+
+
+int huGetNumTroveComments(huTrove_t * trove)
+{
+  return trove->comments.numElements;
+}
+
+
+huError_t * huGetTroveComment(huTrove_t * trove, int commentIdx)
+{
+  if (commentIdx < huGetNumTroveComments(trove))
+  {
+    return (huError_t *) trove->comments.buffer + commentIdx;
+  }
+
+  return NULL;
+}
+
+
+huNode_t * allocNewNode(huTrove_t * trove, int nodeKind, huToken_t * firstToken)
 {
   huNode_t * newNode = huGrowVector(& trove->nodes, 1);
-
+  huInitNode(newNode, trove);
   int newNodeIdx = newNode - (huNode_t *) trove->nodes.buffer;
   newNode->nodeIdx = newNodeIdx;
+  newNode->kind = nodeKind;
   newNode->firstToken = firstToken;
+
+  printf ("node: nodeIdx: %d  firstToken: %d  %s\n",
+    newNodeIdx, (int)(firstToken - (huToken_t *) trove->tokens.buffer), huTokenKindToString(nodeKind));
 
   return newNode;
 }

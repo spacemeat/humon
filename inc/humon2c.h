@@ -108,7 +108,7 @@ extern "C"
 
   typedef struct huComment
   {
-    huToken_t * comment;
+    huToken_t * commentToken;
     huNode_t * owner; // NULL = trove
   } huComment_t;
 
@@ -134,7 +134,7 @@ extern "C"
 
     huVector_t childNodeIdxs;   // int []
     huVector_t childDictKeys;   // huDictEntry_t []
-    huVector_t annotations;     // huAnnotationEntry_t []
+    huVector_t annotations;     // huAnnotation_t []
     huVector_t comments;   // huComment_t []
   } huNode_t;
 
@@ -151,10 +151,10 @@ extern "C"
   huNode_t * huNextSibling(huNode_t * node);
 
   int huGetNumAnnotations(huNode_t * node);
-  huAnnotation_t * huGetAnnotation(huNode_t * node, int errorIdx);
+  huAnnotation_t * huGetAnnotation(huNode_t * node, int annotationIdx);
   
   int huGetNumComments(huNode_t * node);
-  huComment_t * huGetComment(huNode_t * node, int errorIdx);
+  huComment_t * huGetComment(huNode_t * node, int commentIdx);
   
 
   typedef struct huError
@@ -175,8 +175,8 @@ extern "C"
     huVector_t errors;
     int inputTabSize; // for error column #s mostly
     int outputTabSize;
-    huVector_t annotations;     // huAnnotationEntry_t []
-    huVector_t comments;   // huToken_t * []
+    huVector_t annotations;     // huAnnotation_t []
+    huVector_t comments;   // huComment_t[]
   } huTrove_t;
 
 

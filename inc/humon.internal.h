@@ -17,14 +17,13 @@ extern "C"
   void huResetNode(huNode_t * node);
   void huDestroyNode(huNode_t * node);
 
-  huToken_t * huAllocNewToken(huTrove_t * trove, int tokenKind, char const * str, int size, int line, int col);
+  huToken_t * allocNewToken(huTrove_t * trove, int tokenKind, char const * str, int size, int line, int col);
 
-  huNode_t * huAllocNewNode(huTrove_t * trove, huToken_t * firstToken);
+  huNode_t * allocNewNode(huTrove_t * trove, int nodeKind, huToken_t * firstToken);
 
   void huTokenizeTrove(huTrove_t * trove);
   void huParseTrove(huTrove_t * trove);
   
-
 
 #ifdef __cplusplus
 } // extern "C"

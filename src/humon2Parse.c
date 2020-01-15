@@ -1,7 +1,7 @@
 #include "humon.internal.h"
 
 
-void huRecordError(huTrove_t * trove, int errorCode, huToken_t * pCur)
+void recordError(huTrove_t * trove, int errorCode, huToken_t * pCur)
 {
   huError_t * error = huGrowVector(& trove->errors, 1);
   error->errorCode = errorCode;
@@ -9,27 +9,27 @@ void huRecordError(huTrove_t * trove, int errorCode, huToken_t * pCur)
 }
 
 
-void huAssignComment(huNode_t * owner, huToken_t * pCurrentToken)
+void assignComment(huNode_t * owner, huToken_t * pCurrentToken)
 {
   huComment_t * comment = huGrowVector(& owner->comments, 1);
-  comment->comment = pCurrentToken;
+  comment->commentToken = pCurrentToken;
   comment->owner = owner;
 }
 
 
-void huEnqueueComment(huVector_t * commentQueue, huToken_t * comment)
+void enqueueComment(huVector_t * commentQueue, huToken_t * comment)
 {
   huToken_t ** newComment = huGrowVector(commentQueue, 1);
   * newComment = comment;
 }
 
 
-void huAssignEnqueuedComments(huVector_t * commentQueue, huVector_t * commentVector, huNode_t * owner)
+void assignEnqueuedComments(huVector_t * commentQueue, huVector_t * commentVector, huNode_t * owner)
 {
   huComment_t * commentObj = huGrowVector(commentVector, commentQueue->numElements);
   for (int i = 0; i < commentQueue->numElements; ++i)
   {
-    (commentObj + i)->comment = 
+    (commentObj + i)->commentToken = 
       * ((huToken_t **) commentQueue->buffer + i);
     (commentObj + i)->owner = owner;
   }
@@ -37,20 +37,20 @@ void huAssignEnqueuedComments(huVector_t * commentQueue, huVector_t * commentVec
 }
 
 
-void huAssignSameLineComments(huNode_t * node, huToken_t ** ppCur)
+void assignSameLineComments(huNode_t * node, huToken_t ** ppCur)
 {
   huToken_t * pCur = * ppCur;
 
   while (pCur->tokenKind == HU_TOKENKIND_COMMENT &&
     node->firstToken->line == pCur->line)
   { 
-    huAssignComment(node, pCur);
+    assignComment(node, pCur);
     pCur += 1;
   }
 }
 
 
-enum huAnnotationParseState
+enum annotationParseState
 {
   APS_ANTICIPATE_ANNOTATE,
   APS_EXPECT_START_OR_KEY,
@@ -63,7 +63,7 @@ enum huAnnotationParseState
 };
 
 // annotations are like @ foo: bar or @ { foo: bar baz: beer }
-void huParseAnnotations(huNode_t * owner, huToken_t ** ppCurrentToken)
+void parseAnnotations(huNode_t * owner, huToken_t ** ppCurrentToken)
 {
   huToken_t * pCur = * ppCurrentToken;
   huToken_t * key = NULL;
@@ -80,7 +80,7 @@ void huParseAnnotations(huNode_t * owner, huToken_t ** ppCurrentToken)
     switch (pCur->tokenKind)
     {
     case HU_TOKENKIND_EOF:
-      huRecordError(owner->trove, HU_ERROR_UNEXPECTED_EOF, pCur);
+      recordError(owner->trove, HU_ERROR_UNEXPECTED_EOF, pCur);
       scanning = false;
       break;
     
@@ -89,7 +89,7 @@ void huParseAnnotations(huNode_t * owner, huToken_t ** ppCurrentToken)
       break;
     
     case HU_TOKENKIND_COMMENT:
-      huAssignComment(owner, pCur);
+      assignComment(owner, pCur);
       pCur += 1;
       break;
 
@@ -101,7 +101,7 @@ void huParseAnnotations(huNode_t * owner, huToken_t ** ppCurrentToken)
       }
       else
       {
-        huRecordError(owner->trove, HU_ERROR_SYNTAX_ERROR, pCur);
+        recordError(owner->trove, HU_ERROR_SYNTAX_ERROR, pCur);
         pCur += 1;
         scanning = false;
       }
@@ -116,7 +116,7 @@ void huParseAnnotations(huNode_t * owner, huToken_t ** ppCurrentToken)
       }
       else
       {
-        huRecordError(owner->trove, HU_ERROR_SYNTAX_ERROR, pCur);
+        recordError(owner->trove, HU_ERROR_SYNTAX_ERROR, pCur);
         pCur += 1;
         scanning = false;
       }
@@ -130,7 +130,7 @@ void huParseAnnotations(huNode_t * owner, huToken_t ** ppCurrentToken)
       }
       else
       {
-        huRecordError(owner->trove, HU_ERROR_SYNTAX_ERROR, pCur);
+        recordError(owner->trove, HU_ERROR_SYNTAX_ERROR, pCur);
         pCur += 1;
         scanning = false;
       }
@@ -178,7 +178,7 @@ void huParseAnnotations(huNode_t * owner, huToken_t ** ppCurrentToken)
 }
 
 
-enum huParseState
+enum parseState
 {
   PS_TOP_LEVEL_EXPECT_START_OR_VALUE,
   PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END,
@@ -189,21 +189,29 @@ enum huParseState
 };
 
 
-huNode_t * huParseTroveRecursive(huTrove_t * trove, huToken_t ** ppCurrentToken, huNode_t * parentNode, int state, huVector_t * commentQueue)
+int depth = 0;
+
+huNode_t * parseTroveRecursive(huTrove_t * trove, huToken_t ** ppCurrentToken, huNode_t * parentNode, int state, huVector_t * commentQueue)
 {
+  depth += 1;
+
   huToken_t * pCur = * ppCurrentToken;
   huNode_t * parsedNode = NULL;
 
   bool scanning = true;
   while (scanning)
   {
+    printf("parent: %d  depth: %d  state: %d  currentToken: %s\n",
+      parentNode ? parentNode->nodeIdx : -1, depth, state, 
+      huTokenKindToString(pCur->tokenKind));
     switch (pCur->tokenKind)
     {
     case HU_TOKENKIND_EOF:
-      if (state == PS_DONE)
+      if (state == PS_TOP_LEVEL_EXPECT_START_OR_VALUE ||
+          state == PS_DONE)
       {
         scanning = false;
-        huAssignEnqueuedComments(commentQueue, & trove->comments, NULL);
+        assignEnqueuedComments(commentQueue, & trove->comments, NULL);
       }
       break;
 
@@ -216,15 +224,14 @@ huNode_t * huParseTroveRecursive(huTrove_t * trove, huToken_t ** ppCurrentToken,
           { state = PS_DONE; }
         pCur += 1;
 
-        huNode_t * newNode = huAllocNewNode(trove, pCur);
-        newNode->kind = HU_NODEKIND_LIST;
+        huNode_t * newNode = allocNewNode(trove, HU_NODEKIND_LIST, pCur);
         int newNodeIdx = newNode->nodeIdx;
 
-        huAssignEnqueuedComments(commentQueue, & newNode->comments, newNode);
-        huAssignSameLineComments(newNode, & pCur);
-        huParseAnnotations(newNode, & pCur);
+        assignEnqueuedComments(commentQueue, & newNode->comments, newNode);
+        assignSameLineComments(newNode, & pCur);
+        parseAnnotations(newNode, & pCur);
 
-        huNode_t * childNode = huParseTroveRecursive(trove, & pCur, 
+        huNode_t * childNode = parseTroveRecursive(trove, & pCur, 
           newNode, PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END, commentQueue);
         // Here we recompute newNode, just in case the above call reallocated trove->nodes.
         newNode = (huNode_t *) trove->nodes.buffer + newNodeIdx;
@@ -236,7 +243,7 @@ huNode_t * huParseTroveRecursive(huTrove_t * trove, huToken_t ** ppCurrentToken,
       }
       else
       {
-        huRecordError(trove, HU_ERROR_SYNTAX_ERROR, pCur);
+        recordError(trove, HU_ERROR_SYNTAX_ERROR, pCur);
         pCur += 1;
         scanning = false;
       }
@@ -249,13 +256,13 @@ huNode_t * huParseTroveRecursive(huTrove_t * trove, huToken_t ** ppCurrentToken,
         parsedNode = parentNode;
         scanning = false;
 
-        huAssignEnqueuedComments(commentQueue, & parentNode->comments, parentNode);
-        huAssignSameLineComments(parentNode, & pCur);
-        huParseAnnotations(parentNode, & pCur);
+        assignEnqueuedComments(commentQueue, & parentNode->comments, parentNode);
+        assignSameLineComments(parentNode, & pCur);
+        parseAnnotations(parentNode, & pCur);
       }
       else
       {
-        huRecordError(trove, HU_ERROR_START_END_MISMATCH, pCur);
+        recordError(trove, HU_ERROR_START_END_MISMATCH, pCur);
         pCur += 1;
         scanning = false;
       }      
@@ -270,15 +277,14 @@ huNode_t * huParseTroveRecursive(huTrove_t * trove, huToken_t ** ppCurrentToken,
           { state = PS_DONE; }
         pCur += 1;
 
-        huNode_t * newNode = huAllocNewNode(trove, pCur);
-        newNode->kind = HU_NODEKIND_DICT;
+        huNode_t * newNode = allocNewNode(trove, HU_NODEKIND_DICT, pCur);
         int newNodeIdx = newNode->nodeIdx;
 
-        huAssignEnqueuedComments(commentQueue, & newNode->comments, newNode);
-        huAssignSameLineComments(newNode, & pCur);
-        huParseAnnotations(newNode, & pCur);
+        assignEnqueuedComments(commentQueue, & newNode->comments, newNode);
+        assignSameLineComments(newNode, & pCur);
+        parseAnnotations(newNode, & pCur);
 
-        huNode_t * childNode = huParseTroveRecursive(trove, & pCur, 
+        huNode_t * childNode = parseTroveRecursive(trove, & pCur, 
           newNode, PS_IN_DICT_EXPECT_START_OR_VALUE, commentQueue);
         // Here we recompute newNode, just in case the above call reallocated trove->nodes.
         newNode = (huNode_t *) trove->nodes.buffer + newNodeIdx;
@@ -296,7 +302,7 @@ huNode_t * huParseTroveRecursive(huTrove_t * trove, huToken_t ** ppCurrentToken,
       }
       else
       {
-        huRecordError(trove, HU_ERROR_SYNTAX_ERROR, pCur);
+        recordError(trove, HU_ERROR_SYNTAX_ERROR, pCur);
         pCur += 1;
         scanning = false;
       }      
@@ -309,13 +315,13 @@ huNode_t * huParseTroveRecursive(huTrove_t * trove, huToken_t ** ppCurrentToken,
         parsedNode = parentNode;
         scanning = false;
 
-        huAssignEnqueuedComments(commentQueue, & parentNode->comments, parentNode);
-        huAssignSameLineComments(parentNode, & pCur);
-        huParseAnnotations(parentNode, & pCur);
+        assignEnqueuedComments(commentQueue, & parentNode->comments, parentNode);
+        assignSameLineComments(parentNode, & pCur);
+        parseAnnotations(parentNode, & pCur);
       }
       else
       {
-        huRecordError(trove, HU_ERROR_START_END_MISMATCH, pCur);
+        recordError(trove, HU_ERROR_START_END_MISMATCH, pCur);
         pCur += 1;
         scanning = false;
       }      
@@ -328,11 +334,11 @@ huNode_t * huParseTroveRecursive(huTrove_t * trove, huToken_t ** ppCurrentToken,
         pCur += 1;
 
         huNode_t * lastNode = (huNode_t *) trove->nodes.buffer + trove->nodes.numElements - 1;
-        huParseAnnotations(lastNode, & pCur);
+        parseAnnotations(lastNode, & pCur);
       }
       else
       {
-        huRecordError(trove, HU_ERROR_SYNTAX_ERROR, pCur);
+        recordError(trove, HU_ERROR_SYNTAX_ERROR, pCur);
         pCur += 1;
         scanning = false;
       }      
@@ -343,24 +349,22 @@ huNode_t * huParseTroveRecursive(huTrove_t * trove, huToken_t ** ppCurrentToken,
       {
         state = PS_DONE;
 
-        huNode_t * newNode = huAllocNewNode(trove, pCur);
-        newNode->kind = HU_NODEKIND_VALUE;
+        huNode_t * newNode = allocNewNode(trove, HU_NODEKIND_VALUE, pCur);
         newNode->valueToken = pCur;
         pCur += 1;
 
         parsedNode = newNode;
 
-        huAssignEnqueuedComments(commentQueue, & newNode->comments, newNode);
-        huAssignSameLineComments(newNode, & pCur);
-        huParseAnnotations(parentNode, & pCur);
+        assignEnqueuedComments(commentQueue, & newNode->comments, newNode);
+        assignSameLineComments(newNode, & pCur);
+        parseAnnotations(parentNode, & pCur);
       }
       else if (state == PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END)
       {
         // no state change
         scanning = false;
 
-        huNode_t * newNode = huAllocNewNode(trove, pCur);
-        newNode->kind = HU_NODEKIND_VALUE;
+        huNode_t * newNode = allocNewNode(trove, HU_NODEKIND_VALUE, pCur);
         newNode->valueToken = pCur;
         pCur += 1;
 
@@ -371,16 +375,15 @@ huNode_t * huParseTroveRecursive(huTrove_t * trove, huToken_t ** ppCurrentToken,
         * (int *) huGrowVector(& parentNode->childNodeIdxs, 1) = newNode->nodeIdx;
         newNode->childIdx = parentNode->childNodeIdxs.numElements - 1;
 
-        huAssignEnqueuedComments(commentQueue, & newNode->comments, newNode);
-        huAssignSameLineComments(newNode, & pCur);
-        huParseAnnotations(parentNode, & pCur);
+        assignEnqueuedComments(commentQueue, & newNode->comments, newNode);
+        assignSameLineComments(newNode, & pCur);
+        parseAnnotations(parentNode, & pCur);
       }
       else if (state == PS_IN_DICT_EXPECT_KEY_OR_END)
       {
         state = PS_IN_DICT_EXPECT_KVS;
 
-        huNode_t * newNode = huAllocNewNode(trove, pCur);
-        newNode->kind = HU_NODEKIND_VALUE;
+        huNode_t * newNode = allocNewNode(trove, HU_NODEKIND_VALUE, pCur);
         newNode->keyToken = pCur;
         pCur += 1;
 
@@ -395,9 +398,9 @@ huNode_t * huParseTroveRecursive(huTrove_t * trove, huToken_t ** ppCurrentToken,
         dictEntry->key = newNode->keyToken;
         dictEntry->idx = newNode->childIdx;
 
-        huAssignEnqueuedComments(commentQueue, & newNode->comments, newNode);
-        huAssignSameLineComments(newNode, & pCur);
-        huParseAnnotations(newNode, & pCur);
+        assignEnqueuedComments(commentQueue, & newNode->comments, newNode);
+        assignSameLineComments(newNode, & pCur);
+        parseAnnotations(newNode, & pCur);
       }
       else if (state == PS_IN_DICT_EXPECT_START_OR_VALUE)
       {
@@ -411,36 +414,38 @@ huNode_t * huParseTroveRecursive(huTrove_t * trove, huToken_t ** ppCurrentToken,
 
         parsedNode = lastNode;
 
-        huParseAnnotations(lastNode, & pCur);
+        parseAnnotations(lastNode, & pCur);
       }
       else
       {
-        huRecordError(trove, HU_ERROR_SYNTAX_ERROR, pCur);
+        recordError(trove, HU_ERROR_SYNTAX_ERROR, pCur);
         pCur += 1;
         scanning = false;
       }      
       break;
 
     case HU_TOKENKIND_COMMENT:
-      // Only whole-line comments are picked up here; 
-      huEnqueueComment(commentQueue, pCur);
+      // Only whole-line comments are picked up here *
+      enqueueComment(commentQueue, pCur);
       pCur += 1;
       break;
     }
   }
 
+  depth -= 1;
+
   return parsedNode;
 }
 
 
-void parseTrove(huTrove_t * trove)
+void huParseTrove(huTrove_t * trove)
 {
   huVector_t commentQueue;
   huInitVector(& commentQueue, sizeof(huToken_t *));
 
   huResetVector(& trove->nodes);
   huToken_t * pCur = trove->tokens.buffer;
-  huParseTroveRecursive(trove, & pCur, NULL, PS_TOP_LEVEL_EXPECT_START_OR_VALUE, & commentQueue);
+  parseTroveRecursive(trove, & pCur, NULL, PS_TOP_LEVEL_EXPECT_START_OR_VALUE, & commentQueue);
 }
 
 

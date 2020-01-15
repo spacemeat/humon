@@ -117,3 +117,27 @@ huNode_t * huNextSibling(huNode_t * node)
 
   return NULL;
 }
+
+
+int huGetNumAnnotations(huNode_t * node)
+{
+  return node->annotations.numElements;
+}
+
+
+huAnnotation_t * huGetAnnotation(huNode_t * node, int annotationIdx)
+{
+  return (huAnnotation_t *) node->annotations.buffer + annotationIdx;
+}
+
+
+int huGetNumComments(huNode_t * node)
+{
+  return node->comments.numElements;
+}
+
+
+huComment_t * huGetComment(huNode_t * node, int commentIdx)
+{
+  return (huComment_t *) node->annotations.buffer + commentIdx;
+}
