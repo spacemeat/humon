@@ -10,16 +10,19 @@ huTrove_t * huMakeTroveFromString(char const * name, char const * data, int inpu
     { return NULL; }
 
   t->nameSize = strlen(name);
-  t->name = malloc(t->nameSize);
+  t->name = malloc(t->nameSize + 1);
   if (t->name == NULL)
   {
     free(t);
     return NULL;
   }
   strncpy(t->name, name, t->nameSize);
+  t->name[t->nameSize] = '\0';
+
+  printf("%snew trove: %s%s%s\n", darkGreen, lightGreen, t->name, off);
 
   t->dataStringSize = strlen(data);
-  t->dataString = malloc(t->dataStringSize);
+  t->dataString = malloc(t->dataStringSize + 1);
   if (t->dataString == NULL)
   {
     free(t->name);
@@ -27,6 +30,7 @@ huTrove_t * huMakeTroveFromString(char const * name, char const * data, int inpu
     return NULL;
   }
   strncpy(t->dataString, data, t->dataStringSize);
+  t->dataString[t->dataStringSize] = '\0';
 
   huInitVector(& t->tokens, sizeof(huToken_t));
   huInitVector(& t->nodes, sizeof(huNode_t));
@@ -52,13 +56,14 @@ huTrove_t * huMakeTroveFromFile(char const * name, FILE * fp, int inputTabSize, 
     { return NULL; }
 
   t->nameSize = strlen(name);
-  t->name = malloc(t->nameSize);
+  t->name = malloc(t->nameSize + 1);
   if (t->name == NULL)
   {
     free(t);
     return NULL;
   }
   strncpy(t->name, name, t->nameSize);
+  t->name[t->nameSize] = '\0';
 
   if (fseek(fp, 0, SEEK_END) != 0)
   {
@@ -75,7 +80,7 @@ huTrove_t * huMakeTroveFromFile(char const * name, FILE * fp, int inputTabSize, 
     return NULL;
   }
 
-  t->dataString = malloc(t->dataStringSize);
+  t->dataString = malloc(t->dataStringSize + 1);
   if (t->dataString == NULL)
   {
     free(t->name);
@@ -92,6 +97,7 @@ huTrove_t * huMakeTroveFromFile(char const * name, FILE * fp, int inputTabSize, 
     free(t);
     return NULL;
   }
+  t->dataString[t->dataStringSize] = '\0';
 
   huInitVector(& t->tokens, sizeof(huToken_t));
   huInitVector(& t->nodes, sizeof(huNode_t));
@@ -149,11 +155,9 @@ huToken_t * allocNewToken(huTrove_t * trove, int tokenKind,
   newToken->line = line;
   newToken->col = col;
 
-  printf ("token: line: %d  col: %d  len: %d  %s\n",
-    line, col, size, huTokenKindToString(tokenKind));
+  printf ("%stoken: line: %d  col: %d  len: %d  %s%s\n",
+    darkYellow, line, col, size, huTokenKindToString(tokenKind), off);
   
-  printf ("  (numTokens: %d)\n", trove->tokens.numElements);
-
   return newToken;
 }
 
@@ -221,9 +225,11 @@ huNode_t * allocNewNode(huTrove_t * trove, int nodeKind, huToken_t * firstToken)
   newNode->nodeIdx = newNodeIdx;
   newNode->kind = nodeKind;
   newNode->firstToken = firstToken;
+  newNode->lastToken = firstToken;
 
-  printf ("node: nodeIdx: %d  firstToken: %d  %s\n",
-    newNodeIdx, (int)(firstToken - (huToken_t *) trove->tokens.buffer), huTokenKindToString(nodeKind));
+  printf ("%snode: nodeIdx: %d  firstToken: %d  %s%s\n",
+    lightCyan, newNodeIdx, (int)(firstToken - (huToken_t *) trove->tokens.buffer), 
+    huNodeKindToString(nodeKind), off);
 
   return newNode;
 }

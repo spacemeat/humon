@@ -91,7 +91,6 @@ void measureDoubleSlashComment(char const * cur, int tabSize, int * len, int * l
         * lookAhead == '\r')
     {
       * col = 1;
-      * line += 1;
     }
     else if (* lookAhead == '\t')
     {

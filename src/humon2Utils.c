@@ -104,7 +104,7 @@ void * huGrowVector(huVector_t * vector, int numElements)
 
     vector->elementCapacity = cap;
     vector->numElements = numElements;
-    vector->buffer = malloc(cap * vector->elementCapacity);
+    vector->buffer = malloc(cap * vector->elementSize);
 
     return vector->buffer;
   }
@@ -118,7 +118,7 @@ void * huGrowVector(huVector_t * vector, int numElements)
     if (cap > vector->elementCapacity)
     {
       vector->elementCapacity = cap;
-      vector->buffer = realloc(vector->buffer, vector->elementCapacity);
+      vector->buffer = realloc(vector->buffer, cap * vector->elementSize);
     }
 
     return vector->buffer + (vector->numElements - numElements) * vector->elementSize;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "humon2c.h"
+#include "ansiColors.h"
 
 #ifdef __cplusplus
 extern "C"
