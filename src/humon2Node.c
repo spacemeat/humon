@@ -63,15 +63,17 @@ huNode_t * huGetChildNodeByKey(huNode_t * node, char const * key)
 {
   huStringView_t keyView = { key, strlen(key) };
 
+  huDictEntry_t * dicts = (huDictEntry_t *) huGetElement(
+    & node->childDictKeys, 0);
   for (int i = 0; i < huGetNumChildren(node); ++i)
   {
-    huDictEntry_t * dict = (huDictEntry_t *) huGetElement(& node->childDictKeys, i);
+    huDictEntry_t * dict = dicts + i;
     int cmpsz = dict->key->value.size;
-    if (keyView.size > cmpsz)
+    if (cmpsz > keyView.size)
       { cmpsz = keyView.size; }
     if (strncmp(dict->key->value.str, key, cmpsz) == 0)
     {
-      return huGetNode(node->trove, dict->idx);
+      return huGetChildNodeByIndex(node, dict->idx);
     }
   }
 

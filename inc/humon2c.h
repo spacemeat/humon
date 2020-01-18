@@ -67,6 +67,7 @@ extern "C"
 
   char const * huOutputErrorToString(int rhs);
 
+
   typedef struct huSubstring
   {
     int loc;
@@ -164,6 +165,31 @@ extern "C"
   } huError_t;
 
 
+  enum colorKind
+  {
+    HU_COLORKIND_NONE = 0,
+    HU_COLORKIND_PUNCLIST,
+    HU_COLORKIND_PUNCDICT,
+    HU_COLORKIND_PUNCKEYVALUESEP,
+    HU_COLORKIND_PUNCANNOTATE,
+    HU_COLORKIND_PUNCANNOTATEDICT,
+    HU_COLORKIND_PUNCANNOTATEKEYVALUESEP,
+    HU_COLORKIND_KEY,
+    HU_COLORKIND_VALUE,
+    HU_COLORKIND_COMMENT,
+    HU_COLORKIND_ANNOKEY,
+    HU_COLORKIND_ANNOVALUE,
+    HU_COLORKIND_WHITESPACE,
+
+    HU_COLORKIND_NUMCOLORKINDS
+  };
+
+  typedef struct {
+    int tokenKind;
+    char const * colorCode;
+  } huColorFormatEntry_t;
+
+
   typedef struct huTrove
   {
     int nameSize;
@@ -200,7 +226,8 @@ extern "C"
   huError_t * huGetTroveComment(huTrove_t * trove, int errorIdx);
   
   // User must free(*serializedTrove);
-  int huTroveToString(huTrove_t * trove, int outputFormat, bool includeComments, char ** serializedTrove);
+  huStringView_t huTroveToString(huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colorTable);
+
   int huTroveToFile(huTrove_t * trove, int outputFormat, bool includeComments, FILE * fp);
 
 

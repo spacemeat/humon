@@ -274,18 +274,22 @@ void huTokenizeTrove(struct huTrove * trove)
 
   char const * beg = trove->dataString;
   char const * cur = beg;
-  int line = 0;
-  int col = 0;
-  while (*cur != '\0')
+  int line = 1;
+  int col = 1;
+  bool scanning = true;
+  while (scanning)
   {
     eatWs(& cur, trove->inputTabSize, & line, & col);
     int len = 0;
     int lineM = line;
     int colM = col;
     
-    switch(*cur)
+    switch(* cur)
     {
-    case '\0': break;
+    case '\0':
+      allocNewToken(trove, HU_TOKENKIND_EOF, cur, 0, line, col);
+      scanning = false;
+      break;
     case '{':
       allocNewToken(trove, HU_TOKENKIND_STARTDICT, cur, 1, line, col);
       cur += 1;
@@ -373,7 +377,5 @@ void huTokenizeTrove(struct huTrove * trove)
       break;
     }
   }
-
-  allocNewToken(trove, HU_TOKENKIND_EOF, cur, 1, line, col);
 }
 

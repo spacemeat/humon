@@ -3,7 +3,7 @@
 #include "humon.internal.h"
 
 
-huTrove_t * huMakeTroveFromString(char const * name, char const * data, int inputTabSize, int outputTabSize)
+huTrove_t * makeTrove(char const * name, huStringView_t * data, int inputTabSize, int outputTabSize)
 {
   huTrove_t * t = malloc(sizeof(huTrove_t));
   if (t == NULL)
@@ -19,18 +19,18 @@ huTrove_t * huMakeTroveFromString(char const * name, char const * data, int inpu
   strncpy(t->name, name, t->nameSize);
   t->name[t->nameSize] = '\0';
 
-  printf("%snew trove: %s%s%s\n", darkGreen, lightGreen, t->name, off);
-
-  t->dataStringSize = strlen(data);
-  t->dataString = malloc(t->dataStringSize + 1);
+  t->dataStringSize = data->size;
+  t->dataString = malloc(data->size + 1);
   if (t->dataString == NULL)
   {
     free(t->name);
     free(t);
     return NULL;
   }
-  strncpy(t->dataString, data, t->dataStringSize);
-  t->dataString[t->dataStringSize] = '\0';
+  strncpy(t->dataString, data->str, data->size);
+  t->dataString[data->size] = '\0';
+
+  printf("\n%snew trove: %s%s\n%s%s%s\n", darkGreen, lightGreen, t->name, lightYellow, t->dataString, off);
 
   huInitVector(& t->tokens, sizeof(huToken_t));
   huInitVector(& t->nodes, sizeof(huNode_t));
@@ -45,71 +45,77 @@ huTrove_t * huMakeTroveFromString(char const * name, char const * data, int inpu
   huTokenizeTrove(t);
   huParseTrove(t);
 
+  huStringView_t defaultColors[] = 
+  {
+    { darkGray, strlen(darkGray) },           // NONE
+    { lightGray, strlen(lightGray) },           // PUNCLIST
+    { lightGray, strlen(lightGray) },           // PUNCDIST
+    { lightGray, strlen(lightGray) },           // PUNCVALUESEP
+    { darkGray, strlen(darkGray) },         // PUNCANNOTATE
+    { darkGray, strlen(darkGray) },         // PUNCANNOTATEDICT
+    { darkGray, strlen(darkGray) },         // PUNCANNOTATEKEYVALUESEP
+    { darkYellow, strlen(darkYellow) },       // KEY
+    { lightYellow, strlen(lightYellow) },     // VALUE
+    { darkGreen, strlen(darkGreen) },         // COMMENT
+    { darkMagenta, strlen(darkMagenta) },     // ANNOKEY
+    { lightMagenta, strlen(lightMagenta) },   // ANNOVALUE
+    { darkGray, strlen(darkGray) },           // WHITESPACE
+  };
+
+  huStringView_t sv = huTroveToString(t, HU_OUTPUTFORMAT_MINIMAL, false, defaultColors);
+  printf("%s", sv.str);
+
   return t;
+}
+
+
+huTrove_t * huMakeTroveFromString(char const * name, char const * data, int inputTabSize, int outputTabSize)
+{
+  int newDataSize = strlen(data);
+  char * newData = malloc(newDataSize + 1);
+  if (newData == NULL)
+    { return NULL; }
+
+  strncpy(newData, data, newDataSize);
+  newData[newDataSize] = '\0';
+
+  huStringView_t dataView = { newData, newDataSize };
+  huTrove_t * newTrove = makeTrove(name, & dataView, inputTabSize, outputTabSize);
+  if (newTrove == NULL)
+    { free(newData); }
+  
+  return newTrove;
 }
 
 
 huTrove_t * huMakeTroveFromFile(char const * name, FILE * fp, int inputTabSize, int outputTabSize)
 {
-   huTrove_t * t = malloc(sizeof(huTrove_t));
-  if (t == NULL)
+  if (fseek(fp, 0, SEEK_END) != 0)
     { return NULL; }
 
-  t->nameSize = strlen(name);
-  t->name = malloc(t->nameSize + 1);
-  if (t->name == NULL)
-  {
-    free(t);
-    return NULL;
-  }
-  strncpy(t->name, name, t->nameSize);
-  t->name[t->nameSize] = '\0';
+  int newDataSize = ftell(fp);
+  if (newDataSize == -1L)
+    { return NULL; }
 
-  if (fseek(fp, 0, SEEK_END) != 0)
-  {
-    free(t->name);
-    free(t);
-    return NULL;
-  }
-
-  t->dataStringSize = ftell(fp);
-  if (t->dataStringSize == -1L)
-  {
-    free(t->name);
-    free(t);
-    return NULL;
-  }
-
-  t->dataString = malloc(t->dataStringSize + 1);
-  if (t->dataString == NULL)
-  {
-    free(t->name);
-    free(t);
-    return NULL;
-  }
+  char * newData = malloc(newDataSize + 1);
+  if (newData == NULL)
+    { return NULL; }
 
   fseek(fp, 0, SEEK_SET);
-  if (fread(t->dataString, t->dataStringSize, 1, fp) != 
-    t->dataStringSize)
+  if (fread(newData, newDataSize, 1, fp) != 
+    newDataSize)
   {
-    free(t->name);
-    free(t->dataString);
-    free(t);
+    free(newData);
     return NULL;
   }
-  t->dataString[t->dataStringSize] = '\0';
+  newData[newDataSize] = '\0';
 
-  huInitVector(& t->tokens, sizeof(huToken_t));
-  huInitVector(& t->nodes, sizeof(huNode_t));
-  huInitVector(& t->errors, sizeof(huError_t));
-
-  t->inputTabSize = inputTabSize;
-  t->outputTabSize = outputTabSize;
-
-  huTokenizeTrove(t);
-  huParseTrove(t);
-
-  return t;
+  huStringView_t dataView = { newData, newDataSize };
+  huTrove_t * newTrove = makeTrove(name, & dataView, inputTabSize, outputTabSize);
+  if (newTrove == NULL)
+    { free(newData); }
+  
+  return newTrove;
 }
 
 
@@ -176,7 +182,7 @@ huNode_t * huGetRootNode(huTrove_t * trove)
 
 huNode_t * huGetNode(huTrove_t * trove, int nodeIdx)
 {
-  if (nodeIdx < trove->nodes.numElements)
+  if (nodeIdx >= 0 && nodeIdx < trove->nodes.numElements)
     { return (huNode_t *) trove->nodes.buffer + nodeIdx; }
 
   return NULL;
@@ -235,10 +241,257 @@ huNode_t * allocNewNode(huTrove_t * trove, int nodeKind, huToken_t * firstToken)
 }
 
 
-// User must free(*serializedTrove);
-int huTroveToString(huTrove_t * trove, int outputFormat, bool includeComments, char ** serializedTrove)
+void appendString(huVector_t * str, char const * addend, int size)
 {
-  return -1;
+  char * dest = huGrowVector(str, size);
+  strncpy(dest, addend, size);
+}
+
+
+// User must free(returnval.str);
+huStringView_t huTroveToString(huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colorTable)
+{
+  huVector_t str;
+  huInitVector(& str, sizeof(char));
+
+  switch (outputFormat)
+  {
+  case HU_OUTPUTFORMAT_PRESERVED:
+    {
+      if (excludeComments == false && colorTable == NULL)
+      {
+        char * newData = malloc(trove->dataStringSize + 1);
+        strncpy(newData, trove->dataString, trove->dataStringSize + 1);
+        huStringView_t sv = { newData, trove->dataStringSize };
+        return sv;
+      }
+      int line = 1, col = 1;
+      int lastColorTableIdx = HU_COLORKIND_NONE;
+      bool inDict = false;
+      bool inAnno = false;
+      bool expectKey = false;
+      bool isKey = false;
+
+      huToken_t * tokens = (huToken_t *) trove->tokens.buffer;
+      for (int i = 0; i < huGetNumTokens(trove); ++i)
+      {
+        huToken_t * tok = tokens + i;
+        if (tok->tokenKind == HU_TOKENKIND_EOF)
+          { break; }
+        if (tok->tokenKind == HU_TOKENKIND_COMMENT && excludeComments)
+          { continue; }
+        if (tok->tokenKind == HU_TOKENKIND_STARTDICT)
+          { inDict = true; expectKey = true; }
+        else if (tok->tokenKind == HU_TOKENKIND_ENDDICT ||
+                 tok->tokenKind == HU_TOKENKIND_STARTLIST)
+        { 
+          inDict = false;
+          expectKey = false;
+          inAnno = false;
+        }
+        else if (tok->tokenKind == HU_TOKENKIND_ANNOTATE)
+          { inAnno = true; expectKey = true; }
+        else if (tok->tokenKind == HU_TOKENKIND_WORD)
+        {
+          if (expectKey)
+            { isKey = true; expectKey = false; }
+          else
+          {
+            if (inAnno && ! inDict)
+              { inAnno = false; }
+          }
+        }   
+
+        // the space between tokens is filled with whitespace
+        while (tok->line > line)
+        {
+          appendString(& str, "\n", 1);
+          line += 1;
+          col = 1;
+        }
+        while (tok->col > col)
+        {
+          appendString(& str, " ", 1);
+          col += 1;
+        }
+        if (colorTable != NULL && tok->tokenKind != lastColorTableIdx)
+        {
+          int colorTableIdx = HU_COLORKIND_NONE;
+          if (inAnno)
+          {
+            if (tok->tokenKind == HU_TOKENKIND_WORD)
+            {
+              if (isKey)
+                { colorTableIdx = HU_COLORKIND_ANNOKEY; }
+              else
+                { colorTableIdx = HU_COLORKIND_ANNOVALUE; }
+            }
+            else if (tok->tokenKind == HU_TOKENKIND_STARTDICT ||
+                     tok->tokenKind == HU_TOKENKIND_ENDDICT)
+              { colorTableIdx = HU_COLORKIND_PUNCANNOTATEDICT; }
+            else if (tok->tokenKind == HU_TOKENKIND_KEYVALUESEP)
+              { colorTableIdx = HU_COLORKIND_PUNCANNOTATEKEYVALUESEP; }
+            else if (tok->tokenKind == HU_TOKENKIND_ANNOTATE)
+              { colorTableIdx = HU_COLORKIND_PUNCANNOTATE; }
+          }
+          else
+          {
+            if (tok->tokenKind == HU_TOKENKIND_WORD)
+            {
+              if (isKey)
+                { colorTableIdx = HU_COLORKIND_KEY; }
+              else
+                { colorTableIdx = HU_COLORKIND_VALUE; }
+            }
+            else if (tok->tokenKind == HU_TOKENKIND_STARTLIST ||
+                     tok->tokenKind == HU_TOKENKIND_ENDLIST)
+              { colorTableIdx = HU_COLORKIND_PUNCLIST; }
+            else if (tok->tokenKind == HU_TOKENKIND_STARTDICT ||
+                     tok->tokenKind == HU_TOKENKIND_ENDDICT)
+              { colorTableIdx = HU_COLORKIND_PUNCDICT; }
+            else if (tok->tokenKind == HU_TOKENKIND_KEYVALUESEP)
+              { colorTableIdx = HU_COLORKIND_PUNCKEYVALUESEP; }
+          }
+          
+          if (colorTableIdx != lastColorTableIdx)
+          {
+            huStringView_t * ce = colorTable + colorTableIdx;
+            appendString(& str, ce->str, ce->size);
+          }
+        }
+        appendString(& str, tok->value.str, tok->value.size);
+      }
+      // after token loop
+      if (colorTable != NULL)
+      {
+        appendString(& str, off, strlen(off));
+      }
+      appendString(& str, "\n\0", 1);
+    }
+    break;
+
+  case HU_OUTPUTFORMAT_MINIMAL:
+    {
+      int line = 1, col = 1;
+      int lastColorTableIdx = HU_COLORKIND_NONE;
+      bool inDict = false;
+      bool inAnno = false;
+      bool expectKey = false;
+      bool isKey = false;
+
+      huToken_t * tokens = (huToken_t *) trove->tokens.buffer;
+      for (int i = 0; i < huGetNumTokens(trove); ++i)
+      {
+        huToken_t * tok = tokens + i;
+        if (tok->tokenKind == HU_TOKENKIND_EOF)
+          { break; }
+        if (tok->tokenKind == HU_TOKENKIND_COMMENT && excludeComments)
+          { continue; }
+        if (tok->tokenKind == HU_TOKENKIND_STARTDICT)
+          { inDict = true; expectKey = true; }
+        else if (tok->tokenKind == HU_TOKENKIND_ENDDICT ||
+                 tok->tokenKind == HU_TOKENKIND_STARTLIST)
+        { 
+          inDict = false;
+          expectKey = false;
+          inAnno = false;
+        }
+        else if (tok->tokenKind == HU_TOKENKIND_ANNOTATE)
+          { inAnno = true; expectKey = true; }
+        else if (tok->tokenKind == HU_TOKENKIND_WORD)
+        {
+          if (expectKey)
+            { isKey = true; expectKey = false; }
+          else
+          {
+            isKey = false;
+            if (inDict)
+              { expectKey = true; }
+            if (inAnno && ! inDict)
+              { inAnno = false; }
+          }
+        }   
+
+        // the space between tokens is filled with whitespace
+        if (tok->line != line)
+        {
+          appendString(& str, "\n", 1);
+          line += 1;
+          col = 1;
+        }
+        else if (tok->col > col)
+        {
+          appendString(& str, " ", 1);
+          col += 1;
+        }
+
+        if (colorTable != NULL)
+        {
+          int colorTableIdx = HU_COLORKIND_NONE;
+          if (inAnno)
+          {
+            if (tok->tokenKind == HU_TOKENKIND_WORD)
+            {
+              if (isKey)
+                { colorTableIdx = HU_COLORKIND_ANNOKEY; }
+              else
+                { colorTableIdx = HU_COLORKIND_ANNOVALUE; }
+            }
+            else if (tok->tokenKind == HU_TOKENKIND_STARTDICT ||
+                     tok->tokenKind == HU_TOKENKIND_ENDDICT)
+              { colorTableIdx = HU_COLORKIND_PUNCANNOTATEDICT; }
+            else if (tok->tokenKind == HU_TOKENKIND_KEYVALUESEP)
+              { colorTableIdx = HU_COLORKIND_PUNCANNOTATEKEYVALUESEP; }
+            else if (tok->tokenKind == HU_TOKENKIND_ANNOTATE)
+              { colorTableIdx = HU_COLORKIND_PUNCANNOTATE; }
+          }
+          else
+          {
+            if (tok->tokenKind == HU_TOKENKIND_WORD)
+            {
+              if (isKey)
+                { colorTableIdx = HU_COLORKIND_KEY; }
+              else
+                { colorTableIdx = HU_COLORKIND_VALUE; }
+            }
+            else if (tok->tokenKind == HU_TOKENKIND_STARTLIST ||
+                     tok->tokenKind == HU_TOKENKIND_ENDLIST)
+              { colorTableIdx = HU_COLORKIND_PUNCLIST; }
+            else if (tok->tokenKind == HU_TOKENKIND_STARTDICT ||
+                     tok->tokenKind == HU_TOKENKIND_ENDDICT)
+              { colorTableIdx = HU_COLORKIND_PUNCDICT; }
+            else if (tok->tokenKind == HU_TOKENKIND_KEYVALUESEP)
+              { colorTableIdx = HU_COLORKIND_PUNCKEYVALUESEP; }
+          }
+          if (tok->tokenKind == HU_TOKENKIND_COMMENT)
+            { colorTableIdx = HU_COLORKIND_COMMENT; }
+          
+          if (colorTableIdx != lastColorTableIdx)
+          {
+            huStringView_t * ce = colorTable + colorTableIdx;
+            appendString(& str, ce->str, ce->size);
+            lastColorTableIdx = colorTableIdx;
+          }
+        }
+        appendString(& str, tok->value.str, tok->value.size);
+      }
+      if (colorTable != NULL)
+      {
+        appendString(& str, off, strlen(off));
+      }
+      appendString(& str, "\n\0", 2);
+    }
+    break;
+
+  case HU_OUTPUTFORMAT_PRETTY:
+    {
+      
+    }
+    break;
+  }
+
+  huStringView_t res = { str.buffer, str.numElements };
+  return res;
 }
 
 
