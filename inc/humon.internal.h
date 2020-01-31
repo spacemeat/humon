@@ -18,7 +18,7 @@ extern "C"
   void huResetNode(huNode_t * node);
   void huDestroyNode(huNode_t * node);
 
-  huToken_t * allocNewToken(huTrove_t * trove, int tokenKind, char const * str, int size, int line, int col);
+  huToken_t * allocNewToken(huTrove_t * trove, int tokenKind, char const * str, int size, int line, int col, int endLine, int endCol);
 
   huNode_t * allocNewNode(huTrove_t * trove, int nodeKind, huToken_t * firstToken);
 

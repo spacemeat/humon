@@ -161,7 +161,7 @@ huToken_t * huGetToken(huTrove_t * trove, int tokenIdx)
 
 
 huToken_t * allocNewToken(huTrove_t * trove, int tokenKind, 
-  char const * str, int size, int line, int col)
+  char const * str, int size, int line, int col, int endLine, int endCol)
 {
   huToken_t * newToken = huGrowVector(& trove->tokens, 1);
 
@@ -170,6 +170,8 @@ huToken_t * allocNewToken(huTrove_t * trove, int tokenKind,
   newToken->value.size = size;
   newToken->line = line;
   newToken->col = col;
+  newToken->endLine = endLine;
+  newToken->endCol = endCol;
 
 //  printf ("%stoken: line: %d  col: %d  len: %d  %s%s\n",
 //    darkYellow, line, col, size, huTokenKindToString(tokenKind), off);
@@ -626,9 +628,14 @@ huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colo
     bool isKey = false;
 
     huToken_t * tokens = (huToken_t *) trove->tokens.buffer;
+    huToken_t * tok = NULL;
+    huToken_t * lastNonCommentToken = NULL;
     for (int i = 0; i < huGetNumTokens(trove); ++i)
     {
-      huToken_t * tok = tokens + i;
+      huToken_t * prevTok = tok;
+      tok = tokens + i;
+      if (tok->tokenKind != HU_TOKENKIND_COMMENT)
+        { lastNonCommentToken = tok; }
 
 #pragma region // Determine isDict, isAnno, expectKey, isKey.
       if (tok->tokenKind == HU_TOKENKIND_EOF)
@@ -664,13 +671,13 @@ huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colo
 #pragma region // The space between tokens is filled with whitespace, according to the outputFormat.
       if (outputFormat == HU_OUTPUTFORMAT_PRESERVED)
       {
-        while (tok->line > line)
+        while (line < tok->line)
         {
           appendString(str, "\n", 1);
           line += 1;
           col = 1;
         }
-        while (tok->col > col)
+        while (col < tok->col)
         {
           appendString(str, " ", 1);
           col += 1;
@@ -678,16 +685,29 @@ huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colo
       }
       else if (outputFormat == HU_OUTPUTFORMAT_MINIMAL)
       {
-        if (tok->line != line)
+        if (prevTok != NULL)
         {
-          appendString(str, "\n", 1);
-          line += 1;
-          col = 1;
-        }
-        else if (tok->col > col)
-        {
-          appendString(str, " ", 1);
-          col += 1;
+          if (lastNonCommentToken != NULL &&
+              tok->line != lastNonCommentToken->line)
+          {
+            appendString(str, "\n", 1);
+            line += 1;
+            col = 1;
+          }
+          else if (prevTok->tokenKind == HU_TOKENKIND_COMMENT && 
+              prevTok->value.str[0] == '/' && 
+              prevTok->value.str[1] == '/')
+          {
+            appendString(str, "\n", 1);
+            line += 1;
+            col = 1;
+          }
+          else if (prevTok->tokenKind == HU_TOKENKIND_WORD &&
+                  tok->tokenKind == HU_TOKENKIND_WORD)
+          {
+            appendString(str, " ", 1);
+            col += 1;
+          }
         }
       }
 #pragma endregion
@@ -744,6 +764,13 @@ huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colo
 #pragma endregion
 
       appendString(str, tok->value.str, tok->value.size);
+
+      int lineDelta = tok->endLine - tok->line;
+      line += lineDelta;
+      if (lineDelta > 0)
+        { col = tok->endCol; }
+      else
+        { col += tok->endCol - tok->col; }
     }
     if (colorTable != NULL)
     {

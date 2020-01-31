@@ -14,7 +14,7 @@ void eatWs(char const ** ppCur, int tabSize, int * line, int * col)
     else if (** ppCur == '\t')
     {
       * ppCur += 1;
-      * col += tabSize - (* col % tabSize);
+      * col += tabSize - ((* col - 1) % tabSize);
     }
     else if (**ppCur == ',')
     {
@@ -24,7 +24,7 @@ void eatWs(char const ** ppCur, int tabSize, int * line, int * col)
     else if (**ppCur == '\r')
     {
       * ppCur += 1;
-      * col = 0;
+      * col = 1;
       * line += 1;
       if (** ppCur == '\n')
         { * ppCur += 1; }
@@ -32,7 +32,7 @@ void eatWs(char const ** ppCur, int tabSize, int * line, int * col)
     else if (** ppCur == '\n')
     {
       * ppCur += 1;
-      * col = 0;
+      * col = 1;
       * line += 1;
       if (** ppCur == '\r')
         { * ppCur += 1; }
@@ -63,7 +63,7 @@ void measureComment(char const * cur, int tabSize, int * len, int * line, int * 
     }
     else if (* lookAhead == '\t')
     {
-      * col += (tabSize - * col % tabSize);
+      * col += (tabSize - (* col - 1) % tabSize);
     }
     else
     {
@@ -90,11 +90,11 @@ void measureDoubleSlashComment(char const * cur, int tabSize, int * len, int * l
     if (* lookAhead == '\n' ||
         * lookAhead == '\r')
     {
-      * col = 1;
+//      * col = 1;
     }
     else if (* lookAhead == '\t')
     {
-      * col += (tabSize - * col % tabSize);
+      * col += (tabSize - (* col - 1) % tabSize);
     }
     else
     {
@@ -130,7 +130,7 @@ void measureCstyleComment(char const * cur, int tabSize, int * len, int * line, 
     }
     else if (* lookAhead1 == '\t')
     {
-      * col += (tabSize - * col % tabSize);
+      * col += (tabSize - (* col - 1) % tabSize);
     }
     else
     {
@@ -226,13 +226,13 @@ void measureQuotedWord(char const * cur, char quoteChar, int tabSize, int * len,
       
       case '\t':
         cur += 1;
-        * col += tabSize - (* col % tabSize);
+        * col += tabSize - ((* col - 1) % tabSize);
         * len += 1;
         break;
       
       case '\r':
         cur += 1;
-        * col = 0;
+        * col = 1;
         * line += 1;
         if (* cur == '\n')
           { cur += 1; }
@@ -240,7 +240,7 @@ void measureQuotedWord(char const * cur, char quoteChar, int tabSize, int * len,
 
       case '\n':
         cur += 1;
-        * col = 0;
+        * col = 1;
         * line += 1;
         if (*cur == '\r')
           { cur += 1; }
@@ -287,42 +287,42 @@ void huTokenizeTrove(struct huTrove * trove)
     switch(* cur)
     {
     case '\0':
-      allocNewToken(trove, HU_TOKENKIND_EOF, cur, 0, line, col);
+      allocNewToken(trove, HU_TOKENKIND_EOF, cur, 0, line, col, line, col);
       scanning = false;
       break;
     case '{':
-      allocNewToken(trove, HU_TOKENKIND_STARTDICT, cur, 1, line, col);
+      allocNewToken(trove, HU_TOKENKIND_STARTDICT, cur, 1, line, col, line, col + 1);
       cur += 1;
       col += 1;
       break;
     case '}':
-      allocNewToken(trove, HU_TOKENKIND_ENDDICT, cur, 1, line, col);
+      allocNewToken(trove, HU_TOKENKIND_ENDDICT, cur, 1, line, col, line, col + 1);
       cur += 1;
       col += 1;
       break;
     case '[':
-      allocNewToken(trove, HU_TOKENKIND_STARTLIST, cur, 1, line, col);
+      allocNewToken(trove, HU_TOKENKIND_STARTLIST, cur, 1, line, col, line, col + 1);
       cur += 1;
       col += 1;
       break;
     case ']':
-      allocNewToken(trove, HU_TOKENKIND_ENDLIST, cur, 1, line, col);
+      allocNewToken(trove, HU_TOKENKIND_ENDLIST, cur, 1, line, col, line, col + 1);
       cur += 1;
       col += 1;
       break;
     case ':':
-      allocNewToken(trove, HU_TOKENKIND_KEYVALUESEP, cur, 1, line, col);
+      allocNewToken(trove, HU_TOKENKIND_KEYVALUESEP, cur, 1, line, col, line, col + 1);
       cur += 1;
       col += 1;
       break;
     case '@':
-      allocNewToken(trove, HU_TOKENKIND_ANNOTATE, cur, 1, line, col);
+      allocNewToken(trove, HU_TOKENKIND_ANNOTATE, cur, 1, line, col, line, col + 1);
       cur += 1;
       col += 1;
       break;
     case '#':
       measureComment(cur, trove->inputTabSize, & len, & lineM, & colM);
-      allocNewToken(trove, HU_TOKENKIND_COMMENT, cur, len, line, col);
+      allocNewToken(trove, HU_TOKENKIND_COMMENT, cur, len, line, col, lineM, colM);
       cur += len;
       line = lineM;
       col = colM;
@@ -331,15 +331,15 @@ void huTokenizeTrove(struct huTrove * trove)
       if (*(cur + 1) == '/')
       {
         measureDoubleSlashComment(cur, trove->inputTabSize, & len, & lineM, & colM);
-        allocNewToken(trove, HU_TOKENKIND_COMMENT, cur, len, line, col);
-        cur += len;;
+        allocNewToken(trove, HU_TOKENKIND_COMMENT, cur, len, line, col, lineM, colM);
+        cur += len;
         line = lineM;
         col = colM;
       }
       else if (*(cur + 1) == '*')
       {
         measureCstyleComment(cur, trove->inputTabSize, & len, & lineM, & colM);
-        allocNewToken(trove, HU_TOKENKIND_COMMENT, cur, len, line, col);
+        allocNewToken(trove, HU_TOKENKIND_COMMENT, cur, len, line, col, lineM, colM);
         cur += len;
         line = lineM;
         col = colM;
@@ -348,7 +348,7 @@ void huTokenizeTrove(struct huTrove * trove)
       {
         // else treat like a word char
         measureWord(cur, & len, & lineM, & colM);
-        allocNewToken(trove, HU_TOKENKIND_WORD, cur, len, line, col);
+        allocNewToken(trove, HU_TOKENKIND_WORD, cur, len, line, col, lineM, colM);
         cur += len;
         line = lineM;
         col = colM;
@@ -356,21 +356,21 @@ void huTokenizeTrove(struct huTrove * trove)
       break;      
     case '"':
       measureDoubleQuotedWord(cur, trove->inputTabSize, & len, & lineM, & colM);
-      allocNewToken(trove, HU_TOKENKIND_WORD, cur, len, line, col);
+      allocNewToken(trove, HU_TOKENKIND_WORD, cur, len, line, col, lineM, colM);
       cur += len;
       line = lineM;
       col = colM;
       break;
     case '\'':
       measureSingleQuotedWord(cur, trove->inputTabSize, & len, & lineM, & colM);
-      allocNewToken(trove, HU_TOKENKIND_WORD, cur, len, line, col);
+      allocNewToken(trove, HU_TOKENKIND_WORD, cur, len, line, col, lineM, colM);
       cur += len;
       line = lineM;
       col = colM;
       break;
     default: // word char
       measureWord(cur, & len, & lineM, & colM);
-      allocNewToken(trove, HU_TOKENKIND_WORD, cur, len, line, col);
+      allocNewToken(trove, HU_TOKENKIND_WORD, cur, len, line, col, lineM, colM);
       cur += len;
       line = lineM;
       col = colM;
@@ -378,4 +378,3 @@ void huTokenizeTrove(struct huTrove * trove)
     }
   }
 }
-

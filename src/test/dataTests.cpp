@@ -245,7 +245,7 @@ TEST(singleEmptyList, lastValue)
   huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   CHECK_TEXT(node->lastValueToken != NULL, "last value set");
-  STRNCMP_EQUAL_TEXT("]", node->firstValueToken->value.str, 1, "valueToken");
+  STRNCMP_EQUAL_TEXT("]", node->lastValueToken->value.str, 1, "valueToken");
 }
 
 
@@ -328,7 +328,7 @@ TEST(singleEmptyDict, lastValue)
   huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   CHECK_TEXT(node->lastValueToken != NULL, "last value set");
-  STRNCMP_EQUAL_TEXT("}", node->firstValueToken->value.str, 1, "valueToken");
+  STRNCMP_EQUAL_TEXT("}", node->lastValueToken->value.str, 1, "valueToken");
 }
 
 
@@ -411,7 +411,7 @@ TEST(listWithOneValue, lastValue)
   huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "parent not null");
   CHECK_TEXT(node->lastValueToken != NULL, "last value set");
-  STRNCMP_EQUAL_TEXT("]", node->firstValueToken->value.str, 1, "valueToken");
+  STRNCMP_EQUAL_TEXT("]", node->lastValueToken->value.str, 1, "valueToken");
 }
 
 TEST(listWithOneValue, childNodeKind)
@@ -549,7 +549,7 @@ TEST(dictWithOneValue, lastValue)
   huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "parent not null");
   CHECK_TEXT(node->lastValueToken != NULL, "last value set");
-  STRNCMP_EQUAL_TEXT("}", node->firstValueToken->value.str, 1, "valueToken");
+  STRNCMP_EQUAL_TEXT("}", node->lastValueToken->value.str, 1, "valueToken");
 }
 
 TEST(dictWithOneValue, childNodeKind)

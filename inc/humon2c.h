@@ -86,6 +86,8 @@ extern "C"
     huStringView_t value;
     int line;
     int col;
+    int endLine;
+    int endCol;
   } huToken_t;
 
 
