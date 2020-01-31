@@ -151,9 +151,18 @@ TEST(singleValue, value)
 {
   huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
-  CHECK_TEXT(node->valueToken != NULL, "value set");
-  LONGS_EQUAL_TEXT(strlen("snerb"), node->valueToken->value.size, "value strlen");
-  STRNCMP_EQUAL_TEXT("snerb", node->valueToken->value.str, node->valueToken->value.size, "value text");
+  CHECK_TEXT(node->firstValueToken != NULL, "value set");
+  LONGS_EQUAL_TEXT(strlen("snerb"), node->firstValueToken->value.size, "value strlen");
+  STRNCMP_EQUAL_TEXT("snerb", node->firstValueToken->value.str, node->firstValueToken->value.size, "value text");
+}
+
+TEST(singleValue, lastValue)
+{
+  huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
+  CHECK_TEXT(node != NULL, "node not null");
+  CHECK_TEXT(node->firstValueToken != NULL, "first value set");
+  CHECK_TEXT(node->lastValueToken != NULL, "last value set");
+  POINTERS_EQUAL_TEXT(node->firstValueToken, node->lastValueToken, "first == last");
 }
 
 
@@ -223,6 +232,22 @@ TEST(singleEmptyList, numChildren)
   LONGS_EQUAL_TEXT(0, huGetNumChildren(node), "getNumChildren()");
 }
 
+TEST(singleEmptyList, value)
+{
+  huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
+  CHECK_TEXT(node != NULL, "node not null");
+  CHECK_TEXT(node->firstValueToken != NULL, "first value set");
+  STRNCMP_EQUAL_TEXT("[", node->firstValueToken->value.str, 1, "valueToken");
+}
+
+TEST(singleEmptyList, lastValue)
+{
+  huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
+  CHECK_TEXT(node != NULL, "node not null");
+  CHECK_TEXT(node->lastValueToken != NULL, "last value set");
+  STRNCMP_EQUAL_TEXT("]", node->firstValueToken->value.str, 1, "valueToken");
+}
+
 
 TEST_GROUP(singleEmptyDict)
 {
@@ -288,6 +313,22 @@ TEST(singleEmptyDict, numChildren)
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(0, node->childNodeIdxs.numElements, "node.numChildren");
   LONGS_EQUAL_TEXT(0, huGetNumChildren(node), "getNumChildren()");
+}
+
+TEST(singleEmptyDict, value)
+{
+  huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
+  CHECK_TEXT(node != NULL, "node not null");
+  CHECK_TEXT(node->firstValueToken != NULL, "first value set");
+  STRNCMP_EQUAL_TEXT("{", node->firstValueToken->value.str, 1, "valueToken");
+}
+
+TEST(singleEmptyDict, lastValue)
+{
+  huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
+  CHECK_TEXT(node != NULL, "node not null");
+  CHECK_TEXT(node->lastValueToken != NULL, "last value set");
+  STRNCMP_EQUAL_TEXT("}", node->firstValueToken->value.str, 1, "valueToken");
 }
 
 
@@ -357,6 +398,22 @@ TEST(listWithOneValue, parentNumChildren)
   LONGS_EQUAL_TEXT(1, huGetNumChildren(node), "getNumChildren()");
 }
 
+TEST(listWithOneValue, value)
+{
+  huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
+  CHECK_TEXT(node != NULL, "parent not null");
+  CHECK_TEXT(node->firstValueToken != NULL, "first value set");
+  STRNCMP_EQUAL_TEXT("[", node->firstValueToken->value.str, 1, "valueToken");
+}
+
+TEST(listWithOneValue, lastValue)
+{
+  huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
+  CHECK_TEXT(node != NULL, "parent not null");
+  CHECK_TEXT(node->lastValueToken != NULL, "last value set");
+  STRNCMP_EQUAL_TEXT("]", node->firstValueToken->value.str, 1, "valueToken");
+}
+
 TEST(listWithOneValue, childNodeKind)
 {
   huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
@@ -393,11 +450,23 @@ TEST(listWithOneValue, childValue)
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
-  CHECK_TEXT(node->valueToken != NULL, "value set");
-  CHECK_TEXT(node->valueToken->value.str != NULL, "value set");
-  LONGS_EQUAL_TEXT(3, node->valueToken->value.size, "value.size");
-  STRNCMP_EQUAL_TEXT("one", node->valueToken->value.str, 3, "valueToken");
+  CHECK_TEXT(node->firstValueToken != NULL, "value set");
+  CHECK_TEXT(node->firstValueToken->value.str != NULL, "value set");
+  LONGS_EQUAL_TEXT(3, node->firstValueToken->value.size, "value.size");
+  STRNCMP_EQUAL_TEXT("one", node->firstValueToken->value.str, 3, "valueToken");
   STRNCMP_EQUAL_TEXT("one", huGetValue(node)->value.str, 3, "getValue()");
+}
+
+
+TEST(listWithOneValue, childLastValue)
+{
+  huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
+  CHECK_TEXT(node != NULL, "node not null");
+  node = huGetChildNodeByIndex(node, 0);
+  CHECK_TEXT(node != NULL, "child node not null");
+  CHECK_TEXT(node->firstValueToken != NULL, "first value set");
+  CHECK_TEXT(node->lastValueToken != NULL, "last value set");
+  POINTERS_EQUAL_TEXT(node->firstValueToken, node->lastValueToken, "value.size");
 }
 
 
@@ -467,6 +536,22 @@ TEST(dictWithOneValue, parentNumChildren)
   LONGS_EQUAL_TEXT(1, huGetNumChildren(node), "getNumChildren()");
 }
 
+TEST(dictWithOneValue, value)
+{
+  huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
+  CHECK_TEXT(node != NULL, "parent not null");
+  CHECK_TEXT(node->firstValueToken != NULL, "first value set");
+  STRNCMP_EQUAL_TEXT("{", node->firstValueToken->value.str, 1, "valueToken");
+}
+
+TEST(dictWithOneValue, lastValue)
+{
+  huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
+  CHECK_TEXT(node != NULL, "parent not null");
+  CHECK_TEXT(node->lastValueToken != NULL, "last value set");
+  STRNCMP_EQUAL_TEXT("}", node->firstValueToken->value.str, 1, "valueToken");
+}
+
 TEST(dictWithOneValue, childNodeKind)
 {
   huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
@@ -517,11 +602,22 @@ TEST(dictWithOneValue, childValue)
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
-  CHECK_TEXT(node->valueToken != NULL, "value set");
-  CHECK_TEXT(node->valueToken->value.str != NULL, "value set");
-  LONGS_EQUAL_TEXT(3, node->valueToken->value.size, "value.size");
-  STRNCMP_EQUAL_TEXT("two", node->valueToken->value.str, 3, "valueToken");
+  CHECK_TEXT(node->firstValueToken != NULL, "value set");
+  CHECK_TEXT(node->firstValueToken->value.str != NULL, "value set");
+  LONGS_EQUAL_TEXT(3, node->firstValueToken->value.size, "value.size");
+  STRNCMP_EQUAL_TEXT("two", node->firstValueToken->value.str, 3, "valueToken");
   STRNCMP_EQUAL_TEXT("two", huGetValue(node)->value.str, 3, "getValue()");
+}
+
+TEST(dictWithOneValue, childLastValue)
+{
+  huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
+  CHECK_TEXT(node != NULL, "node not null");
+  node = huGetChildNodeByIndex(node, 0);
+  CHECK_TEXT(node != NULL, "child node not null");
+  CHECK_TEXT(node->firstValueToken != NULL, "first value set");
+  CHECK_TEXT(node->lastValueToken != NULL, "last value set");
+  POINTERS_EQUAL_TEXT(node->firstValueToken, node->lastValueToken, "value.size");
 }
 
 
@@ -631,10 +727,10 @@ TEST(listWithTwoValues, twoValue)
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
-  CHECK_TEXT(node->valueToken != NULL, "value set");
-  CHECK_TEXT(node->valueToken->value.str != NULL, "value set");
-  LONGS_EQUAL_TEXT(3, node->valueToken->value.size, "value.size");
-  STRNCMP_EQUAL_TEXT("two", node->valueToken->value.str, 3, "valueToken");
+  CHECK_TEXT(node->firstValueToken != NULL, "value set");
+  CHECK_TEXT(node->firstValueToken->value.str != NULL, "value set");
+  LONGS_EQUAL_TEXT(3, node->firstValueToken->value.size, "value.size");
+  STRNCMP_EQUAL_TEXT("two", node->firstValueToken->value.str, 3, "valueToken");
   STRNCMP_EQUAL_TEXT("two", huGetValue(node)->value.str, 3, "getValue()");
 }
 
@@ -673,10 +769,10 @@ TEST(listWithTwoValues, threeValue)
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 1);
   CHECK_TEXT(node != NULL, "child node not null");
-  CHECK_TEXT(node->valueToken != NULL, "value set");
-  CHECK_TEXT(node->valueToken->value.str != NULL, "value set");
-  LONGS_EQUAL_TEXT(5, node->valueToken->value.size, "value.size");
-  STRNCMP_EQUAL_TEXT("three", node->valueToken->value.str, 5, "valueToken");
+  CHECK_TEXT(node->firstValueToken != NULL, "value set");
+  CHECK_TEXT(node->firstValueToken->value.str != NULL, "value set");
+  LONGS_EQUAL_TEXT(5, node->firstValueToken->value.size, "value.size");
+  STRNCMP_EQUAL_TEXT("three", node->firstValueToken->value.str, 5, "valueToken");
   STRNCMP_EQUAL_TEXT("three", huGetValue(node)->value.str, 5, "getValue()");
 }
 
@@ -805,10 +901,10 @@ TEST(dictWithTwoValues, twoValue)
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
-  CHECK_TEXT(node->valueToken != NULL, "value set");
-  CHECK_TEXT(node->valueToken->value.str != NULL, "value set");
-  LONGS_EQUAL_TEXT(3, node->valueToken->value.size, "value.size");
-  STRNCMP_EQUAL_TEXT("red", node->valueToken->value.str, 3, "valueToken");
+  CHECK_TEXT(node->firstValueToken != NULL, "value set");
+  CHECK_TEXT(node->firstValueToken->value.str != NULL, "value set");
+  LONGS_EQUAL_TEXT(3, node->firstValueToken->value.size, "value.size");
+  STRNCMP_EQUAL_TEXT("red", node->firstValueToken->value.str, 3, "valueToken");
   STRNCMP_EQUAL_TEXT("red", huGetValue(node)->value.str, 3, "getValue()");
 }
 
@@ -862,10 +958,10 @@ TEST(dictWithTwoValues, threeValue)
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 1);
   CHECK_TEXT(node != NULL, "child node not null");
-  CHECK_TEXT(node->valueToken != NULL, "value set");
-  CHECK_TEXT(node->valueToken->value.str != NULL, "value set");
-  LONGS_EQUAL_TEXT(4, node->valueToken->value.size, "value.size");
-  STRNCMP_EQUAL_TEXT("blue", node->valueToken->value.str, 4, "valueToken");
+  CHECK_TEXT(node->firstValueToken != NULL, "value set");
+  CHECK_TEXT(node->firstValueToken->value.str != NULL, "value set");
+  LONGS_EQUAL_TEXT(4, node->firstValueToken->value.size, "value.size");
+  STRNCMP_EQUAL_TEXT("blue", node->firstValueToken->value.str, 4, "valueToken");
   STRNCMP_EQUAL_TEXT("blue", huGetValue(node)->value.str, 4, "getValue()");
 }
 
@@ -1214,8 +1310,8 @@ TEST(multipleNestedLists, values)
       for (int k = 0; k < 3; ++k)
       {
         huNode_t * ch2 = huGetChildNodeByIndex(ch1, k);
-        CHECK_TEXT(ch2->valueToken != NULL, "value set");
-        LONGS_EQUAL_TEXT(1, ch2->valueToken->value.size, "value.size");
+        CHECK_TEXT(ch2->firstValueToken != NULL, "value set");
+        LONGS_EQUAL_TEXT(1, ch2->firstValueToken->value.size, "value.size");
         STRNCMP_EQUAL_TEXT(c, huGetValue(ch2)->value.str, 1, c);
         c[0] += 1;
       }

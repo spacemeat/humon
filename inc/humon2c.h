@@ -38,11 +38,9 @@ extern "C"
   enum huNodeKind
   {
     HU_NODEKIND_NULL,
-    HU_NODEKIND_ERROR,
     HU_NODEKIND_LIST,
     HU_NODEKIND_DICT,
-    HU_NODEKIND_VALUE,
-    HU_NODEKIND_COMMENT
+    HU_NODEKIND_VALUE
   };
 
   char const * huNodeKindToString(int rhs);
@@ -124,10 +122,10 @@ extern "C"
     int kind;
 
     huToken_t * firstToken;
-    huToken_t * lastToken;
-
     huToken_t * keyToken;
-    huToken_t * valueToken;
+    huToken_t * firstValueToken;
+    huToken_t * lastValueToken;
+    huToken_t * lastToken;
 
     int childIdx;   // Among its siblings, to its parent.
 
@@ -149,6 +147,10 @@ extern "C"
 
   bool huHasValue(huNode_t * node);
   huToken_t * huGetValue(huNode_t * node);
+
+  huToken_t * huGetStartToken(huNode_t * node);
+  huToken_t * huGetEndToken(huNode_t * node);
+
   huNode_t * huNextSibling(huNode_t * node);
 
   int huGetNumAnnotations(huNode_t * node);
@@ -223,10 +225,10 @@ extern "C"
   huError_t * huGetError(huTrove_t * trove, int errorIdx);
 
   int huGetNumTroveComments(huTrove_t * trove);
-  huError_t * huGetTroveComment(huTrove_t * trove, int errorIdx);
+  huComment_t * huGetTroveComment(huTrove_t * trove, int errorIdx);
   
   // User must free(*serializedTrove);
-  huStringView_t huTroveToString(huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colorTable);
+  void huTroveToString(huVector_t * str, huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colorTable);
 
   int huTroveToFile(huTrove_t * trove, int outputFormat, bool includeComments, FILE * fp);
 

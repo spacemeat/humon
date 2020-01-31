@@ -8,9 +8,10 @@ void huInitNode(huNode_t * node, huTrove_t * trove)
   node->nodeIdx = -1;
   node->kind = HU_NODEKIND_NULL;
   node->firstToken = NULL;
-  node->lastToken = NULL;
   node->keyToken = NULL;
-  node->valueToken = NULL;
+  node->firstValueToken = NULL;
+  node->lastValueToken = NULL;
+  node->lastToken = NULL;
   node->childIdx = -1;
   node->parentNodeIdx = -1;
   huInitVector(& node->childNodeIdxs, sizeof(int));
@@ -95,13 +96,25 @@ huToken_t * huGetKey(huNode_t * node)
 
 bool huHasValue(huNode_t * node)
 {
-  return node->valueToken != NULL;
+  return node->firstValueToken != NULL;
 }
 
 
 huToken_t * huGetValue(huNode_t * node)
 {
-  return node->valueToken;
+  return node->firstValueToken;
+}
+
+
+huToken_t * huGetStartToken(huNode_t * node)
+{
+  return node->firstValueToken;
+}
+
+
+huToken_t * huGetEndToken(huNode_t * node)
+{
+  return node->lastValueToken;
 }
 
 
@@ -141,5 +154,5 @@ int huGetNumComments(huNode_t * node)
 
 huComment_t * huGetComment(huNode_t * node, int commentIdx)
 {
-  return (huComment_t *) node->annotations.buffer + commentIdx;
+  return (huComment_t *) node->comments.buffer + commentIdx;
 }

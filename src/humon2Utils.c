@@ -25,11 +25,9 @@ char const * huNodeKindToString(int rhs)
   switch(rhs)
   {
   case HU_NODEKIND_NULL: return "null";
-  case HU_NODEKIND_ERROR: return "error";
   case HU_NODEKIND_LIST: return "list";
   case HU_NODEKIND_DICT: return "dict";
   case HU_NODEKIND_VALUE: return "value";
-  case HU_NODEKIND_COMMENT: return "comment";
   default: return "!!unknown!!";
   }
 }
@@ -95,7 +93,7 @@ void * huGetElement(huVector_t * vector, int idx)
 
 void * huGrowVector(huVector_t * vector, int numElements)
 {
-  if (vector->buffer == NULL)
+  if (vector->numElements == 0)
   {
     // round up to a group of 16 elements
     int cap = numElements;

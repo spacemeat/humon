@@ -62,8 +62,18 @@ huTrove_t * makeTrove(char const * name, huStringView_t * data, int inputTabSize
     { darkGray, strlen(darkGray) },           // WHITESPACE
   };
 
-  huStringView_t sv = huTroveToString(t, HU_OUTPUTFORMAT_MINIMAL, false, defaultColors);
-  printf("%s", sv.str);
+  huVector_t str;
+  huInitVector(& str, sizeof(char));
+  huTroveToString(& str, t, HU_OUTPUTFORMAT_MINIMAL, false, defaultColors);
+  printf("Minimal:\n%s\n", (char *) str.buffer);
+
+  huResetVector(& str);
+  huTroveToString(& str, t, HU_OUTPUTFORMAT_PRESERVED, false, defaultColors);
+  printf("Preserved:\n%s\n", (char *) str.buffer);
+
+  huResetVector(& str);
+  huTroveToString(& str, t, HU_OUTPUTFORMAT_PRETTY, false, defaultColors);
+  printf("Pretty:\n%s\n", (char *) str.buffer);
 
   return t;
 }
@@ -161,8 +171,8 @@ huToken_t * allocNewToken(huTrove_t * trove, int tokenKind,
   newToken->line = line;
   newToken->col = col;
 
-  printf ("%stoken: line: %d  col: %d  len: %d  %s%s\n",
-    darkYellow, line, col, size, huTokenKindToString(tokenKind), off);
+//  printf ("%stoken: line: %d  col: %d  len: %d  %s%s\n",
+//    darkYellow, line, col, size, huTokenKindToString(tokenKind), off);
   
   return newToken;
 }
@@ -212,11 +222,11 @@ int huGetNumTroveComments(huTrove_t * trove)
 }
 
 
-huError_t * huGetTroveComment(huTrove_t * trove, int commentIdx)
+huComment_t * huGetTroveComment(huTrove_t * trove, int commentIdx)
 {
   if (commentIdx < huGetNumTroveComments(trove))
   {
-    return (huError_t *) trove->comments.buffer + commentIdx;
+    return (huComment_t *) trove->comments.buffer + commentIdx;
   }
 
   return NULL;
@@ -233,9 +243,9 @@ huNode_t * allocNewNode(huTrove_t * trove, int nodeKind, huToken_t * firstToken)
   newNode->firstToken = firstToken;
   newNode->lastToken = firstToken;
 
-  printf ("%snode: nodeIdx: %d  firstToken: %d  %s%s\n",
-    lightCyan, newNodeIdx, (int)(firstToken - (huToken_t *) trove->tokens.buffer), 
-    huNodeKindToString(nodeKind), off);
+  // printf ("%snode: nodeIdx: %d  firstToken: %d  %s%s\n",
+  //  lightCyan, newNodeIdx, (int)(firstToken - (huToken_t *) trove->tokens.buffer), 
+  //  huNodeKindToString(nodeKind), off);
 
   return newNode;
 }
@@ -248,252 +258,506 @@ void appendString(huVector_t * str, char const * addend, int size)
 }
 
 
-// User must free(returnval.str);
-huStringView_t huTroveToString(huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colorTable)
+void appendWs(huVector_t * str, int numChars)
 {
-  huVector_t str;
-  huInitVector(& str, sizeof(char));
-
-  switch (outputFormat)
+  char const spaces[] = "                "; // 16 spaces
+  while (numChars > 16)
   {
-  case HU_OUTPUTFORMAT_PRESERVED:
-    {
-      if (excludeComments == false && colorTable == NULL)
-      {
-        char * newData = malloc(trove->dataStringSize + 1);
-        strncpy(newData, trove->dataString, trove->dataStringSize + 1);
-        huStringView_t sv = { newData, trove->dataStringSize };
-        return sv;
-      }
-      int line = 1, col = 1;
-      int lastColorTableIdx = HU_COLORKIND_NONE;
-      bool inDict = false;
-      bool inAnno = false;
-      bool expectKey = false;
-      bool isKey = false;
+    appendString(str, spaces, 16);
+    numChars -= 16;
+  }
+  appendString(str, spaces, numChars);
+}
 
-      huToken_t * tokens = (huToken_t *) trove->tokens.buffer;
-      for (int i = 0; i < huGetNumTokens(trove); ++i)
+
+void appendColor(huVector_t * str, huStringView_t * colorTable, int colorCode)
+{
+  huStringView_t * color = colorTable + colorCode;
+  appendString(str, color->str, color->size);
+}
+
+
+void printComment(huComment_t * comment, huVector_t * str, huStringView_t * colorTable)
+{
+  if (colorTable != NULL)
+    { appendColor(str, colorTable, HU_COLORKIND_COMMENT); }
+  huStringView_t * comstr = & comment->commentToken->value;
+  appendString(str, comstr->str, comstr->size);
+}
+
+
+int printSameLineComents(huNode_t * node, int line, bool firstToken, int startingCommentIdx, huVector_t * str, huStringView_t * colorTable)
+{
+  int iCom = startingCommentIdx;
+  for (; iCom < huGetNumComments(node); ++iCom)
+  {
+    huComment_t * comment = huGetComment(node, iCom);
+    // If not firstToken, forego the position check. Handles enqueued comments before the end token.
+    if (firstToken == false ||
+        (comment->commentToken->line == huGetStartToken(node)->line &&
+         comment->commentToken->col < node->lastValueToken->col))
+    {
+      appendWs(str, 1);
+      printComment(comment, str, colorTable);
+    }
+    else
+      { break; }
+  }
+
+  return iCom;
+}
+
+
+int printSameLineAnnotations(huNode_t * node, int line, int startingAnnoIdx, huVector_t * str, huStringView_t * colorTable)
+{
+  int numAnno = huGetNumAnnotations(node);
+  if (numAnno > startingAnnoIdx)
+  {
+    appendColor(str, colorTable, HU_COLORKIND_PUNCANNOTATE);
+    appendString(str, " @", 2);
+
+    if (numAnno > startingAnnoIdx + 1)
+    {
+      appendColor(str, colorTable, HU_COLORKIND_PUNCANNOTATEDICT);
+      appendString(str, "{", 2);
+    }
+
+    int iAnno = startingAnnoIdx;
+    for (; iAnno < numAnno; ++iAnno)
+    {
+      if (iAnno > 0)
+        { appendWs(str, 1); }
+
+      huAnnotation_t * anno = huGetAnnotation(node, iAnno);
+      if (anno->key->line == line)
       {
-        huToken_t * tok = tokens + i;
-        if (tok->tokenKind == HU_TOKENKIND_EOF)
-          { break; }
-        if (tok->tokenKind == HU_TOKENKIND_COMMENT && excludeComments)
-          { continue; }
-        if (tok->tokenKind == HU_TOKENKIND_STARTDICT)
-          { inDict = true; expectKey = true; }
-        else if (tok->tokenKind == HU_TOKENKIND_ENDDICT ||
-                 tok->tokenKind == HU_TOKENKIND_STARTLIST)
-        { 
-          inDict = false;
-          expectKey = false;
-          inAnno = false;
-        }
-        else if (tok->tokenKind == HU_TOKENKIND_ANNOTATE)
-          { inAnno = true; expectKey = true; }
-        else if (tok->tokenKind == HU_TOKENKIND_WORD)
+        appendColor(str, colorTable, HU_COLORKIND_ANNOKEY);
+        appendString(str, anno->key->value.str, anno->key->value.size);
+        appendColor(str, colorTable, HU_COLORKIND_PUNCANNOTATEKEYVALUESEP);
+        appendString(str, ":", 2);
+        appendColor(str, colorTable, HU_COLORKIND_ANNOVALUE);
+        appendString(str, anno->value->value.str, anno->value->value.size);
+      }
+      else
+        { break; }
+    }
+
+    if (numAnno > 1)
+    {
+      appendColor(str, colorTable, HU_COLORKIND_PUNCANNOTATEDICT);
+      appendString(str, "}", 2);
+    }
+
+    return iAnno - startingAnnoIdx;
+  }
+
+  return 0;
+}
+
+
+void printKey(huToken_t * keyToken, huVector_t * str, huStringView_t * colorTable)
+{
+  if (colorTable != NULL)
+    { appendColor(str, colorTable, HU_COLORKIND_KEY); }
+  appendString(str, keyToken->value.str, keyToken->value.size);
+  if (colorTable != NULL)
+    { appendColor(str, colorTable, HU_COLORKIND_PUNCKEYVALUESEP); }
+  appendString(str, ": ", 2);
+}
+
+
+void printValue(huToken_t * valueToken, huVector_t * str, huStringView_t * colorTable)
+{
+  if (colorTable != NULL)
+    { appendColor(str, colorTable, HU_COLORKIND_VALUE); }
+  appendString(str, valueToken->value.str, valueToken->value.size);
+}
+
+
+void troveToPrettyStringRec(huVector_t * str, huNode_t * node, int depth, int outputFormat, bool excludeComments, huStringView_t * colorTable)
+{
+  bool lineIsDirty = false;
+
+  // print preceeding comments
+  int iCom = 0;
+  for (; iCom < huGetNumComments(node); ++iCom)
+  {
+    huComment_t * comment = huGetComment(node, iCom);
+    if (comment->commentToken->line < huGetStartToken(node)->line)
+    {
+      if (node->parentNodeIdx != -1)
+        { appendString(str, "\n", 1); }
+      appendWs(str, node->trove->outputTabSize * depth);
+      printComment(comment, str, colorTable);
+      lineIsDirty = true;
+    }
+    else
+      { break; }
+  }
+  
+  int iAnno = 0;
+  huToken_t * keyToken = huGetKey(node);
+
+  // if node has a key, print key:
+  if (keyToken != NULL)
+  {
+    appendString(str, "\n", 1);
+    appendWs(str, node->trove->outputTabSize * depth);
+
+    printKey(keyToken, str, colorTable);
+    lineIsDirty = true;
+  }
+
+  // print [ or {
+  if (node->kind == HU_NODEKIND_LIST)
+  {
+    if (node->keyToken == NULL)
+    {
+      if (node->childIdx == -1)
+      {
+        if (lineIsDirty)
         {
-          if (expectKey)
-            { isKey = true; expectKey = false; }
+          appendString(str, "\n", 1);
+        }
+        else
+        {
+          if (node->nodeIdx == 0)
+          {
+            // nop
+          }
           else
           {
-            if (inAnno && ! inDict)
-              { inAnno = false; }
+            appendWs(str, 1);
           }
-        }   
+        }
+      }
+      else
+      {
+        if (lineIsDirty)
+        {
+          appendString(str, "\n", 1);
+        }
+        else
+        {
+          appendWs(str, 1);
+        }
+      }
 
-        // the space between tokens is filled with whitespace
+      /*
+      if (lineIsDirty == false && node->childIdx == 0 && 
+          node->parentNodeIdx != -1)
+        { appendWs(str, 1); }
+      else
+      {
+        if ((lineIsDirty || node->childIdx != 0) && 
+            node->parentNodeIdx != -1)
+          { appendString(str, "\n", 1); }
+        appendWs(str, node->trove->outputTabSize * depth);
+      }
+      */
+    }
+    appendColor(str, colorTable, HU_COLORKIND_PUNCLIST);
+    appendString(str, "[", 1);
+  }
+  else if (node->kind == HU_NODEKIND_DICT)
+  {
+    if (node->keyToken == NULL)
+    {
+      if (node->childIdx == -1)
+      {
+        if (lineIsDirty)
+        {
+          appendString(str, "\n", 1);
+        }
+        else
+        {
+          if (node->nodeIdx == 0)
+          {
+            // nop
+          }
+          else
+          {
+            appendWs(str, 1);
+          }
+        }
+      }
+      else
+      {
+        if (lineIsDirty)
+        {
+          appendString(str, "\n", 1);
+        }
+        else
+        {
+          appendWs(str, 1);
+        }
+      }
+
+      /*
+      if (lineIsDirty == false && node->childIdx == 0 && 
+          node->parentNodeIdx != -1)
+        { appendWs(str, 1); }
+      else
+      {
+        if ((lineIsDirty || node->childIdx != 0) && 
+            node->parentNodeIdx != -1)
+          { appendString(str, "\n", 1); }
+        appendWs(str, node->trove->outputTabSize * depth);
+      }
+      */
+    }
+    appendColor(str, colorTable, HU_COLORKIND_PUNCDICT);
+    appendString(str, "{", 1);
+  }
+
+  if (node->kind == HU_NODEKIND_LIST ||
+      node->kind == HU_NODEKIND_DICT)
+  {
+    // print annotations on one line
+    iAnno = printSameLineAnnotations(node, huGetStartToken(node)->line, 0, str, colorTable);
+
+    // print any same-line comments
+    iCom = printSameLineComents(node, huGetStartToken(node)->line, true, iCom, str, colorTable);
+
+    // if there were annotations or commments, print \n\t+
+    if (iCom > 0)
+    {
+//      appendString(str, "\n", 1);
+      //appendWs(str, node->trove->outputTabSize * depth);
+    }
+
+    // recursive calls
+    int numCh = huGetNumChildren(node);
+    for (int i = 0; i < numCh; ++i)
+    {
+      huNode_t * chNode = huGetChildNodeByIndex(node, i);
+      troveToPrettyStringRec(str, chNode, depth + 1, outputFormat, excludeComments, colorTable);
+    }
+
+    // if collection is not empty, print \n  
+  //  if (numCh > 0)
+  //    { appendString(str, "\n", 1); }
+
+    // print ]
+    if (node->kind == HU_NODEKIND_LIST)
+    {
+        { appendString(str, "\n", 1); }
+      appendWs(str, node->trove->outputTabSize * depth);
+      appendColor(str, colorTable, HU_COLORKIND_PUNCLIST);
+      appendString(str, "]", 1);
+    }
+    else
+    {
+        { appendString(str, "\n", 1); }
+      appendWs(str, node->trove->outputTabSize * depth);
+      appendColor(str, colorTable, HU_COLORKIND_PUNCDICT);
+      appendString(str, "}", 1);
+    }
+  }
+  else if (node->kind == HU_NODEKIND_VALUE)
+  {
+    if (node->keyToken == NULL)
+    {
+      //if (node->childIdx == 0)
+      {
+        appendString(str, "\n", 1);
+      }
+
+      appendWs(str, node->trove->outputTabSize * depth);
+    }
+    printValue(huGetValue(node), str, colorTable);
+  }
+
+  // print post-object annotations on same line
+  printSameLineAnnotations(node, huGetEndToken(node)->line, iAnno, str, colorTable);
+
+  // print post-object comments on same line
+  printSameLineComents(node, huGetEndToken(node)->line, false, iCom, str, colorTable);
+
+  //if (node->kind != HU_NODEKIND_VALUE)
+  //  { appendString(str, "\n", 1); }
+}
+
+
+void troveToPrettyString(huVector_t * str, huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colorTable)
+{
+  huNode_t * nodes = (huNode_t *) trove->nodes.buffer;
+
+  if (nodes != NULL)
+  {
+    troveToPrettyStringRec(str, & nodes[0], 0, outputFormat, excludeComments, colorTable);
+    appendString(str, "\n", 1);
+  }
+
+  for (int iCom = 0; iCom < huGetNumTroveComments(trove); ++iCom)
+  {
+    huComment_t * comment = huGetTroveComment(trove, iCom);
+    printComment(comment, str, colorTable);
+    appendString(str, "\n", 1);
+  }
+
+  appendColor(str, colorTable, HU_COLORKIND_NONE);
+  appendString(str, "\0", 1);
+}
+
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+
+// User must free(returnval.str);
+void huTroveToString(huVector_t * str,
+huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colorTable)
+{
+  if (outputFormat == HU_OUTPUTFORMAT_PRESERVED &&
+    excludeComments == false && colorTable == NULL)
+  {
+    // raw output is raw
+    char * newData = malloc(trove->dataStringSize + 1);
+    strncpy(newData, trove->dataString, trove->dataStringSize + 1);
+  }
+  else if (outputFormat == HU_OUTPUTFORMAT_PRESERVED ||
+           outputFormat == HU_OUTPUTFORMAT_MINIMAL)
+  {
+    int line = 1, col = 1;
+    int lastColorTableIdx = HU_COLORKIND_NONE;
+    bool inDict = false;
+    bool inAnno = false;
+    bool expectKey = false;
+    bool isKey = false;
+
+    huToken_t * tokens = (huToken_t *) trove->tokens.buffer;
+    for (int i = 0; i < huGetNumTokens(trove); ++i)
+    {
+      huToken_t * tok = tokens + i;
+
+#pragma region // Determine isDict, isAnno, expectKey, isKey.
+      if (tok->tokenKind == HU_TOKENKIND_EOF)
+        { break; }
+      if (tok->tokenKind == HU_TOKENKIND_COMMENT && excludeComments)
+        { continue; }
+      if (tok->tokenKind == HU_TOKENKIND_STARTDICT)
+        { inDict = true; expectKey = true; }
+      else if (tok->tokenKind == HU_TOKENKIND_ENDDICT ||
+                tok->tokenKind == HU_TOKENKIND_STARTLIST)
+      { 
+        inDict = false;
+        expectKey = false;
+        inAnno = false;
+      }
+      else if (tok->tokenKind == HU_TOKENKIND_ANNOTATE)
+        { inAnno = true; expectKey = true; }
+      else if (tok->tokenKind == HU_TOKENKIND_WORD)
+      {
+        if (expectKey)
+          { isKey = true; expectKey = false; }
+        else
+        {
+          isKey = false;
+          if (inDict)
+            { expectKey = true; }
+          if (inAnno && ! inDict)
+            { inAnno = false; }
+        }
+      }
+#pragma endregion
+
+#pragma region // The space between tokens is filled with whitespace, according to the outputFormat.
+      if (outputFormat == HU_OUTPUTFORMAT_PRESERVED)
+      {
         while (tok->line > line)
         {
-          appendString(& str, "\n", 1);
+          appendString(str, "\n", 1);
           line += 1;
           col = 1;
         }
         while (tok->col > col)
         {
-          appendString(& str, " ", 1);
+          appendString(str, " ", 1);
           col += 1;
         }
-        if (colorTable != NULL && tok->tokenKind != lastColorTableIdx)
-        {
-          int colorTableIdx = HU_COLORKIND_NONE;
-          if (inAnno)
-          {
-            if (tok->tokenKind == HU_TOKENKIND_WORD)
-            {
-              if (isKey)
-                { colorTableIdx = HU_COLORKIND_ANNOKEY; }
-              else
-                { colorTableIdx = HU_COLORKIND_ANNOVALUE; }
-            }
-            else if (tok->tokenKind == HU_TOKENKIND_STARTDICT ||
-                     tok->tokenKind == HU_TOKENKIND_ENDDICT)
-              { colorTableIdx = HU_COLORKIND_PUNCANNOTATEDICT; }
-            else if (tok->tokenKind == HU_TOKENKIND_KEYVALUESEP)
-              { colorTableIdx = HU_COLORKIND_PUNCANNOTATEKEYVALUESEP; }
-            else if (tok->tokenKind == HU_TOKENKIND_ANNOTATE)
-              { colorTableIdx = HU_COLORKIND_PUNCANNOTATE; }
-          }
-          else
-          {
-            if (tok->tokenKind == HU_TOKENKIND_WORD)
-            {
-              if (isKey)
-                { colorTableIdx = HU_COLORKIND_KEY; }
-              else
-                { colorTableIdx = HU_COLORKIND_VALUE; }
-            }
-            else if (tok->tokenKind == HU_TOKENKIND_STARTLIST ||
-                     tok->tokenKind == HU_TOKENKIND_ENDLIST)
-              { colorTableIdx = HU_COLORKIND_PUNCLIST; }
-            else if (tok->tokenKind == HU_TOKENKIND_STARTDICT ||
-                     tok->tokenKind == HU_TOKENKIND_ENDDICT)
-              { colorTableIdx = HU_COLORKIND_PUNCDICT; }
-            else if (tok->tokenKind == HU_TOKENKIND_KEYVALUESEP)
-              { colorTableIdx = HU_COLORKIND_PUNCKEYVALUESEP; }
-          }
-          
-          if (colorTableIdx != lastColorTableIdx)
-          {
-            huStringView_t * ce = colorTable + colorTableIdx;
-            appendString(& str, ce->str, ce->size);
-          }
-        }
-        appendString(& str, tok->value.str, tok->value.size);
       }
-      // after token loop
-      if (colorTable != NULL)
+      else if (outputFormat == HU_OUTPUTFORMAT_MINIMAL)
       {
-        appendString(& str, off, strlen(off));
-      }
-      appendString(& str, "\n\0", 1);
-    }
-    break;
-
-  case HU_OUTPUTFORMAT_MINIMAL:
-    {
-      int line = 1, col = 1;
-      int lastColorTableIdx = HU_COLORKIND_NONE;
-      bool inDict = false;
-      bool inAnno = false;
-      bool expectKey = false;
-      bool isKey = false;
-
-      huToken_t * tokens = (huToken_t *) trove->tokens.buffer;
-      for (int i = 0; i < huGetNumTokens(trove); ++i)
-      {
-        huToken_t * tok = tokens + i;
-        if (tok->tokenKind == HU_TOKENKIND_EOF)
-          { break; }
-        if (tok->tokenKind == HU_TOKENKIND_COMMENT && excludeComments)
-          { continue; }
-        if (tok->tokenKind == HU_TOKENKIND_STARTDICT)
-          { inDict = true; expectKey = true; }
-        else if (tok->tokenKind == HU_TOKENKIND_ENDDICT ||
-                 tok->tokenKind == HU_TOKENKIND_STARTLIST)
-        { 
-          inDict = false;
-          expectKey = false;
-          inAnno = false;
-        }
-        else if (tok->tokenKind == HU_TOKENKIND_ANNOTATE)
-          { inAnno = true; expectKey = true; }
-        else if (tok->tokenKind == HU_TOKENKIND_WORD)
-        {
-          if (expectKey)
-            { isKey = true; expectKey = false; }
-          else
-          {
-            isKey = false;
-            if (inDict)
-              { expectKey = true; }
-            if (inAnno && ! inDict)
-              { inAnno = false; }
-          }
-        }   
-
-        // the space between tokens is filled with whitespace
         if (tok->line != line)
         {
-          appendString(& str, "\n", 1);
+          appendString(str, "\n", 1);
           line += 1;
           col = 1;
         }
         else if (tok->col > col)
         {
-          appendString(& str, " ", 1);
+          appendString(str, " ", 1);
           col += 1;
         }
-
-        if (colorTable != NULL)
-        {
-          int colorTableIdx = HU_COLORKIND_NONE;
-          if (inAnno)
-          {
-            if (tok->tokenKind == HU_TOKENKIND_WORD)
-            {
-              if (isKey)
-                { colorTableIdx = HU_COLORKIND_ANNOKEY; }
-              else
-                { colorTableIdx = HU_COLORKIND_ANNOVALUE; }
-            }
-            else if (tok->tokenKind == HU_TOKENKIND_STARTDICT ||
-                     tok->tokenKind == HU_TOKENKIND_ENDDICT)
-              { colorTableIdx = HU_COLORKIND_PUNCANNOTATEDICT; }
-            else if (tok->tokenKind == HU_TOKENKIND_KEYVALUESEP)
-              { colorTableIdx = HU_COLORKIND_PUNCANNOTATEKEYVALUESEP; }
-            else if (tok->tokenKind == HU_TOKENKIND_ANNOTATE)
-              { colorTableIdx = HU_COLORKIND_PUNCANNOTATE; }
-          }
-          else
-          {
-            if (tok->tokenKind == HU_TOKENKIND_WORD)
-            {
-              if (isKey)
-                { colorTableIdx = HU_COLORKIND_KEY; }
-              else
-                { colorTableIdx = HU_COLORKIND_VALUE; }
-            }
-            else if (tok->tokenKind == HU_TOKENKIND_STARTLIST ||
-                     tok->tokenKind == HU_TOKENKIND_ENDLIST)
-              { colorTableIdx = HU_COLORKIND_PUNCLIST; }
-            else if (tok->tokenKind == HU_TOKENKIND_STARTDICT ||
-                     tok->tokenKind == HU_TOKENKIND_ENDDICT)
-              { colorTableIdx = HU_COLORKIND_PUNCDICT; }
-            else if (tok->tokenKind == HU_TOKENKIND_KEYVALUESEP)
-              { colorTableIdx = HU_COLORKIND_PUNCKEYVALUESEP; }
-          }
-          if (tok->tokenKind == HU_TOKENKIND_COMMENT)
-            { colorTableIdx = HU_COLORKIND_COMMENT; }
-          
-          if (colorTableIdx != lastColorTableIdx)
-          {
-            huStringView_t * ce = colorTable + colorTableIdx;
-            appendString(& str, ce->str, ce->size);
-            lastColorTableIdx = colorTableIdx;
-          }
-        }
-        appendString(& str, tok->value.str, tok->value.size);
       }
+#pragma endregion
+
+#pragma region // Colorize the output.
       if (colorTable != NULL)
       {
-        appendString(& str, off, strlen(off));
+        int colorTableIdx = HU_COLORKIND_NONE;
+        if (inAnno)
+        {
+          if (tok->tokenKind == HU_TOKENKIND_WORD)
+          {
+            if (isKey)
+              { colorTableIdx = HU_COLORKIND_ANNOKEY; }
+            else
+              { colorTableIdx = HU_COLORKIND_ANNOVALUE; }
+          }
+          else if (tok->tokenKind == HU_TOKENKIND_STARTDICT ||
+                    tok->tokenKind == HU_TOKENKIND_ENDDICT)
+            { colorTableIdx = HU_COLORKIND_PUNCANNOTATEDICT; }
+          else if (tok->tokenKind == HU_TOKENKIND_KEYVALUESEP)
+            { colorTableIdx = HU_COLORKIND_PUNCANNOTATEKEYVALUESEP; }
+          else if (tok->tokenKind == HU_TOKENKIND_ANNOTATE)
+            { colorTableIdx = HU_COLORKIND_PUNCANNOTATE; }
+        }
+        else
+        {
+          if (tok->tokenKind == HU_TOKENKIND_WORD)
+          {
+            if (isKey)
+              { colorTableIdx = HU_COLORKIND_KEY; }
+            else
+              { colorTableIdx = HU_COLORKIND_VALUE; }
+          }
+          else if (tok->tokenKind == HU_TOKENKIND_STARTLIST ||
+                    tok->tokenKind == HU_TOKENKIND_ENDLIST)
+            { colorTableIdx = HU_COLORKIND_PUNCLIST; }
+          else if (tok->tokenKind == HU_TOKENKIND_STARTDICT ||
+                    tok->tokenKind == HU_TOKENKIND_ENDDICT)
+            { colorTableIdx = HU_COLORKIND_PUNCDICT; }
+          else if (tok->tokenKind == HU_TOKENKIND_KEYVALUESEP)
+            { colorTableIdx = HU_COLORKIND_PUNCKEYVALUESEP; }
+        }
+        if (tok->tokenKind == HU_TOKENKIND_COMMENT)
+          { colorTableIdx = HU_COLORKIND_COMMENT; }
+        
+        if (colorTableIdx != lastColorTableIdx)
+        {
+          huStringView_t * ce = colorTable + colorTableIdx;
+          appendString(str, ce->str, ce->size);
+          lastColorTableIdx = colorTableIdx;
+        }
       }
-      appendString(& str, "\n\0", 2);
-    }
-    break;
+#pragma endregion
 
-  case HU_OUTPUTFORMAT_PRETTY:
+      appendString(str, tok->value.str, tok->value.size);
+    }
+    if (colorTable != NULL)
     {
-      
+      appendString(str, off, strlen(off));
     }
-    break;
+    appendString(str, "\n\0", 2);
   }
-
-  huStringView_t res = { str.buffer, str.numElements };
-  return res;
+  else if (outputFormat == HU_OUTPUTFORMAT_PRETTY)
+  {
+    troveToPrettyString(str, trove, outputFormat, excludeComments, colorTable);
+  }
 }
 
+#pragma GCC diagnostic pop
 
 int huTroveToFile(huTrove_t * trove, int outputFormat, bool includeComments, FILE * fp)
 {
