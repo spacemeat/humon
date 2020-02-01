@@ -744,7 +744,11 @@ huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colo
 
 #pragma GCC diagnostic pop
 
-int huTroveToFile(huTrove_t * trove, int outputFormat, bool includeComments, FILE * fp)
+size_t huTroveToFile(FILE * fp, huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colorTable)
 {
-  return -1;
+  huVector_t str;
+  huInitVector(& str, sizeof(char));
+  huTroveToString(& str, trove, outputFormat, excludeComments, colorTable);
+
+  return fwrite(str.buffer, sizeof(char), str.numElements, fp);
 }

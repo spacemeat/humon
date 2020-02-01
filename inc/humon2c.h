@@ -235,8 +235,7 @@ extern "C"
   // User must free(*serializedTrove);
   void huTroveToString(huVector_t * str, huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colorTable);
 
-  int huTroveToFile(huTrove_t * trove, int outputFormat, bool includeComments, FILE * fp);
-
+  size_t huTroveToFile(FILE * fp, huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colorTable);
 
 #ifdef __cplusplus
 } // extern "C"
