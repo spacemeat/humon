@@ -1318,3 +1318,362 @@ TEST(multipleNestedLists, values)
     }
   }
 }
+
+TEST_GROUP(oneAnnoOnly)
+{
+  huTrove_t * trove = NULL;
+
+  void setup()
+  {
+    auto humon = 
+R"(@a:b)";
+    trove = huMakeTroveFromString("oneAnnoOnly", humon, 2, 2);
+  }
+
+  void teardown()
+  {
+    if (trove)
+      { huDestroyTrove(trove); }
+  }
+};
+
+TEST(oneAnnoOnly, values)
+{
+  LONGS_EQUAL_TEXT(0, huGetNumErrors(trove), "GetNumErrors()");
+  LONGS_EQUAL_TEXT(1, huGetNumTroveAnnotations(trove), "getNumTAs()");
+  huAnnotation_t * anno = huGetTroveAnnotation(trove, 0);
+  LONGS_EQUAL_TEXT(1, anno->key->value.size, "key len");
+  STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "key val");
+  LONGS_EQUAL_TEXT(1, anno->value->value.size, "val len");
+  STRNCMP_EQUAL_TEXT("b", anno->value->value.str, 1, "val val");
+}
+
+
+TEST_GROUP(oneValueAnno)
+{
+  huTrove_t * trove = NULL;
+
+  void setup()
+  {
+    auto humon = 
+R"(foo   @ a : b)";
+    trove = huMakeTroveFromString("oneValueAnno", humon, 2, 2);
+  }
+
+  void teardown()
+  {
+    if (trove)
+      { huDestroyTrove(trove); }
+  }
+};
+
+TEST(oneValueAnno, values)
+{
+  huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
+  LONGS_EQUAL_TEXT(1, huGetNumAnnotations(node), "num anno");
+  huAnnotation_t * anno = huGetAnnotation(node, 0);
+  LONGS_EQUAL_TEXT(1, anno->key->value.size, "key len");
+  STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "key val");
+  LONGS_EQUAL_TEXT(1, anno->value->value.size, "val len");
+  STRNCMP_EQUAL_TEXT("b", anno->value->value.str, 1, "val val");
+}
+
+
+TEST_GROUP(oneValueTwoAnno)
+{
+  huTrove_t * trove = NULL;
+
+  void setup()
+  {
+    auto humon = 
+R"(foo   @ a : b
+@ c : d)";
+    trove = huMakeTroveFromString("oneValueTwoAnno", humon, 2, 2);
+  }
+
+  void teardown()
+  {
+    if (trove)
+      { huDestroyTrove(trove); }
+  }
+};
+
+TEST(oneValueTwoAnno, values)
+{
+  huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
+  LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
+  huAnnotation_t * anno = huGetAnnotation(node, 0);
+  LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", anno->value->value.str, 1, "b val val");
+  anno = huGetAnnotation(node, 1);
+  LONGS_EQUAL_TEXT(1, anno->key->value.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", anno->key->value.str, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, anno->value->value.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", anno->value->value.str, 1, "d val val");
+}
+
+
+TEST_GROUP(oneValueTwoAnnoGroup)
+{
+  huTrove_t * trove = NULL;
+
+  void setup()
+  {
+    auto humon = 
+R"(foo   @ {a : b
+c : d} )";
+    trove = huMakeTroveFromString("dictInDict", humon, 2, 2);
+  }
+
+  void teardown()
+  {
+    if (trove)
+      { huDestroyTrove(trove); }
+  }
+};
+
+TEST(oneValueTwoAnnoGroup, values)
+{
+  huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
+  LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
+  huAnnotation_t * anno = huGetAnnotation(node, 0);
+  LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", anno->value->value.str, 1, "b val val");
+  anno = huGetAnnotation(node, 1);
+  LONGS_EQUAL_TEXT(1, anno->key->value.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", anno->key->value.str, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, anno->value->value.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", anno->value->value.str, 1, "d val val");
+}
+
+
+TEST_GROUP(oneEmptyListTwoAnnoGroup)
+{
+  huTrove_t * trove = NULL;
+
+  void setup()
+  {
+    auto humon = 
+R"([   @ {a : b
+c : d} ])";
+    trove = huMakeTroveFromString("oneEmptyListTwoAnnoGroup", humon, 2, 2);
+  }
+
+  void teardown()
+  {
+    if (trove)
+      { huDestroyTrove(trove); }
+  }
+};
+
+TEST(oneEmptyListTwoAnnoGroup, values)
+{
+  huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
+  LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
+  huAnnotation_t * anno = huGetAnnotation(node, 0);
+  LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", anno->value->value.str, 1, "b val val");
+  anno = huGetAnnotation(node, 1);
+  LONGS_EQUAL_TEXT(1, anno->key->value.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", anno->key->value.str, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, anno->value->value.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", anno->value->value.str, 1, "d val val");
+}
+
+
+TEST_GROUP(oneEmptyListTwoAnnoLast)
+{
+  huTrove_t * trove = NULL;
+
+  void setup()
+  {
+    auto humon = 
+R"([   @ a : b
+]@c : d )";
+    trove = huMakeTroveFromString("oneEmptyListTwoAnnoLast", humon, 2, 2);
+  }
+
+  void teardown()
+  {
+    if (trove)
+      { huDestroyTrove(trove); }
+  }
+};
+
+TEST(oneEmptyListTwoAnnoLast, values)
+{
+  huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
+  LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
+  huAnnotation_t * anno = huGetAnnotation(node, 0);
+  LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", anno->value->value.str, 1, "b val val");
+  anno = huGetAnnotation(node, 1);
+  LONGS_EQUAL_TEXT(1, anno->key->value.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", anno->key->value.str, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, anno->value->value.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", anno->value->value.str, 1, "d val val");
+}
+
+
+TEST_GROUP(oneEmptyDictTwoAnnoGroup)
+{
+  huTrove_t * trove = NULL;
+
+  void setup()
+  {
+    auto humon = 
+R"({   @ {a : b
+c : d} })";
+    trove = huMakeTroveFromString("oneEmptyDictTwoAnnoGroup", humon, 2, 2);
+  }
+
+  void teardown()
+  {
+    if (trove)
+      { huDestroyTrove(trove); }
+  }
+};
+
+TEST(oneEmptyDictTwoAnnoGroup, values)
+{
+  huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
+  LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
+  huAnnotation_t * anno = huGetAnnotation(node, 0);
+  LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", anno->value->value.str, 1, "b val val");
+  anno = huGetAnnotation(node, 1);
+  LONGS_EQUAL_TEXT(1, anno->key->value.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", anno->key->value.str, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, anno->value->value.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", anno->value->value.str, 1, "d val val");
+}
+
+
+TEST_GROUP(oneEmptyDictTwoAnnoLast)
+{
+  huTrove_t * trove = NULL;
+
+  void setup()
+  {
+    auto humon = 
+R"({   @ a : b}@
+c : d)";
+    trove = huMakeTroveFromString("oneEmptyDictTwoAnnoLast", humon, 2, 2);
+  }
+
+  void teardown()
+  {
+    if (trove)
+      { huDestroyTrove(trove); }
+  }
+};
+
+TEST(oneEmptyDictTwoAnnoLast, values)
+{
+  huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
+  LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
+  huAnnotation_t * anno = huGetAnnotation(node, 0);
+  LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", anno->value->value.str, 1, "b val val");
+  anno = huGetAnnotation(node, 1);
+  LONGS_EQUAL_TEXT(1, anno->key->value.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", anno->key->value.str, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, anno->value->value.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", anno->value->value.str, 1, "d val val");
+}
+
+
+TEST_GROUP(oneValueListTwoAnnoGroup)
+{
+  huTrove_t * trove = NULL;
+
+  void setup()
+  {
+    auto humon = 
+R"([  foo @ {a : b
+c : d} ])";
+    trove = huMakeTroveFromString("oneValueListTwoAnnoGroup", humon, 2, 2);
+  }
+
+  void teardown()
+  {
+    if (trove)
+      { huDestroyTrove(trove); }
+  }
+};
+
+TEST(oneValueListTwoAnnoGroup, values)
+{
+  huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
+  node = huGetChildNodeByIndex(node, 0);
+  LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
+  huAnnotation_t * anno = huGetAnnotation(node, 0);
+  LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", anno->value->value.str, 1, "b val val");
+  anno = huGetAnnotation(node, 1);
+  LONGS_EQUAL_TEXT(1, anno->key->value.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", anno->key->value.str, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, anno->value->value.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", anno->value->value.str, 1, "d val val");
+}
+
+
+TEST_GROUP(oneValueDictFourAnno)
+{
+  huTrove_t * trove = NULL;
+
+  void setup()
+  {
+    auto humon = 
+R"({  foo @ a : b :
+  @ c : d @e:f bar @g:h })";
+    trove = huMakeTroveFromString("oneValueDictFourAnno", humon, 2, 2);
+  }
+
+  void teardown()
+  {
+    if (trove)
+      { huDestroyTrove(trove); }
+  }
+};
+
+TEST(oneValueDictFourAnno, values)
+{
+  huNode_t * node = (huNode_t *) huGetElement(& trove->nodes, 0);
+  node = huGetChildNodeByIndex(node, 0);
+  LONGS_EQUAL_TEXT(4, huGetNumAnnotations(node), "num anno");
+  huAnnotation_t * anno = huGetAnnotation(node, 0);
+  LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", anno->value->value.str, 1, "b val val");
+  anno = huGetAnnotation(node, 1);
+  LONGS_EQUAL_TEXT(1, anno->key->value.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", anno->key->value.str, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, anno->value->value.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", anno->value->value.str, 1, "d val val");
+  anno = huGetAnnotation(node, 2);
+  LONGS_EQUAL_TEXT(1, anno->key->value.size, "e key len");
+  STRNCMP_EQUAL_TEXT("e", anno->key->value.str, 1, "e key val");
+  LONGS_EQUAL_TEXT(1, anno->value->value.size, "f val len");
+  STRNCMP_EQUAL_TEXT("f", anno->value->value.str, 1, "f val val");
+  anno = huGetAnnotation(node, 3);
+  LONGS_EQUAL_TEXT(1, anno->key->value.size, "g key len");
+  STRNCMP_EQUAL_TEXT("g", anno->key->value.str, 1, "g key val");
+  LONGS_EQUAL_TEXT(1, anno->value->value.size, "h val len");
+  STRNCMP_EQUAL_TEXT("h", anno->value->value.str, 1, "h val val");
+}

@@ -226,6 +226,9 @@ extern "C"
   int huGetNumErrors(huTrove_t * trove);
   huError_t * huGetError(huTrove_t * trove, int errorIdx);
 
+  int huGetNumTroveAnnotations(huTrove_t * trove);
+  huAnnotation_t * huGetTroveAnnotation(huTrove_t * trove, int errorIdx);
+
   int huGetNumTroveComments(huTrove_t * trove);
   huComment_t * huGetTroveComment(huTrove_t * trove, int errorIdx);
   

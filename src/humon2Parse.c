@@ -11,6 +11,14 @@ void recordError(huTrove_t * trove, int errorCode, huToken_t * pCur)
 }
 
 
+void assignTroveComment(huTrove_t * trove, huToken_t * pCurrentToken)
+{
+  huComment_t * comment = huGrowVector(& trove->comments, 1);
+  comment->commentToken = pCurrentToken;
+  comment->owner = NULL;
+}
+
+
 void assignComment(huNode_t * owner, huToken_t * pCurrentToken)
 {
   huComment_t * comment = huGrowVector(& owner->comments, 1);
@@ -77,7 +85,7 @@ enum annotationParseState
 };
 
 // annotations are like @ foo: bar or @ { foo: bar baz: beer }
-void parseAnnotations(huNode_t * owner, huToken_t ** ppCur)
+void parseAnnotations(huTrove_t * trove, huNode_t * owner, huToken_t ** ppCur)
 {
   huToken_t * key = NULL;
   huToken_t * value = NULL;
@@ -89,21 +97,33 @@ void parseAnnotations(huNode_t * owner, huToken_t ** ppCur)
     if (state == APS_ANTICIPATE_ANNOTATE && 
         (* ppCur)->tokenKind != HU_TOKENKIND_ANNOTATE)
       { break; }
+    
+    printf("state: %d\n", state);
 
     switch ((* ppCur)->tokenKind)
     {
     case HU_TOKENKIND_EOF:
-      recordError(owner->trove, HU_ERROR_UNEXPECTED_EOF, * ppCur);
+      recordError(trove, HU_ERROR_UNEXPECTED_EOF, * ppCur);
       scanning = false;
       break;
     
     case HU_TOKENKIND_ANNOTATE:
       state = APS_EXPECT_START_OR_KEY;
+      if (owner != NULL)
+        { owner->lastToken = * ppCur; }
+      * ppCur += 1;
       break;
     
     case HU_TOKENKIND_COMMENT:
-      assignComment(owner, * ppCur);
-      owner->lastToken = * ppCur;
+      if (owner != NULL)
+      {
+        assignComment(owner, * ppCur);
+        owner->lastToken = * ppCur;
+      }
+      else
+      {
+        assignTroveComment(trove, * ppCur);
+      }
       * ppCur += 1;
       break;
 
@@ -111,12 +131,13 @@ void parseAnnotations(huNode_t * owner, huToken_t ** ppCur)
       if (state == APS_EXPECT_START_OR_KEY)
       {
         state = APS_IN_DICT_EXPECT_KEY_OR_END;
-        owner->lastToken = * ppCur;
+        if (owner != NULL)
+          { owner->lastToken = * ppCur; }
         * ppCur += 1;
       }
       else
       {
-        recordError(owner->trove, HU_ERROR_SYNTAX_ERROR, * ppCur);
+        recordError(trove, HU_ERROR_SYNTAX_ERROR, * ppCur);
         * ppCur += 1;
         scanning = false;
       }
@@ -126,28 +147,37 @@ void parseAnnotations(huNode_t * owner, huToken_t ** ppCur)
       if (state == APS_IN_DICT_EXPECT_KEY_OR_END)
       {
         state = APS_ANTICIPATE_ANNOTATE;
-        owner->lastToken = * ppCur;
+        if (owner != NULL)
+          { owner->lastToken = * ppCur; }
         * ppCur += 1;
         scanning = false;
       }
       else
       {
-        recordError(owner->trove, HU_ERROR_SYNTAX_ERROR, * ppCur);
+        recordError(trove, HU_ERROR_SYNTAX_ERROR, * ppCur);
         * ppCur += 1;
         scanning = false;
       }
       break;
 
     case HU_TOKENKIND_KEYVALUESEP:
-      if (state == APS_IN_DICT_EXPECT_KVS)
+      if (state == APS_EXPECT_KVS)
+      {
+        state = APS_EXPECT_VAL;
+        if (owner != NULL)
+          { owner->lastToken = * ppCur; }
+        * ppCur += 1;
+      }
+      else if (state == APS_IN_DICT_EXPECT_KVS)
       {
         state = APS_IN_DICT_EXPECT_VAL;
-        owner->lastToken = * ppCur;
+        if (owner != NULL)
+          { owner->lastToken = * ppCur; }
         * ppCur += 1;
       }
       else
       {
-        recordError(owner->trove, HU_ERROR_SYNTAX_ERROR, * ppCur);
+        recordError(trove, HU_ERROR_SYNTAX_ERROR, * ppCur);
         * ppCur += 1;
         scanning = false;
       }
@@ -158,42 +188,67 @@ void parseAnnotations(huNode_t * owner, huToken_t ** ppCur)
       {
         state = APS_EXPECT_KVS;
         key = * ppCur;
-        owner->lastToken = * ppCur;
+        if (owner != NULL)
+          { owner->lastToken = * ppCur; }
         * ppCur += 1;
       }
       else if (state == APS_IN_DICT_EXPECT_KEY_OR_END)
       {
         state = APS_IN_DICT_EXPECT_KVS;
         key = * ppCur;
-        owner->lastToken = * ppCur;
+        if (owner != NULL)
+          { owner->lastToken = * ppCur; }
         * ppCur += 1;
       }
       else if (state == APS_EXPECT_VAL)
       {
         state = APS_ANTICIPATE_ANNOTATE;
         value = * ppCur;
-        owner->lastToken = * ppCur;
+        if (owner != NULL)
+        {
+          owner->lastToken = * ppCur;
+          huAnnotation_t * annotation = huGrowVector(
+            & owner->annotations, 1);
+          annotation->key = key;
+          annotation->value = value;
+        }
+        else
+        {
+          huAnnotation_t * annotation = huGrowVector(
+            & trove->annotations, 1);
+          annotation->key = key;
+          annotation->value = value;
+        }
         * ppCur += 1;
         scanning = false;
-
-        huAnnotation_t * annotation = huGrowVector(
-          & owner->annotations, 1);
-        annotation->key = key;
-        annotation->value = value;
       }
       else if (state == APS_IN_DICT_EXPECT_VAL)
       {
         state = APS_IN_DICT_EXPECT_KEY_OR_END;
         value = * ppCur;
-        owner->lastToken = * ppCur;
+        if (owner != NULL)
+        {
+          owner->lastToken = * ppCur;
+          huAnnotation_t * annotation = huGrowVector(
+            & owner->annotations, 1);
+          annotation->key = key;
+          annotation->value = value;
+        }
+        else
+        {
+          huAnnotation_t * annotation = huGrowVector(
+            & trove->annotations, 1);
+          annotation->key = key;
+          annotation->value = value;
+        }
         * ppCur += 1;
-
-        huAnnotation_t * annotation = huGrowVector(
-          & owner->annotations, 1);
-        annotation->key = key;
-        annotation->value = value;
       }
       break;
+    
+    default:
+      recordError(trove, HU_ERROR_SYNTAX_ERROR, * ppCur);
+      * ppCur += 1;
+      scanning = false;
     }
   }
 }
@@ -285,7 +340,7 @@ void parseTroveRecursive(huTrove_t * trove, huToken_t ** ppCur, int parentNodeId
 
         assignEnqueuedComments(commentQueue, & newNode->comments, newNode);
         assignSameLineComments(newNode, & * ppCur);
-        parseAnnotations(newNode, & * ppCur);
+        parseAnnotations(trove, newNode, & * ppCur);
 
         parseTroveRecursive(trove, ppCur, 
           newNode->nodeIdx, PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END, commentQueue);
@@ -312,7 +367,7 @@ void parseTroveRecursive(huTrove_t * trove, huToken_t ** ppCur, int parentNodeId
         assignEnqueuedComments(commentQueue, & parentNode->comments, parentNode);
         // TODO: These can be arbitrarily ordered on one line. Also, fix this for all instances of these invocations.
         assignSameLineComments(parentNode, ppCur);
-        parseAnnotations(parentNode, ppCur);
+        parseAnnotations(trove, parentNode, ppCur);
       }
       else
       {
@@ -375,7 +430,7 @@ void parseTroveRecursive(huTrove_t * trove, huToken_t ** ppCur, int parentNodeId
 
         assignEnqueuedComments(commentQueue, & newNode->comments, newNode);
         assignSameLineComments(newNode, ppCur);
-        parseAnnotations(newNode, ppCur);
+        parseAnnotations(trove, newNode, ppCur);
 
         parseTroveRecursive(trove, ppCur, 
           newNode->nodeIdx, PS_IN_DICT_EXPECT_KEY_OR_END, commentQueue);
@@ -401,7 +456,7 @@ void parseTroveRecursive(huTrove_t * trove, huToken_t ** ppCur, int parentNodeId
 
         assignEnqueuedComments(commentQueue, & parentNode->comments, parentNode);
         assignSameLineComments(parentNode, ppCur);
-        parseAnnotations(parentNode, ppCur);
+        parseAnnotations(trove, parentNode, ppCur);
       }
       else
       {
@@ -424,7 +479,7 @@ void parseTroveRecursive(huTrove_t * trove, huToken_t ** ppCur, int parentNodeId
         * ppCur += 1;
         assignEnqueuedComments(commentQueue, & lastNode->comments, lastNode);
         assignSameLineComments(lastNode, ppCur);
-        parseAnnotations(lastNode, ppCur);
+        parseAnnotations(trove, lastNode, ppCur);
       }
       else
       {
@@ -449,7 +504,7 @@ void parseTroveRecursive(huTrove_t * trove, huToken_t ** ppCur, int parentNodeId
 
         assignEnqueuedComments(commentQueue, & newNode->comments, newNode);
         assignSameLineComments(newNode, ppCur);
-        parseAnnotations(parentNode, ppCur);
+        parseAnnotations(trove, newNode, ppCur);
       }
       else if (state == PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END)
       {
@@ -470,7 +525,7 @@ void parseTroveRecursive(huTrove_t * trove, huToken_t ** ppCur, int parentNodeId
 
         assignEnqueuedComments(commentQueue, & newNode->comments, newNode);
         assignSameLineComments(newNode, ppCur);
-        parseAnnotations(parentNode, ppCur);
+        parseAnnotations(trove, newNode, ppCur);
       }
       else if (state == PS_IN_DICT_EXPECT_KEY_OR_END)
       {
@@ -483,7 +538,7 @@ void parseTroveRecursive(huTrove_t * trove, huToken_t ** ppCur, int parentNodeId
 
         assignEnqueuedComments(commentQueue, & newNode->comments, newNode);
         assignSameLineComments(newNode, ppCur);
-        parseAnnotations(newNode, ppCur);
+        parseAnnotations(trove, newNode, ppCur);
       }
       else if (state == PS_IN_DICT_EXPECT_START_OR_VALUE)
       {
@@ -510,7 +565,7 @@ void parseTroveRecursive(huTrove_t * trove, huToken_t ** ppCur, int parentNodeId
 
         assignEnqueuedComments(commentQueue, & lastNode->comments, lastNode);
         assignSameLineComments(lastNode, ppCur);
-        parseAnnotations(lastNode, ppCur);
+        parseAnnotations(trove, lastNode, ppCur);
       }
       else
       {
@@ -525,7 +580,20 @@ void parseTroveRecursive(huTrove_t * trove, huToken_t ** ppCur, int parentNodeId
       enqueueComment(commentQueue, * ppCur);
       * ppCur += 1;
       break;
+
+    case HU_TOKENKIND_ANNOTATE:
+      {
+        // Only annotations after other annotations OR trove annotations are picked up here
+        huNode_t * lastNode = NULL;
+        if (huGetNumNodes(trove) != 0)
+        {
+          lastNode = (huNode_t *) trove->nodes.buffer + trove->nodes.numElements - 1;
+        }
+        parseAnnotations(trove, lastNode, ppCur);
+      }
+      break;
     }
+
   }
 
   depth -= 1;
