@@ -1,0 +1,5 @@
+﻿/* comment */
+@annoKey: annoVal
+{
+    key: [list],
+}

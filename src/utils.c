@@ -55,7 +55,6 @@ char const * huOutputErrorToString(int rhs)
 }
 
 
-
 void huInitVector(huVector_t * vector, int elementSize)
 {
   vector->buffer = NULL;
@@ -85,7 +84,7 @@ int huGetVectorSize(huVector_t * vector)
 }
 
 
-void * huGetElement(huVector_t * vector, int idx)
+void * huGetVectorElement(huVector_t * vector, int idx)
 {
   return vector->buffer + vector->elementSize * idx;
 }
@@ -117,8 +116,102 @@ void * huGrowVector(huVector_t * vector, int numElements)
     {
       vector->elementCapacity = cap;
       vector->buffer = realloc(vector->buffer, cap * vector->elementSize);
+      if (vector->buffer == NULL)
+        { return NULL; }
     }
 
     return vector->buffer + (vector->numElements - numElements) * vector->elementSize;
   }
 }
+
+
+huToken_t humon_nullToken = 
+{
+  .tokenKind = HU_TOKENKIND_NULL,
+  .value = {
+    .str = "",
+    .size = 0
+  },
+  .line = 0,
+  .col = 0,
+  .endLine = 0,
+  .endCol = 0
+};
+
+huNode_t humon_nullNode =
+{
+  .trove = & humon_nullTrove,
+  .nodeIdx = -1,
+  .kind = HU_NODEKIND_NULL,
+  .firstToken = & humon_nullToken,
+  .keyToken = & humon_nullToken,
+  .firstValueToken = & humon_nullToken,
+  .lastValueToken = & humon_nullToken,
+  .lastToken = & humon_nullToken,
+  .childIdx = 0,
+  .parentNodeIdx = -1,
+  .childNodeIdxs = (huVector_t) {
+    .buffer = NULL,
+    .elementSize = sizeof(int),
+    .numElements = 0,
+    .elementCapacity = 0
+  },
+  .childDictKeys = (huVector_t) {
+    .buffer = NULL,
+    .elementSize = sizeof(huDictEntry_t),
+    .numElements = 0,
+    .elementCapacity = 0
+  },
+  .annotations = (huVector_t) {
+    .buffer = NULL,
+    .elementSize = sizeof(huAnnotation_t),
+    .numElements = 0,
+    .elementCapacity = 0
+  },
+  .comments = (huVector_t) {
+    .buffer = NULL,
+    .elementSize = sizeof(huComment_t),
+    .numElements = 0,
+    .elementCapacity = 0
+  }
+};
+
+huTrove_t humon_nullTrove = 
+{
+  .nameSize = 0,
+  .name = "",
+  .dataStringSize = 0,
+  .dataString = "",
+  .tokens = (huVector_t) {
+    .buffer = & humon_nullToken,
+    .elementSize = 0,
+    .numElements = 0,
+    .elementCapacity = 0
+  },
+  .nodes = (huVector_t) {
+    .buffer = & humon_nullNode,
+    .elementSize = 0,
+    .numElements = 0,
+    .elementCapacity = 0
+  },
+  .errors = (huVector_t) {
+    .buffer = NULL,
+    .elementSize = 0,
+    .numElements = 0,
+    .elementCapacity = 0
+  },
+  .inputTabSize = 4,
+  .outputTabSize = 4,
+  .annotations = (huVector_t) {
+    .buffer = NULL,
+    .elementSize = 0,
+    .numElements = 0,
+    .elementCapacity = 0
+  },
+  .comments = (huVector_t) {
+    .buffer = NULL,
+    .elementSize = 0,
+    .numElements = 0,
+    .elementCapacity = 0
+  }
+};

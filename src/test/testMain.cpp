@@ -1,5 +1,5 @@
 #include <CppUTest/CommandLineTestRunner.h>
-#include "humon2c.h"
+#include "humon.h"
 
 
 int main(int argc, char * argv[])

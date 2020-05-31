@@ -7,30 +7,32 @@ huTrove_t * makeTrove(char const * name, huStringView_t * data, int inputTabSize
 {
   huTrove_t * t = malloc(sizeof(huTrove_t));
   if (t == NULL)
-    { return NULL; }
+    { return & humon_nullTrove; }
 
   t->nameSize = strlen(name);
   t->name = malloc(t->nameSize + 1);
   if (t->name == NULL)
   {
     free(t);
-    return NULL;
+    return & humon_nullTrove;
   }
-  strncpy(t->name, name, t->nameSize);
+  memcpy(t->name, name, t->nameSize);
   t->name[t->nameSize] = '\0';
 
   t->dataStringSize = data->size;
-  t->dataString = malloc(data->size + 1);
+  // Pad by 4 nulls. This lets us look ahead three bytes for a 4-byte code point match.
+  t->dataString = malloc(data->size + 4);
   if (t->dataString == NULL)
   {
     free(t->name);
     free(t);
-    return NULL;
+    return & humon_nullTrove;
   }
-  strncpy(t->dataString, data->str, data->size);
+  memcpy(t->dataString, data->str, data->size);
   t->dataString[data->size] = '\0';
-
-  printf("\n%snew trove: %s%s\n%s%s%s\n", darkGreen, lightGreen, t->name, lightYellow, t->dataString, off);
+  t->dataString[data->size + 1] = '\0';
+  t->dataString[data->size + 2] = '\0';
+  t->dataString[data->size + 3] = '\0';
 
   huInitVector(& t->tokens, sizeof(huToken_t));
   huInitVector(& t->nodes, sizeof(huNode_t));
@@ -45,6 +47,7 @@ huTrove_t * makeTrove(char const * name, huStringView_t * data, int inputTabSize
   huTokenizeTrove(t);
   huParseTrove(t);
 
+  /*
   huStringView_t defaultColors[] = 
   {
     { darkGray, strlen(darkGray) },           // NONE
@@ -75,56 +78,82 @@ huTrove_t * makeTrove(char const * name, huStringView_t * data, int inputTabSize
   huResetVector(& str);
   huTroveToString(& str, t, HU_OUTPUTFORMAT_PRETTY, false, defaultColors);
   printf("Pretty:\n%s\n", (char *) str.buffer);
-
+  */
+ 
   return t;
 }
 
 
-huTrove_t * huMakeTroveFromString(char const * name, char const * data, int inputTabSize, int outputTabSize)
+huTrove_t * huMakeTroveFromString(char const * name, char const * data, int dataLen, int inputTabSize, int outputTabSize)
 {
-  int newDataSize = strlen(data);
-  char * newData = malloc(newDataSize + 1);
+  if (data == NULL)
+    { return & humon_nullTrove; }
+
+  if (dataLen < 0)
+    { return & humon_nullTrove; }
+
+  // pad by 4 nulls -- see above
+  char * newData = malloc(dataLen + 4);
   if (newData == NULL)
-    { return NULL; }
+    { return & humon_nullTrove; }
 
-  strncpy(newData, data, newDataSize);
-  newData[newDataSize] = '\0';
+  memcpy(newData, data, dataLen);
+  newData[dataLen] = '\0';
+  newData[dataLen + 1] = '\0';
+  newData[dataLen + 2] = '\0';
+  newData[dataLen + 3] = '\0';
 
-  huStringView_t dataView = { newData, newDataSize };
+  huStringView_t dataView = { newData, dataLen };
   huTrove_t * newTrove = makeTrove(name, & dataView, inputTabSize, outputTabSize);
   if (newTrove == NULL)
-    { free(newData); }
+  {
+    free(newData);
+    return & humon_nullTrove;
+  }
   
   return newTrove;
 }
 
 
-huTrove_t * huMakeTroveFromFile(char const * name, FILE * fp, int inputTabSize, int outputTabSize)
+// TODO: This currently loads the whole stream before tokenizing. It would
+// be better to load and tokenize and parse in parallel, for large file.
+huTrove_t * huMakeTroveFromFile(char const * name, char const * path, int inputTabSize, int outputTabSize)
 {
+  FILE * fp = fopen(path, "r");
+  if (fp == NULL)
+    { return & humon_nullTrove; }
+
   if (fseek(fp, 0, SEEK_END) != 0)
-    { return NULL; }
+    { return & humon_nullTrove; }
 
   int newDataSize = ftell(fp);
   if (newDataSize == -1L)
-    { return NULL; }
-
-  char * newData = malloc(newDataSize + 1);
-  if (newData == NULL)
-    { return NULL; }
+    { return & humon_nullTrove; }
 
   fseek(fp, 0, SEEK_SET);
-  if (fread(newData, newDataSize, 1, fp) != 
-    newDataSize)
+  
+  char * newData = malloc(newDataSize + 4);
+  if (newData == NULL)
+    { return & humon_nullTrove; }
+
+  int freadRet = fread(newData, 1, newDataSize, fp);
+  if (freadRet != newDataSize)
   {
     free(newData);
-    return NULL;
+    return & humon_nullTrove;
   }
   newData[newDataSize] = '\0';
+  newData[newDataSize + 1] = '\0';
+  newData[newDataSize + 2] = '\0';
+  newData[newDataSize + 3] = '\0';
 
   huStringView_t dataView = { newData, newDataSize };
   huTrove_t * newTrove = makeTrove(name, & dataView, inputTabSize, outputTabSize);
   if (newTrove == NULL)
-    { free(newData); }
+  {
+    free(newData);
+    return & humon_nullTrove;
+  }
   
   return newTrove;
 }
@@ -157,7 +186,7 @@ huToken_t * huGetToken(huTrove_t * trove, int tokenIdx)
   if (tokenIdx < trove->tokens.numElements)
     { return (huToken_t *) trove->tokens.buffer + tokenIdx; }
 
-  return NULL;
+  return & humon_nullToken;
 }
 
 
@@ -165,6 +194,8 @@ huToken_t * allocNewToken(huTrove_t * trove, int tokenKind,
   char const * str, int size, int line, int col, int endLine, int endCol)
 {
   huToken_t * newToken = huGrowVector(& trove->tokens, 1);
+  if (newToken == NULL)
+    { return & humon_nullToken; }
 
   newToken->tokenKind = tokenKind;
   newToken->value.str = str;
@@ -174,8 +205,8 @@ huToken_t * allocNewToken(huTrove_t * trove, int tokenKind,
   newToken->endLine = endLine;
   newToken->endCol = endCol;
 
-//  printf ("%stoken: line: %d  col: %d  len: %d  %s%s\n",
-//    darkYellow, line, col, size, huTokenKindToString(tokenKind), off);
+  //printf ("%stoken: line: %d  col: %d  len: %d  %s%s\n",
+  //  darkYellow, line, col, size, huTokenKindToString(tokenKind), off);
   
   return newToken;
 }
@@ -198,7 +229,7 @@ huNode_t * huGetNode(huTrove_t * trove, int nodeIdx)
   if (nodeIdx >= 0 && nodeIdx < trove->nodes.numElements)
     { return (huNode_t *) trove->nodes.buffer + nodeIdx; }
 
-  return NULL;
+  return & humon_nullNode;
 }
 
 
@@ -256,6 +287,9 @@ huComment_t * huGetTroveComment(huTrove_t * trove, int commentIdx)
 huNode_t * allocNewNode(huTrove_t * trove, int nodeKind, huToken_t * firstToken)
 {
   huNode_t * newNode = huGrowVector(& trove->nodes, 1);
+  if (newNode == NULL)
+    { return & humon_nullNode; }
+
   huInitNode(newNode, trove);
   int newNodeIdx = newNode - (huNode_t *) trove->nodes.buffer;
   newNode->nodeIdx = newNodeIdx;
@@ -274,7 +308,7 @@ huNode_t * allocNewNode(huTrove_t * trove, int nodeKind, huToken_t * firstToken)
 void appendString(huVector_t * str, char const * addend, int size)
 {
   char * dest = huGrowVector(str, size);
-  strncpy(dest, addend, size);
+  memcpy(dest, addend, size);
 }
 
 
@@ -384,6 +418,9 @@ void printAnnotations(huAnnotation_t * annos, int numAnno, bool troveOwned, huVe
 
 void printTroveAnnotations(huTrove_t * trove, huVector_t * str, huStringView_t * colorTable)
 {
+  if (huGetNumTroveAnnotations(trove) == 0)
+    { return; }
+
   huAnnotation_t * annos = huGetTroveAnnotation(trove, 0);
   printAnnotations(annos, huGetNumTroveAnnotations(trove), true, str, colorTable);
 }
@@ -391,6 +428,9 @@ void printTroveAnnotations(huTrove_t * trove, huVector_t * str, huStringView_t *
 
 void printNodeAnnotations(huNode_t * node, huVector_t * str, huStringView_t * colorTable)
 {
+  if (huGetNumAnnotations(node) == 0)
+    { return; }
+
   huAnnotation_t * annos = huGetAnnotation(node, 0);
   printAnnotations(annos, huGetNumAnnotations(node), false, str, colorTable);
 }
@@ -574,10 +614,13 @@ void troveToPrettyString(huVector_t * str, huTrove_t * trove, int outputFormat, 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
 
-// User must free(returnval.str);
-void huTroveToString(huVector_t * str,
-huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colorTable)
+// User must free(retval.str);
+huStringView_t huTroveToString(huTrove_t * trove, 
+  int outputFormat, bool excludeComments, huStringView_t * colorTable)
 {
+  huVector_t str;
+  huInitVector(& str, sizeof(char));
+
   if (outputFormat == HU_OUTPUTFORMAT_PRESERVED &&
     excludeComments == false && colorTable == NULL)
   {
@@ -641,13 +684,13 @@ huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colo
       {
         while (line < tok->line)
         {
-          appendString(str, "\n", 1);
+          appendString(& str, "\n", 1);
           line += 1;
           col = 1;
         }
         while (col < tok->col)
         {
-          appendString(str, " ", 1);
+          appendString(& str, " ", 1);
           col += 1;
         }
       }
@@ -658,7 +701,7 @@ huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colo
           if (lastNonCommentToken != NULL &&
               tok->line != lastNonCommentToken->line)
           {
-            appendString(str, "\n", 1);
+            appendString(& str, "\n", 1);
             line += 1;
             col = 1;
           }
@@ -666,14 +709,14 @@ huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colo
               prevTok->value.str[0] == '/' && 
               prevTok->value.str[1] == '/')
           {
-            appendString(str, "\n", 1);
+            appendString(& str, "\n", 1);
             line += 1;
             col = 1;
           }
           else if (prevTok->tokenKind == HU_TOKENKIND_WORD &&
                   tok->tokenKind == HU_TOKENKIND_WORD)
           {
-            appendString(str, " ", 1);
+            appendString(& str, " ", 1);
             col += 1;
           }
         }
@@ -725,13 +768,13 @@ huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colo
         if (colorTableIdx != lastColorTableIdx)
         {
           huStringView_t * ce = colorTable + colorTableIdx;
-          appendString(str, ce->str, ce->size);
+          appendString(& str, ce->str, ce->size);
           lastColorTableIdx = colorTableIdx;
         }
       }
 #pragma endregion
 
-      appendString(str, tok->value.str, tok->value.size);
+      appendString(& str, tok->value.str, tok->value.size);
 
       int lineDelta = tok->endLine - tok->line;
       line += lineDelta;
@@ -743,23 +786,30 @@ huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colo
     if (colorTable != NULL)
     {
       huStringView_t * ce = colorTable + HU_COLORKIND_END;
-      appendString(str, ce->str, ce->size);
+      appendString(& str, ce->str, ce->size);
     }
-    appendString(str, "\n\0", 2);
+    appendString(& str, "\n\0", 2);
   }
   else if (outputFormat == HU_OUTPUTFORMAT_PRETTY)
   {
-    troveToPrettyString(str, trove, outputFormat, excludeComments, colorTable);
+    troveToPrettyString(& str, trove, outputFormat, excludeComments, colorTable);
   }
+
+  huStringView_t sv = { .str = str.buffer, .size = str.numElements };
+  return sv;
 }
 
 #pragma GCC diagnostic pop
 
-size_t huTroveToFile(FILE * fp, huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colorTable)
+size_t huTroveToFile(char const * path, huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colorTable)
 {
-  huVector_t str;
-  huInitVector(& str, sizeof(char));
-  huTroveToString(& str, trove, outputFormat, excludeComments, colorTable);
+  FILE * fp = fopen(path, "w");
+  if (fp == NULL)
+    { return 0; }
 
-  return fwrite(str.buffer, sizeof(char), str.numElements, fp);
+  huStringView_t str = huTroveToString(trove, outputFormat, excludeComments, colorTable);
+  size_t ret = fwrite(str.str, sizeof(char), str.size, fp);
+
+  free((char *) str.str); // NOTE: We're casting away const here. It's kinda sketchy, but correct.
+  return ret;
 }

@@ -2,6 +2,9 @@
     "configurations": [
         {
             "name": "Linux",
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true
+            },
             "includePath": [
                 "${workspaceFolder}/**"
             ],

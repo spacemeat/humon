@@ -1,362 +1,267 @@
-#ifndef HUMON_H
-#define HUMON_H
+#pragma once
 
-#include <string>
-#include <vector>
-#include <unordered_map>
-#include <memory>
-#include <ostream>
+/*
+  TODO:
+    Unicode
+    CMake, vcpkg
+    comment and anno search
+    backtick quotes
+    insertion ops (later priority)
+    string value transformers (getDecodedValue())
+    doxygen
+    exceptional C++ version?
+    hashed dictionary access in C?
+    ensure all annotation values from one key are returned
+    select a license
+    stringized addressing
+    saving option for CRLF
+*/
 
-#define REQUIRES(...) typename std::enable_if<(__VA_ARGS__), int>::type = 0
-#define REQUIRES_DEF(...) typename std::enable_if<(__VA_ARGS__), int>::type
+#include <stdbool.h>
+#include <stdio.h>
 
-
-namespace humon
+#ifdef __cplusplus
+extern "C"
 {
-  class HuNode;
-  class HuList;
-  class HuDict;
-  class HuValue;
+#endif
 
-  using nodePtr_t = std::unique_ptr<HuNode>;
-
-  extern nodePtr_t fromString(std::string const & humonString);
-  extern std::ostream & operator << (std::ostream & stream, HuNode const & rhs);
-
-  class HuNode
+  typedef struct huVector
   {
-  public:
-    static nodePtr_t fromString(std::string const & humonString);
-    HuNode(HuNode const & rhs) = delete;
-    HuNode(HuNode && rhs) = delete;
+    void * buffer;
+    int elementSize;
+    int numElements;
+    int elementCapacity;
+  } huVector_t;
 
-  protected:
-    static nodePtr_t fromParsing(char const *& str, size_t & len);
-    HuNode();
+  int huGetVectorSize(huVector_t * vector);
+  void * huGetVectorElement(huVector_t * vector, int idx);
 
-  public:
-    virtual ~HuNode();
-    nodePtr_t clone() const;
-
-    template <class ReturnType>
-    ReturnType & as()
-    {
-      return dynamic_cast<ReturnType &>(*this);
-    }
-
-    template <class ReturnType>
-    ReturnType const & as() const
-    {
-      return dynamic_cast<ReturnType const &>(*this);
-    }
-
-    virtual bool isList() const { return false; };
-    virtual bool isDict() const { return false; };
-    virtual bool isValue() const { return false; };
-
-    HuList const & asList() const { return as<HuList const>(); }
-    HuDict const & asDict() const { return as<HuDict>(); }
-    HuValue const & asValue() const { return as<HuValue>(); }
-
-    HuList & asList() { return as<HuList>(); }
-    HuDict & asDict() { return as<HuDict>(); }
-    HuValue & asValue() { return as<HuValue>(); }
-
-    bool operator %(std::string const & key) const;
-    
-    template <class IntType, REQUIRES(std::is_integral<IntType>())>
-    bool operator %(IntType idx) const;
-    
-    HuNode const & operator /(std::string const & key) const;
-    
-    template <class IntType, REQUIRES(std::is_integral<IntType>())>
-    HuNode const & operator /(IntType idx) const;
-    
-    HuNode const & operator >>(bool & rhs) const;
-
-    template <class Type>
-    HuNode const & operator >>(Type & rhs) const
-    {
-      rhs = *this;
-      return *this;
-    }
-
-    HuNode const & operator >>(std::string & rhs) const;
-
-    bool operator %(std::string const & key)
-      { return std::as_const(*this) % key; }
-
-    template <class IntType, REQUIRES(std::is_integral<IntType>())>
-    bool operator %(IntType idx)
-      { return std::as_const(*this) % idx; }
-
-    HuNode & operator /(std::string const & key)
-      { return const_cast<HuNode &>(std::as_const(*this) / key); }
-
-    template <class IntType, REQUIRES(std::is_integral<IntType>())>
-    HuNode & operator /(IntType idx)
-      { return const_cast<HuNode &>(std::as_const(*this) / idx); }
-
-    HuNode & operator >>(bool & rhs)
-      { return const_cast<HuNode &>(std::as_const(*this) >> rhs); }
-
-    template <class Type>
-    HuNode & operator >>(Type & rhs)
-      { return const_cast<HuNode &>(std::as_const(*this) >> rhs); }
-
-    HuNode & operator >>(std::string & rhs)
-      { return const_cast<HuNode &>(std::as_const(*this) >> rhs); }
-
-    operator bool() const;
-    operator short() const;
-    operator unsigned short() const;
-    operator int() const;
-    operator unsigned int() const;
-    operator long() const;
-    operator unsigned long() const;
-    operator long long() const;
-    operator unsigned long long() const;
-    operator float() const;
-    operator double() const;
-    operator long double() const;
-    operator std::string() const;
-
-    std::string const & keyAt(size_t idx) const;
-
-    size_t size() const;
-
-    std::string getReport() const;
-    virtual void print(std::ostream & stream, int depth = 0,
-      bool indentFirstLine = true) const = 0;
-    virtual bool operator ==(HuNode const & rhs) const = 0;
-    virtual bool operator !=(HuNode const & rhs) const = 0;
-
-  private:
-    virtual nodePtr_t clone_impl() const = 0;
+  enum huTokenKind
+  {
+    HU_TOKENKIND_NULL,
+    HU_TOKENKIND_EOF,
+    HU_TOKENKIND_STARTLIST,
+    HU_TOKENKIND_ENDLIST,
+    HU_TOKENKIND_STARTDICT,
+    HU_TOKENKIND_ENDDICT,
+    HU_TOKENKIND_KEYVALUESEP,
+    HU_TOKENKIND_ANNOTATE,
+    HU_TOKENKIND_WORD,
+    HU_TOKENKIND_COMMENT
   };
 
+  char const * huTokenKindToString(int rhs);
 
-  class HuList : public HuNode
+
+  enum huNodeKind
   {
-  public:
-    HuList(char const *& str, size_t & len);
-    HuList();
-    HuList(HuList const & rhs) = delete;
-    HuList(HuList && rhs) = delete;
-    virtual ~HuList();
-
-    virtual void print(std::ostream & stream, int depth, 
-      bool indentFirstLine = true) const override;
-
-    virtual bool operator ==(HuNode const & rhs) const override;
-    virtual bool operator !=(HuNode const & rhs) const override;
-
-    virtual bool isList() const override { return true; };
-
-    size_t size() const { return elems.size(); }
-
-    HuNode & at(size_t idx)
-    {
-      return const_cast<HuNode &>(std::as_const(*this).at(idx));
-    }
-
-    HuNode const & at(size_t idx) const
-    {
-      return * elems.at(idx).get();
-    }
-
-    template <class ReturnType>
-    ReturnType & at(size_t idx)
-    {
-      return const_cast<ReturnType &>(std::as_const(*this).at<ReturnType>(idx));
-    }
-
-    template <class ReturnType>
-    ReturnType const & at(size_t idx) const
-    {
-      return elems.at(idx).get()->as<ReturnType>();
-    }
-
-    size_t indexOf(nodePtr_t node) const;
-
-    void append(nodePtr_t node);
-    void addAt(size_t index, nodePtr_t node);
-    void removeAt(size_t index);
-
-  private:
-    virtual nodePtr_t clone_impl() const override;
-
-    std::vector<nodePtr_t> elems;
+    HU_NODEKIND_NULL,
+    HU_NODEKIND_LIST,
+    HU_NODEKIND_DICT,
+    HU_NODEKIND_VALUE
   };
 
+  char const * huNodeKindToString(int rhs);
 
-  class HuDict : public HuNode
+
+  enum huOutputFormat
   {
-  public:
-    HuDict(char const *& str, size_t & len);
-    HuDict();
-    HuDict(HuDict const & rhs) = delete;
-    HuDict(HuDict && rhs) = delete;
-    virtual ~HuDict();
-
-    virtual void print(std::ostream & stream, int depth, 
-      bool indentFirstLine = true) const override;
-
-    virtual bool operator ==(HuNode const & rhs) const override;
-    virtual bool operator !=(HuNode const & rhs) const override;
-
-    virtual bool isDict() const override { return true; };
-
-    size_t size() const { return elems.size(); }
-    bool hasKey(std::string const & key) const;
-
-    std::string const & keyAt(size_t idx) const
-    {
-      return keys.at(idx);
-    }
-
-    HuNode & at(size_t idx)
-    {
-      return const_cast<HuNode &>(std::as_const(*this).at(idx));
-    }
-
-    HuNode const & at(size_t idx) const
-    {
-      auto key = keys.at(idx);
-      return at(key);
-    }
-
-    template <class ReturnType>
-    ReturnType & at(size_t idx)
-    {
-      return const_cast<HuNode &>(std::as_const(*this).at<ReturnType>(idx));
-    }
-
-    template <class ReturnType>
-    ReturnType const & at(size_t idx) const
-    {
-      auto key = keys.at(idx);
-      return at<ReturnType>(key);
-    }
-
-    HuNode & at(std::string const & key)
-    {
-      return * elems.at(key).get();
-    }
-
-    HuNode const & at(std::string const & key) const
-    {
-      return * elems.at(key).get();
-    }
-
-    template <class ReturnType>
-    ReturnType & at(std::string const & key)
-    {
-      return const_cast<ReturnType &>(std::as_const(*this).at<ReturnType>(key));
-    }
-
-    template <class ReturnType>
-    ReturnType const & at(std::string const & key) const
-    {
-      return elems.at(key).get()->as<ReturnType>();
-    }
-
-    void add(std::string const & key, nodePtr_t node);
-    void removeAt(std::string const & key);
-
-  private:
-    virtual nodePtr_t clone_impl() const override;
-
-    std::unordered_map<std::string, nodePtr_t> elems;
-    std::vector<std::string> keys;
+    HU_OUTPUTFORMAT_PRESERVED,
+    HU_OUTPUTFORMAT_MINIMAL,
+    HU_OUTPUTFORMAT_PRETTY
   };
 
+  char const * huOutputFormatToString(int rhs);
 
-  class HuValue : public HuNode
+
+  enum huErrorCode
   {
-  public:
-    HuValue(char const *& str, size_t & len);
-    HuValue();
-    HuValue(HuValue const & rhs) = delete;
-    HuValue(HuValue && rhs) = delete;
-    virtual ~HuValue();
-
-    virtual void print(std::ostream & stream, int depth, 
-      bool indentFirstLine = true) const override;
-
-    virtual bool operator ==(HuNode const & rhs) const override;
-    virtual bool operator !=(HuNode const & rhs) const override;
-
-    virtual bool isValue() const override { return true; };
-
-    bool tryGet(bool & rv) const;
-    bool tryGet(short & rv) const;
-    bool tryGet(unsigned short & rv) const;
-    bool tryGet(int & rv) const;
-    bool tryGet(unsigned int & rv) const;
-    bool tryGet(long & rv) const;
-    bool tryGet(unsigned long & rv) const;
-    bool tryGet(long long & rv) const;
-    bool tryGet(unsigned long long & rv) const;
-    bool tryGet(float & rv) const;
-    bool tryGet(double & rv) const;
-    bool tryGet(long double & rv) const;
-
-    bool                getBool() const;
-    short               getShort() const;
-    unsigned short      getUshort() const;
-    int                 getInt() const;
-    unsigned int        getUint() const;
-    long                getLong() const;
-    unsigned long       getUlong() const;
-    long long           getLonglong() const;
-    unsigned long long  getUlonglong() const;
-    float               getFloat() const;
-    double              getDouble() const;
-    long double         getLongdouble() const;
-    std::string const & getString() const;
-
-    template <class Type>
-    void setValue(Type val);
-
-//    void setValue(bool val);
-//    void setValue(long val);
-//    void setValue(float val);
-//    void setValue(std::string const & val);
-
-  private:
-    virtual nodePtr_t clone_impl() const override;
-
-    std::string value;
+    HU_ERROR_UNEXPECTED_EOF,
+    HU_ERROR_SYNTAX_ERROR,
+    HU_ERROR_START_END_MISMATCH
   };
 
+  char const * huOutputErrorToString(int rhs);
 
-  template <class IntType, REQUIRES_DEF(std::is_integral<IntType>())>
-  bool HuNode::operator %(IntType idx) const
+
+  typedef struct huSubstring
   {
-    if (isList())
-      { return static_cast<size_t>(idx) < asList().size(); }
-    else
-      { return static_cast<size_t>(idx) < asDict().size(); }
-  }
+    int loc;
+    int size;
+  } huSubstring_t;
 
 
-  template <class IntType, REQUIRES_DEF(std::is_integral<IntType>())>
-  HuNode const & HuNode::operator /(IntType idx) const
+  typedef struct huStringView
   {
-    if (isList())
-      { return asList().at(idx); }
-    else
-      { return asDict().at(idx); }
-  }
+    char const * str;
+    int size;
+  } huStringView_t;
 
 
-  template <class Type>
-  void HuValue::setValue(Type val)
+  typedef struct huToken
   {
-    value = to_string(val);
-  }
-}
+    int tokenKind;
+    huStringView_t value;
+    int line;
+    int col;
+    int endLine;
+    int endCol;
+  } huToken_t;
 
 
+  typedef struct huDictEntry
+  {
+    huToken_t * key;
+    int idx;
+  } huDictEntry_t;
+
+
+  typedef struct huAnnotation
+  {
+    huToken_t * key;
+    huToken_t * value;
+  } huAnnotation_t;
+
+
+  typedef struct huNode huNode_t;
+
+  typedef struct huComment
+  {
+    huToken_t * commentToken;
+    huNode_t * owner; // NULL = trove
+  } huComment_t;
+
+
+  typedef struct huTrove huTrove_t;
+
+  typedef struct huNode
+  {
+    huTrove_t * trove;
+
+    int nodeIdx;
+    int kind;
+
+    huToken_t * firstToken;
+    huToken_t * keyToken;
+    huToken_t * firstValueToken;
+    huToken_t * lastValueToken;
+    huToken_t * lastToken;
+
+  // TODO: change following to childOrdinal
+    int childIdx;   // Among its siblings, to its parent.
+
+    int parentNodeIdx;
+
+    huVector_t childNodeIdxs;   // int []
+    huVector_t childDictKeys;   // huDictEntry_t []
+    huVector_t annotations;     // huAnnotation_t []
+    huVector_t comments;   // huComment_t []
+  } huNode_t;
+
+  huNode_t * huGetParentNode(huNode_t * node);
+  int huGetNumChildren(huNode_t * node);
+  huNode_t * huGetChildNodeByIndex(huNode_t * node, int childIdx);
+  huNode_t * huGetChildNodeByKey(huNode_t * node, char const * key, int keyLen);
+
+  bool huHasKey(huNode_t * node);
+  huToken_t * huGetKey(huNode_t * node);
+
+  bool huHasValue(huNode_t * node);
+  huToken_t * huGetValue(huNode_t * node);
+
+  huToken_t * huGetStartToken(huNode_t * node);
+  huToken_t * huGetEndToken(huNode_t * node);
+
+  huNode_t * huNextSibling(huNode_t * node);
+
+  int huGetNumAnnotations(huNode_t * node);
+  huAnnotation_t * huGetAnnotation(huNode_t * node, int annotationIdx);
+  
+  int huGetNumComments(huNode_t * node);
+  huComment_t * huGetComment(huNode_t * node, int commentIdx);
+  
+
+  typedef struct huError
+  {
+    int errorCode;
+    huToken_t * errorToken;
+  } huError_t;
+
+
+  enum huColorKind
+  {
+    HU_COLORKIND_NONE = 0,
+    HU_COLORKIND_END,
+    HU_COLORKIND_PUNCLIST,
+    HU_COLORKIND_PUNCDICT,
+    HU_COLORKIND_PUNCKEYVALUESEP,
+    HU_COLORKIND_PUNCANNOTATE,
+    HU_COLORKIND_PUNCANNOTATEDICT,
+    HU_COLORKIND_PUNCANNOTATEKEYVALUESEP,
+    HU_COLORKIND_KEY,
+    HU_COLORKIND_VALUE,
+    HU_COLORKIND_COMMENT,
+    HU_COLORKIND_ANNOKEY,
+    HU_COLORKIND_ANNOVALUE,
+    HU_COLORKIND_WHITESPACE,
+
+    HU_COLORKIND_NUMCOLORKINDS
+  };
+
+  typedef struct {
+    int tokenKind;
+    char const * colorCode;
+  } huColorFormatEntry_t;
+
+
+  typedef struct huTrove
+  {
+    int nameSize;
+    char * name;
+    int dataStringSize;
+    char * dataString;
+    huVector_t tokens;
+    huVector_t nodes;
+    huVector_t errors;
+    int inputTabSize; // for error column #s mostly
+    int outputTabSize;
+    huVector_t annotations;     // huAnnotation_t []
+    huVector_t comments;   // huComment_t[]
+  } huTrove_t;
+
+
+  huTrove_t * huMakeTroveFromString(char const * name, char const * data, int dataLen, int inputTabSize, int outputTabSize);
+  huTrove_t * huMakeTroveFromFile(char const * name, char const * path, int inputTabSize, int outputTabSize);
+
+  void huDestroyTrove(huTrove_t * trove);
+
+  int huGetNumTokens(huTrove_t * trove);
+  huToken_t * huGetToken(huTrove_t * trove, int tokenIdx);
+
+  int huGetNumNodes(huTrove_t * trove);
+  huNode_t * huGetRootNode(huTrove_t * trove);
+  huNode_t * huGetNode(huTrove_t * trove, int nodeIdx);
+
+  int huGetNumErrors(huTrove_t * trove);
+  huError_t * huGetError(huTrove_t * trove, int errorIdx);
+
+  int huGetNumTroveAnnotations(huTrove_t * trove);
+  huAnnotation_t * huGetTroveAnnotation(huTrove_t * trove, int errorIdx);
+
+  int huGetNumTroveComments(huTrove_t * trove);
+  huComment_t * huGetTroveComment(huTrove_t * trove, int errorIdx);
+  
+  // User must free(retval.str);
+  huStringView_t huTroveToString(huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colorTable);
+
+  size_t huTroveToFile(char const * path, huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colorTable);
+
+
+  // Globals that represent error objects. All calls on these objects are legal and won't raise signals.
+  extern huToken_t humon_nullToken;
+  extern huNode_t humon_nullNode;
+  extern huTrove_t humon_nullTrove;
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

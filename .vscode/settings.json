@@ -56,7 +56,8 @@
     "mutex": "cpp",
     "thread": "cpp",
     "cinttypes": "cpp",
-    "charconv": "cpp"
+    "charconv": "cpp",
+    "bit": "cpp"
   },
   "C_Cpp.errorSquiggles": "Enabled"
 }

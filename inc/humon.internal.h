@@ -1,6 +1,6 @@
 #pragma once
 
-#include "humon2c.h"
+#include "humon.h"
 #include "ansiColors.h"
 
 #ifdef __cplusplus
@@ -15,7 +15,6 @@ extern "C"
 
 
   void huInitNode(huNode_t * node, huTrove_t * trove);
-  void huResetNode(huNode_t * node);
   void huDestroyNode(huNode_t * node);
 
   huToken_t * allocNewToken(huTrove_t * trove, int tokenKind, char const * str, int size, int line, int col, int endLine, int endCol);

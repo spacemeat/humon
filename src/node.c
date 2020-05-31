@@ -7,25 +7,17 @@ void huInitNode(huNode_t * node, huTrove_t * trove)
   node->trove = trove;
   node->nodeIdx = -1;
   node->kind = HU_NODEKIND_NULL;
-  node->firstToken = NULL;
-  node->keyToken = NULL;
-  node->firstValueToken = NULL;
-  node->lastValueToken = NULL;
-  node->lastToken = NULL;
-  node->childIdx = -1;
+  node->firstToken = & humon_nullToken;
+  node->keyToken = & humon_nullToken;
+  node->firstValueToken = & humon_nullToken;
+  node->lastValueToken = & humon_nullToken;
+  node->lastToken = & humon_nullToken;
+  node->childIdx = 0;
   node->parentNodeIdx = -1;
   huInitVector(& node->childNodeIdxs, sizeof(int));
   huInitVector(& node->childDictKeys, sizeof(huDictEntry_t));
   huInitVector(& node->annotations, sizeof(huAnnotation_t));
   huInitVector(& node->comments, sizeof(huComment_t));
-}
-
-
-void huResetNode(huNode_t * node)
-{
-  huTrove_t * trove = node->trove;
-  huDestroyNode(node);
-  huInitNode(node, trove);
 }
 
 
@@ -53,18 +45,18 @@ int huGetNumChildren(huNode_t * node)
 huNode_t * huGetChildNodeByIndex(huNode_t * node, int childIdx)
 {
   if (childIdx < 0 || childIdx >= huGetNumChildren(node))
-    { return NULL; }
+    { return & humon_nullNode; }
 
   return huGetNode(node->trove, 
-    * (int *) huGetElement(& node->childNodeIdxs, childIdx));
+    * (int *) huGetVectorElement(& node->childNodeIdxs, childIdx));
 }
 
 
-huNode_t * huGetChildNodeByKey(huNode_t * node, char const * key)
+huNode_t * huGetChildNodeByKey(huNode_t * node, char const * key, int keyLen)
 {
-  huStringView_t keyView = { key, strlen(key) };
+  huStringView_t keyView = { key, keyLen };
 
-  huDictEntry_t * dicts = (huDictEntry_t *) huGetElement(
+  huDictEntry_t * dicts = (huDictEntry_t *) huGetVectorElement(
     & node->childDictKeys, 0);
   for (int i = 0; i < huGetNumChildren(node); ++i)
   {
@@ -78,13 +70,13 @@ huNode_t * huGetChildNodeByKey(huNode_t * node, char const * key)
     }
   }
 
-  return NULL;
+  return & humon_nullNode;
 }
 
 
 bool huHasKey(huNode_t * node)
 {
-  return node->keyToken != NULL;
+  return node->keyToken->tokenKind != HU_TOKENKIND_NULL;
 }
 
 
@@ -96,7 +88,7 @@ huToken_t * huGetKey(huNode_t * node)
 
 bool huHasValue(huNode_t * node)
 {
-  return node->firstValueToken != NULL;
+  return node->firstValueToken->tokenKind != HU_TOKENKIND_NULL;
 }
 
 
@@ -130,7 +122,7 @@ huNode_t * huNextSibling(huNode_t * node)
     }
   }
 
-  return NULL;
+  return & humon_nullNode;
 }
 
 
@@ -142,7 +134,10 @@ int huGetNumAnnotations(huNode_t * node)
 
 huAnnotation_t * huGetAnnotation(huNode_t * node, int annotationIdx)
 {
-  return (huAnnotation_t *) node->annotations.buffer + annotationIdx;
+  if (annotationIdx < node->annotations.numElements)
+    { return (huAnnotation_t *) node->annotations.buffer + annotationIdx; }
+  else
+    { return NULL; }  
 }
 
 
@@ -154,5 +149,8 @@ int huGetNumComments(huNode_t * node)
 
 huComment_t * huGetComment(huNode_t * node, int commentIdx)
 {
-  return (huComment_t *) node->comments.buffer + commentIdx;
+  if (commentIdx < node->comments.numElements)
+    { return (huComment_t *) node->comments.buffer + commentIdx; }
+  else
+    { return NULL; }
 }

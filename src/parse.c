@@ -3,7 +3,7 @@
 
 void recordError(huTrove_t * trove, int errorCode, huToken_t * pCur)
 {
-  printf ("%sError%s: line: %d  col: %d  %s\n", lightRed, off, 
+  fprintf (stderr, "%sError%s: line: %d  col: %d  %s\n", lightRed, off, 
     pCur->line, pCur->col, huOutputErrorToString(errorCode));
   huError_t * error = huGrowVector(& trove->errors, 1);
   error->errorCode = errorCode;
@@ -45,13 +45,13 @@ void assignEnqueuedComments(huVector_t * commentQueue, huVector_t * commentVecto
   // The first (earliest) one extends the node's first token to the comment token.
   if (owner != NULL && commentQueue->numElements > 0)
   {
-    huComment_t * firstComment = huGetElement(commentQueue, 0);
+    huComment_t * firstComment = huGetVectorElement(commentQueue, 0);
     owner->firstToken = firstComment->commentToken;
   }
 
   for (int i = 0; i < commentQueue->numElements; ++i)
   {
-    huComment_t * comment = huGetElement(commentQueue, i);
+    huComment_t * comment = huGetVectorElement(commentQueue, i);
     (newCommentObj + i)->commentToken = comment->commentToken;
     (newCommentObj + i)->owner = owner;
   }
@@ -98,8 +98,6 @@ void parseAnnotations(huTrove_t * trove, huNode_t * owner, huToken_t ** ppCur)
         (* ppCur)->tokenKind != HU_TOKENKIND_ANNOTATE)
       { break; }
     
-    printf("state: %d\n", state);
-
     switch ((* ppCur)->tokenKind)
     {
     case HU_TOKENKIND_EOF:
@@ -276,7 +274,7 @@ void parseTroveRecursive(huTrove_t * trove, huToken_t ** ppCur, int parentNodeId
   bool scanning = true;
   while (scanning)
   {
-    // printf("%sparseRec: parent: %d  depth: %d  state: %d  currentToken: %s%s\n",
+    //printf("%sparseRec: parent: %d  depth: %d  state: %d  currentToken: %s%s\n",
     //  darkBlue, parentNode ? parentNode->nodeIdx : -1, depth, state, 
     //  huTokenKindToString((* ppCur)->tokenKind), off);
     switch ((* ppCur)->tokenKind)
