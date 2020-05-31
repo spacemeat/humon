@@ -36,7 +36,7 @@ g++ --std=c++17 -Wall -shared -Wl,-soname,libhumon-r.so.0  -o bin/libhumon-r.so.
 echo Done.
 
 echo Building tests...
-g++ --std=c++17 -Wall -g -O0 src/test/testMain.cpp src/test/dataTests.cpp src/test/cppTests.cpp -Iinc -Lbin -lhumon-d -lCppUTest -lCppUTestExt -o bin/test
+g++ --std=c++17 -Wall -g -O0 src/test/testMain.cpp src/test/utf8Tests.cpp src/test/dataTests.cpp src/test/cppTests.cpp -Iinc -Lbin -lhumon-d -lCppUTest -lCppUTestExt -o bin/test
 
 echo Done.
 

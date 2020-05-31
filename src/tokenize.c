@@ -7,22 +7,6 @@ int getCodepointLength(char const * cur)
 {
   if ((*cur & 0x80) == 0)
       { return 1; }
-  else if ((*cur & 0xc0) == 0xc0)
-  {
-    cur += 1;
-    if ((*cur & 0xc0) == 0x80)
-      { return 2; }
-  }
-  else if ((*cur & 0xe0) == 0xe0)
-  {
-    cur += 1;
-    if ((*cur & 0xc0) == 0x80)
-    {
-      cur += 1;
-      if ((*cur & 0xc0) == 0x80)
-        { return 3; }
-    }
-  }
   else if ((*cur & 0xf0) == 0xf0)
   {
     cur += 1;
@@ -36,6 +20,22 @@ int getCodepointLength(char const * cur)
             { return 4; }
       }
     }
+  }
+  else if ((*cur & 0xe0) == 0xe0)
+  {
+    cur += 1;
+    if ((*cur & 0xc0) == 0x80)
+    {
+      cur += 1;
+      if ((*cur & 0xc0) == 0x80)
+        { return 3; }
+    }
+  }
+  else if ((*cur & 0xc0) == 0xc0)
+  {
+    cur += 1;
+    if ((*cur & 0xc0) == 0x80)
+      { return 2; }
   }
 
   return 0;
