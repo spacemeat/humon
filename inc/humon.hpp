@@ -197,6 +197,13 @@ namespace hu
     }
 
 
+    static inline void free_const(void const * t) noexcept
+        { free(const_cast<void *>(t)); }
+
+    template <typename T>
+    using unique_ptr_free = std::unique_ptr<T, decltype(free_const)*>;
+
+
     class Token
     {
     public:
@@ -233,7 +240,13 @@ namespace hu
                 std::is_integral<IntType>::value, IntType>::type * = nullptr>
         Node getChild(IntType idx) const noexcept { return capi::huGetChildNodeByIndex(cnode, idx); }
         Node getChild(std::string_view key) const noexcept 
-            { return capi::huGetChildNodeByKey(cnode, key.data(), key.size()); }
+            { return capi::huGetChildNodeByKeyN(cnode, key.data(), key.size()); }
+        std::tuple<Node, ErrorCode> getNode(std::string_view relativeAddress) const noexcept
+        {
+            int ierror = capi::HU_ERROR_NO_ERROR;
+            auto n = capi::huGetNodeByRelativeAddressN(cnode, relativeAddress.data(), relativeAddress.size(), & ierror);
+            return { n, static_cast<ErrorCode>(ierror) };
+        }
         bool hasKey() const noexcept { return capi::huHasKey(cnode); }
         Token getKeyToken() const noexcept { return Token(capi::huGetKey(cnode)); }
         bool hasValue() const noexcept { return capi::huHasValue(cnode); }
@@ -242,19 +255,25 @@ namespace hu
         Token getEndToken() const noexcept { return Token(capi::huGetEndToken(cnode)); }
         Node getNextSibling() const noexcept { return Node(capi::huNextSibling(cnode)); }
         int getNumAnnotations() const noexcept { return capi::huGetNumAnnotations(cnode); }
-        template <class IntType, 
-            typename std::enable_if<
-                std::is_integral<IntType>::value, IntType>::type * = nullptr>
-        std::tuple<Token, Token> getAnnotation(IntType idx) const noexcept 
+        std::tuple<Token, Token> getAnnotation(int idx) const noexcept 
         { 
             auto canno = capi::huGetAnnotation(cnode, idx); 
             return { Token(canno->key), Token(canno->value) };
         }
+        int getNumAnnotationsByKey(std::string_view key) const noexcept { return capi::huGetNumAnnotationsByKeyN(cnode, key.data(), key.size()); }
+        std::tuple<Token, Token> getAnnotationByKey(std::string_view key, int idx) const noexcept 
+        { 
+            auto canno = capi::huGetAnnotationByKeyN(cnode, key.data(), key.size(), idx);
+            return { Token(canno->key), Token(canno->value) };
+        }
+        int getNumAnnotationsByValue(std::string_view value) const noexcept { return capi::huGetNumAnnotationsByValueN(cnode, value.data(), value.size()); }
+        std::tuple<Token, Token> getAnnotationByValue(std::string_view value, int idx) const noexcept 
+        { 
+            auto canno = capi::huGetAnnotationByValueN(cnode, value.data(), value.size(), idx);
+            return { Token(canno->key), Token(canno->value) };
+        }
         int getNumComments() const noexcept { return capi::huGetNumComments(cnode); }
-        template <class IntType, 
-            typename std::enable_if<
-                std::is_integral<IntType>::value, IntType>::type * = nullptr>
-        std::tuple<Token, Node> getComment(IntType idx) const noexcept 
+        std::tuple<Token, Node> getComment(int idx) const noexcept 
         {
             auto ccomm = capi::huGetComment(cnode, idx);
             return { Token(ccomm->commentToken), Node(ccomm->owner) };
@@ -291,7 +310,7 @@ namespace hu
         template <class IntType, 
             typename std::enable_if<
                 std::is_integral<IntType>::value, IntType>::type * = nullptr>
-        Node operator / (IntType idx) const noexcept { return getChild(idx); }
+        Node operator / (IntType idx) const noexcept { return getChild(static_cast<int>(idx)); }
         Node operator / (std::string_view key) const noexcept { return getChild(key); }
 
         // Lets you say:
@@ -317,15 +336,16 @@ namespace hu
             return "";
         }
 
+        std::tuple<unique_ptr_free<char const>, int> getAddress() const noexcept
+        {
+            auto str = capi::huGetNodeAddress(cnode);
+            auto ptr = unique_ptr_free<char const> { str.str, free_const };
+            return { std::move(ptr), str.size };
+        }
+
     private:
         capi::huNode_t * cnode;
     };
-
-    static inline void free_const(void const * t) noexcept
-        { free(const_cast<void *>(t)); }
-
-    template <typename T>
-    using unique_ptr_free = std::unique_ptr<T, decltype(free_const)*>;
 
     class Trove
     {
@@ -333,14 +353,14 @@ namespace hu
         static Trove fromString(std::string_view name, std::string_view data,
             int inputTabSize = 4, int outputTabSize = 4) noexcept
         {
-            return Trove(capi::huMakeTroveFromString(
+            return Trove(capi::huMakeTroveFromStringN(
                 name.data(), data.data(), data.size(), inputTabSize, outputTabSize));
         }
 
         static Trove fromString(std::string_view data,
             int inputTabSize = 4, int outputTabSize = 4) noexcept
         {
-            return Trove(capi::huMakeTroveFromString(
+            return Trove(capi::huMakeTroveFromStringN(
                 NULL, data.data(), data.size(), inputTabSize, outputTabSize));
         }
 
@@ -417,6 +437,12 @@ namespace hu
         int getNumNodes() const noexcept { return capi::huGetNumNodes(ctrove); }
         Node getRootNode() const noexcept { return capi::huGetRootNode(ctrove); }
         Node getNode(int idx) const noexcept { return Node(capi::huGetNode(ctrove, idx)); }
+        std::tuple<Node, ErrorCode> getNode(std::string_view address) const noexcept
+        {
+            int ierror = capi::HU_ERROR_NO_ERROR;
+            auto n = Node(capi::huGetNodeByFullAddressN(ctrove, address.data(), address.size(), & ierror));
+            return { n, static_cast<ErrorCode>(ierror) };
+        }
         int getNumErrors() const noexcept { return capi::huGetNumErrors(ctrove); }
         std::tuple<ErrorCode, Token> getError(int idx) const noexcept 
         {
@@ -427,6 +453,18 @@ namespace hu
         std::tuple<Token, Token> getAnnotation(int idx) const noexcept 
         { 
             auto canno = capi::huGetTroveAnnotation(ctrove, idx); 
+            return { Token(canno->key), Token(canno->value) };
+        }
+        int getNumAnnotationsByKey(std::string_view key) const noexcept { return capi::huGetNumTroveAnnotationsByKeyN(ctrove, key.data(), key.size()); }
+        std::tuple<Token, Token> getAnnotationByKey(std::string_view key, int idx) const noexcept 
+        { 
+            auto canno = capi::huGetTroveAnnotationByKeyN(ctrove, key.data(), key.size(), idx);
+            return { Token(canno->key), Token(canno->value) };
+        }
+        int getNumAnnotationsByValue(std::string_view value) const noexcept { return capi::huGetNumTroveAnnotationsByValueN(ctrove, value.data(), value.size()); }
+        std::tuple<Token, Token> getAnnotationByValue(std::string_view value, int idx) const noexcept 
+        { 
+            auto canno = capi::huGetTroveAnnotationByValueN(ctrove, value.data(), value.size(), idx);
             return { Token(canno->key), Token(canno->value) };
         }
         int getNumComments() const noexcept { return capi::huGetNumTroveComments(ctrove); }
@@ -468,6 +506,50 @@ namespace hu
                 std::is_integral<IntType>::value, IntType>::type * = nullptr>
         Node operator / (IntType idx) const noexcept { return getRootNode() / idx; }
         Node operator / (std::string_view key) const noexcept { return getRootNode() / key; }
+
+        std::vector<Node> findNodesByAnnotationKey(std::string_view key) const
+        {
+            std::vector<Node> vec;
+            auto huvec = capi::huFindNodesByAnnotationKeyN(ctrove, key.data(), key.size());
+            for (int i = 0; i < huGetVectorSize(& huvec); ++i)
+                { vec.emplace_back(reinterpret_cast<capi::huNode_t *>(
+                    huGetVectorElement(& huvec, i))); }
+
+            return vec;
+        }
+
+        std::vector<Node> findNodesByAnnotationValue(std::string_view value) const
+        {
+            std::vector<Node> vec;
+            auto huvec = capi::huFindNodesByAnnotationValueN(ctrove, value.data(), value.size());
+            for (int i = 0; i < huGetVectorSize(& huvec); ++i)
+                { vec.emplace_back(reinterpret_cast<capi::huNode_t *>(
+                    huGetVectorElement(& huvec, i))); }
+
+            return vec;
+        }
+
+        std::vector<Node> findNodesByAnnotationKeyValue(std::string_view key, std::string_view value) const
+        {
+            std::vector<Node> vec;
+            auto huvec = capi::huFindNodesByAnnotationKeyValueNN(ctrove, key.data(), key.size(), value.data(), value.size());
+            for (int i = 0; i < huGetVectorSize(& huvec); ++i)
+                { vec.emplace_back(reinterpret_cast<capi::huNode_t *>(
+                    huGetVectorElement(& huvec, i))); }
+
+            return vec;
+        }
+
+        std::vector<Node> findNodesByComment(std::string_view text) const
+        {
+            std::vector<Node> vec;
+            auto huvec = capi::huFindNodesByCommentN(ctrove, text.data(), text.size());
+            for (int i = 0; i < huGetVectorSize(& huvec); ++i)
+                { vec.emplace_back(reinterpret_cast<capi::huNode_t *>(
+                    huGetVectorElement(& huvec, i))); }
+
+            return vec;
+        }
 
     private:
         capi::huTrove_t * ctrove = nullptr;

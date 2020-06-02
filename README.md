@@ -251,7 +251,7 @@ If this is all Greek to you, just rest assured that any modern text editor or we
 This is mostly for recording line numbers in token objects, for error reporting and other things that need token placement information.
 
 **All non-whitespace characters are part of some token.**
-Only whitespace characters like spaces, newlines, and commas are discarded from tracking in the tokenizer.
+Only whitespace characters like spaces, newlines, commas, and quote characters around keys and values are discarded from tracking in the tokenizer.
 
 **All tokens are part of some node.**
 During a load, a humon file is tokenized into a list of token objects, and then those tokens are parsed into a node hierarchy. Every single token object is owned by exactly one node, or by the trove itself in a few cases. The API implementation can completely reconstruct a humon file from nodes and tokens, including reconstructing comments and annotations.
@@ -263,7 +263,7 @@ Usually boolean and numeric values are computational though, and matter to the a
 
 **Humon doesn't copy data for reading.**
 Some of the design decisions stem from the implementation: Humon doesn't copy data when loading and exposing keys and values from a file. It stores the file contents itself, and returns pointers to that content. This means several things:
-1. Raw string values contain escapes and any surrounding quotes. There are included APIs to convert these explicitly if needed. If strings contain CRLF newlines in the file, they'll appear that way in raw string accesses too.
+1. Raw string values contain escapes. They do not contain any surrounding quotes. If strings contain CRLF newlines in the file, they'll appear that way in raw string accesses too.
 1. Raw string values are still UTF8-encoded.
 1. Troves are immutable. Operations that insert text or nodes into a trove actually create a new trove, with a new (final) text string and new token and node data. (These ops are coming soon.)
 1. Accessing raw value data is quick. You basially get a pointer and size. Since the data behind it doesn't move or change, that value pointer is good for the life of the trove.

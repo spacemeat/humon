@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <stdint.h>
 #include "humon.internal.h"
 
 
@@ -40,15 +39,6 @@ int getCodepointLength(char const * cur)
 
   return 0;
 }
-
-
-typedef struct cursor
-{
-    char const * character;
-    uint8_t codepointLength;
-    uint8_t ws_col;                // set if space-like whitespace
-    uint8_t ws_line;               // set if newline-like whitespace
-} cursor_t;
 
 
 void nextCharacter(cursor_t * cursor)
@@ -195,7 +185,10 @@ void eatCStyleComment(cursor_t * cursor, int tabSize, int * len, int * line, int
             }
         }
         else
-            { eating = false; }
+        {
+          eating = false;
+          recordError(cursor->trove, HU_ERROR_UNFINISHED_CSTYLECOMMENT, NULL);
+        }
     }
 }
 
@@ -237,7 +230,6 @@ void eatWord(cursor_t * cursor, int * len, int * line, int * col)
 void eatQuotedWord(cursor_t * cursor, char quoteChar, int tabSize, int * len, int * line, int * col)
 {
     // The first character is already confirmed quoteChar, so, next please.
-    * len += 1;
     * col += 1;
     nextCharacter(cursor);
 
@@ -246,7 +238,10 @@ void eatQuotedWord(cursor_t * cursor, char quoteChar, int tabSize, int * len, in
     {
         analyzeWhitespace(cursor);
         if (cursor->character[0] == '\0')
-            { eating = false; /*TODO: error: Unfinished quoted string before EOF */}
+        {
+          eating = false;
+          recordError(cursor->trove, HU_ERROR_UNFINISHED_QUOTE, NULL);
+        }
         else if (cursor->ws_line)
         {
             * len += cursor->codepointLength;
@@ -256,7 +251,6 @@ void eatQuotedWord(cursor_t * cursor, char quoteChar, int tabSize, int * len, in
         }
         else
         {
-            * len += cursor->codepointLength;
             if (cursor->character[0] == '\t')
                 { * col += tabSize - ((* col - 1) % tabSize); }
             else
@@ -278,6 +272,7 @@ void eatQuotedWord(cursor_t * cursor, char quoteChar, int tabSize, int * len, in
             }
             else
             {
+                * len += cursor->codepointLength;
                 nextCharacter(cursor);
             }
         }
@@ -309,7 +304,8 @@ void huTokenizeTrove(struct huTrove * trove)
 
   char const * beg = trove->dataString;
   cursor_t cur = 
-    { .character = beg, .codepointLength = getCodepointLength(beg) };
+    { .trove = trove, .character = beg, 
+      .codepointLength = getCodepointLength(beg) };
   int line = 1;
   int col = 1;
   bool scanning = true;
@@ -381,7 +377,7 @@ void huTokenizeTrove(struct huTrove * trove)
         line = lineM;
         col = colM;
       }
-      break;      
+      break;
     case '"':
       eatDoubleQuotedWord(& cur, trove->inputTabSize, & len, & lineM, & colM);
       allocNewToken(trove, HU_TOKENKIND_WORD, cur.character - len, len, line, col, lineM, colM);
