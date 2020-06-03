@@ -4,7 +4,6 @@
     TODO:
         P1 CMake, vcpkg
         P1 doxygen
-        P1 select a license
         P1 vscode colorizer comments
         P2 custom memory allocator fns
         P2 insertion ops (later priority)

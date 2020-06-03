@@ -8,7 +8,7 @@
 
 Humon is primarily three things: 1) A general text-based, structured language format, 2) some programming interfaces that understand it, and 3) a reference implementation of said interface with bindings to several programming languages. Mainly, it takes some of the roles that JSON has been taking increasingly lately, but with an eye towards the human side of the experience.
 
-I use it for design. It's a great mind-mapping tool. I use it to model database tables, serialized structure definitions, app configuration. It's amazing how a formal language spec that *doesn't get in the way* actually makes designing a complex structure a fun and interactive task *in the text editor, no less*. The absense of syntax makes authorship feel fluid, and I can keep my mind on my creative work.
+I use it for design. It's a great mind-mapping tool. I use it to model database tables, serialized structure definitions, app configuration. Designing a complex structure is a fun and interactive task, even in a text editor. The absense of much syntax makes authorship feel fluid, and I can keep my mind on my creative work.
 
 ### examples
 
@@ -51,17 +51,19 @@ It's not very friendly to composition by hand. Minimal humon looks pretty close,
         someValue: bug
     }
 
-No quotes except where necessary, and no commas required (they're optional). More useful humon might look like this:
+No quotes except where necessary, and no commas required (they're optional, and treated like whitespace). So that's kind of nice. More useful humon might look like this:
 
-    {
-        someDict: {     // so they say
-            cow: { says: moo,  source: mouth }
-            cat: { says: meow, source: mouth }   @ note: "added by schrock, 5-26-20"
+    @ engineVersion: 0.1.0
+    assets: {
+        brick-diffuse: {
+            src: [brick-diffuse.png]
+            importData: {
+                type: image
+                extents: [0 0 0]   # extract from src
+                numMipLevels: 0    # all the mips
+                format: R8G8B8A8Unorm # there should be a way to say "whatever we're using, man" Maybe "Unknown".
+            }
         }
-        someList: [     // Things that are one
-            first, 1, true      // comma-separated, because you still can
-        ]
-        someValue: bug  /* C-style comments work as well */
     }
 
 The `@` syntax is an *annotation*. We'll discuss that, but it's one of the only real syntax-y parts of humon, and completely optional.
@@ -70,9 +72,9 @@ Using the APIs is straightforward. To get values above, we might invoke the foll
 
     #include <humon.h>
     ...
-        huTrove_t * trove = huMakeTroveFromString(NULL, humonStr, 4, 4);
+        huTrove_t * trove = huMakeTroveFromStringZ(NULL, humonStr, 4, 4);
         huNode_t * node = huGetRootNode(trove);
-        node = huGetChildByKey(node, "someList");
+        node = huGetChildByKeyZ(node, "someList");
         node = huGetChildByIndex(node, 0);
         huStringValue_t * sVal = huGetValue(node); // has str and size
 
@@ -84,7 +86,7 @@ or in C++:
         auto intVal = trove / "someList" / 1 / hu::value<int>{}; // returns int
 
 ### installation
-Wherein we discuss installation. I think I need a CMake.
+If you're programming with humon, or rather want to be, [here's how we install it, and do all the CMake yakkity smack]. If you're just using humon files with some app, you don't need to do anything. Also here's a VSCode colorizer.
 
 ## principles of the design
 We're going to keep referencing JSON, as it's the model that humon takes after. But we want it to be better, so the obvious thing to do is just fix the problems with JSON. Once we commit to designing a new format / language, we're free to make the rules. Rules should come from guiding principles:
@@ -92,28 +94,19 @@ We're going to keep referencing JSON, as it's the model that humon takes after. 
 1. **We are serving humans with this language.**
 Human authors and maintainers are one of the two primary customers. Reading, modifying, and writing humon data in an editor should be as simple and approachable as possible. It must never come as a surprise what the language thinks you mean, or what is legal to state in the language. A minimal syntax promotes this principle. Humon files must be able to be large, storing lots of kinds of data, free to fulfill human needs tersely.
 1. **We are serving machines with this language.**
-Computing machines are the other primary customer. Software written against the language must run quick, and the language must promote simple interfaces and consistent operation. There must be adequate facilities for programmed machines to utilize the data exposed by humon. Resource usage for grokking humon objects must be minimized.
+Computing machines are the other primary customer. Software written against the language must run quick, and the language must promote simple interfaces and consistent operation. There must be adequate facilities for programmed machines to utilize the data exposed by humon. Resource usage for grokking humon objects must be reasonable.
 1. **We are serving humans who are serving machines with this language.**
-The APIs are the conjunction of human and machine. We learn and use them, and the machine subsequently does the same. API design must be convenient and unsurprising, consistent and unspecialized.
+The APIs are the conjunction of human and machine. The machine has been taught how to use them. We learn the same. API design must be convenient and unsurprising, consistent and unspecialized.
 
 ### principles in the language
-No more quotes. Commas are optional. You can use any quote character ('; "; `). Values are just character data. Quoted values can contain newlines. Annotations and conmments can provide "human hooks" into the data without mucking with the structure, as expected by an application. Humon files are *intended* to be authored and modified in text editing tools, by humans.
+No more quotes. Commas are optional. You can use any quote character `' " \``. Values are just character data. Quoted values can contain newlines. Annotations and conmments can provide "human hooks" into the data without the need to muck with the structure design, and without polluting the data structure expected by an extant application. Humon files are *intended* to be authored and modified in text editing tools, by humans.
 
 ### principles in the APIs
 The base API is a C interface. Everything a human or machine needs to traverse the data heirarchically or by search is there and easy to use. Mainly it exists for other language bindings, but this makes humon available to C code as well.
 
 There is a C++ layer which wraps the C API, giving syntactic sugar and a more accessible interface. You'll almost certainly prefer it over the C API for C++ projects.
 
-    {
-        languageIntegrations: [
-            C
-            C++
-            Python      @ started: notYet
-            ES6+/Node   @ started: notYet
-            Rust        @ started: notYet
-            .NET        @ started: notYet
-        ]
-    }
+Language bindings forthcoming include Python, Node, Rust, and .NET.
 
 ## the language
 I happen to love me some JSON. To my mind, it has the best syntax for describing structured data. It's incredibly expressive, incredibly simple, and open to just about any practical use. There are so many structures, descriptions, configurations, and data models that can be faithfully described by a JSON file, with very little plumbing. The array- and dictionary-style collections are generally sufficient to describe a huge swath of problems. (Some structures, like graphs, are harder to model in a heirarchy. Using labels helps bridge some gaps, but graphs are a problem in any serial text format.)
@@ -145,7 +138,6 @@ So, this project proposes a replacement, or suggests a good philosophy for such 
 
 `annotation`: One of a collection of key:value pairs applied to a node or a trove. They are exposed as special values in nodes, and are globally searchable by key and value.
 
-
 ### the principles applied to the language
 
 #### brevity and simplicity
@@ -169,10 +161,10 @@ To that end, Humon makes no assumptions about the meaning of values. There are n
 Okay, let's state some explicit rules, then.
 
 **A trove contains zero or one root node.**
-A blank file, or a file with only comments and annotations (but no structures or values) contains no root node. Any other file must contain only one top-level node, probably with many children. This is always at node index 0.
+A blank file, or a file with only comments and annotations (but no structures or values) contains no root node. Any other file must contain only one top-level node, probably with many children.
 
 **The root node is what it is, which is what you say it is.**
-There is no assumption made about the kind of the root node. If the first non-comment token in your humon stream or file is a '{', then the root is a dict; a '[' starts a list. If it's a value, then it's the only one allowed (since value nodes don't have children).
+There is no assumption made about the kind of the root node. If the first non-comment token in your humon stream or file is a '{', then the root is a dict; a '[' starts a list. If it's a value, then it's the only one allowed, since value nodes don't have children.
 
 **List are enclosed in [square brackets].**
 Any object kind can occupy any entry in any list. Lists don't have to contain objects of any one kind; mix and match as you see fit.
@@ -221,21 +213,23 @@ Annotations are the only sort of language-y syntax-y components of humon. The fi
 
 Any node can have any number of annotations. The trove can have them too, if an annotation appears before any other objects. Annotations begin with an `@` symbol, followed by either one key:value pair, or a dict of key:value pairs:
 
-    nostromo @movie: alien
-    sulaco @{movie: aliens director: cameron}
+    [
+        nostromo @movie: alien
+        sulaco @{movie: aliens director: cameron}
+    ]
 
 The values must be value strings only; an annotation can't be a collection. That way lies some madness.
 
 Unlike dict entries, you can have multiple annotation values associated with the same key:
 
-    ripley @ movie: alien @ movie: aliens @ movie: "alien 3" movie: "alien 4"
+    ripley @ movie: alien @ movie: aliens @ movie: "alien 3" @ movie: "alien 4"
 
-The APIs can return all of the values above by the `movie` key.
+The APIs can return all of the values above by the `movie` key and an index.
 
-For the most part, annotations aren't a necessary part of humon. All their data could be baked into objects themselves, and there was a time when humon didn't have them. But they provide a way to mark up old data without modifying the structure, and provide out-of-band associations that allows a humon app to be almsot as free-form as humon itself. They're recommended over comments as associated, searchable metadata.
+Practically, annotations aren't a necessary part of humon. All their data could be baked into objects themselves, and there was a time when humon didn't have them. But they provide a way to mark up old data without modifying the structure, and provide out-of-band associations that allows a humon app to be almsot as free-form as humon itself. They're recommended over comments as associated, searchable metadata.
 
 ## the C-family programming interfaces
-There are API specs for the C and C++ interfaces. The C API is pretty basic, but fully featured. The C++ API mainly wraps the C API, but also provides some nice features for more C++ish things.
+There are API specs for the C and C++ interfaces. The C API is pretty basic, but fully featured. The C++ API mainly wraps the C API, but also provides some nice features for more C++ish fun-time things.
 
 ### the principles applied to the C-family APIs
 Maybe you'd call them behaviors, but they embody the humon principles.
@@ -248,7 +242,7 @@ A code point is either whitespace, language punctuation (which is only ever a si
 If this is all Greek to you, just rest assured that any modern text editor or web server or web browser reads and writes UTF8, and can handle foreign language text and emojis, and humon speaks that encoding too.
 
 **CRLF-style newlines (often made in Windows or Symbian OS) are regarded as one newline object.**
-This is mostly for recording line numbers in token objects, for error reporting and other things that need token placement information.
+This is mostly for recording line numbers in token objects, for error reporting and other things that need token placement information. In general, it does what you expect.
 
 **All non-whitespace characters are part of some token.**
 Only whitespace characters like spaces, newlines, commas, and quote characters around keys and values are discarded from tracking in the tokenizer.
@@ -267,7 +261,7 @@ Some of the design decisions stem from the implementation: Humon doesn't copy da
 1. Raw string values are still UTF8-encoded.
 1. Troves are immutable. Operations that insert text or nodes into a trove actually create a new trove, with a new (final) text string and new token and node data. (These ops are coming soon.)
 1. Accessing raw value data is quick. You basially get a pointer and size. Since the data behind it doesn't move or change, that value pointer is good for the life of the trove.
-1. The whole file must be in contiguous memory. This is currently true at least, and means loading a whole file before tokenizing and parsing. It's unfortunate for concurrency, and I'm thinking about it. For most human-use cases, this isn't a real issue.
+1. The whole file must be in contiguous memory. This is currently true at least, and means loading a whole file before tokenizing and parsing. It's unfortunate for concurrency, and I'm thinking about it. For most use cases, this isn't a real issue.
 1. When serializing back to another stream or file from a humon trove, the exact source can be spit out without any conversion, since the original string is still in memory.
 
 **The C-family APIs don't signal by default; rather, they return null objects.**
@@ -327,37 +321,35 @@ Note: Usually you would prefer annotations for searchable metadata, as comments 
 **Annotations have context.**
 Like comments, annotations are associated with nodes or the trove. You can access annotations by key from a node, or search all annotations by key or value and get their associated nodes.
 
-Annotations are always *associated backward*. They modify the nearest non-comment node that appeared before the annotation, regardless of line number or same-lineness. Any amount of whitespace or comments in between is ignored, as usual. If the previous token was a collection-starter or collection-ender (`[`, `{`, `]` or `}`), it modifies that list or dict. In the following, `testAcct:true` annotates the player dict, not the userId value:
+Annotations are always *associated backward*. They modify the nearest non-comment node that appeared before the annotation, regardless of same-lineness. Any amount of whitespace or comments in between is ignored, as usual. If the previous token was a collection-starter or collection-ender (`[`, `{`, `]` or `}`), it modifies that list or dict. In the following, `testAcct:true` annotates the player dict, not the userId value:
 
     {
-        player: {   @testAcct: true
+        player: {
+            @testAcct: true
             userId:     int
             username:   string,
             friends:    vector<string>
         }
     }
 
-If no nodes appear before an annotation, it applies to the trove. A great way to begin a humon file is by specifying an application version or config version the file is good for. Maybe you're developing a code-generation suite cleverly called "hudo", and want to ensure the correct version of the engine is called to consume every model file, even older ones. Hudo could look for a version annotation, and use the appropriate engine version to interpret a structure:
+If no nodes appear before an annotation, it applies to the trove. A great way to begin a humon file spec is by specifying an application version or config version for which the file is good. Maybe you're developing a code-generation suite cleverly called "hudo", and want to ensure the correct version of the engine is called to consume every model file, even older ones. Hudo could look for a version annotation on the trove, before examining any nodes, and use the appropriate engine version to interpret a structure:
 
 *playerData*:
 
     @ {app: hudo, version: 0.1.1}
 
     {
-        player: {
+        player: { @testAcct: true
             userId:     int
-            username:   string,
-            friends:    vector<string>
-        }
-    }
+    ...
 
 *loadPlayer.cpp:*
 
     auto version = trove.getAnnotation("app") == "hudo"
                  ? Version<3> { trove.getAnnotation("version") }
                  : Version<3> { };
-    if (version < "0.1.0"ver3) { ... }
-    else if (version < "0.2.0"ver3) { ... }
+    if (version < Version { 0, 1, 0 }) { ... }
+    else if (version < Version { 0, 2, 0 }) { ... }
     else ...
 
 Like asserted earlier, annotations are 100% open in their use. Humon doesn't use any annotaton keys or values and doesn't interpret them. Applications can use them or not, but all annotations that are legal are guaranteed to be parsed, even if the application doesn't know about or use them at all. In this way you can embed metadata about objects in the humon file, and even old versions of humon apps will correctly read (and ignore) them.
@@ -366,7 +358,7 @@ Like asserted earlier, annotations are 100% open in their use. Humon doesn't use
 The API allows for serializing a trove back to memory or a stream. There are three options to serialize humon objects:
 1. **Preserve**: A direct copy of the original file is produced, including all comments and commas and whitespace. Just a brainless memory slam.
 1. **Minimal**: This reduces whitespace to at most one character each to pare down length. Humon does as much as it can, but if you choose to preserve comments in the minified output, you may notice that not all newlines get replaced. This is because the next read operation on the resultant file must replicate the comment associations from the original, and that requires some comments be on their own line. Also, C++-style //comments end in a newline, and tokens after must be on their own line, so those newlines are also preserved.
-1. **Pretty**: This produces a clean, indented, eminently readable string.
+1. **Pretty**: This produces a clean, indented, possibly colorized, eminently readable string.
 
 Each of these options allows you to remove comments (perhaps for security), and also provide a color table for syntax highlighting. This is useful for producing colored output for a text-based shell, or perhaps HTML.
 
