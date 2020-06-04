@@ -13,7 +13,7 @@
         "languages": [{
             "id": "humon",
             "aliases": ["Humon", "humon"],
-            "extensions": [".hu"],
+            "extensions": [".hu", ".humon"],
             "configuration": "./language-configuration.json"
         }],
         "grammars": [{

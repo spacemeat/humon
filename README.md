@@ -214,7 +214,7 @@ Annotations are the only sort of language-y syntax-y components of humon. The fi
 Any node can have any number of annotations. The trove can have them too, if an annotation appears before any other objects. Annotations begin with an `@` symbol, followed by either one key:value pair, or a dict of key:value pairs:
 
     [
-        nostromo @movie: alien
+        nostromo @ movie: alien
         sulaco @{movie: aliens director: cameron}
     ]
 
@@ -222,7 +222,7 @@ The values must be value strings only; an annotation can't be a collection. That
 
 Unlike dict entries, you can have multiple annotation values associated with the same key:
 
-    ripley @ movie: alien @ movie: aliens @ movie: "alien 3" @ movie: "alien 4"
+    ripley @movie: alien @movie: aliens @movie: "alien 3" @movie: "alien 4"
 
 The APIs can return all of the values above by the `movie` key and an index.
 

@@ -1,26 +1,78 @@
 {
 	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
 	"name": "Humon",
-	"patterns": [{
-			"include": "#node"
-		}
-	],
-
+	"scopeName": "source.humon",
 	"repository": {
+		"blockComment": {
+			"name": "comment.block",
+			"begin": "/\\*",
+			"end": "\\*/",
+			"patterns": [{
+					"name": "constant.character.escape.humon",
+					"match": "\\\\."
+				}
+			]
+		},
+		"lineComment": {
+			"name": "comment.line.double-slash",
+			"match": "//.*$",
+			"patterns": [{
+					"name": "constant.character.escape.humon",
+					"match": "\\\\."
+				}
+			]
+		},
+
 		"comment": {
-			"name": "comment",
-			"match": "\\#.*$"
+			"patterns": [{
+					"include": "#lineComment"
+				}, {
+					"include": "#blockComment"
+				}
+			]
+		},
+
+		"comma": {
+			"name": "punctuation.separator.comma.humon",
+			"match": ","
+		},
+
+		"annotation": {
+			"name": "keyword.control.humon",
+			"match": "@"
 		},
 
 		"unquotedValue": {
-			"name": "string.unquoted.humon",
-			"match": "[a-zA-Z0-9_]+"
+			"name": "support.type.property-name.humon",
+			"match": "[^\\[\\]{},[:space:]:@'\"`][^\\[\\]{},[:space:]:@]*?(?=(//|/*))"
 		},
 
-		"quotedValue": {
-			"name": "string.quoted.double.humon",
+		"singleQuotedValue": {
+			"name": "string.quoted.single.humon",
+			"begin": "'",
+			"end": "'",
+			"patterns": [{
+					"name": "constant.character.escape.humon",
+					"match": "\\\\."
+				}
+			]
+		},
+
+		"doubleQuotedValue": {
+			"name": "string.quoted.single.humon",
 			"begin": "\"",
 			"end": "\"",
+			"patterns": [{
+					"name": "constant.character.escape.humon",
+					"match": "\\\\."
+				}
+			]
+		},
+
+		"backQuotedValue": {
+			"name": "string.quoted.single.humon",
+			"begin": "`",
+			"end": "`",
 			"patterns": [{
 					"name": "constant.character.escape.humon",
 					"match": "\\\\."
@@ -32,7 +84,11 @@
 			"patterns": [{
 					"include": "#unquotedValue"
 				}, {
-					"include": "#quotedValue"
+					"include": "#backQuotedValue"
+				}, {
+					"include": "#singleQuotedValue"
+				}, {
+					"include": "#doubleQuotedValue"
 				}
 			]
 		},
@@ -48,47 +104,9 @@
 				"0": { "name": "punctuation.definition.array.end.humon" }
 			},
 			"patterns": [{
-					"include": "#node"
-				}, {
 					"include": "#comment"
-				}
-			]
-		},
-
-		"unquotedKey": {
-			"match": "(\\w+)\\s*(\\:)",
-			"captures": {
-				"1": { "name": "support.type.property-name.humon" },
-				"2": { "name": "punctuation.separator.dictionary.key-value.humon" }
-			}
-		},
-
-		"quotedKey": {
-			"match": "(\"\\w*\")\\s*(\\:)",
-			"captures": {
-				"1": { "name": "support.type.property-name.humon" },
-				"2": { "name": "punctuation.separator.dictionary.key-value.humon" }
-			},
-			"patterns": [{
-					"name": "constant.character.escape.humon",
-					"match": "\\\\."
-				}
-			]
-		},
-
-		"key": {
-			"patterns": [{
-					"include": "#unquotedKey"
 				}, {
-					"include": "#quotedKey"
-				}
-			]
-		},
-
-		"keyValuePair": {
-			"name": "meta.structure.dictionary.key-value.humon",
-			"patterns": [{
-					"include": "#key"
+					"include": "#comma"
 				}, {
 					"include": "#node"
 				}
@@ -106,9 +124,14 @@
 				"0": { "name": "punctuation.definition.dictionary.end.humon" }
 			},
 			"patterns": [{
-					"include": "#keyValuePair"
-				}, {
 					"include": "#comment"
+				}, {
+					"include": "#comma"
+				}, {
+					"name": "punctuation.separator.dictionary.key-value.humon",
+					"match": "\\:"
+				}, {
+					"include": "#node"
 				}
 			]
 		},
@@ -116,7 +139,7 @@
 		"node": {
 			"name": "meta.structure.node.humon",
 			"patterns": [{
-					"include": "#comment"
+					"include": "#annotation"
 				}, {
 					"include": "#value"
 				}, {
@@ -127,5 +150,14 @@
 			]
 		}
 	},
-	"scopeName": "source.humon"
+	"patterns": [{
+			"include": "#comment"
+		}, {
+			"include": "#comma"
+		}, {
+			"include": "#annotation"
+		}, {
+			"include": "#node"
+		}
+	]
 }
