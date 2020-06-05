@@ -41,7 +41,7 @@ int getCodepointLength(char const * cur)
 }
 
 
-void nextCharacter(cursor_t * cursor)
+void nextCharacter(huCursor * cursor)
 {
     cursor->character += cursor->codepointLength;
     cursor->codepointLength = getCodepointLength(cursor->character);
@@ -50,7 +50,7 @@ void nextCharacter(cursor_t * cursor)
 }
 
 
-void analyzeWhitespace(cursor_t * cursor)
+void analyzeWhitespace(huCursor * cursor)
 {
     char ca = cursor->character[0];
     char cb = cursor->character[1];
@@ -85,7 +85,7 @@ void analyzeWhitespace(cursor_t * cursor)
 }
 
 
-void eatWs(cursor_t * cursor, int tabSize, int * line, int * col)
+void eatWs(huCursor * cursor, int tabSize, int * line, int * col)
 {
     bool eating = true;
     while (eating)
@@ -111,7 +111,7 @@ void eatWs(cursor_t * cursor, int tabSize, int * line, int * col)
 }
 
 
-void eatDoubleSlashComment(cursor_t * cursor, int tabSize, int * len, int * line, int * col)
+void eatDoubleSlashComment(huCursor * cursor, int tabSize, int * len, int * line, int * col)
 {
     // The first two characters are already confirmed //, so, next please.
     * len += 2;
@@ -139,7 +139,7 @@ void eatDoubleSlashComment(cursor_t * cursor, int tabSize, int * len, int * line
 }
 
 
-void eatCStyleComment(cursor_t * cursor, int tabSize, int * len, int * line, int * col)
+void eatCStyleComment(huCursor * cursor, int tabSize, int * len, int * line, int * col)
 {
     // The first two characters are already confirmed /*, so, next please.
     nextCharacter(cursor);
@@ -193,7 +193,7 @@ void eatCStyleComment(cursor_t * cursor, int tabSize, int * len, int * line, int
 }
 
 
-void eatWord(cursor_t * cursor, int * len, int * line, int * col)
+void eatWord(huCursor * cursor, int * len, int * line, int * col)
 {
     // The first character is already confirmed a word char, so, next please.
     * len += cursor->codepointLength;
@@ -227,7 +227,7 @@ void eatWord(cursor_t * cursor, int * len, int * line, int * col)
 }
 
 
-void eatQuotedWord(cursor_t * cursor, char quoteChar, int tabSize, int * len, int * line, int * col)
+void eatQuotedWord(huCursor * cursor, char quoteChar, int tabSize, int * len, int * line, int * col)
 {
     // The first character is already confirmed quoteChar, so, next please.
     * col += 1;
@@ -280,30 +280,30 @@ void eatQuotedWord(cursor_t * cursor, char quoteChar, int tabSize, int * len, in
 }
 
 
-void eatSingleQuotedWord(cursor_t * cur, int tabSize, int * len, int * line, int * col)
+void eatSingleQuotedWord(huCursor * cur, int tabSize, int * len, int * line, int * col)
 {
   eatQuotedWord(cur, '\'', tabSize, len, line, col);
 }
 
 
-void eatDoubleQuotedWord(cursor_t * cur, int tabSize, int * len, int * line, int * col)
+void eatDoubleQuotedWord(huCursor * cur, int tabSize, int * len, int * line, int * col)
 {
   eatQuotedWord(cur, '"', tabSize, len, line, col);
 }
 
 
-void eatBackQuotedWord(cursor_t * cur, int tabSize, int * len, int * line, int * col)
+void eatBackQuotedWord(huCursor * cur, int tabSize, int * len, int * line, int * col)
 {
   eatQuotedWord(cur, '`', tabSize, len, line, col);
 }
 
 
-void huTokenizeTrove(struct huTrove * trove)
+void huTokenizeTrove(huTrove * trove)
 {
   huResetVector(& trove->tokens);
 
   char const * beg = trove->dataString;
-  cursor_t cur = 
+  huCursor cur = 
     { .trove = trove, .character = beg, 
       .codepointLength = getCodepointLength(beg) };
   int line = 1;

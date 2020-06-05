@@ -72,11 +72,11 @@ Using the APIs is straightforward. To get values above, we might invoke the foll
 
     #include <humon.h>
     ...
-        huTrove_t * trove = huMakeTroveFromStringZ(NULL, humonStr, 4, 4);
-        huNode_t * node = huGetRootNode(trove);
+        huTrove * trove = huMakeTroveFromStringZ(NULL, humonStr, 4, 4);
+        huNode * node = huGetRootNode(trove);
         node = huGetChildByKeyZ(node, "someList");
         node = huGetChildByIndex(node, 0);
-        huStringValue_t * sVal = huGetValue(node); // has str and size
+        huStringValue * sVal = huGetValue(node); // has str and size
 
 or in C++:
 

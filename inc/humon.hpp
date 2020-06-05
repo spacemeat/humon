@@ -207,7 +207,7 @@ namespace hu
     class Token
     {
     public:
-        Token(capi::huToken_t * ctoken) : ctoken(ctoken) { }
+        Token(capi::huToken * ctoken) : ctoken(ctoken) { }
         bool isValid() const noexcept { return ctoken != nullptr; }
         TokenKind getKind() const noexcept { return static_cast<TokenKind>(ctoken->tokenKind); }
         std::string_view getValue() const noexcept { return make_sv(ctoken->value); }
@@ -217,14 +217,14 @@ namespace hu
         int getEndCol() const noexcept { return ctoken->endCol; }
 
     private:
-        capi::huToken_t * ctoken;
+        capi::huToken * ctoken;
     };
 
 
     class Node
     {
     public:
-        Node(capi::huNode_t * cnode) : cnode(cnode) { }
+        Node(capi::huNode * cnode) : cnode(cnode) { }
         bool isValid() const noexcept { return cnode != nullptr; }
         // TODO: int getIdx() maybe
         NodeKind getKind() const noexcept { return static_cast<NodeKind>(cnode->kind); }
@@ -344,7 +344,7 @@ namespace hu
         }
 
     private:
-        capi::huNode_t * cnode;
+        capi::huNode * cnode;
     };
 
     class Trove
@@ -402,7 +402,7 @@ namespace hu
         Trove() { }
 
     private:
-        Trove(capi::huTrove_t * ctrove) : ctrove(ctrove) { }
+        Trove(capi::huTrove * ctrove) : ctrove(ctrove) { }
 
     public:
         Trove(Trove const & rhs) = delete;
@@ -477,7 +477,7 @@ namespace hu
         std::tuple<unique_ptr_free<char const>, int> toString(OutputFormat outputFormat, 
             bool excludeComments, std::vector<std::string> const & colorTable) const noexcept 
         {
-            std::array<capi::huStringView_t, capi::HU_COLORKIND_NUMCOLORKINDS> colors;
+            std::array<capi::huStringView, capi::HU_COLORKIND_NUMCOLORKINDS> colors;
             for (int i = 0; i < capi::HU_COLORKIND_NUMCOLORKINDS; ++i)
             {
                 colors[i].str = colorTable[i].c_str();
@@ -512,7 +512,7 @@ namespace hu
             std::vector<Node> vec;
             auto huvec = capi::huFindNodesByAnnotationKeyN(ctrove, key.data(), key.size());
             for (int i = 0; i < huGetVectorSize(& huvec); ++i)
-                { vec.emplace_back(reinterpret_cast<capi::huNode_t *>(
+                { vec.emplace_back(reinterpret_cast<capi::huNode *>(
                     huGetVectorElement(& huvec, i))); }
 
             return vec;
@@ -523,7 +523,7 @@ namespace hu
             std::vector<Node> vec;
             auto huvec = capi::huFindNodesByAnnotationValueN(ctrove, value.data(), value.size());
             for (int i = 0; i < huGetVectorSize(& huvec); ++i)
-                { vec.emplace_back(reinterpret_cast<capi::huNode_t *>(
+                { vec.emplace_back(reinterpret_cast<capi::huNode *>(
                     huGetVectorElement(& huvec, i))); }
 
             return vec;
@@ -534,7 +534,7 @@ namespace hu
             std::vector<Node> vec;
             auto huvec = capi::huFindNodesByAnnotationKeyValueNN(ctrove, key.data(), key.size(), value.data(), value.size());
             for (int i = 0; i < huGetVectorSize(& huvec); ++i)
-                { vec.emplace_back(reinterpret_cast<capi::huNode_t *>(
+                { vec.emplace_back(reinterpret_cast<capi::huNode *>(
                     huGetVectorElement(& huvec, i))); }
 
             return vec;
@@ -545,13 +545,13 @@ namespace hu
             std::vector<Node> vec;
             auto huvec = capi::huFindNodesByCommentN(ctrove, text.data(), text.size());
             for (int i = 0; i < huGetVectorSize(& huvec); ++i)
-                { vec.emplace_back(reinterpret_cast<capi::huNode_t *>(
+                { vec.emplace_back(reinterpret_cast<capi::huNode *>(
                     huGetVectorElement(& huvec, i))); }
 
             return vec;
         }
 
     private:
-        capi::huTrove_t * ctrove = nullptr;
+        capi::huTrove * ctrove = nullptr;
     };
 }

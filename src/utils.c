@@ -69,7 +69,7 @@ char const * huOutputErrorToString(int rhs)
 }
 
 
-void huInitVector(huVector_t * vector, int elementSize)
+void huInitVector(huVector * vector, int elementSize)
 {
     vector->buffer = NULL;
     vector->elementSize = elementSize;
@@ -78,33 +78,33 @@ void huInitVector(huVector_t * vector, int elementSize)
 }
 
 
-void huDestroyVector(huVector_t * vector)
+void huDestroyVector(huVector * vector)
 {
     if (vector->buffer != NULL)
         { free(vector->buffer); }
 }
 
 
-void huResetVector(huVector_t * vector)
+void huResetVector(huVector * vector)
 {
     huDestroyVector(vector);
     huInitVector(vector, vector->elementSize);
 }
 
 
-int huGetVectorSize(huVector_t * vector)
+int huGetVectorSize(huVector * vector)
 {
     return vector->numElements;
 }
 
 
-void * huGetVectorElement(huVector_t * vector, int idx)
+void * huGetVectorElement(huVector * vector, int idx)
 {
     return vector->buffer + vector->elementSize * idx;
 }
 
 
-void * huGrowVector(huVector_t * vector, int numElements)
+void * huGrowVector(huVector * vector, int numElements)
 {
     if (vector->numElements == 0)
     {
@@ -139,7 +139,7 @@ void * huGrowVector(huVector_t * vector, int numElements)
 }
 
 
-huToken_t humon_nullToken = 
+huToken humon_nullToken = 
 {
     .tokenKind = HU_TOKENKIND_NULL,
     .value = {
@@ -152,7 +152,7 @@ huToken_t humon_nullToken =
     .endCol = 0
 };
 
-huNode_t humon_nullNode =
+huNode humon_nullNode =
 {
     .trove = & humon_nullTrove,
     .nodeIdx = -1,
@@ -164,51 +164,51 @@ huNode_t humon_nullNode =
     .lastToken = & humon_nullToken,
     .childIdx = 0,
     .parentNodeIdx = -1,
-    .childNodeIdxs = (huVector_t) {
+    .childNodeIdxs = (huVector) {
         .buffer = NULL,
         .elementSize = sizeof(int),
         .numElements = 0,
         .elementCapacity = 0
     },
-    .childDictKeys = (huVector_t) {
+    .childDictKeys = (huVector) {
         .buffer = NULL,
-        .elementSize = sizeof(huDictEntry_t),
+        .elementSize = sizeof(huDictEntry),
         .numElements = 0,
         .elementCapacity = 0
     },
-    .annotations = (huVector_t) {
+    .annotations = (huVector) {
         .buffer = NULL,
-        .elementSize = sizeof(huAnnotation_t),
+        .elementSize = sizeof(huAnnotation),
         .numElements = 0,
         .elementCapacity = 0
     },
-    .comments = (huVector_t) {
+    .comments = (huVector) {
         .buffer = NULL,
-        .elementSize = sizeof(huComment_t),
+        .elementSize = sizeof(huComment),
         .numElements = 0,
         .elementCapacity = 0
     }
 };
 
-huTrove_t humon_nullTrove = 
+huTrove humon_nullTrove = 
 {
     .nameSize = 0,
     .name = "",
     .dataStringSize = 0,
     .dataString = "",
-    .tokens = (huVector_t) {
+    .tokens = (huVector) {
         .buffer = & humon_nullToken,
         .elementSize = 0,
         .numElements = 0,
         .elementCapacity = 0
     },
-    .nodes = (huVector_t) {
+    .nodes = (huVector) {
         .buffer = & humon_nullNode,
         .elementSize = 0,
         .numElements = 0,
         .elementCapacity = 0
     },
-    .errors = (huVector_t) {
+    .errors = (huVector) {
         .buffer = NULL,
         .elementSize = 0,
         .numElements = 0,
@@ -216,13 +216,13 @@ huTrove_t humon_nullTrove =
     },
     .inputTabSize = 4,
     .outputTabSize = 4,
-    .annotations = (huVector_t) {
+    .annotations = (huVector) {
         .buffer = NULL,
         .elementSize = 0,
         .numElements = 0,
         .elementCapacity = 0
     },
-    .comments = (huVector_t) {
+    .comments = (huVector) {
         .buffer = NULL,
         .elementSize = 0,
         .numElements = 0,

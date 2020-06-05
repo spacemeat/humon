@@ -4,7 +4,6 @@
     TODO:
         P1 CMake, vcpkg
         P1 doxygen
-        P1 vscode colorizer comments
         P2 custom memory allocator fns
         P2 insertion ops (later priority)
         P2 string value transformers (getDecodedValue())
@@ -20,16 +19,16 @@ extern "C"
 {
 #endif
 
-    typedef struct huVector
+    typedef struct huVector_tag
     {
         void * buffer;
         int elementSize;
         int numElements;
         int elementCapacity;
-    } huVector_t;
+    } huVector;
 
-    int huGetVectorSize(huVector_t * vector);
-    void * huGetVectorElement(huVector_t * vector, int idx);
+    int huGetVectorSize(huVector * vector);
+    void * huGetVectorElement(huVector * vector, int idx);
 
     enum huTokenKind
     {
@@ -83,124 +82,117 @@ extern "C"
     char const * huOutputErrorToString(int rhs);
 
 
-    typedef struct huSubstring
-    {
-        int loc;
-        int size;
-    } huSubstring_t;
-
-
-    typedef struct huStringView
+    typedef struct huStringView_tag
     {
         char const * str;
         int size;
-    } huStringView_t;
+    } huStringView;
 
 
-    typedef struct huToken
+    typedef struct huToken_tag
     {
         int tokenKind;
-        huStringView_t value;
+        huStringView value;
         int line;
         int col;
         int endLine;
         int endCol;
-    } huToken_t;
+    } huToken;
 
 
-    typedef struct huDictEntry
+    typedef struct huDictEntry_tag
     {
-        huToken_t * key;
+        huToken * key;
         int idx;
-    } huDictEntry_t;
+    } huDictEntry;
 
 
-    typedef struct huAnnotation
+    typedef struct huAnnotation_tag
     {
-        huToken_t * key;
-        huToken_t * value;
-    } huAnnotation_t;
+        huToken * key;
+        huToken * value;
+    } huAnnotation;
 
 
-    typedef struct huNode huNode_t;
+    typedef struct huNode_tag huNode;
 
-    typedef struct huComment
+    typedef struct huComment_tag
     {
-        huToken_t * commentToken;
-        huNode_t * owner; // NULL = trove
-    } huComment_t;
+        huToken * commentToken;
+        huNode * owner; // NULL = trove
+    } huComment;
 
 
-    typedef struct huTrove huTrove_t;
+    typedef struct huTrove_tag huTrove;
 
-    typedef struct huNode
+    typedef struct huNode_tag
     {
-        huTrove_t * trove;
+        huTrove * trove;
 
         int nodeIdx;
         int kind;
 
-        huToken_t * firstToken;
-        huToken_t * keyToken;
-        huToken_t * firstValueToken;
-        huToken_t * lastValueToken;
-        huToken_t * lastToken;
+        huToken * firstToken;
+        huToken * keyToken;
+        huToken * firstValueToken;
+        huToken * lastValueToken;
+        huToken * lastToken;
 
     // TODO: change following to childOrdinal
         int childIdx;     // Among its siblings, to its parent.
 
         int parentNodeIdx;
 
-        huVector_t childNodeIdxs;     // int []
-        huVector_t childDictKeys;     // huDictEntry_t []
-        huVector_t annotations;         // huAnnotation_t []
-        huVector_t comments;     // huComment_t []
-    } huNode_t;
+        huVector childNodeIdxs;     // int []
+        huVector childDictKeys;     // huDictEntry []
+        huVector annotations;         // huAnnotation []
+        huVector comments;     // huComment []
+    } huNode;
 
-    huNode_t * huGetParentNode(huNode_t * node);
-    int huGetNumChildren(huNode_t * node);
-    huNode_t * huGetChildNodeByIndex(huNode_t * node, int childIdx);
-    huNode_t * huGetChildNodeByKeyZ(huNode_t * node, char const * key);
-    huNode_t * huGetChildNodeByKeyN(huNode_t * node, char const * key, int keyLen);
+    huNode * huGetParentNode(huNode * node);
+    int huGetNumChildren(huNode * node);
+    huNode * huGetChildNodeByIndex(huNode * node, int childIdx);
+    huNode * huGetChildNodeByKeyZ(huNode * node, char const * key);
+    huNode * huGetChildNodeByKeyN(huNode * node, char const * key, int keyLen);
 
-    bool huHasKey(huNode_t * node);
-    huToken_t * huGetKey(huNode_t * node);
+    bool huHasKey(huNode * node);
+    huToken * huGetKey(huNode * node);
 
-    bool huHasValue(huNode_t * node);
-    huToken_t * huGetValue(huNode_t * node);
+    bool huHasValue(huNode * node);
+    huToken * huGetValue(huNode * node);
 
-    huToken_t * huGetStartToken(huNode_t * node);
-    huToken_t * huGetEndToken(huNode_t * node);
+    huToken * huGetStartToken(huNode * node);
+    huToken * huGetEndToken(huNode * node);
 
-    huNode_t * huNextSibling(huNode_t * node);
+    huNode * huNextSibling(huNode * node);
 
-    int huGetNumAnnotations(huNode_t * node);
-    huAnnotation_t * huGetAnnotation(huNode_t * node, int annotationIdx);
+    int huGetNumAnnotations(huNode * node);
+    huAnnotation * huGetAnnotation(huNode * node, int annotationIdx);
 
-    int huGetNumAnnotationsByKeyZ(huNode_t * node, char const * key);
-    int huGetNumAnnotationsByKeyN(huNode_t * node, char const * key, int keyLen);
-    huAnnotation_t * huGetAnnotationByKeyZ(huNode_t * node, char const * key, int annotationIdx);
-    huAnnotation_t * huGetAnnotationByKeyN(huNode_t * node, char const * key, int keyLen, int annotationIdx);
+    int huGetNumAnnotationsByKeyZ(huNode * node, char const * key);
+    int huGetNumAnnotationsByKeyN(huNode * node, char const * key, int keyLen);
+    huAnnotation * huGetAnnotationByKeyZ(huNode * node, char const * key, int annotationIdx);
+    huAnnotation * huGetAnnotationByKeyN(huNode * node, char const * key, int keyLen, int annotationIdx);
 
-    int huGetNumAnnotationsByValueZ(huNode_t * node, char const * value);
-    int huGetNumAnnotationsByValueN(huNode_t * node, char const * value, int valueLen);
-    huAnnotation_t * huGetAnnotationByValueZ(huNode_t * node, char const * value, int annotationIdx);
-    huAnnotation_t * huGetAnnotationByValueN(huNode_t * node, char const * value, int valueLen, int annotationIdx);
+    int huGetNumAnnotationsByValueZ(huNode * node, char const * value);
+    int huGetNumAnnotationsByValueN(huNode * node, char const * value, int valueLen);
+    huAnnotation * huGetAnnotationByValueZ(huNode * node, char const * value, int annotationIdx);
+    huAnnotation * huGetAnnotationByValueN(huNode * node, char const * value, int valueLen, int annotationIdx);
 
-    int huGetNumComments(huNode_t * node);
-    huComment_t * huGetComment(huNode_t * node, int commentIdx);
+    int huGetNumComments(huNode * node);
+    huComment * huGetComment(huNode * node, int commentIdx);
     
-    huNode_t * huGetNodeByRelativeAddressZ(huNode_t * node, char const * address, int * error);
-    huNode_t * huGetNodeByRelativeAddressN(huNode_t * node, char const * address, int addressLen, int * error);
+    huNode * huGetNodeByRelativeAddressZ(huNode * node, char const * address, int * error);
+    huNode * huGetNodeByRelativeAddressN(huNode * node, char const * address, int addressLen, int * error);
 
     // user must free(retval.str)
-    huStringView_t huGetNodeAddress(huNode_t * node);
+    huStringView huGetNodeAddress(huNode * node);
 
-    typedef struct huError
+    typedef struct huError_tag
     {
         int errorCode;
-        huToken_t * errorToken;
-    } huError_t;
+        huToken * errorToken;
+    } huError;
 
 
     enum huColorKind
@@ -223,87 +215,82 @@ extern "C"
         HU_COLORKIND_NUMCOLORKINDS
     };
 
-    typedef struct {
-        int tokenKind;
-        char const * colorCode;
-    } huColorFormatEntry_t;
 
-
-    typedef struct huTrove
+    typedef struct huTrove_tag
     {
         int nameSize;
         char * name;
         int dataStringSize;
         char * dataString;
-        huVector_t tokens;
-        huVector_t nodes;
-        huVector_t errors;
+        huVector tokens;
+        huVector nodes;
+        huVector errors;
         int inputTabSize; // for error column #s mostly
         int outputTabSize;
-        huVector_t annotations;         // huAnnotation_t []
-        huVector_t comments;     // huComment_t[]
-    } huTrove_t;
+        huVector annotations;         // huAnnotation []
+        huVector comments;     // huComment[]
+    } huTrove;
 
 
-    huTrove_t * huMakeTroveFromStringZ(char const * name, char const * data, int inputTabSize, int outputTabSize);
-    huTrove_t * huMakeTroveFromStringN(char const * name, char const * data, int dataLen, int inputTabSize, int outputTabSize);
-    huTrove_t * huMakeTroveFromFile(char const * name, char const * path, int inputTabSize, int outputTabSize);
+    huTrove * huMakeTroveFromStringZ(char const * name, char const * data, int inputTabSize, int outputTabSize);
+    huTrove * huMakeTroveFromStringN(char const * name, char const * data, int dataLen, int inputTabSize, int outputTabSize);
+    huTrove * huMakeTroveFromFile(char const * name, char const * path, int inputTabSize, int outputTabSize);
 
-    void huDestroyTrove(huTrove_t * trove);
+    void huDestroyTrove(huTrove * trove);
 
-    int huGetNumTokens(huTrove_t * trove);
-    huToken_t * huGetToken(huTrove_t * trove, int tokenIdx);
+    int huGetNumTokens(huTrove * trove);
+    huToken * huGetToken(huTrove * trove, int tokenIdx);
 
-    int huGetNumNodes(huTrove_t * trove);
-    huNode_t * huGetRootNode(huTrove_t * trove);
-    huNode_t * huGetNode(huTrove_t * trove, int nodeIdx);
+    int huGetNumNodes(huTrove * trove);
+    huNode * huGetRootNode(huTrove * trove);
+    huNode * huGetNode(huTrove * trove, int nodeIdx);
 
-    int huGetNumErrors(huTrove_t * trove);
-    huError_t * huGetError(huTrove_t * trove, int errorIdx);
+    int huGetNumErrors(huTrove * trove);
+    huError * huGetError(huTrove * trove, int errorIdx);
 
-    int huGetNumTroveAnnotations(huTrove_t * trove);
-    huAnnotation_t * huGetTroveAnnotation(huTrove_t * trove, int errorIdx);
+    int huGetNumTroveAnnotations(huTrove * trove);
+    huAnnotation * huGetTroveAnnotation(huTrove * trove, int errorIdx);
 
-    int huGetNumTroveAnnotationsByKeyZ(huTrove_t * trove, char const * key);
-    int huGetNumTroveAnnotationsByKeyN(huTrove_t * trove, char const * key, int keyLen);
-    huAnnotation_t * huGetTroveAnnotationByKeyZ(huTrove_t * trove, char const * key, int annotationIdx);
-    huAnnotation_t * huGetTroveAnnotationByKeyN(huTrove_t * trove, char const * key, int keyLen, int annotationIdx);
+    int huGetNumTroveAnnotationsByKeyZ(huTrove * trove, char const * key);
+    int huGetNumTroveAnnotationsByKeyN(huTrove * trove, char const * key, int keyLen);
+    huAnnotation * huGetTroveAnnotationByKeyZ(huTrove * trove, char const * key, int annotationIdx);
+    huAnnotation * huGetTroveAnnotationByKeyN(huTrove * trove, char const * key, int keyLen, int annotationIdx);
 
-    int huGetNumTroveAnnotationsByValueZ(huTrove_t * trove, char const * value);
-    int huGetNumTroveAnnotationsByValueN(huTrove_t * trove, char const * value, int valueLen);
-    huAnnotation_t * huGetTroveAnnotationByValueZ(huTrove_t * trove, char const * value, int annotationIdx);
-    huAnnotation_t * huGetTroveAnnotationByValueN(huTrove_t * trove, char const * value, int valueLen, int annotationIdx);
+    int huGetNumTroveAnnotationsByValueZ(huTrove * trove, char const * value);
+    int huGetNumTroveAnnotationsByValueN(huTrove * trove, char const * value, int valueLen);
+    huAnnotation * huGetTroveAnnotationByValueZ(huTrove * trove, char const * value, int annotationIdx);
+    huAnnotation * huGetTroveAnnotationByValueN(huTrove * trove, char const * value, int valueLen, int annotationIdx);
 
-    int huGetNumTroveComments(huTrove_t * trove);
-    huComment_t * huGetTroveComment(huTrove_t * trove, int errorIdx);
+    int huGetNumTroveComments(huTrove * trove);
+    huComment * huGetTroveComment(huTrove * trove, int errorIdx);
 
-    huNode_t * huGetNodeByFullAddressZ(huTrove_t * trove, char const * address, int * error);
-    huNode_t * huGetNodeByFullAddressN(huTrove_t * trove, char const * address, int addressLen, int * error);
+    huNode * huGetNodeByFullAddressZ(huTrove * trove, char const * address, int * error);
+    huNode * huGetNodeByFullAddressN(huTrove * trove, char const * address, int addressLen, int * error);
     
     // User must free(retval.buffer);
-    huVector_t huFindNodesByAnnotationKeyZ(huTrove_t * trove, char const * key);
-    huVector_t huFindNodesByAnnotationKeyN(huTrove_t * trove, char const * key, int keyLen);
-    huVector_t huFindNodesByAnnotationValueZ(huTrove_t * trove, char const * value);
-    huVector_t huFindNodesByAnnotationValueN(huTrove_t * trove, char const * value, int valueLen);
-    huVector_t huFindNodesByAnnotationKeyValueZZ(huTrove_t * trove, char const * key, char const * value);
-    huVector_t huFindNodesByAnnotationKeyValueNZ(huTrove_t * trove, char const * key, int keyLen, char const * value);
-    huVector_t huFindNodesByAnnotationKeyValueZN(huTrove_t * trove, char const * key, char const * value, int valueLen);
-    huVector_t huFindNodesByAnnotationKeyValueNN(huTrove_t * trove, char const * key, int keyLen, char const * value, int valueLen);
+    huVector huFindNodesByAnnotationKeyZ(huTrove * trove, char const * key);
+    huVector huFindNodesByAnnotationKeyN(huTrove * trove, char const * key, int keyLen);
+    huVector huFindNodesByAnnotationValueZ(huTrove * trove, char const * value);
+    huVector huFindNodesByAnnotationValueN(huTrove * trove, char const * value, int valueLen);
+    huVector huFindNodesByAnnotationKeyValueZZ(huTrove * trove, char const * key, char const * value);
+    huVector huFindNodesByAnnotationKeyValueNZ(huTrove * trove, char const * key, int keyLen, char const * value);
+    huVector huFindNodesByAnnotationKeyValueZN(huTrove * trove, char const * key, char const * value, int valueLen);
+    huVector huFindNodesByAnnotationKeyValueNN(huTrove * trove, char const * key, int keyLen, char const * value, int valueLen);
 
     // User must free(retval.buffer);
-    huVector_t huFindNodesByCommentZ(huTrove_t * trove, char const * text);
-    huVector_t huFindNodesByCommentN(huTrove_t * trove, char const * text, int textLen);    
+    huVector huFindNodesByCommentZ(huTrove * trove, char const * text);
+    huVector huFindNodesByCommentN(huTrove * trove, char const * text, int textLen);    
 
     // User must free(retval.str);
-    huStringView_t huTroveToString(huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colorTable);
+    huStringView huTroveToString(huTrove * trove, int outputFormat, bool excludeComments, huStringView * colorTable);
 
-    size_t huTroveToFile(char const * path, huTrove_t * trove, int outputFormat, bool excludeComments, huStringView_t * colorTable);
+    size_t huTroveToFile(char const * path, huTrove * trove, int outputFormat, bool excludeComments, huStringView * colorTable);
 
 
     // Globals that represent error objects. All calls on these objects are legal and won't raise signals.
-    extern huToken_t humon_nullToken;
-    extern huNode_t humon_nullNode;
-    extern huTrove_t humon_nullTrove;
+    extern huToken humon_nullToken;
+    extern huNode humon_nullNode;
+    extern huTrove humon_nullTrove;
 
 #ifdef __cplusplus
 } // extern "C"
