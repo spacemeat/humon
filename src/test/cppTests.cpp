@@ -22,7 +22,7 @@ TEST_GROUP(makers)
 
 TEST(makers, fromString)
 {
-    hu::Trove trove = hu::Trove::fromString("test", humon, 2, 2);
+    hu::Trove trove = hu::Trove::fromString(humon, 2, 2);
     auto root = trove.getRootNode();
     CHECK_TEXT(root.getKind() == hu::NodeKind::list, "load0");
     CHECK_TEXT(root.getNumChildren() == 1, "load1");
@@ -40,7 +40,7 @@ TEST_GROUP(api)
 
     void setup()
     {
-        trove = hu::Trove::fromString("api", humon, 2, 2);
+        trove = hu::Trove::fromString(humon, 2, 2);
     }
 
     void teardown()

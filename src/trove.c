@@ -3,28 +3,17 @@
 #include "humon.internal.h"
 
 
-huTrove * makeTrove(char const * name, huStringView * data, int inputTabSize, int outputTabSize)
+huTrove * makeTrove(huStringView * data, int inputTabSize, int outputTabSize)
 {
     huTrove * t = malloc(sizeof(huTrove));
     if (t == NULL)
         { return & humon_nullTrove; }
-
-    t->nameSize = strlen(name);
-    t->name = malloc(t->nameSize + 1);
-    if (t->name == NULL)
-    {
-        free(t);
-        return & humon_nullTrove;
-    }
-    memcpy(t->name, name, t->nameSize);
-    t->name[t->nameSize] = '\0';
 
     t->dataStringSize = data->size;
     // Pad by 4 nulls. This lets us look ahead three bytes for a 4-byte code point match.
     t->dataString = malloc(data->size + 4);
     if (t->dataString == NULL)
     {
-        free(t->name);
         free(t);
         return & humon_nullTrove;
     }
@@ -51,7 +40,7 @@ huTrove * makeTrove(char const * name, huStringView * data, int inputTabSize, in
     huStringView defaultColors[] = 
     {
         { darkGray, strlen(darkGray) },                 // NONE
-        { "", 0 },                                                                // END
+        { "", 0 },                                      // END
         { lightGray, strlen(lightGray) },               // PUNCLIST
         { lightGray, strlen(lightGray) },               // PUNCDIST
         { lightGray, strlen(lightGray) },               // PUNCVALUESEP
@@ -84,13 +73,13 @@ huTrove * makeTrove(char const * name, huStringView * data, int inputTabSize, in
 }
 
 
-huTrove * huMakeTroveFromString(char const * name, char const * data, int inputTabSize, int outputTabSize)
+huTrove * huMakeTroveFromString(char const * data, int inputTabSize, int outputTabSize)
 {
-    return huMakeTroveFromStringN(name, data, strlen(data), inputTabSize, outputTabSize);
+    return huMakeTroveFromStringN(data, strlen(data), inputTabSize, outputTabSize);
 }
 
 
-huTrove * huMakeTroveFromStringN(char const * name, char const * data, int dataLen, int inputTabSize, int outputTabSize)
+huTrove * huMakeTroveFromStringN(char const * data, int dataLen, int inputTabSize, int outputTabSize)
 {
     if (data == NULL)
         { return & humon_nullTrove; }
@@ -110,7 +99,7 @@ huTrove * huMakeTroveFromStringN(char const * name, char const * data, int dataL
     newData[dataLen + 3] = '\0';
 
     huStringView dataView = { newData, dataLen };
-    huTrove * newTrove = makeTrove(name, & dataView, inputTabSize, outputTabSize);
+    huTrove * newTrove = makeTrove(& dataView, inputTabSize, outputTabSize);
     if (newTrove == NULL)
     {
         free(newData);
@@ -121,9 +110,7 @@ huTrove * huMakeTroveFromStringN(char const * name, char const * data, int dataL
 }
 
 
-// TODO: This currently loads the whole stream before tokenizing. It would
-// be better to load and tokenize and parse in parallel, for large file.
-huTrove * huMakeTroveFromFile(char const * name, char const * path, int inputTabSize, int outputTabSize)
+huTrove * huMakeTroveFromFile(char const * path, int inputTabSize, int outputTabSize)
 {
     FILE * fp = fopen(path, "r");
     if (fp == NULL)
@@ -154,7 +141,7 @@ huTrove * huMakeTroveFromFile(char const * name, char const * path, int inputTab
     newData[newDataSize + 3] = '\0';
 
     huStringView dataView = { newData, newDataSize };
-    huTrove * newTrove = makeTrove(name, & dataView, inputTabSize, outputTabSize);
+    huTrove * newTrove = makeTrove(& dataView, inputTabSize, outputTabSize);
     if (newTrove == NULL)
     {
         free(newData);
@@ -173,9 +160,6 @@ void huDestroyTrove(huTrove * trove)
     
     if (trove->dataString != NULL)
         { free(trove->dataString); }
-
-    if (trove->name != NULL)
-        { free(trove->name); }
 
     free(trove);
 }
@@ -1076,7 +1060,7 @@ huStringView huTroveToString(huTrove * trove,
 
 #pragma GCC diagnostic pop
 
-size_t huTroveToFile(char const * path, huTrove * trove, int outputFormat, bool excludeComments, huStringView * colorTable)
+size_t huTroveToFile(huTrove * trove, char const * path, int outputFormat, bool excludeComments, huStringView * colorTable)
 {
     FILE * fp = fopen(path, "w");
     if (fp == NULL)

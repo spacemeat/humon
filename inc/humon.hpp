@@ -350,44 +350,20 @@ namespace hu
     class Trove
     {
     public:
-        static Trove fromString(std::string_view name, std::string_view data,
-            int inputTabSize = 4, int outputTabSize = 4) noexcept
-        {
-            return Trove(capi::huMakeTroveFromStringN(
-                name.data(), data.data(), data.size(), inputTabSize, outputTabSize));
-        }
-
         static Trove fromString(std::string_view data,
             int inputTabSize = 4, int outputTabSize = 4) noexcept
         {
             return Trove(capi::huMakeTroveFromStringN(
-                NULL, data.data(), data.size(), inputTabSize, outputTabSize));
+                data.data(), data.size(), inputTabSize, outputTabSize));
         }
 
-        static Trove fromFile(std::string_view name, std::string_view path,
-            int inputTabSize = 4, int outputTabSize = 4) noexcept
-        {
-            return Trove(capi::huMakeTroveFromFile(
-                name.data(), path.data(), inputTabSize, outputTabSize));
-        }
-        
         static Trove fromFile(std::string_view path,
             int inputTabSize = 4, int outputTabSize = 4) noexcept
         {
             return Trove(capi::huMakeTroveFromFile(
-                "", path.data(), inputTabSize, outputTabSize));
+                path.data(), inputTabSize, outputTabSize));
         }
-        
-        static Trove fromIstream(std::string_view name, std::istream & in,
-            int inputTabSize = 4, int outputTabSize = 4) noexcept
-        {
-            // TODO: This currently loads the whole stream before tokenizing. It would
-            // be better to load and tokenize and parse in parallel, for large file.
-            std::stringstream buffer;
-            buffer << in.rdbuf();
-            return fromString(name, buffer.str(), inputTabSize, outputTabSize);
-        }
-
+                
         static Trove fromIstream(std::istream & in,
             int inputTabSize = 4, int outputTabSize = 4) noexcept
         {
@@ -395,7 +371,7 @@ namespace hu
             // be better to load and tokenize and parse in parallel, for large file.
             std::stringstream buffer;
             buffer << in.rdbuf();
-            return fromString("", buffer.str(), inputTabSize, outputTabSize);
+            return fromString(buffer.str(), inputTabSize, outputTabSize);
         }
     
     public:

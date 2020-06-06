@@ -74,7 +74,7 @@ void huInitVector(huVector * vector, int elementSize)
     vector->buffer = NULL;
     vector->elementSize = elementSize;
     vector->numElements = 0;
-    vector->elementCapacity = 0;
+    vector->vectorCapacity = 0;
 }
 
 
@@ -113,7 +113,7 @@ void * huGrowVector(huVector * vector, int numElements)
         if (cap % 16 != 0)
             { cap = ((numElements / 16) + 1) * 16; }
 
-        vector->elementCapacity = cap;
+        vector->vectorCapacity = cap;
         vector->numElements = numElements;
         vector->buffer = malloc(cap * vector->elementSize);
 
@@ -122,13 +122,13 @@ void * huGrowVector(huVector * vector, int numElements)
     else
     {
         vector->numElements += numElements;
-        int cap = vector->elementCapacity;
+        int cap = vector->vectorCapacity;
         while (vector->numElements > cap)
             { cap *= 2; }
 
-        if (cap > vector->elementCapacity)
+        if (cap > vector->vectorCapacity)
         {
-            vector->elementCapacity = cap;
+            vector->vectorCapacity = cap;
             vector->buffer = realloc(vector->buffer, cap * vector->elementSize);
             if (vector->buffer == NULL)
                 { return NULL; }
@@ -168,51 +168,49 @@ huNode humon_nullNode =
         .buffer = NULL,
         .elementSize = sizeof(int),
         .numElements = 0,
-        .elementCapacity = 0
+        .vectorCapacity = 0
     },
     .childDictKeys = (huVector) {
         .buffer = NULL,
         .elementSize = sizeof(huDictEntry),
         .numElements = 0,
-        .elementCapacity = 0
+        .vectorCapacity = 0
     },
     .annotations = (huVector) {
         .buffer = NULL,
         .elementSize = sizeof(huAnnotation),
         .numElements = 0,
-        .elementCapacity = 0
+        .vectorCapacity = 0
     },
     .comments = (huVector) {
         .buffer = NULL,
         .elementSize = sizeof(huComment),
         .numElements = 0,
-        .elementCapacity = 0
+        .vectorCapacity = 0
     }
 };
 
 huTrove humon_nullTrove = 
 {
-    .nameSize = 0,
-    .name = "",
     .dataStringSize = 0,
     .dataString = "",
     .tokens = (huVector) {
         .buffer = & humon_nullToken,
         .elementSize = 0,
         .numElements = 0,
-        .elementCapacity = 0
+        .vectorCapacity = 0
     },
     .nodes = (huVector) {
         .buffer = & humon_nullNode,
         .elementSize = 0,
         .numElements = 0,
-        .elementCapacity = 0
+        .vectorCapacity = 0
     },
     .errors = (huVector) {
         .buffer = NULL,
         .elementSize = 0,
         .numElements = 0,
-        .elementCapacity = 0
+        .vectorCapacity = 0
     },
     .inputTabSize = 4,
     .outputTabSize = 4,
@@ -220,12 +218,12 @@ huTrove humon_nullTrove =
         .buffer = NULL,
         .elementSize = 0,
         .numElements = 0,
-        .elementCapacity = 0
+        .vectorCapacity = 0
     },
     .comments = (huVector) {
         .buffer = NULL,
         .elementSize = 0,
         .numElements = 0,
-        .elementCapacity = 0
+        .vectorCapacity = 0
     }
 };
