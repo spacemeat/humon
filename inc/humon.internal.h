@@ -19,13 +19,13 @@ extern "C"
     {
             huTrove * trove;
             char const * character;
-            uint8_t codepointLength;
+            uint8_t charLength;
             uint8_t ws_col;            // boolean - set if space-like whitespace
             uint8_t ws_line;           // boolean - set if newline-like whitespace
     } huCursor;
 
 
-    int getCodepointLength(char const * cur);
+    int getcharLength(char const * cur);
     void nextCharacter(huCursor * cursor);
     void analyzeWhitespace(huCursor * cursor);
     void eatWs(huCursor * cursor, int tabSize, int * line, int * col);

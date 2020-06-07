@@ -10,7 +10,7 @@ huTrove const * makeTrove(huStringView const * data, int inputTabSize, int outpu
         { return & humon_nullTrove; }
 
     t->dataStringSize = data->size;
-    // Pad by 4 nulls. This lets us look ahead three bytes for a 4-byte code point match.
+    // Pad by 4 nulls. This lets us look ahead three bytes for a 4-byte char match.
     char * newDataString = malloc(data->size + 4);
     if (newDataString == NULL)
     {

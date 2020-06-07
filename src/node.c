@@ -256,7 +256,7 @@ huComment const * huGetComment(huNode const * node, int commentIdx)
 void eatAddressWord(huCursor * cursor, int * len, int * col)
 {
     // The first character is already confirmed a word char, so, next please.
-    * len += cursor->codepointLength;
+    * len += cursor->charLength;
     * col += 1;
     nextCharacter(cursor);
 
@@ -277,7 +277,7 @@ void eatAddressWord(huCursor * cursor, int * len, int * col)
                 eating = false;
                 break;
             default:
-                * len += cursor->codepointLength;
+                * len += cursor->charLength;
                 * col += 1;
                 nextCharacter(cursor);
                 break;
@@ -305,7 +305,7 @@ void eatQuotedAddressWord(huCursor * cursor, char quoteChar, int * len, int * co
         }
         else if (cursor->ws_line)
         {
-            * len += cursor->codepointLength;
+            * len += cursor->charLength;
             * col = 1;
             nextCharacter(cursor);
         }
@@ -329,7 +329,7 @@ void eatQuotedAddressWord(huCursor * cursor, char quoteChar, int * len, int * co
             }
             else
             {
-                * len += cursor->codepointLength;
+                * len += cursor->charLength;
                 nextCharacter(cursor);
             }
         }
@@ -384,7 +384,7 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
     huCursor cur = 
         { .trove = NULL, 
           .character = address, 
-          .codepointLength = getCodepointLength(address) };
+          .charLength = getcharLength(address) };
     int line = 0;  // unused
     int col = 0;
 

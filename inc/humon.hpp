@@ -254,29 +254,69 @@ namespace hu
         Token getStartToken() const noexcept { return Token(capi::huGetStartToken(cnode)); }
         Token getEndToken() const noexcept { return Token(capi::huGetEndToken(cnode)); }
         Node getNextSibling() const noexcept { return Node(capi::huNextSibling(cnode)); }
+
         int getNumAnnotations() const noexcept { return capi::huGetNumAnnotations(cnode); }
         std::tuple<Token, Token> getAnnotation(int idx) const noexcept 
         { 
             auto canno = capi::huGetAnnotation(cnode, idx); 
             return { Token(canno->key), Token(canno->value) };
         }
+        std::vector<std::tuple<Token, Token>> getAnnotations() const
+        {
+            std::vector<std::tuple<Token, Token>> vec;
+            int numAnnos = getNumAnnotations();
+            vec.reserve(numAnnos);
+            for (int i = 0; i < numAnnos; ++i)
+                { vec[i] = getAnnotation(i); }
+            return vec;
+        }
+
         int getNumAnnotationsByKey(std::string_view key) const noexcept { return capi::huGetNumAnnotationsByKeyN(cnode, key.data(), key.size()); }
         std::tuple<Token, Token> getAnnotationByKey(std::string_view key, int idx) const noexcept 
         { 
             auto canno = capi::huGetAnnotationByKeyN(cnode, key.data(), key.size(), idx);
             return { Token(canno->key), Token(canno->value) };
         }
+        std::vector<std::tuple<Token, Token>> getAnnotationsByKey(std::string_view key) const
+        {
+            std::vector<std::tuple<Token, Token>> vec;
+            int numAnnos = getNumAnnotationsByKey(key);
+            vec.reserve(numAnnos);
+            for (int i = 0; i < numAnnos; ++i)
+                { vec[i] = getAnnotationByKey(key, i); }
+            return vec;
+        }
+
         int getNumAnnotationsByValue(std::string_view value) const noexcept { return capi::huGetNumAnnotationsByValueN(cnode, value.data(), value.size()); }
         std::tuple<Token, Token> getAnnotationByValue(std::string_view value, int idx) const noexcept 
         { 
             auto canno = capi::huGetAnnotationByValueN(cnode, value.data(), value.size(), idx);
             return { Token(canno->key), Token(canno->value) };
         }
+        std::vector<std::tuple<Token, Token>> getAnnotationsByValue(std::string_view key) const
+        {
+            std::vector<std::tuple<Token, Token>> vec;
+            int numAnnos = getNumAnnotationsByValue(key);
+            vec.reserve(numAnnos);
+            for (int i = 0; i < numAnnos; ++i)
+                { vec[i] = getAnnotationByValue(key, i); }
+            return vec;
+        }
+
         int getNumComments() const noexcept { return capi::huGetNumComments(cnode); }
         std::tuple<Token, Node> getComment(int idx) const noexcept 
         {
             auto ccomm = capi::huGetComment(cnode, idx);
             return { Token(ccomm->commentToken), Node(ccomm->owner) };
+        }
+        std::vector<std::tuple<Token, Node>> getComments() const
+        {
+            std::vector<std::tuple<Token, Node>> vec;
+            int numComms = getNumComments();
+            vec.reserve(numComms);
+            for (int i = 0; i < numComms; ++i)
+                { vec[i] = getComment(i); }
+            return vec;
         }
 
         std::string_view getKey() const noexcept 
@@ -412,6 +452,7 @@ namespace hu
         Token getToken(int idx) const noexcept { return Token(capi::huGetToken(ctrove, idx)); }
         int getNumNodes() const noexcept { return capi::huGetNumNodes(ctrove); }
         Node getRootNode() const noexcept { return capi::huGetRootNode(ctrove); }
+
         Node getNode(int idx) const noexcept { return Node(capi::huGetNode(ctrove, idx)); }
         std::tuple<Node, ErrorCode> getNode(std::string_view address) const noexcept
         {
@@ -419,35 +460,85 @@ namespace hu
             auto n = Node(capi::huGetNodeByFullAddressN(ctrove, address.data(), address.size(), & ierror));
             return { n, static_cast<ErrorCode>(ierror) };
         }
+
         int getNumErrors() const noexcept { return capi::huGetNumErrors(ctrove); }
         std::tuple<ErrorCode, Token> getError(int idx) const noexcept 
         {
             auto cerr = capi::huGetError(ctrove, idx);
             return { static_cast<ErrorCode>(cerr->errorCode), Token(cerr->errorToken) };
+        }        
+        std::vector<std::tuple<ErrorCode, Token>> getErrors() const
+        {
+            std::vector<std::tuple<ErrorCode, Token>> vec;
+            int numErrors = getNumErrors();
+            vec.reserve(numErrors);
+            for (int i = 0; i < numErrors; ++i)
+                { vec[i] = getError(i); }
+            return vec;
         }
+
         int getNumAnnotations() const noexcept { return capi::huGetNumTroveAnnotations(ctrove); }
         std::tuple<Token, Token> getAnnotation(int idx) const noexcept 
         { 
             auto canno = capi::huGetTroveAnnotation(ctrove, idx); 
             return { Token(canno->key), Token(canno->value) };
         }
+        std::vector<std::tuple<Token, Token>> getAnnotations() const
+        {
+            std::vector<std::tuple<Token, Token>> vec;
+            int numAnnos = getNumAnnotations();
+            vec.reserve(numAnnos);
+            for (int i = 0; i < numAnnos; ++i)
+                { vec[i] = getAnnotation(i); }
+            return vec;
+        }
+
         int getNumAnnotationsByKey(std::string_view key) const noexcept { return capi::huGetNumTroveAnnotationsByKeyN(ctrove, key.data(), key.size()); }
         std::tuple<Token, Token> getAnnotationByKey(std::string_view key, int idx) const noexcept 
         { 
             auto canno = capi::huGetTroveAnnotationByKeyN(ctrove, key.data(), key.size(), idx);
             return { Token(canno->key), Token(canno->value) };
         }
+        std::vector<std::tuple<Token, Token>> getAnnotationsByKey(std::string_view key) const
+        {
+            std::vector<std::tuple<Token, Token>> vec;
+            int numAnnos = getNumAnnotationsByKey(key);
+            vec.reserve(numAnnos);
+            for (int i = 0; i < numAnnos; ++i)
+                { vec[i] = getAnnotationByKey(key, i); }
+            return vec;
+        }
+
         int getNumAnnotationsByValue(std::string_view value) const noexcept { return capi::huGetNumTroveAnnotationsByValueN(ctrove, value.data(), value.size()); }
         std::tuple<Token, Token> getAnnotationByValue(std::string_view value, int idx) const noexcept 
         { 
             auto canno = capi::huGetTroveAnnotationByValueN(ctrove, value.data(), value.size(), idx);
             return { Token(canno->key), Token(canno->value) };
         }
+        std::vector<std::tuple<Token, Token>> getAnnotationsByValue(std::string_view key) const
+        {
+            std::vector<std::tuple<Token, Token>> vec;
+            int numAnnos = getNumAnnotationsByValue(key);
+            vec.reserve(numAnnos);
+            for (int i = 0; i < numAnnos; ++i)
+                { vec[i] = getAnnotationByValue(key, i); }
+            return vec;
+        }
+
         int getNumComments() const noexcept { return capi::huGetNumTroveComments(ctrove); }
         std::tuple<Token, Node> getComment(int idx) const noexcept 
         {
             auto ccomm = capi::huGetTroveComment(ctrove, idx);
             return { Token(ccomm->commentToken), nullptr };
+        }
+        std::vector<std::tuple<Token, Node>> getComments() const
+        {
+            std::vector<std::tuple<Token, Node>> vec;
+            int numComms = getNumComments();
+            vec.reserve(numComms);
+            for (int i = 0; i < numComms; ++i)
+                { vec[i] = getComment(i); }
+            return vec;
         }
 
         std::tuple<unique_ptr_free<char const>, int> toString(OutputFormat outputFormat, 

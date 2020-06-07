@@ -2,7 +2,7 @@
 #include "humon.internal.h"
 
 
-int getCodepointLength(char const * cur)
+int getcharLength(char const * cur)
 {
   if ((*cur & 0x80) == 0)
       { return 1; }
@@ -43,8 +43,8 @@ int getCodepointLength(char const * cur)
 
 void nextCharacter(huCursor * cursor)
 {
-    cursor->character += cursor->codepointLength;
-    cursor->codepointLength = getCodepointLength(cursor->character);
+    cursor->character += cursor->charLength;
+    cursor->charLength = getcharLength(cursor->character);
     cursor->ws_col = 0;
     cursor->ws_line = 0;
 }
@@ -77,10 +77,10 @@ void analyzeWhitespace(huCursor * cursor)
                        (ca == 0xe2 && cb == 0x80 && cc == 0xaf) ||
                        (ca == 0xe2 && cb == 0x81 && cc == 0x9f) ||
                        (ca == 0xe3 && cb == 0x80 && cc == 0x80));
-    // Combine cr+lf into one 'codepoint'.
+    // Combine cr+lf into one sort of 'codepoint'.
     if (ca == '\r' && cb == '\n')
     {
-        cursor->codepointLength = 2;
+        cursor->charLength = 2;
     }
 }
 
@@ -126,7 +126,7 @@ void eatDoubleSlashComment(huCursor * cursor, int tabSize, int * len, int * line
         if (! cursor->ws_line && 
             cursor->character[0] != '\0')
         {
-            * len += cursor->codepointLength;
+            * len += cursor->charLength;
             if (cursor->character[0] == '\t')
                 { * col += tabSize - ((* col - 1) % tabSize); }
             else
@@ -155,14 +155,14 @@ void eatCStyleComment(huCursor * cursor, int tabSize, int * len, int * line, int
             { eating = false; }
         else if (cursor->ws_line)
         {
-            * len += cursor->codepointLength;
+            * len += cursor->charLength;
             * col = 1;
             * line += 1;
             nextCharacter(cursor);
         }
         else if (cursor->character[0] != '\0')
         {
-            * len += cursor->codepointLength;
+            * len += cursor->charLength;
             if (cursor->character[0] == '\t')
                 { * col += tabSize - ((* col - 1) % tabSize); }
             else
@@ -196,7 +196,7 @@ void eatCStyleComment(huCursor * cursor, int tabSize, int * len, int * line, int
 void eatWord(huCursor * cursor, int * len, int * line, int * col)
 {
     // The first character is already confirmed a word char, so, next please.
-    * len += cursor->codepointLength;
+    * len += cursor->charLength;
     * col += 1;
     nextCharacter(cursor);
 
@@ -216,7 +216,7 @@ void eatWord(huCursor * cursor, int * len, int * line, int * col)
                 // skip whatever is next, unless it's a newline.
                 if (! cursor->ws_line)
                 {
-                  * len += cursor->codepointLength;
+                  * len += cursor->charLength;
                   * col += 1;
                 }
                 nextCharacter(cursor);
@@ -236,7 +236,7 @@ void eatWord(huCursor * cursor, int * len, int * line, int * col)
                 eating = false;
                 break;
             default:
-                * len += cursor->codepointLength;
+                * len += cursor->charLength;
                 * col += 1;
                 nextCharacter(cursor);
                 break;
@@ -263,7 +263,7 @@ void eatQuotedWord(huCursor * cursor, char quoteChar, int tabSize, int * len, in
         }
         else if (cursor->ws_line)
         {
-            * len += cursor->codepointLength;
+            * len += cursor->charLength;
             * col = 1;
             * line += 1;
             nextCharacter(cursor);
@@ -291,7 +291,7 @@ void eatQuotedWord(huCursor * cursor, char quoteChar, int tabSize, int * len, in
             }
             else
             {
-                * len += cursor->codepointLength;
+                * len += cursor->charLength;
                 nextCharacter(cursor);
             }
         }
@@ -324,7 +324,7 @@ void huTokenizeTrove(huTrove * trove)
   char const * beg = trove->dataString;
   huCursor cur = 
     { .trove = trove, .character = beg, 
-      .codepointLength = getCodepointLength(beg) };
+      .charLength = getcharLength(beg) };
   int line = 1;
   int col = 1;
   bool scanning = true;
