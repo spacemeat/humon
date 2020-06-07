@@ -259,7 +259,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
 {
     depth += 1;
 
-    huNode * parentNode = huGetNode(trove, parentNodeIdx);
+    huNode * parentNode = (huNode *) huGetNode(trove, parentNodeIdx);
 
     bool scanning = true;
     while (scanning)
@@ -291,7 +291,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
                     newNode = allocNewNode(trove, HU_NODEKIND_LIST, * ppCur);
                     newNode->firstToken = * ppCur;
                     newNode->firstValueToken = * ppCur;
-                    parentNode = huGetNode(trove, parentNodeIdx);
+                    parentNode = (huNode *) huGetNode(trove, parentNodeIdx);
                 }
 
                 if (state == PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END)
@@ -300,7 +300,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
 
                     // parentage
                     newNode->parentNodeIdx = parentNodeIdx;
-                    * (int *) huGrowVector(& parentNode->childNodeIdxs, 1) = newNode->nodeIdx;
+                    * (int *) huGrowVector((huVector *) & parentNode->childNodeIdxs, 1) = newNode->nodeIdx;
                     newNode->childIdx = parentNode->childNodeIdxs.numElements - 1;
                 }
                 else if (state == PS_IN_DICT_EXPECT_START_OR_VALUE)
@@ -314,12 +314,12 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
 
                     // parentage
                     newNode->parentNodeIdx = parentNodeIdx;
-                    * (int *) huGrowVector(& parentNode->childNodeIdxs, 1) = newNode->nodeIdx;
+                    * (int *) huGrowVector((huVector *) & parentNode->childNodeIdxs, 1) = newNode->nodeIdx;
                     newNode->childIdx = parentNode->childNodeIdxs.numElements - 1;
 
                     // dictionary key
                     huDictEntry * dictEntry = huGrowVector(
-                        & parentNode->childDictKeys, 1);
+                        (huVector *) & parentNode->childDictKeys, 1);
                     dictEntry->key = newNode->keyToken;
                     dictEntry->idx = newNode->childIdx;
                 }
@@ -333,7 +333,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
                 parseTroveRecursive(trove, ppCur, 
                     newNode->nodeIdx, PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END, commentQueue);
                 // recursive call may realloc, so refresh parentNode
-                parentNode = huGetNode(trove, parentNodeIdx);
+                parentNode = (huNode *) huGetNode(trove, parentNodeIdx);
             }
             else
             {
@@ -381,7 +381,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
                     newNode = allocNewNode(trove, HU_NODEKIND_DICT, * ppCur);
                     newNode->firstToken = * ppCur;
                     newNode->firstValueToken = * ppCur;
-                    parentNode = huGetNode(trove, parentNodeIdx);
+                    parentNode = (huNode *) huGetNode(trove, parentNodeIdx);
                 }
 
                 if (state == PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END)
@@ -408,7 +408,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
                     newNode->childIdx = parentNode->childNodeIdxs.numElements - 1;
 
                     // dictionary key
-                    huDictEntry * dictEntry = huGrowVector(
+                    huDictEntry * dictEntry = (huDictEntry *) huGrowVector(
                         & parentNode->childDictKeys, 1);
                     dictEntry->key = newNode->keyToken;
                     dictEntry->idx = newNode->childIdx;
@@ -423,7 +423,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
                 parseTroveRecursive(trove, ppCur, 
                     newNode->nodeIdx, PS_IN_DICT_EXPECT_KEY_OR_END, commentQueue);
                 // recursive call may realloc, so refresh parentNode
-                parentNode = huGetNode(trove, parentNodeIdx);
+                parentNode = (huNode *) huGetNode(trove, parentNodeIdx);
             }
             else
             {
@@ -487,7 +487,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
                 newNode->firstValueToken = * ppCur;
                 newNode->lastValueToken = * ppCur;
                 newNode->lastToken = * ppCur;
-                parentNode = huGetNode(trove, parentNodeIdx);
+                parentNode = (huNode *) huGetNode(trove, parentNodeIdx);
                 * ppCur += 1;
 
                 assignEnqueuedComments(commentQueue, & newNode->comments, newNode);
@@ -503,7 +503,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
                 newNode->firstValueToken = * ppCur;
                 newNode->lastValueToken = * ppCur;
                 newNode->lastToken = * ppCur;
-                parentNode = huGetNode(trove, parentNodeIdx);
+                parentNode = (huNode *) huGetNode(trove, parentNodeIdx);
                 * ppCur += 1;
 
                 // parentage
@@ -521,7 +521,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
 
                 huNode * newNode = allocNewNode(trove, HU_NODEKIND_NULL, * ppCur);
                 newNode->keyToken = * ppCur;
-                parentNode = huGetNode(trove, parentNodeIdx);
+                parentNode = (huNode *) huGetNode(trove, parentNodeIdx);
                 * ppCur += 1;
 
                 assignEnqueuedComments(commentQueue, & newNode->comments, newNode);

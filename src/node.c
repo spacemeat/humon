@@ -4,7 +4,7 @@
 #include "humon.internal.h"
 
 
-void huInitNode(huNode * node, huTrove * trove)
+void huInitNode(huNode * node, huTrove const * trove)
 {
     node->trove = trove;
     node->nodeIdx = -1;
@@ -23,7 +23,7 @@ void huInitNode(huNode * node, huTrove * trove)
 }
 
 
-void huDestroyNode(huNode * node)
+void huDestroyNode(huNode const * node)
 {
     huDestroyVector(& node->childNodeIdxs);
     huDestroyVector(& node->childDictKeys);
@@ -32,19 +32,19 @@ void huDestroyNode(huNode * node)
 }
 
 
-huNode * huGetParentNode(huNode * node)
+huNode const * huGetParentNode(huNode const * node)
 {
     return huGetNode(node->trove, node->parentNodeIdx);
 }
 
 
-int huGetNumChildren(huNode * node)
+int huGetNumChildren(huNode const * node)
 {
     return node->childNodeIdxs.numElements;
 }
 
 
-huNode * huGetChildNodeByIndex(huNode * node, int childIdx)
+huNode const * huGetChildNodeByIndex(huNode const * node, int childIdx)
 {
     if (childIdx < 0 || childIdx >= huGetNumChildren(node))
         { return & humon_nullNode; }
@@ -54,13 +54,13 @@ huNode * huGetChildNodeByIndex(huNode * node, int childIdx)
 }
 
 
-huNode * huGetChildNodeByKeyZ(huNode * node, char const * key)
+huNode const * huGetChildNodeByKeyZ(huNode const * node, char const * key)
 {
     return huGetChildNodeByKeyN(node, key, strlen(key));
 }
 
 
-huNode * huGetChildNodeByKeyN(huNode * node, char const * key, int keyLen)
+huNode const * huGetChildNodeByKeyN(huNode const * node, char const * key, int keyLen)
 {
     huStringView keyView = { key, keyLen };
 
@@ -81,47 +81,47 @@ huNode * huGetChildNodeByKeyN(huNode * node, char const * key, int keyLen)
     return & humon_nullNode;
 }
 
-bool huHasKey(huNode * node)
+bool huHasKey(huNode const * node)
 {
     return node->keyToken->tokenKind != HU_TOKENKIND_NULL;
 }
 
 
-huToken * huGetKey(huNode * node)
+huToken const * huGetKey(huNode const * node)
 {
     return node->keyToken;
 }
 
 
-bool huHasValue(huNode * node)
+bool huHasValue(huNode const * node)
 {
     return node->firstValueToken->tokenKind != HU_TOKENKIND_NULL;
 }
 
 
-huToken * huGetValue(huNode * node)
+huToken const * huGetValue(huNode const * node)
 {
     return node->firstValueToken;
 }
 
 
-huToken * huGetStartToken(huNode * node)
+huToken const * huGetStartToken(huNode const * node)
 {
     return node->firstValueToken;
 }
 
 
-huToken * huGetEndToken(huNode * node)
+huToken const * huGetEndToken(huNode const * node)
 {
     return node->lastValueToken;
 }
 
 
-huNode * huNextSibling(huNode * node)
+huNode const * huNextSibling(huNode const * node)
 {
     if (node->parentNodeIdx != -1)
     {
-        huNode * parentNode = huGetParentNode(node);
+        huNode const * parentNode = huGetParentNode(node);
 
         if (huGetNumChildren(parentNode) > node->childIdx + 1)
         {
@@ -133,13 +133,13 @@ huNode * huNextSibling(huNode * node)
 }
 
 
-int huGetNumAnnotations(huNode * node)
+int huGetNumAnnotations(huNode const * node)
 {
     return node->annotations.numElements;
 }
 
 
-huAnnotation * huGetAnnotation(huNode * node, int annotationIdx)
+huAnnotation const * huGetAnnotation(huNode const * node, int annotationIdx)
 {
     if (annotationIdx < node->annotations.numElements)
         { return (huAnnotation *) node->annotations.buffer + annotationIdx; }
@@ -148,18 +148,18 @@ huAnnotation * huGetAnnotation(huNode * node, int annotationIdx)
 }
 
 
-int huGetNumAnnotationsByKeyZ(huNode * node, char const * key)
+int huGetNumAnnotationsByKeyZ(huNode const * node, char const * key)
 {
     return huGetNumAnnotationsByKeyN(node, key, strlen(key));
 }
 
 
-int huGetNumAnnotationsByKeyN(huNode * node, char const * key, int keyLen)
+int huGetNumAnnotationsByKeyN(huNode const * node, char const * key, int keyLen)
 {
     int matches = 0;
     for (int i = 0; i < node->annotations.numElements; ++i)
     { 
-        huAnnotation * anno = (huAnnotation *) node->annotations.buffer + i;
+        huAnnotation const * anno = (huAnnotation *) node->annotations.buffer + i;
         if (strncmp(anno->key->value.str, key, keyLen) == 0)
             { matches += 1; }
     }
@@ -168,18 +168,18 @@ int huGetNumAnnotationsByKeyN(huNode * node, char const * key, int keyLen)
 }
 
 
-huAnnotation * huGetAnnotationByKeyZ(huNode * node, char const * key, int annotationIdx)
+huAnnotation const * huGetAnnotationByKeyZ(huNode const * node, char const * key, int annotationIdx)
 {
     return huGetAnnotationByKeyN(node, key, strlen(key), annotationIdx);
 }
 
 
-huAnnotation * huGetAnnotationByKeyN(huNode * node, char const * key, int keyLen, int annotationIdx)
+huAnnotation const * huGetAnnotationByKeyN(huNode const * node, char const * key, int keyLen, int annotationIdx)
 {
     int matches = 0;
     for (int i = 0; i < node->annotations.numElements; ++i)
     { 
-        huAnnotation * anno = (huAnnotation *) node->annotations.buffer + i;
+        huAnnotation const * anno = (huAnnotation const *) node->annotations.buffer + i;
         if (strncmp(anno->key->value.str, key, keyLen) == 0)
         {
             if (matches == annotationIdx)
@@ -193,18 +193,18 @@ huAnnotation * huGetAnnotationByKeyN(huNode * node, char const * key, int keyLen
 }
 
 
-int huGetNumAnnotationsByValueZ(huNode * node, char const * value)
+int huGetNumAnnotationsByValueZ(huNode const * node, char const * value)
 {
     return huGetNumAnnotationsByValueN(node, value, strlen(value));
 }
 
 
-int huGetNumAnnotationsByValueN(huNode * node, char const * value, int valueLen)
+int huGetNumAnnotationsByValueN(huNode const * node, char const * value, int valueLen)
 {
     int matches = 0;
     for (int i = 0; i < node->annotations.numElements; ++i)
     { 
-        huAnnotation * anno = (huAnnotation *) node->annotations.buffer + i;
+        huAnnotation const * anno = (huAnnotation const *) node->annotations.buffer + i;
         if (strncmp(anno->value->value.str, value, valueLen) == 0)
             { matches += 1; }
     }
@@ -213,18 +213,18 @@ int huGetNumAnnotationsByValueN(huNode * node, char const * value, int valueLen)
 }
 
 
-huAnnotation * huGetAnnotationByValueZ(huNode * node, char const * value, int annotationIdx)
+huAnnotation const * huGetAnnotationByValueZ(huNode const * node, char const * value, int annotationIdx)
 {
     return huGetAnnotationByValueN(node, value, strlen(value), annotationIdx);
 }
 
 
-huAnnotation * huGetAnnotationByValueN(huNode * node, char const * value, int valueLen, int annotationIdx)
+huAnnotation const * huGetAnnotationByValueN(huNode const * node, char const * value, int valueLen, int annotationIdx)
 {
     int matches = 0;
     for (int i = 0; i < node->annotations.numElements; ++i)
     { 
-        huAnnotation * anno = (huAnnotation *) node->annotations.buffer + i;
+        huAnnotation const * anno = (huAnnotation *) node->annotations.buffer + i;
         if (strncmp(anno->value->value.str, value, valueLen) == 0)
         {
             if (matches == annotationIdx)
@@ -238,16 +238,16 @@ huAnnotation * huGetAnnotationByValueN(huNode * node, char const * value, int va
 }
 
 
-int huGetNumComments(huNode * node)
+int huGetNumComments(huNode const * node)
 {
     return node->comments.numElements;
 }
 
 
-huComment * huGetComment(huNode * node, int commentIdx)
+huComment const * huGetComment(huNode const * node, int commentIdx)
 {
     if (commentIdx < node->comments.numElements)
-        { return (huComment *) node->comments.buffer + commentIdx; }
+        { return (huComment const *) node->comments.buffer + commentIdx; }
     else
         { return NULL; }
 }
@@ -355,7 +355,7 @@ void eatBackQuotedAddressWord(huCursor * cur, int * len, int * col, int * error)
 }
 
 
-huNode * huGetNodeByRelativeAddressZ(huNode * node, char const * address, int * error)
+huNode const * huGetNodeByRelativeAddressZ(huNode const * node, char const * address, int * error)
 {
     return huGetNodeByRelativeAddressN(node, address, strlen(address), error);
 }
@@ -366,7 +366,7 @@ huNode * huGetNodeByRelativeAddressZ(huNode * node, char const * address, int * 
     "foo"/"3"/"bar"
     foo\u2000/3/bar
 */
-huNode * huGetNodeByRelativeAddressN(huNode * node, char const * address, int addressLen, int * error)
+huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * address, int addressLen, int * error)
 {
     if (error) { * error = HU_ERROR_NO_ERROR; }
 
@@ -416,7 +416,7 @@ huNode * huGetNodeByRelativeAddressN(huNode * node, char const * address, int ad
     if (error)
        { return & humon_nullNode; }
 
-    huNode * childNode = & humon_nullNode;
+    huNode const * childNode = & humon_nullNode;
     // if numeric, and not quoted, use as an index
     char * wordEnd;
     int index = strtol(address + col, & wordEnd, 10);
@@ -469,15 +469,15 @@ int log10i(unsigned int x)
 }
 
 
-huStringView huGetNodeAddress(huNode * node)
+huStringView huGetNodeAddress(huNode const * node)
 {
     // measure, alloc, fill
     int addressLen = 0;
 
-    huNode * n = node;
+    huNode const * n = node;
     while (n != & humon_nullNode)
     {
-        huNode * parentN = huGetParentNode(n);
+        huNode const * parentN = huGetParentNode(n);
         if (parentN->kind == HU_NODEKIND_LIST)
         {
             addressLen += huGetKey(n)->value.size;
@@ -505,10 +505,10 @@ huStringView huGetNodeAddress(huNode * node)
     n = node;
     while (n != & humon_nullNode)
     {
-        huNode * parentN = huGetParentNode(n);
+        huNode const * parentN = huGetParentNode(n);
         if (parentN->kind == HU_NODEKIND_LIST)
         {
-            huStringView * key = & huGetKey(n)->value;
+            huStringView const * key = & huGetKey(n)->value;
             cur -= addressLen;
             memcpy(cur, key->str, key->size);
         }

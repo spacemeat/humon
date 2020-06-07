@@ -9,7 +9,7 @@ using namespace std::literals;
 
 TEST_GROUP(emptyString)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -50,7 +50,7 @@ TEST(emptyString, numTroveComments)
 
 TEST_GROUP(commentsOnly)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -94,7 +94,7 @@ TEST(commentsOnly, numTroveComments)
 
 TEST_GROUP(singleValue)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -137,7 +137,7 @@ TEST(singleValue, numTroveComments)
 
 TEST(singleValue, numNodeComments)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(2, node->comments.numElements, "comments.num");
   LONGS_EQUAL_TEXT(2, huGetNumComments(node), "getNumComments()");
@@ -145,14 +145,14 @@ TEST(singleValue, numNodeComments)
 
 TEST(singleValue, nodeKind)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(HU_NODEKIND_VALUE, node->kind, "node kind");
 }
 
 TEST(singleValue, value)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   CHECK_TEXT(node->firstValueToken != NULL, "value set");
   LONGS_EQUAL_TEXT(strlen("snerb"), node->firstValueToken->value.size, "value strlen");
@@ -161,7 +161,7 @@ TEST(singleValue, value)
 
 TEST(singleValue, lastValue)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   CHECK_TEXT(node->firstValueToken != NULL, "first value set");
   CHECK_TEXT(node->lastValueToken != NULL, "last value set");
@@ -171,7 +171,7 @@ TEST(singleValue, lastValue)
 
 TEST_GROUP(singleEmptyList)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -214,7 +214,7 @@ TEST(singleEmptyList, numTroveComments)
 
 TEST(singleEmptyList, numNodeComments)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(2, node->comments.numElements, "comments.num");
   LONGS_EQUAL_TEXT(2, huGetNumComments(node), "getNumComments()");
@@ -222,14 +222,14 @@ TEST(singleEmptyList, numNodeComments)
 
 TEST(singleEmptyList, nodeKind)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(HU_NODEKIND_LIST, node->kind, "node kind");
 }
 
 TEST(singleEmptyList, numChildren)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(0, node->childNodeIdxs.numElements, "node.numChildren");
   LONGS_EQUAL_TEXT(0, huGetNumChildren(node), "getNumChildren()");
@@ -237,7 +237,7 @@ TEST(singleEmptyList, numChildren)
 
 TEST(singleEmptyList, value)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   CHECK_TEXT(node->firstValueToken != NULL, "first value set");
   STRNCMP_EQUAL_TEXT("[", node->firstValueToken->value.str, 1, "valueToken");
@@ -245,7 +245,7 @@ TEST(singleEmptyList, value)
 
 TEST(singleEmptyList, lastValue)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   CHECK_TEXT(node->lastValueToken != NULL, "last value set");
   STRNCMP_EQUAL_TEXT("]", node->lastValueToken->value.str, 1, "valueToken");
@@ -254,7 +254,7 @@ TEST(singleEmptyList, lastValue)
 
 TEST_GROUP(singleEmptyDict)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -297,7 +297,7 @@ TEST(singleEmptyDict, numTroveComments)
 
 TEST(singleEmptyDict, numNodeComments)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(2, node->comments.numElements, "comments.num");
   LONGS_EQUAL_TEXT(2, huGetNumComments(node), "getNumComments()");
@@ -305,14 +305,14 @@ TEST(singleEmptyDict, numNodeComments)
 
 TEST(singleEmptyDict, nodeKind)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(HU_NODEKIND_DICT, node->kind, "node kind");
 }
 
 TEST(singleEmptyDict, numChildren)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(0, node->childNodeIdxs.numElements, "node.numChildren");
   LONGS_EQUAL_TEXT(0, huGetNumChildren(node), "getNumChildren()");
@@ -320,7 +320,7 @@ TEST(singleEmptyDict, numChildren)
 
 TEST(singleEmptyDict, value)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   CHECK_TEXT(node->firstValueToken != NULL, "first value set");
   STRNCMP_EQUAL_TEXT("{", node->firstValueToken->value.str, 1, "valueToken");
@@ -328,7 +328,7 @@ TEST(singleEmptyDict, value)
 
 TEST(singleEmptyDict, lastValue)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   CHECK_TEXT(node->lastValueToken != NULL, "last value set");
   STRNCMP_EQUAL_TEXT("}", node->lastValueToken->value.str, 1, "valueToken");
@@ -337,7 +337,7 @@ TEST(singleEmptyDict, lastValue)
 
 TEST_GROUP(listWithOneValue)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -380,7 +380,7 @@ TEST(listWithOneValue, numTroveComments)
 
 TEST(listWithOneValue, numParentNodeComments)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(3, node->comments.numElements, "comments.num");
   LONGS_EQUAL_TEXT(3, huGetNumComments(node), "getNumComments()");
@@ -388,14 +388,14 @@ TEST(listWithOneValue, numParentNodeComments)
 
 TEST(listWithOneValue, parentNodeKind)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(HU_NODEKIND_LIST, node->kind, "node kind");
 }
 
 TEST(listWithOneValue, parentNumChildren)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(1, node->childNodeIdxs.numElements, "node.numChildren");
   LONGS_EQUAL_TEXT(1, huGetNumChildren(node), "getNumChildren()");
@@ -403,7 +403,7 @@ TEST(listWithOneValue, parentNumChildren)
 
 TEST(listWithOneValue, value)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "parent not null");
   CHECK_TEXT(node->firstValueToken != NULL, "first value set");
   STRNCMP_EQUAL_TEXT("[", node->firstValueToken->value.str, 1, "valueToken");
@@ -411,7 +411,7 @@ TEST(listWithOneValue, value)
 
 TEST(listWithOneValue, lastValue)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "parent not null");
   CHECK_TEXT(node->lastValueToken != NULL, "last value set");
   STRNCMP_EQUAL_TEXT("]", node->lastValueToken->value.str, 1, "valueToken");
@@ -419,7 +419,7 @@ TEST(listWithOneValue, lastValue)
 
 TEST(listWithOneValue, childNodeKind)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -429,7 +429,7 @@ TEST(listWithOneValue, childNodeKind)
 
 TEST(listWithOneValue, childNumChildren)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -439,7 +439,7 @@ TEST(listWithOneValue, childNumChildren)
 
 TEST(listWithOneValue, childNumNodeComments)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -449,7 +449,7 @@ TEST(listWithOneValue, childNumNodeComments)
 
 TEST(listWithOneValue, childValue)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -463,7 +463,7 @@ TEST(listWithOneValue, childValue)
 
 TEST(listWithOneValue, childLastValue)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -475,7 +475,7 @@ TEST(listWithOneValue, childLastValue)
 
 TEST_GROUP(dictWithOneValue)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -518,7 +518,7 @@ TEST(dictWithOneValue, numTroveComments)
 
 TEST(dictWithOneValue, numParentNodeComments)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(3, node->comments.numElements, "comments.num");
   LONGS_EQUAL_TEXT(3, huGetNumComments(node), "getNumComments()");
@@ -526,14 +526,14 @@ TEST(dictWithOneValue, numParentNodeComments)
 
 TEST(dictWithOneValue, parentNodeKind)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(HU_NODEKIND_DICT, node->kind, "node kind");
 }
 
 TEST(dictWithOneValue, parentNumChildren)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(1, node->childNodeIdxs.numElements, "node.numChildren");
   LONGS_EQUAL_TEXT(1, huGetNumChildren(node), "getNumChildren()");
@@ -541,7 +541,7 @@ TEST(dictWithOneValue, parentNumChildren)
 
 TEST(dictWithOneValue, value)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "parent not null");
   CHECK_TEXT(node->firstValueToken != NULL, "first value set");
   STRNCMP_EQUAL_TEXT("{", node->firstValueToken->value.str, 1, "valueToken");
@@ -549,7 +549,7 @@ TEST(dictWithOneValue, value)
 
 TEST(dictWithOneValue, lastValue)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "parent not null");
   CHECK_TEXT(node->lastValueToken != NULL, "last value set");
   STRNCMP_EQUAL_TEXT("}", node->lastValueToken->value.str, 1, "valueToken");
@@ -557,7 +557,7 @@ TEST(dictWithOneValue, lastValue)
 
 TEST(dictWithOneValue, childNodeKind)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -566,7 +566,7 @@ TEST(dictWithOneValue, childNodeKind)
 
 TEST(dictWithOneValue, childNumChildren)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -576,7 +576,7 @@ TEST(dictWithOneValue, childNumChildren)
 
 TEST(dictWithOneValue, childNumNodeComments)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -586,9 +586,9 @@ TEST(dictWithOneValue, childNumNodeComments)
 
 TEST(dictWithOneValue, childKey)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
-  huNode * nodeByKey = huGetChildNodeByKeyZ(node, "one");
+  huNode const * nodeByKey = huGetChildNodeByKeyZ(node, "one");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
   POINTERS_EQUAL_TEXT(node, nodeByKey, "foo by key");
@@ -601,7 +601,7 @@ TEST(dictWithOneValue, childKey)
 
 TEST(dictWithOneValue, childValue)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -614,7 +614,7 @@ TEST(dictWithOneValue, childValue)
 
 TEST(dictWithOneValue, childLastValue)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -626,7 +626,7 @@ TEST(dictWithOneValue, childLastValue)
 
 TEST_GROUP(listWithTwoValues)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -674,7 +674,7 @@ TEST(listWithTwoValues, numTroveComments)
 
 TEST(listWithTwoValues, numParentNodeComments)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(4, node->comments.numElements, "comments.num");
   LONGS_EQUAL_TEXT(4, huGetNumComments(node), "getNumComments()");
@@ -682,14 +682,14 @@ TEST(listWithTwoValues, numParentNodeComments)
 
 TEST(listWithTwoValues, parentNodeKind)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(HU_NODEKIND_LIST, node->kind, "node kind");
 }
 
 TEST(listWithTwoValues, parentNumChildren)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(2, node->childNodeIdxs.numElements, "node.numChildren");
   LONGS_EQUAL_TEXT(2, huGetNumChildren(node), "getNumChildren()");
@@ -697,7 +697,7 @@ TEST(listWithTwoValues, parentNumChildren)
 
 TEST(listWithTwoValues, twoNodeKind)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -706,7 +706,7 @@ TEST(listWithTwoValues, twoNodeKind)
 
 TEST(listWithTwoValues, twoNumChildren)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -716,7 +716,7 @@ TEST(listWithTwoValues, twoNumChildren)
 
 TEST(listWithTwoValues, twoNumNodeComments)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -726,7 +726,7 @@ TEST(listWithTwoValues, twoNumNodeComments)
 
 TEST(listWithTwoValues, twoValue)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -739,7 +739,7 @@ TEST(listWithTwoValues, twoValue)
 
 TEST(listWithTwoValues, threeNodeKind)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 1);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -748,7 +748,7 @@ TEST(listWithTwoValues, threeNodeKind)
 
 TEST(listWithTwoValues, threeNumChildren)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 1);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -758,7 +758,7 @@ TEST(listWithTwoValues, threeNumChildren)
 
 TEST(listWithTwoValues, threeNumNodeComments)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 1);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -768,7 +768,7 @@ TEST(listWithTwoValues, threeNumNodeComments)
 
 TEST(listWithTwoValues, threeValue)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 1);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -781,7 +781,7 @@ TEST(listWithTwoValues, threeValue)
 
 TEST_GROUP(dictWithTwoValues)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -833,7 +833,7 @@ TEST(dictWithTwoValues, numTroveComments)
 
 TEST(dictWithTwoValues, numParentNodeComments)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(4, node->comments.numElements, "comments.num");
   LONGS_EQUAL_TEXT(4, huGetNumComments(node), "getNumComments()");
@@ -841,14 +841,14 @@ TEST(dictWithTwoValues, numParentNodeComments)
 
 TEST(dictWithTwoValues, parentNodeKind)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(HU_NODEKIND_DICT, node->kind, "node kind");
 }
 
 TEST(dictWithTwoValues, parentNumChildren)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(2, node->childNodeIdxs.numElements, "node.numChildren");
   LONGS_EQUAL_TEXT(2, huGetNumChildren(node), "getNumChildren()");
@@ -856,7 +856,7 @@ TEST(dictWithTwoValues, parentNumChildren)
 
 TEST(dictWithTwoValues, twoNodeKind)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -865,7 +865,7 @@ TEST(dictWithTwoValues, twoNodeKind)
 
 TEST(dictWithTwoValues, twoNumChildren)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -875,7 +875,7 @@ TEST(dictWithTwoValues, twoNumChildren)
 
 TEST(dictWithTwoValues, twoNumNodeComments)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -885,9 +885,9 @@ TEST(dictWithTwoValues, twoNumNodeComments)
 
 TEST(dictWithTwoValues, twoKey)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
-  huNode * nodeByKey = huGetChildNodeByKeyZ(node, "two");
+  huNode const * nodeByKey = huGetChildNodeByKeyZ(node, "two");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
   POINTERS_EQUAL_TEXT(node, nodeByKey, "foo by key");
@@ -900,7 +900,7 @@ TEST(dictWithTwoValues, twoKey)
 
 TEST(dictWithTwoValues, twoValue)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -913,7 +913,7 @@ TEST(dictWithTwoValues, twoValue)
 
 TEST(dictWithTwoValues, threeNodeKind)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 1);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -922,7 +922,7 @@ TEST(dictWithTwoValues, threeNodeKind)
 
 TEST(dictWithTwoValues, threeNumChildren)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 1);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -932,7 +932,7 @@ TEST(dictWithTwoValues, threeNumChildren)
 
 TEST(dictWithTwoValues, threeNumNodeComments)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 1);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -942,9 +942,9 @@ TEST(dictWithTwoValues, threeNumNodeComments)
 
 TEST(dictWithTwoValues, threeKey)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
-  huNode * nodeByKey = huGetChildNodeByKeyZ(node, "three");
+  huNode const * nodeByKey = huGetChildNodeByKeyZ(node, "three");
   node = huGetChildNodeByIndex(node, 1);
   CHECK_TEXT(node != NULL, "child node not null");
   POINTERS_EQUAL_TEXT(node, nodeByKey, "foo by key");
@@ -957,7 +957,7 @@ TEST(dictWithTwoValues, threeKey)
 
 TEST(dictWithTwoValues, threeValue)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 1);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -971,7 +971,7 @@ TEST(dictWithTwoValues, threeValue)
 
 TEST_GROUP(listInList)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -1006,14 +1006,14 @@ TEST(listInList, numErrors)
 
 TEST(listInList, nodeKind)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(HU_NODEKIND_LIST, node->kind, "node kind");
 }
 
 TEST(listInList, numChildren)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(1, node->childNodeIdxs.numElements, "node.numChildren");
   LONGS_EQUAL_TEXT(1, huGetNumChildren(node), "getNumChildren()");
@@ -1021,7 +1021,7 @@ TEST(listInList, numChildren)
 
 TEST(listInList, childNodeKind)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -1030,7 +1030,7 @@ TEST(listInList, childNodeKind)
 
 TEST(listInList, childNumChildren)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -1041,7 +1041,7 @@ TEST(listInList, childNumChildren)
 
 TEST_GROUP(dictInList)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -1076,14 +1076,14 @@ TEST(dictInList, numErrors)
 
 TEST(dictInList, nodeKind)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(HU_NODEKIND_LIST, node->kind, "node kind");
 }
 
 TEST(dictInList, numChildren)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(1, node->childNodeIdxs.numElements, "node.numChildren");
   LONGS_EQUAL_TEXT(1, huGetNumChildren(node), "getNumChildren()");
@@ -1091,7 +1091,7 @@ TEST(dictInList, numChildren)
 
 TEST(dictInList, childNodeKind)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -1100,7 +1100,7 @@ TEST(dictInList, childNodeKind)
 
 TEST(dictInList, childNumChildren)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -1110,7 +1110,7 @@ TEST(dictInList, childNumChildren)
 
 TEST_GROUP(listInDict)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -1145,14 +1145,14 @@ TEST(listInDict, numErrors)
 
 TEST(listInDict, nodeKind)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(HU_NODEKIND_DICT, node->kind, "node kind");
 }
 
 TEST(listInDict, numChildren)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(1, node->childNodeIdxs.numElements, "node.numChildren");
   LONGS_EQUAL_TEXT(1, huGetNumChildren(node), "getNumChildren()");
@@ -1160,9 +1160,9 @@ TEST(listInDict, numChildren)
 
 TEST(listInDict, key)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
-  huNode * nodeByKey = huGetChildNodeByKeyZ(node, "foo");
+  huNode const * nodeByKey = huGetChildNodeByKeyZ(node, "foo");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
   POINTERS_EQUAL_TEXT(node, nodeByKey, "foo by key");
@@ -1175,7 +1175,7 @@ TEST(listInDict, key)
 
 TEST(listInDict, childNodeKind)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -1184,7 +1184,7 @@ TEST(listInDict, childNodeKind)
 
 TEST(listInDict, childNumChildren)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -1195,7 +1195,7 @@ TEST(listInDict, childNumChildren)
 
 TEST_GROUP(dictInDict)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -1230,14 +1230,14 @@ TEST(dictInDict, numErrors)
 
 TEST(dictInDict, nodeKind)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(HU_NODEKIND_DICT, node->kind, "node kind");
 }
 
 TEST(dictInDict, numChildren)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   LONGS_EQUAL_TEXT(1, node->childNodeIdxs.numElements, "node.numChildren");
   LONGS_EQUAL_TEXT(1, huGetNumChildren(node), "getNumChildren()");
@@ -1245,7 +1245,7 @@ TEST(dictInDict, numChildren)
 
 TEST(dictInDict, key)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -1258,7 +1258,7 @@ TEST(dictInDict, key)
 
 TEST(dictInDict, childNodeKind)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -1267,7 +1267,7 @@ TEST(dictInDict, childNodeKind)
 
 TEST(dictInDict, childNumChildren)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   CHECK_TEXT(node != NULL, "node not null");
   node = huGetChildNodeByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
@@ -1278,7 +1278,7 @@ TEST(dictInDict, childNumChildren)
 
 TEST_GROUP(multipleNestedLists)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -1298,21 +1298,21 @@ TEST_GROUP(multipleNestedLists)
 
 TEST(multipleNestedLists, values)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   LONGS_EQUAL_TEXT(2, huGetNumChildren(node), "t0 ch");
 
   char c[] = "a";
   for (int i = 0; i < 2; ++i)
   {
-    huNode * ch0 = huGetChildNodeByIndex(node, i);
+    huNode const * ch0 = huGetChildNodeByIndex(node, i);
     LONGS_EQUAL_TEXT(2, huGetNumChildren(ch0), "t1 ch");
     for (int j = 0; j < 2; ++j)
     {
-      huNode * ch1 = huGetChildNodeByIndex(ch0, j);
+      huNode const * ch1 = huGetChildNodeByIndex(ch0, j);
       LONGS_EQUAL_TEXT(3, huGetNumChildren(ch1), c);
       for (int k = 0; k < 3; ++k)
       {
-        huNode * ch2 = huGetChildNodeByIndex(ch1, k);
+        huNode const * ch2 = huGetChildNodeByIndex(ch1, k);
         CHECK_TEXT(ch2->firstValueToken != NULL, "value set");
         LONGS_EQUAL_TEXT(1, ch2->firstValueToken->value.size, "value.size");
         STRNCMP_EQUAL_TEXT(c, huGetValue(ch2)->value.str, 1, c);
@@ -1324,7 +1324,7 @@ TEST(multipleNestedLists, values)
 
 TEST_GROUP(oneAnnoOnly)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -1344,7 +1344,7 @@ TEST(oneAnnoOnly, values)
 {
   LONGS_EQUAL_TEXT(0, huGetNumErrors(trove), "GetNumErrors()");
   LONGS_EQUAL_TEXT(1, huGetNumTroveAnnotations(trove), "getNumTAs()");
-  huAnnotation * anno = huGetTroveAnnotation(trove, 0);
+  huAnnotation const * anno = huGetTroveAnnotation(trove, 0);
   LONGS_EQUAL_TEXT(1, anno->key->value.size, "key len");
   STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "key val");
   LONGS_EQUAL_TEXT(1, anno->value->value.size, "val len");
@@ -1354,7 +1354,7 @@ TEST(oneAnnoOnly, values)
 
 TEST_GROUP(oneValueAnno)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -1372,9 +1372,9 @@ R"(foo   @ a : b)"sv;
 
 TEST(oneValueAnno, values)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   LONGS_EQUAL_TEXT(1, huGetNumAnnotations(node), "num anno");
-  huAnnotation * anno = huGetAnnotation(node, 0);
+  huAnnotation const * anno = huGetAnnotation(node, 0);
   LONGS_EQUAL_TEXT(1, anno->key->value.size, "key len");
   STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "key val");
   LONGS_EQUAL_TEXT(1, anno->value->value.size, "val len");
@@ -1384,7 +1384,7 @@ TEST(oneValueAnno, values)
 
 TEST_GROUP(oneValueTwoAnno)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -1403,9 +1403,9 @@ R"(foo   @ a : b
 
 TEST(oneValueTwoAnno, values)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
-  huAnnotation * anno = huGetAnnotation(node, 0);
+  huAnnotation const * anno = huGetAnnotation(node, 0);
   LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
   STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
   LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");
@@ -1420,7 +1420,7 @@ TEST(oneValueTwoAnno, values)
 
 TEST_GROUP(oneValueTwoAnnoGroup)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -1439,9 +1439,9 @@ c : d} )"sv;
 
 TEST(oneValueTwoAnnoGroup, values)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
-  huAnnotation * anno = huGetAnnotation(node, 0);
+  huAnnotation const * anno = huGetAnnotation(node, 0);
   LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
   STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
   LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");
@@ -1456,7 +1456,7 @@ TEST(oneValueTwoAnnoGroup, values)
 
 TEST_GROUP(oneEmptyListTwoAnnoGroup)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -1475,9 +1475,9 @@ c : d} ])"sv;
 
 TEST(oneEmptyListTwoAnnoGroup, values)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
-  huAnnotation * anno = huGetAnnotation(node, 0);
+  huAnnotation const * anno = huGetAnnotation(node, 0);
   LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
   STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
   LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");
@@ -1492,7 +1492,7 @@ TEST(oneEmptyListTwoAnnoGroup, values)
 
 TEST_GROUP(oneEmptyListTwoAnnoLast)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -1511,9 +1511,9 @@ R"([   @ a : b
 
 TEST(oneEmptyListTwoAnnoLast, values)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
-  huAnnotation * anno = huGetAnnotation(node, 0);
+  huAnnotation const * anno = huGetAnnotation(node, 0);
   LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
   STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
   LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");
@@ -1528,7 +1528,7 @@ TEST(oneEmptyListTwoAnnoLast, values)
 
 TEST_GROUP(oneEmptyDictTwoAnnoGroup)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -1547,9 +1547,9 @@ c : d} })"sv;
 
 TEST(oneEmptyDictTwoAnnoGroup, values)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
-  huAnnotation * anno = huGetAnnotation(node, 0);
+  huAnnotation const * anno = huGetAnnotation(node, 0);
   LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
   STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
   LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");
@@ -1564,7 +1564,7 @@ TEST(oneEmptyDictTwoAnnoGroup, values)
 
 TEST_GROUP(oneEmptyDictTwoAnnoLast)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -1583,9 +1583,9 @@ c : d)"sv;
 
 TEST(oneEmptyDictTwoAnnoLast, values)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
-  huAnnotation * anno = huGetAnnotation(node, 0);
+  huAnnotation const * anno = huGetAnnotation(node, 0);
   LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
   STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
   LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");
@@ -1600,7 +1600,7 @@ TEST(oneEmptyDictTwoAnnoLast, values)
 
 TEST_GROUP(oneValueListTwoAnnoGroup)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -1619,10 +1619,10 @@ c : d} ])"sv;
 
 TEST(oneValueListTwoAnnoGroup, values)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   node = huGetChildNodeByIndex(node, 0);
   LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
-  huAnnotation * anno = huGetAnnotation(node, 0);
+  huAnnotation const * anno = huGetAnnotation(node, 0);
   LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
   STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
   LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");
@@ -1637,7 +1637,7 @@ TEST(oneValueListTwoAnnoGroup, values)
 
 TEST_GROUP(oneValueDictFourAnno)
 {
-  huTrove * trove = NULL;
+  huTrove const * trove = NULL;
 
   void setup()
   {
@@ -1656,10 +1656,10 @@ R"({  foo @ a : b :
 
 TEST(oneValueDictFourAnno, values)
 {
-  huNode * node = (huNode *) huGetVectorElement(& trove->nodes, 0);
+  huNode const * node = (huNode const *) huGetVectorElement(& trove->nodes, 0);
   node = huGetChildNodeByIndex(node, 0);
   LONGS_EQUAL_TEXT(4, huGetNumAnnotations(node), "num anno");
-  huAnnotation * anno = huGetAnnotation(node, 0);
+  huAnnotation const * anno = huGetAnnotation(node, 0);
   LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
   STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
   LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");

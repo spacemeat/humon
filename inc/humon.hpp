@@ -207,7 +207,7 @@ namespace hu
     class Token
     {
     public:
-        Token(capi::huToken * ctoken) : ctoken(ctoken) { }
+        Token(capi::huToken const * ctoken) : ctoken(ctoken) { }
         bool isValid() const noexcept { return ctoken != nullptr; }
         TokenKind getKind() const noexcept { return static_cast<TokenKind>(ctoken->tokenKind); }
         std::string_view getValue() const noexcept { return make_sv(ctoken->value); }
@@ -217,14 +217,14 @@ namespace hu
         int getEndCol() const noexcept { return ctoken->endCol; }
 
     private:
-        capi::huToken * ctoken;
+        capi::huToken const * ctoken;
     };
 
 
     class Node
     {
     public:
-        Node(capi::huNode * cnode) : cnode(cnode) { }
+        Node(capi::huNode const * cnode) : cnode(cnode) { }
         bool isValid() const noexcept { return cnode != nullptr; }
         // TODO: int getIdx() maybe
         NodeKind getKind() const noexcept { return static_cast<NodeKind>(cnode->kind); }
@@ -344,7 +344,7 @@ namespace hu
         }
 
     private:
-        capi::huNode * cnode;
+        capi::huNode const * cnode;
     };
 
     class Trove
@@ -378,7 +378,7 @@ namespace hu
         Trove() { }
 
     private:
-        Trove(capi::huTrove * ctrove) : ctrove(ctrove) { }
+        Trove(capi::huTrove const * ctrove) : ctrove(ctrove) { }
 
     public:
         Trove(Trove const & rhs) = delete;
@@ -528,6 +528,6 @@ namespace hu
         }
 
     private:
-        capi::huTrove * ctrove = nullptr;
+        capi::huTrove const * ctrove = nullptr;
     };
 }

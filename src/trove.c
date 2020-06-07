@@ -3,7 +3,7 @@
 #include "humon.internal.h"
 
 
-huTrove * makeTrove(huStringView * data, int inputTabSize, int outputTabSize)
+huTrove const * makeTrove(huStringView const * data, int inputTabSize, int outputTabSize)
 {
     huTrove * t = malloc(sizeof(huTrove));
     if (t == NULL)
@@ -11,17 +11,19 @@ huTrove * makeTrove(huStringView * data, int inputTabSize, int outputTabSize)
 
     t->dataStringSize = data->size;
     // Pad by 4 nulls. This lets us look ahead three bytes for a 4-byte code point match.
-    t->dataString = malloc(data->size + 4);
-    if (t->dataString == NULL)
+    char * newDataString = malloc(data->size + 4);
+    if (newDataString == NULL)
     {
         free(t);
         return & humon_nullTrove;
     }
-    memcpy(t->dataString, data->str, data->size);
-    t->dataString[data->size] = '\0';
-    t->dataString[data->size + 1] = '\0';
-    t->dataString[data->size + 2] = '\0';
-    t->dataString[data->size + 3] = '\0';
+    memcpy(newDataString, data->str, data->size);
+    newDataString[data->size] = '\0';
+    newDataString[data->size + 1] = '\0';
+    newDataString[data->size + 2] = '\0';
+    newDataString[data->size + 3] = '\0';
+
+    t->dataString = newDataString;
 
     huInitVector(& t->tokens, sizeof(huToken));
     huInitVector(& t->nodes, sizeof(huNode));
@@ -73,13 +75,13 @@ huTrove * makeTrove(huStringView * data, int inputTabSize, int outputTabSize)
 }
 
 
-huTrove * huMakeTroveFromString(char const * data, int inputTabSize, int outputTabSize)
+huTrove const * huMakeTroveFromString(char const * data, int inputTabSize, int outputTabSize)
 {
     return huMakeTroveFromStringN(data, strlen(data), inputTabSize, outputTabSize);
 }
 
 
-huTrove * huMakeTroveFromStringN(char const * data, int dataLen, int inputTabSize, int outputTabSize)
+huTrove const * huMakeTroveFromStringN(char const * data, int dataLen, int inputTabSize, int outputTabSize)
 {
     if (data == NULL)
         { return & humon_nullTrove; }
@@ -99,7 +101,7 @@ huTrove * huMakeTroveFromStringN(char const * data, int dataLen, int inputTabSiz
     newData[dataLen + 3] = '\0';
 
     huStringView dataView = { newData, dataLen };
-    huTrove * newTrove = makeTrove(& dataView, inputTabSize, outputTabSize);
+    huTrove const * newTrove = makeTrove(& dataView, inputTabSize, outputTabSize);
     if (newTrove == NULL)
     {
         free(newData);
@@ -110,7 +112,7 @@ huTrove * huMakeTroveFromStringN(char const * data, int dataLen, int inputTabSiz
 }
 
 
-huTrove * huMakeTroveFromFile(char const * path, int inputTabSize, int outputTabSize)
+huTrove const * huMakeTroveFromFile(char const * path, int inputTabSize, int outputTabSize)
 {
     FILE * fp = fopen(path, "r");
     if (fp == NULL)
@@ -141,7 +143,7 @@ huTrove * huMakeTroveFromFile(char const * path, int inputTabSize, int outputTab
     newData[newDataSize + 3] = '\0';
 
     huStringView dataView = { newData, newDataSize };
-    huTrove * newTrove = makeTrove(& dataView, inputTabSize, outputTabSize);
+    huTrove const * newTrove = makeTrove(& dataView, inputTabSize, outputTabSize);
     if (newTrove == NULL)
     {
         free(newData);
@@ -152,26 +154,26 @@ huTrove * huMakeTroveFromFile(char const * path, int inputTabSize, int outputTab
 }
 
 
-void huDestroyTrove(huTrove * trove)
+void huDestroyTrove(huTrove const * trove)
 {
     huDestroyVector(& trove->tokens);
     huDestroyVector(& trove->nodes);
     huDestroyVector(& trove->errors);
     
     if (trove->dataString != NULL)
-        { free(trove->dataString); }
+        { free((void *) trove->dataString); }
 
-    free(trove);
+    free((void *) trove);
 }
 
 
-int huGetNumTokens(huTrove * trove)
+int huGetNumTokens(huTrove const * trove)
 {
     return trove->tokens.numElements;
 }
 
 
-huToken * huGetToken(huTrove * trove, int tokenIdx)
+huToken const * huGetToken(huTrove const * trove, int tokenIdx)
 {
     if (tokenIdx < trove->tokens.numElements)
         { return (huToken *) trove->tokens.buffer + tokenIdx; }
@@ -202,19 +204,19 @@ huToken * allocNewToken(huTrove * trove, int tokenKind,
 }
 
 
-int huGetNumNodes(huTrove * trove)
+int huGetNumNodes(huTrove const * trove)
 {
     return trove->nodes.numElements;
 }
 
 
-huNode * huGetRootNode(huTrove * trove)
+huNode const * huGetRootNode(huTrove const * trove)
 {
     return trove->nodes.buffer;
 }
 
 
-huNode * huGetNode(huTrove * trove, int nodeIdx)
+huNode const * huGetNode(huTrove const * trove, int nodeIdx)
 {
     if (nodeIdx >= 0 && nodeIdx < trove->nodes.numElements)
         { return (huNode *) trove->nodes.buffer + nodeIdx; }
@@ -223,13 +225,13 @@ huNode * huGetNode(huTrove * trove, int nodeIdx)
 }
 
 
-int huGetNumErrors(huTrove * trove)
+int huGetNumErrors(huTrove const * trove)
 {
     return trove->errors.numElements;
 }
 
 
-huError * huGetError(huTrove * trove, int errorIdx)
+huError const * huGetError(huTrove const * trove, int errorIdx)
 {
     if (errorIdx < huGetNumErrors(trove))
     {
@@ -240,13 +242,13 @@ huError * huGetError(huTrove * trove, int errorIdx)
 }
 
 
-int huGetNumTroveAnnotations(huTrove * trove)
+int huGetNumTroveAnnotations(huTrove const * trove)
 {
     return trove->annotations.numElements;
 }
 
 
-huAnnotation * huGetTroveAnnotation(huTrove * trove, int annotationIdx)
+huAnnotation const * huGetTroveAnnotation(huTrove const * trove, int annotationIdx)
 {
     if (annotationIdx < trove->annotations.numElements)
     {
@@ -257,13 +259,13 @@ huAnnotation * huGetTroveAnnotation(huTrove * trove, int annotationIdx)
 }
 
 
-int huGetNumTroveAnnotationsByKeyZ(huTrove * trove, char const * key)
+int huGetNumTroveAnnotationsByKeyZ(huTrove const * trove, char const * key)
 {
     return huGetNumTroveAnnotationsByKeyN(trove, key, strlen(key));
 }
 
 
-int huGetNumTroveAnnotationsByKeyN(huTrove * trove, char const * key, int keyLen)
+int huGetNumTroveAnnotationsByKeyN(huTrove const * trove, char const * key, int keyLen)
 {
     int matches = 0;
     for (int i = 0; i < trove->annotations.numElements; ++i)
@@ -277,13 +279,13 @@ int huGetNumTroveAnnotationsByKeyN(huTrove * trove, char const * key, int keyLen
 }
 
 
-huAnnotation * huGetTroveAnnotationByKeyZ(huTrove * trove, char const * key, int annotationIdx)
+huAnnotation const * huGetTroveAnnotationByKeyZ(huTrove const * trove, char const * key, int annotationIdx)
 {
     return huGetTroveAnnotationByKeyN(trove, key, strlen(key), annotationIdx);
 }
 
 
-huAnnotation * huGetTroveAnnotationByKeyN(huTrove * trove, char const * key, int keyLen, int annotationIdx)
+huAnnotation const * huGetTroveAnnotationByKeyN(huTrove const * trove, char const * key, int keyLen, int annotationIdx)
 {
     int matches = 0;
     for (int i = 0; i < trove->annotations.numElements; ++i)
@@ -302,13 +304,13 @@ huAnnotation * huGetTroveAnnotationByKeyN(huTrove * trove, char const * key, int
 }
 
 
-int huGetNumTroveAnnotationsByValueZ(huTrove * trove, char const * value)
+int huGetNumTroveAnnotationsByValueZ(huTrove const * trove, char const * value)
 {
     return huGetNumTroveAnnotationsByValueN(trove, value, strlen(value));
 }
 
 
-int huGetNumTroveAnnotationsByValueN(huTrove * trove, char const * value, int valueLen)
+int huGetNumTroveAnnotationsByValueN(huTrove const * trove, char const * value, int valueLen)
 {
     int matches = 0;
     for (int i = 0; i < trove->annotations.numElements; ++i)
@@ -322,13 +324,13 @@ int huGetNumTroveAnnotationsByValueN(huTrove * trove, char const * value, int va
 }
 
 
-huAnnotation * huGetTroveAnnotationByValueZ(huTrove * trove, char const * value, int annotationIdx)
+huAnnotation const * huGetTroveAnnotationByValueZ(huTrove const * trove, char const * value, int annotationIdx)
 {
     return huGetTroveAnnotationByValueN(trove, value, strlen(value), annotationIdx);
 }
 
 
-huAnnotation * huGetTroveAnnotationByValueN(huTrove * trove, char const * value, int valueLen, int annotationIdx)
+huAnnotation const * huGetTroveAnnotationByValueN(huTrove const * trove, char const * value, int valueLen, int annotationIdx)
 {
     int matches = 0;
     for (int i = 0; i < trove->annotations.numElements; ++i)
@@ -347,13 +349,13 @@ huAnnotation * huGetTroveAnnotationByValueN(huTrove * trove, char const * value,
 }
 
 
-int huGetNumTroveComments(huTrove * trove)
+int huGetNumTroveComments(huTrove const * trove)
 {
     return trove->comments.numElements;
 }
 
 
-huComment * huGetTroveComment(huTrove * trove, int commentIdx)
+huComment const * huGetTroveComment(huTrove const * trove, int commentIdx)
 {
     if (commentIdx < trove->comments.numElements)
     {
@@ -364,13 +366,13 @@ huComment * huGetTroveComment(huTrove * trove, int commentIdx)
 }
 
 
-huNode * huGetNodeByFullAddressZ(huTrove * trove, char const * address, int * error)
+huNode const * huGetNodeByFullAddressZ(huTrove const * trove, char const * address, int * error)
 {
     return huGetNodeByFullAddressN(trove, address, strlen(address), error);
 }
 
 
-huNode * huGetNodeByFullAddressN(huTrove * trove, char const * address, int addressLen, int * error)
+huNode const * huGetNodeByFullAddressN(huTrove const * trove, char const * address, int addressLen, int * error)
 {
     if (error) { * error = HU_ERROR_NO_ERROR; }
 
@@ -381,7 +383,7 @@ huNode * huGetNodeByFullAddressN(huTrove * trove, char const * address, int addr
     if (address[0] != '/')
         { * error = HU_ERROR_SYNTAX_ERROR; return & humon_nullNode; }
 
-    huNode * root = huGetRootNode(trove);    
+    huNode const * root = huGetRootNode(trove);    
     if (root->kind == HU_NODEKIND_NULL)
         { * error = HU_ERROR_NOTFOUND; return & humon_nullNode; }
 
@@ -390,14 +392,14 @@ huNode * huGetNodeByFullAddressN(huTrove * trove, char const * address, int addr
 
 
 // User must free(retval.buffer);
-huVector huFindNodesByAnnotationKeyZ(huTrove * trove, char const * key)
+huVector huFindNodesByAnnotationKeyZ(huTrove const * trove, char const * key)
 {
     return huFindNodesByAnnotationKeyN(trove, key, strlen(key));
 }
 
 
 // User must free(retval.buffer);
-huVector huFindNodesByAnnotationKeyN(huTrove * trove, char const * key, int keyLen)
+huVector huFindNodesByAnnotationKeyN(huTrove const * trove, char const * key, int keyLen)
 {
     // grow a vector by looking at every node annotation for match
     huVector nodesVect;
@@ -405,11 +407,11 @@ huVector huFindNodesByAnnotationKeyN(huTrove * trove, char const * key, int keyL
 
     for (int i = 0; i < huGetNumNodes(trove); ++i)
     {
-        huNode * node = huGetNode(trove, i);
+        huNode const * node = huGetNode(trove, i);
         int na = huGetNumAnnotationsByKeyN(node, key, keyLen);
         if (na > 0)
         {
-            huNode ** pn = huGrowVector(& nodesVect, 1);
+            huNode const ** pn = huGrowVector(& nodesVect, 1);
             pn[0] = node;
         }
     }
@@ -419,14 +421,14 @@ huVector huFindNodesByAnnotationKeyN(huTrove * trove, char const * key, int keyL
 
 
 // User must free(retval.buffer);
-huVector huFindNodesByAnnotationValueZ(huTrove * trove, char const * value)
+huVector huFindNodesByAnnotationValueZ(huTrove const * trove, char const * value)
 {
     return huFindNodesByAnnotationValueN(trove, value, strlen(value));
 }
 
 
 // User must free(retval.buffer);
-huVector huFindNodesByAnnotationValueN(huTrove * trove, char const * value, int valueLen)
+huVector huFindNodesByAnnotationValueN(huTrove const * trove, char const * value, int valueLen)
 {
     // grow a vector by looking at every node annotation for match
     huVector nodesVect;
@@ -434,11 +436,11 @@ huVector huFindNodesByAnnotationValueN(huTrove * trove, char const * value, int 
 
     for (int i = 0; i < huGetNumNodes(trove); ++i)
     {
-        huNode * node = huGetNode(trove, i);
+        huNode const * node = huGetNode(trove, i);
         int na = huGetNumAnnotationsByValueN(node, value, valueLen);
         if (na > 0)
         {
-            huNode ** pn = huGrowVector(& nodesVect, 1);
+            huNode const ** pn = huGrowVector(& nodesVect, 1);
             pn[0] = node;
         }
     }
@@ -448,28 +450,28 @@ huVector huFindNodesByAnnotationValueN(huTrove * trove, char const * value, int 
 
 
 // User must free(retval.buffer);
-huVector huFindNodesByAnnotationKeyValueZZ(huTrove * trove, char const * key, char const * value)
+huVector huFindNodesByAnnotationKeyValueZZ(huTrove const * trove, char const * key, char const * value)
 {
     return huFindNodesByAnnotationKeyValueNN(trove, key, strlen(key), value, strlen(value));
 }
 
 
 // User must free(retval.buffer);
-huVector huFindNodesByAnnotationKeyValueNZ(huTrove * trove, char const * key, int keyLen, char const * value)
+huVector huFindNodesByAnnotationKeyValueNZ(huTrove const * trove, char const * key, int keyLen, char const * value)
 {
     return huFindNodesByAnnotationKeyValueNN(trove, key, keyLen, value, strlen(value));
 }
 
 
 // User must free(retval.buffer);
-huVector huFindNodesByAnnotationKeyValueZN(huTrove * trove, char const * key, char const * value, int valueLen)
+huVector huFindNodesByAnnotationKeyValueZN(huTrove const * trove, char const * key, char const * value, int valueLen)
 {
     return huFindNodesByAnnotationKeyValueNN(trove, key, strlen(key), value, valueLen);
 }
 
 
 // User must free(retval.buffer);
-huVector huFindNodesByAnnotationKeyValueNN(huTrove * trove, char const * key, int keyLen, char const * value, int valueLen)
+huVector huFindNodesByAnnotationKeyValueNN(huTrove const * trove, char const * key, int keyLen, char const * value, int valueLen)
 {
     // grow a vector by looking at every node annotation for match
     huVector nodesVect;
@@ -477,15 +479,15 @@ huVector huFindNodesByAnnotationKeyValueNN(huTrove * trove, char const * key, in
 
     for (int i = 0; i < huGetNumNodes(trove); ++i)
     {
-        huNode * node = huGetNode(trove, i);
+        huNode const * node = huGetNode(trove, i);
         int na = huGetNumAnnotationsByKeyN(node, key, keyLen);
 
         for (int j = 0; j < na; ++j)
         {
-            huAnnotation * anno = huGetAnnotationByKeyN(node, key, keyLen, j);
+            huAnnotation const * anno = huGetAnnotationByKeyN(node, key, keyLen, j);
             if (strncmp(anno->value->value.str, value, valueLen) == 0)
             {
-                huNode ** pn = huGrowVector(& nodesVect, 1);                
+                huNode const ** pn = huGrowVector(& nodesVect, 1);                
                 * pn = node;
                 break;
             }
@@ -498,14 +500,14 @@ huVector huFindNodesByAnnotationKeyValueNN(huTrove * trove, char const * key, in
 
 
 // User must free(retval.buffer);
-huVector huFindNodesByCommentZ(huTrove * trove, char const * text)
+huVector huFindNodesByCommentZ(huTrove const * trove, char const * text)
 {
     return huFindNodesByCommentN(trove, text, strlen(text));
 }
 
 
 // User must free(retval.buffer);
-huVector huFindNodesByCommentN(huTrove * trove, char const * text, int textLen)
+huVector huFindNodesByCommentN(huTrove const * trove, char const * text, int textLen)
 {
     // grow a vector by looking at every node annotation for match
     huVector nodesVect;
@@ -513,16 +515,16 @@ huVector huFindNodesByCommentN(huTrove * trove, char const * text, int textLen)
 
     for (int i = 0; i < huGetNumNodes(trove); ++i)
     {
-        huNode * node = huGetNode(trove, i);
+        huNode const * node = huGetNode(trove, i);
 
         int na = huGetNumComments(node);
         for (int j = 0; j < na; ++j)
         {
-            huComment * comm = huGetComment(node, j);
+            huComment const * comm = huGetComment(node, j);
             if (stringInString(comm->commentToken->value.str, comm->commentToken->value.size, 
                     text, textLen))
             {
-                huNode ** pn = huGrowVector(& nodesVect, 1);                
+                huNode const ** pn = huGrowVector(& nodesVect, 1);                
                 * pn = node;
                 break;
             }
@@ -554,7 +556,7 @@ huNode * allocNewNode(huTrove * trove, int nodeKind, huToken * firstToken)
 }
 
 
-void recordError(huTrove * trove, int errorCode, huToken * pCur)
+void recordError(huTrove * trove, int errorCode, huToken const * pCur)
 {
     fprintf (stderr, "%sError%s: line: %d    col: %d    %s\n", lightRed, off, 
         pCur->line, pCur->col, huOutputErrorToString(errorCode));
@@ -583,22 +585,22 @@ void appendWs(huVector * str, int numChars)
 }
 
 
-void appendColor(huVector * str, huStringView * colorTable, int colorCode)
+void appendColor(huVector * str, huStringView const * colorTable, int colorCode)
 {
     if (colorTable == NULL)
         { return; }
-    huStringView * color = colorTable + colorCode;
+    huStringView const * color = colorTable + colorCode;
     appendString(str, color->str, color->size);
 }
 
 
-void endColor(huVector * str, huStringView * colorTable)
+void endColor(huVector * str, huStringView const * colorTable)
 {
     appendColor(str, colorTable, HU_COLORKIND_END);
 }
 
 
-void appendColoredString(huVector * str, char const * addend, int size, huStringView * colorTable, int colorCode)
+void appendColoredString(huVector * str, char const * addend, int size, huStringView const * colorTable, int colorCode)
 {
     appendColor(str, colorTable, colorCode);
     appendString(str, addend, size);
@@ -606,20 +608,20 @@ void appendColoredString(huVector * str, char const * addend, int size, huString
 }
 
 
-void printComment(huComment * comment, huVector * str, huStringView * colorTable)
+void printComment(huComment const * comment, huVector * str, huStringView const * colorTable)
 {
-    huStringView * comstr = & comment->commentToken->value;
+    huStringView const * comstr = & comment->commentToken->value;
     appendColoredString(str, comstr->str, comstr->size, 
         colorTable, HU_COLORKIND_COMMENT);
 }
 
 
-int printSameLineComents(huNode * node, int line, bool firstToken, int startingCommentIdx, huVector * str, huStringView * colorTable)
+int printSameLineComents(huNode const * node, int line, bool firstToken, int startingCommentIdx, huVector * str, huStringView const* colorTable)
 {
     int iCom = startingCommentIdx;
     for (; iCom < huGetNumComments(node); ++iCom)
     {
-        huComment * comment = huGetComment(node, iCom);
+        huComment const * comment = huGetComment(node, iCom);
         // If not firstToken, forego the position check. Handles enqueued comments before the end token.
         if (firstToken == false ||
                 (comment->commentToken->line == huGetStartToken(node)->line &&
@@ -636,7 +638,7 @@ int printSameLineComents(huNode * node, int line, bool firstToken, int startingC
 }
 
 
-void printAnnotations(huAnnotation * annos, int numAnno, bool troveOwned, huVector * str, huStringView * colorTable)
+void printAnnotations(huAnnotation const * annos, int numAnno, bool troveOwned, huVector * str, huStringView const * colorTable)
 {
     if (numAnno == 0)
         { return; }
@@ -655,7 +657,7 @@ void printAnnotations(huAnnotation * annos, int numAnno, bool troveOwned, huVect
 
     for (int iAnno = 0; iAnno < numAnno; ++iAnno)
     {
-        huAnnotation * anno = annos + iAnno;
+        huAnnotation const * anno = annos + iAnno;
         if (iAnno > 0)
             { appendWs(str, 1); }
 
@@ -675,27 +677,27 @@ void printAnnotations(huAnnotation * annos, int numAnno, bool troveOwned, huVect
 }
 
 
-void printTroveAnnotations(huTrove * trove, huVector * str, huStringView * colorTable)
+void printTroveAnnotations(huTrove const * trove, huVector * str, huStringView const * colorTable)
 {
     if (huGetNumTroveAnnotations(trove) == 0)
         { return; }
 
-    huAnnotation * annos = huGetTroveAnnotation(trove, 0);
+    huAnnotation const * annos = huGetTroveAnnotation(trove, 0);
     printAnnotations(annos, huGetNumTroveAnnotations(trove), true, str, colorTable);
 }
 
 
-void printNodeAnnotations(huNode * node, huVector * str, huStringView * colorTable)
+void printNodeAnnotations(huNode const * node, huVector * str, huStringView const * colorTable)
 {
     if (huGetNumAnnotations(node) == 0)
         { return; }
 
-    huAnnotation * annos = huGetAnnotation(node, 0);
+    huAnnotation const * annos = huGetAnnotation(node, 0);
     printAnnotations(annos, huGetNumAnnotations(node), false, str, colorTable);
 }
 
 
-void printKey(huToken * keyToken, huVector * str, huStringView * colorTable)
+void printKey(huToken const * keyToken, huVector * str, huStringView const * colorTable)
 {
     appendColoredString(str, keyToken->value.str, keyToken->value.size,
         colorTable, HU_COLORKIND_KEY);
@@ -704,14 +706,14 @@ void printKey(huToken * keyToken, huVector * str, huStringView * colorTable)
 }
 
 
-void printValue(huToken * valueToken, huVector * str, huStringView * colorTable)
+void printValue(huToken const * valueToken, huVector * str, huStringView const * colorTable)
 {
     appendColoredString(str, valueToken->value.str, valueToken->value.size,
         colorTable, HU_COLORKIND_VALUE);
 }
 
 
-void troveToPrettyStringRec(huVector * str, huNode * node, int depth, int outputFormat, bool excludeComments, huStringView * colorTable)
+void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int outputFormat, bool excludeComments, huStringView const * colorTable)
 {
     bool lineIsDirty = false;
 
@@ -719,7 +721,7 @@ void troveToPrettyStringRec(huVector * str, huNode * node, int depth, int output
     int iCom = 0;
     for (; iCom < huGetNumComments(node); ++iCom)
     {
-        huComment * comment = huGetComment(node, iCom);
+        huComment const * comment = huGetComment(node, iCom);
         if (comment->commentToken->line < huGetStartToken(node)->line)
         {
             if (node->parentNodeIdx != -1)
@@ -732,7 +734,7 @@ void troveToPrettyStringRec(huVector * str, huNode * node, int depth, int output
             { break; }
     }
     
-    huToken * keyToken = huGetKey(node);
+    huToken const * keyToken = huGetKey(node);
 
     // if node has a key, print key:
     if (keyToken != NULL)
@@ -809,8 +811,8 @@ void troveToPrettyStringRec(huVector * str, huNode * node, int depth, int output
         int numCh = huGetNumChildren(node);
         for (int i = 0; i < numCh; ++i)
         {
-            huNode * chNode = huGetChildNodeByIndex(node, i);
-            troveToPrettyStringRec(str, chNode, depth + 1, outputFormat, excludeComments, colorTable);
+            huNode const * chNode = huGetChildNodeByIndex(node, i);
+            troveToPrettyStringRec(chNode, str, depth + 1, outputFormat, excludeComments, colorTable);
         }
 
         // print ]
@@ -847,21 +849,21 @@ void troveToPrettyStringRec(huVector * str, huNode * node, int depth, int output
 }
 
 
-void troveToPrettyString(huVector * str, huTrove * trove, int outputFormat, bool excludeComments, huStringView * colorTable)
+void troveToPrettyString(huTrove const * trove, huVector * str, int outputFormat, bool excludeComments, huStringView const * colorTable)
 {
     printTroveAnnotations(trove, str, colorTable);
 
-    huNode * nodes = (huNode *) trove->nodes.buffer;
+    huNode const * nodes = (huNode const *) trove->nodes.buffer;
 
     if (nodes != NULL)
     {
-        troveToPrettyStringRec(str, & nodes[0], 0, outputFormat, excludeComments, colorTable);
+        troveToPrettyStringRec(& nodes[0], str, 0, outputFormat, excludeComments, colorTable);
         appendString(str, "\n", 1);
     }
 
     for (int iCom = 0; iCom < huGetNumTroveComments(trove); ++iCom)
     {
-        huComment * comment = huGetTroveComment(trove, iCom);
+        huComment const * comment = huGetTroveComment(trove, iCom);
         printComment(comment, str, colorTable);
         appendString(str, "\n", 1);
     }
@@ -874,8 +876,8 @@ void troveToPrettyString(huVector * str, huTrove * trove, int outputFormat, bool
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
 
 // User must free(retval.str);
-huStringView huTroveToString(huTrove * trove, 
-    int outputFormat, bool excludeComments, huStringView * colorTable)
+huStringView huTroveToString(huTrove const * trove, 
+    int outputFormat, bool excludeComments, huStringView const * colorTable)
 {
     huVector str;
     huInitVector(& str, sizeof(char));
@@ -897,12 +899,12 @@ huStringView huTroveToString(huTrove * trove,
         bool expectKey = false;
         bool isKey = false;
 
-        huToken * tokens = (huToken *) trove->tokens.buffer;
-        huToken * tok = NULL;
-        huToken * lastNonCommentToken = NULL;
+        huToken const * tokens = (huToken const *) trove->tokens.buffer;
+        huToken const * tok = NULL;
+        huToken const * lastNonCommentToken = NULL;
         for (int i = 0; i < huGetNumTokens(trove); ++i)
         {
-            huToken * prevTok = tok;
+            huToken const * prevTok = tok;
             tok = tokens + i;
             if (tok->tokenKind != HU_TOKENKIND_COMMENT)
                 { lastNonCommentToken = tok; }
@@ -1026,7 +1028,7 @@ huStringView huTroveToString(huTrove * trove,
                 
                 if (colorTableIdx != lastColorTableIdx)
                 {
-                    huStringView * ce = colorTable + colorTableIdx;
+                    huStringView const * ce = colorTable + colorTableIdx;
                     appendString(& str, ce->str, ce->size);
                     lastColorTableIdx = colorTableIdx;
                 }
@@ -1044,14 +1046,14 @@ huStringView huTroveToString(huTrove * trove,
         }
         if (colorTable != NULL)
         {
-            huStringView * ce = colorTable + HU_COLORKIND_END;
+            huStringView const * ce = colorTable + HU_COLORKIND_END;
             appendString(& str, ce->str, ce->size);
         }
         appendString(& str, "\n\0", 2);
     }
     else if (outputFormat == HU_OUTPUTFORMAT_PRETTY)
     {
-        troveToPrettyString(& str, trove, outputFormat, excludeComments, colorTable);
+        troveToPrettyString(trove, & str, outputFormat, excludeComments, colorTable);
     }
 
     huStringView sv = { .str = str.buffer, .size = str.numElements };
@@ -1060,7 +1062,7 @@ huStringView huTroveToString(huTrove * trove,
 
 #pragma GCC diagnostic pop
 
-size_t huTroveToFile(huTrove * trove, char const * path, int outputFormat, bool excludeComments, huStringView * colorTable)
+size_t huTroveToFile(huTrove const * trove, char const * path, int outputFormat, bool excludeComments, huStringView const * colorTable)
 {
     FILE * fp = fopen(path, "w");
     if (fp == NULL)

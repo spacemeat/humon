@@ -208,6 +208,25 @@ void eatWord(huCursor * cursor, int * len, int * line, int * col)
             { eating = false; }
         else if (cursor->ws_line || cursor->ws_col)
             { eating = false; }
+        else if (cursor->character[0] == '\\')
+        {
+                // skip the '\'
+                nextCharacter(cursor);
+                analyzeWhitespace(cursor);
+                // skip whatever is next, unless it's a newline.
+                if (! cursor->ws_line)
+                {
+                  * len += cursor->codepointLength;
+                  * col += 1;
+                }
+                nextCharacter(cursor);
+        }
+        else if (cursor->character[0] == '/' &&
+                 (cursor->character[1] == '/' || cursor->character[2] == '*'))
+            {
+                // A comment abutting an unquoted string should still delimit.
+                eating = false;
+            }
         else
         {
             switch(cursor->character[0])

@@ -1,13 +1,16 @@
-P1 CMake, vcpkg
-P1 doxygen
+DONE THIS CHECKIN:
 P1 replicate abutting comment behavior
-P1 confirm use of huDictEntry and consider sorting keys and doing BSP search.
-P1 normalize language around comments and annotations either being owned by a node, or begin associated to a node.
-P1 normalize capitalization of "Humon"
 P1 review where I'm using node indexes vs. node pointers.
 P1 huNode const * everywhere? And others?
 P1 Is FindNodeByComment doing a subset match?
 P1 Convenience functions to free() the C returns
+
+TODO:
+P1 CMake, vcpkg
+P1 doxygen
+P1 normalize language around comments and annotations either being owned by a node, or begin associated to a node.
+P1 normalize capitalization of "Humon"
+P2 consider sorting dict keys and doing BSP search.
 P2 allow user to spec index type (int32, int64, etc)
 P2 custom memory allocator fns
 P2 insertion ops

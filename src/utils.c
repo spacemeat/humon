@@ -78,10 +78,11 @@ void huInitVector(huVector * vector, int elementSize)
 }
 
 
-void huDestroyVector(huVector * vector)
+void huDestroyVector(huVector const * vector)
 {
+    // you bet your sweet bippy I'm casting away the const
     if (vector->buffer != NULL)
-        { free(vector->buffer); }
+        { free((void *) vector->buffer); }
 }
 
 
@@ -92,13 +93,13 @@ void huResetVector(huVector * vector)
 }
 
 
-int huGetVectorSize(huVector * vector)
+int huGetVectorSize(huVector const * vector)
 {
     return vector->numElements;
 }
 
 
-void * huGetVectorElement(huVector * vector, int idx)
+void * huGetVectorElement(huVector const * vector, int idx)
 {
     return vector->buffer + vector->elementSize * idx;
 }
@@ -136,6 +137,14 @@ void * huGrowVector(huVector * vector, int numElements)
 
         return vector->buffer + (vector->numElements - numElements) * vector->elementSize;
     }
+}
+
+
+void huDestroyStringView(huStringView const * string)
+{
+    // here too, ya hoser
+    if (string->str != NULL)
+        { free((void *) string->str); }
 }
 
 
