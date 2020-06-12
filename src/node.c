@@ -167,13 +167,13 @@ bool huHasAnnotationWithKeyN(huNode const * node, char const * key, int keyLen)
 }
 
 
-huToken const * huGetAnnotationByKeyZ(huNode const * node, char const * key, int annotationIdx)
+huToken const * huGetAnnotationByKeyZ(huNode const * node, char const * key)
 {
-    return huGetAnnotationByKeyN(node, key, strlen(key), annotationIdx);
+    return huGetAnnotationByKeyN(node, key, strlen(key));
 }
 
 
-huToken const * huGetAnnotationByKeyN(huNode const * node, char const * key, int keyLen, int annotationIdx)
+huToken const * huGetAnnotationByKeyN(huNode const * node, char const * key, int keyLen)
 {
     for (int i = 0; i < node->annotations.numElements; ++i)
     { 
@@ -246,13 +246,13 @@ huComment const * huGetComment(huNode const * node, int commentIdx)
 }
 
 
-huVector huGetCommentsZ(huNode const * node, char const * containedText)
+huVector huGetCommentsContainingZ(huNode const * node, char const * containedText)
 {
-    return huGetCommentsN(node, containedText, strlen(containedText));
+    return huGetCommentsContainingN(node, containedText, strlen(containedText));
 }
 
 
-huVector huGetCommentsN(huNode const * node, char const * containedText, int containedTextLen)
+huVector huGetCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen)
 {
     huVector nodesVect;
     huInitVector(& nodesVect, sizeof(huNode *));

@@ -1,9 +1,6 @@
 DONE THIS CHECKIN:
-P1 Added more consistent functions for getting comments containing a substring.
-P1 Cleaned up annotation APIs to return more useful objects.
-P1 review capitalization of 'humon' in code comments.
-P1 moved outputTabSize to be a parameter of serialization functions.
-P1 much more documentation in humon.hpp.
+P1 Sync'd up hu*ToString enum printers.
+P1 Fixed build errors. How embarassing.
 
 TODO:
 P1 CMake, vcpkg
@@ -11,6 +8,7 @@ P1 doxygen
 P1 review (and actually validate) code in readme.
 P1 much more API testing
     - C++: test value<T>, from_chars(... T&), etc.
+P2 UTF8 digits for addressing
 P2 consider sorting dict keys and doing BSP search.
 P2 allow user to spec index type (int32, int64, etc)
 P2 custom memory allocator fns

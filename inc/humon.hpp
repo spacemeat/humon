@@ -350,10 +350,10 @@ namespace hu
          * the specified key. */
         bool hasNumAnnotationWithKey(std::string_view key) const noexcept
             { return capi::huHasAnnotationWithKeyN(cnode, key.data(), key.size()); }
-        /// Returns a Token referencing the value of the annotaion accessed by index and key.
-        Token const getAnnotationByKey(std::string_view key, int idx) const noexcept 
+        /// Returns a Token referencing the value of the annotaion accessed by key.
+        Token const getAnnotationByKey(std::string_view key) const noexcept 
         { 
-            auto canno = capi::huGetAnnotationByKeyN(cnode, key.data(), key.size(), idx);
+            auto canno = capi::huGetAnnotationByKeyN(cnode, key.data(), key.size());
             return Token(canno);
         }
 

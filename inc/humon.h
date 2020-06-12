@@ -242,9 +242,9 @@ extern "C"
     /// Return the number of annotations associated to a node with a specific key.
     bool huHasAnnotationWithKeyN(huNode const * node, char const * key, int keyLen);
     /// Return an annoation object associated to a node, by key and index.
-    huToken const * huGetAnnotationByKeyZ(huNode const * node, char const * key, int annotationIdx);
+    huToken const * huGetAnnotationByKeyZ(huNode const * node, char const * key);
     /// Return an annoation object associated to a node, by key and index.
-    huToken const * huGetAnnotationByKeyN(huNode const * node, char const * key, int keyLen, int annotationIdx);
+    huToken const * huGetAnnotationByKeyN(huNode const * node, char const * key, int keyLen);
 
     /// Return the number of annotations associated to a node with a specific value.
     int huGetNumAnnotationsByValueZ(huNode const * node, char const * value);

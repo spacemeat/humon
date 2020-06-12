@@ -186,7 +186,7 @@ huToken * allocNewToken(huTrove * trove, int tokenKind,
 {
     huToken * newToken = huGrowVector(& trove->tokens, 1);
     if (newToken == NULL)
-        { return & humon_nullToken; }
+        { return (huToken *) & humon_nullToken; }
 
     newToken->tokenKind = tokenKind;
     newToken->value.str = str;
@@ -407,8 +407,8 @@ huVector huFindNodesByAnnotationKeyN(huTrove const * trove, char const * key, in
     for (int i = 0; i < huGetNumNodes(trove); ++i)
     {
         huNode const * node = huGetNode(trove, i);
-        int na = huGetNumAnnotationsByKeyN(node, key, keyLen);
-        if (na > 0)
+        bool hasOne = huHasAnnotationWithKeyN(node, key, keyLen);
+        if (hasOne)
         {
             huNode const ** pn = huGrowVector(& nodesVect, 1);
             pn[0] = node;
@@ -479,12 +479,10 @@ huVector huFindNodesByAnnotationKeyValueNN(huTrove const * trove, char const * k
     for (int i = 0; i < huGetNumNodes(trove); ++i)
     {
         huNode const * node = huGetNode(trove, i);
-        int na = huGetNumAnnotationsByKeyN(node, key, keyLen);
-
-        for (int j = 0; j < na; ++j)
+        huToken const * anno = huGetAnnotationByKeyN(node, key, keyLen);
+        if (anno->tokenKind != HU_NODEKIND_NULL)
         {
-            huAnnotation const * anno = huGetAnnotationByKeyN(node, key, keyLen, j);
-            if (strncmp(anno->value->value.str, value, valueLen) == 0)
+            if (strncmp(anno->value.str, value, valueLen) == 0)
             {
                 huNode const ** pn = huGrowVector(& nodesVect, 1);                
                 * pn = node;
@@ -538,7 +536,7 @@ huNode * allocNewNode(huTrove * trove, int nodeKind, huToken * firstToken)
 {
     huNode * newNode = huGrowVector(& trove->nodes, 1);
     if (newNode == NULL)
-        { return & humon_nullNode; }
+        { return (huNode *) & humon_nullNode; }
 
     huInitNode(newNode, trove);
     int newNodeIdx = newNode - (huNode *) trove->nodes.buffer;

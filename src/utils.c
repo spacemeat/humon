@@ -20,6 +20,7 @@ char const * huTokenKindToString(int rhs)
 {
     switch(rhs)
     {
+    case HU_TOKENKIND_NULL: return "null";
     case HU_TOKENKIND_EOF: return "eof";
     case HU_TOKENKIND_STARTLIST: return "startList";
     case HU_TOKENKIND_ENDLIST: return "endList";
@@ -46,7 +47,8 @@ char const * huNodeKindToString(int rhs)
     }
 }
 
-    char const * huOutputFormatToString(int rhs)
+
+char const * huOutputFormatToString(int rhs)
 {
     switch(rhs)
     {
@@ -57,13 +59,18 @@ char const * huNodeKindToString(int rhs)
     }
 }
 
+
 char const * huOutputErrorToString(int rhs)
 {
     switch(rhs)
     {
+    case HU_ERROR_NO_ERROR: return "no error";
     case HU_ERROR_UNEXPECTED_EOF: return "unexpected EOF";
+    case HU_ERROR_UNFINISHED_QUOTE: return "unfinished quote";
+    case HU_ERROR_UNFINISHED_CSTYLECOMMENT: return "unfinished C-style comment";
     case HU_ERROR_SYNTAX_ERROR: return "syntax error";
     case HU_ERROR_START_END_MISMATCH: return "start/end mismatch";
+    case HU_ERROR_NOTFOUND: return "not found";
     default: return "!!unknown!!";
     }
 }
@@ -204,13 +211,13 @@ huTrove const humon_nullTrove =
     .dataStringSize = 0,
     .dataString = "",
     .tokens = (huVector) {
-        .buffer = & humon_nullToken,
+        .buffer = (void *) & humon_nullToken,
         .elementSize = 0,
         .numElements = 0,
         .vectorCapacity = 0
     },
     .nodes = (huVector) {
-        .buffer = & humon_nullNode,
+        .buffer = (void *) & humon_nullNode,
         .elementSize = 0,
         .numElements = 0,
         .vectorCapacity = 0
