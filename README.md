@@ -73,22 +73,29 @@ Using the APIs is straightforward. To get the image's (x, y) extents above, we m
     #include <Humon.h>
     ...
         huTrove const * trove = huMakeTroveFromFile("config.hu", 4, 4);
-        huNode const * node = huGetNodeByAddress(trove, "/assets/brick-diffuse/importData/extents");
-        huNode const * nx = huGetChildByIndex(node, 0);
-        huStringValue const * sExtX = huGetValue(nx); // has str and size
-        int extX = strntol(sExtX.str, sExtX.size, NULL, 10);
-        huNode const * ny = huGetChildByIndex(node, 1);
-        huStringValue const * sExtY = huGetValue(ny); // has str and size
-        int extY = strntol(sExtY.str, sExtY.size, NULL, 10);
+        int errorCode = HU_ERRORCODE_NO_ERROR;
+        huNode const * node = huGetNodeByFullAddressZ(trove, "/assets/brick-diffuse/importData/extents", & errorCode);
+        if (errorCode == HU_ERRORCODE_NO_ERROR)
+        {
+            huNode const * nx = huGetChildByIndex(node, 0);
+            huStringValue const * sExtX = huGetValue(nx); // has str and size
+            int extX = strntol(sExtX.str, sExtX.size, NULL, 10);
+            huNode const * ny = huGetChildByIndex(node, 1);
+            huStringValue const * sExtY = huGetValue(ny); // has str and size
+            int extY = strntol(sExtY.str, sExtY.size, NULL, 10);
+            ...
 
 or in C++:
 
     #include <Humon.hpp>
     ...
         auto trove = hu::Trove::fromFile("config.hu"sv);
-        auto extentsNode = trove.getNode("/assets/brick-diffuse/importData/extents"sv);
-        std::tuple<int, int> extents = { extentsNode / 0 / hu::value<int>{}, 
-                                         extentsNode / 1 / hu::value<int>{} };
+        auto [extentsNode, errorCode] = trove.getNode("/assets/brick-diffuse/importData/extents"sv);
+        if (errorCode == hu::ErrorCode::noError)
+        {
+            std::tuple<int, int> extents = { extentsNode / 0 / hu::value<int>{}, 
+                                             extentsNode / 1 / hu::value<int>{} };
+            ...
 
 ### installation
 If you're programming with Humon, or rather want to be, [here's how we install it, and do all the CMake yakkity smack]. If you're just using Humon files with some app, you don't need to do anything. Also here's a VSCode colorizer.
@@ -220,7 +227,7 @@ Humon doesn't know or care about your comments. Humon commentary is just noise.
 **Annotations are their own thing, and mean nothing.**
 Annotations are the only sort of language-y syntax-y components of Humon. The first specs didn't include them, but as I used Humon in those early days, I found that I wanted a convenient shorthand that sort of "jumped out of the structure" to provide context data, or specify certain rare conditions. Something formal and machineable, but that also didn't force modifications to the structure in place. I settled on annotations.
 
-Any node can have any number of annotations. The trove can have them too, if an annotation appears before any other objects. Annotations begin with an `@` symbol, followed by either one key:value pair, or a dict of key:value pairs:
+Any single node can have any number of annotations. The trove can have them too, if an annotation appears before any other objects. Annotations begin with an `@` symbol, followed by either one key:value pair, or a dict of key:value pairs:
 
     [
         nostromo @ movie-ref: alien

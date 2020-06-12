@@ -148,7 +148,7 @@ void huDestroyStringView(huStringView const * string)
 }
 
 
-huToken humon_nullToken = 
+huToken const humon_nullToken = 
 {
     .tokenKind = HU_TOKENKIND_NULL,
     .value = {
@@ -161,7 +161,7 @@ huToken humon_nullToken =
     .endCol = 0
 };
 
-huNode humon_nullNode =
+huNode const humon_nullNode =
 {
     .trove = & humon_nullTrove,
     .nodeIdx = -1,
@@ -199,7 +199,7 @@ huNode humon_nullNode =
     }
 };
 
-huTrove humon_nullTrove = 
+huTrove const humon_nullTrove = 
 {
     .dataStringSize = 0,
     .dataString = "",
@@ -222,7 +222,6 @@ huTrove humon_nullTrove =
         .vectorCapacity = 0
     },
     .inputTabSize = 4,
-    .outputTabSize = 4,
     .annotations = (huVector) {
         .buffer = NULL,
         .elementSize = 0,

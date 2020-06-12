@@ -3,7 +3,7 @@
 #include "humon.internal.h"
 
 
-huTrove const * makeTrove(huStringView const * data, int inputTabSize, int outputTabSize)
+huTrove const * makeTrove(huStringView const * data, int inputTabSize)
 {
     huTrove * t = malloc(sizeof(huTrove));
     if (t == NULL)
@@ -30,7 +30,6 @@ huTrove const * makeTrove(huStringView const * data, int inputTabSize, int outpu
     huInitVector(& t->errors, sizeof(huError));
 
     t->inputTabSize = inputTabSize;
-    t->outputTabSize = outputTabSize;
 
     huInitVector(& t->annotations, sizeof(huAnnotation));
     huInitVector(& t->comments, sizeof(huComment));
@@ -75,13 +74,13 @@ huTrove const * makeTrove(huStringView const * data, int inputTabSize, int outpu
 }
 
 
-huTrove const * huMakeTroveFromString(char const * data, int inputTabSize, int outputTabSize)
+huTrove const * huMakeTroveFromString(char const * data, int inputTabSize)
 {
-    return huMakeTroveFromStringN(data, strlen(data), inputTabSize, outputTabSize);
+    return huMakeTroveFromStringN(data, strlen(data), inputTabSize);
 }
 
 
-huTrove const * huMakeTroveFromStringN(char const * data, int dataLen, int inputTabSize, int outputTabSize)
+huTrove const * huMakeTroveFromStringN(char const * data, int dataLen, int inputTabSize)
 {
     if (data == NULL)
         { return & humon_nullTrove; }
@@ -101,7 +100,7 @@ huTrove const * huMakeTroveFromStringN(char const * data, int dataLen, int input
     newData[dataLen + 3] = '\0';
 
     huStringView dataView = { newData, dataLen };
-    huTrove const * newTrove = makeTrove(& dataView, inputTabSize, outputTabSize);
+    huTrove const * newTrove = makeTrove(& dataView, inputTabSize);
     if (newTrove == NULL)
     {
         free(newData);
@@ -112,7 +111,7 @@ huTrove const * huMakeTroveFromStringN(char const * data, int dataLen, int input
 }
 
 
-huTrove const * huMakeTroveFromFile(char const * path, int inputTabSize, int outputTabSize)
+huTrove const * huMakeTroveFromFile(char const * path, int inputTabSize)
 {
     FILE * fp = fopen(path, "r");
     if (fp == NULL)
@@ -143,7 +142,7 @@ huTrove const * huMakeTroveFromFile(char const * path, int inputTabSize, int out
     newData[newDataSize + 3] = '\0';
 
     huStringView dataView = { newData, newDataSize };
-    huTrove const * newTrove = makeTrove(& dataView, inputTabSize, outputTabSize);
+    huTrove const * newTrove = makeTrove(& dataView, inputTabSize);
     if (newTrove == NULL)
     {
         free(newData);
@@ -500,14 +499,14 @@ huVector huFindNodesByAnnotationKeyValueNN(huTrove const * trove, char const * k
 
 
 // User must free(retval.buffer);
-huVector huFindNodesByCommentZ(huTrove const * trove, char const * text)
+huVector huFindNodesByCommentContainingZ(huTrove const * trove, char const * containedText)
 {
-    return huFindNodesByCommentN(trove, text, strlen(text));
+    return huFindNodesByCommentContainingN(trove, containedText, strlen(containedText));
 }
 
 
 // User must free(retval.buffer);
-huVector huFindNodesByCommentN(huTrove const * trove, char const * text, int textLen)
+huVector huFindNodesByCommentContainingN(huTrove const * trove, char const * containedText, int containedTextLen)
 {
     // grow a vector by looking at every node annotation for match
     huVector nodesVect;
@@ -522,7 +521,7 @@ huVector huFindNodesByCommentN(huTrove const * trove, char const * text, int tex
         {
             huComment const * comm = huGetComment(node, j);
             if (stringInString(comm->commentToken->value.str, comm->commentToken->value.size, 
-                    text, textLen))
+                    containedText, containedTextLen))
             {
                 huNode const ** pn = huGrowVector(& nodesVect, 1);                
                 * pn = node;
@@ -713,7 +712,7 @@ void printValue(huToken const * valueToken, huVector * str, huStringView const *
 }
 
 
-void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int outputFormat, bool excludeComments, huStringView const * colorTable)
+void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable)
 {
     bool lineIsDirty = false;
 
@@ -726,7 +725,7 @@ void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int 
         {
             if (node->parentNodeIdx != -1)
                 { appendString(str, "\n", 1); }
-            appendWs(str, node->trove->outputTabSize * depth);
+            appendWs(str, outputTabSize * depth);
             printComment(comment, str, colorTable);
             lineIsDirty = true;
         }
@@ -740,7 +739,7 @@ void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int 
     if (keyToken != NULL)
     {
         appendString(str, "\n", 1);
-        appendWs(str, node->trove->outputTabSize * depth);
+        appendWs(str, outputTabSize * depth);
 
         printKey(keyToken, str, colorTable);
         lineIsDirty = true;
@@ -812,21 +811,21 @@ void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int 
         for (int i = 0; i < numCh; ++i)
         {
             huNode const * chNode = huGetChildNodeByIndex(node, i);
-            troveToPrettyStringRec(chNode, str, depth + 1, outputFormat, excludeComments, colorTable);
+            troveToPrettyStringRec(chNode, str, depth + 1, outputFormat, excludeComments, outputTabSize, colorTable);
         }
 
         // print ]
         if (node->kind == HU_NODEKIND_LIST)
         {
             appendString(str, "\n", 1);
-            appendWs(str, node->trove->outputTabSize * depth);
+            appendWs(str, outputTabSize * depth);
             appendColoredString(str, "]", 1, 
                 colorTable, HU_COLORKIND_PUNCLIST);
         }
         else
         {
             appendString(str, "\n", 1);
-            appendWs(str, node->trove->outputTabSize * depth);
+            appendWs(str, outputTabSize * depth);
             appendColoredString(str, "}", 1, 
                 colorTable, HU_COLORKIND_PUNCLIST);
         }
@@ -838,7 +837,7 @@ void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int 
                     node->firstToken != node->firstValueToken))
         {
             appendString(str, "\n", 1);
-            appendWs(str, node->trove->outputTabSize * depth);
+            appendWs(str, outputTabSize * depth);
         }
         printValue(huGetValue(node), str, colorTable);
         printNodeAnnotations(node, str, colorTable);
@@ -849,7 +848,7 @@ void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int 
 }
 
 
-void troveToPrettyString(huTrove const * trove, huVector * str, int outputFormat, bool excludeComments, huStringView const * colorTable)
+void troveToPrettyString(huTrove const * trove, huVector * str, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable)
 {
     printTroveAnnotations(trove, str, colorTable);
 
@@ -857,7 +856,7 @@ void troveToPrettyString(huTrove const * trove, huVector * str, int outputFormat
 
     if (nodes != NULL)
     {
-        troveToPrettyStringRec(& nodes[0], str, 0, outputFormat, excludeComments, colorTable);
+        troveToPrettyStringRec(& nodes[0], str, 0, outputFormat, excludeComments, outputTabSize, colorTable);
         appendString(str, "\n", 1);
     }
 
@@ -877,7 +876,7 @@ void troveToPrettyString(huTrove const * trove, huVector * str, int outputFormat
 
 // User must free(retval.str);
 huStringView huTroveToString(huTrove const * trove, 
-    int outputFormat, bool excludeComments, huStringView const * colorTable)
+    int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable)
 {
     huVector str;
     huInitVector(& str, sizeof(char));
@@ -1053,7 +1052,7 @@ huStringView huTroveToString(huTrove const * trove,
     }
     else if (outputFormat == HU_OUTPUTFORMAT_PRETTY)
     {
-        troveToPrettyString(trove, & str, outputFormat, excludeComments, colorTable);
+        troveToPrettyString(trove, & str, outputFormat, excludeComments, outputTabSize, colorTable);
     }
 
     huStringView sv = { .str = str.buffer, .size = str.numElements };
@@ -1062,13 +1061,13 @@ huStringView huTroveToString(huTrove const * trove,
 
 #pragma GCC diagnostic pop
 
-size_t huTroveToFile(huTrove const * trove, char const * path, int outputFormat, bool excludeComments, huStringView const * colorTable)
+size_t huTroveToFile(huTrove const * trove, char const * path, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable)
 {
     FILE * fp = fopen(path, "w");
     if (fp == NULL)
         { return 0; }
 
-    huStringView str = huTroveToString(trove, outputFormat, excludeComments, colorTable);
+    huStringView str = huTroveToString(trove, outputFormat, excludeComments, outputTabSize, colorTable);
     size_t ret = fwrite(str.str, sizeof(char), str.size, fp);
 
     free((char *) str.str); // NOTE: We're casting away const here. It's kinda sketchy, but correct.

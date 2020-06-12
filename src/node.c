@@ -148,48 +148,41 @@ huAnnotation const * huGetAnnotation(huNode const * node, int annotationIdx)
 }
 
 
-int huGetNumAnnotationsByKeyZ(huNode const * node, char const * key)
+bool huHasAnnotationWithKeyZ(huNode const * node, char const * key)
 {
-    return huGetNumAnnotationsByKeyN(node, key, strlen(key));
+    return huHasAnnotationWithKeyN(node, key, strlen(key));
 }
 
 
-int huGetNumAnnotationsByKeyN(huNode const * node, char const * key, int keyLen)
+bool huHasAnnotationWithKeyN(huNode const * node, char const * key, int keyLen)
 {
-    int matches = 0;
     for (int i = 0; i < node->annotations.numElements; ++i)
     { 
         huAnnotation const * anno = (huAnnotation *) node->annotations.buffer + i;
         if (strncmp(anno->key->value.str, key, keyLen) == 0)
-            { matches += 1; }
+            { return true; }
     }
 
-    return matches;
+    return false;
 }
 
 
-huAnnotation const * huGetAnnotationByKeyZ(huNode const * node, char const * key, int annotationIdx)
+huToken const * huGetAnnotationByKeyZ(huNode const * node, char const * key, int annotationIdx)
 {
     return huGetAnnotationByKeyN(node, key, strlen(key), annotationIdx);
 }
 
 
-huAnnotation const * huGetAnnotationByKeyN(huNode const * node, char const * key, int keyLen, int annotationIdx)
+huToken const * huGetAnnotationByKeyN(huNode const * node, char const * key, int keyLen, int annotationIdx)
 {
-    int matches = 0;
     for (int i = 0; i < node->annotations.numElements; ++i)
     { 
         huAnnotation const * anno = (huAnnotation const *) node->annotations.buffer + i;
         if (strncmp(anno->key->value.str, key, keyLen) == 0)
-        {
-            if (matches == annotationIdx)
-                { return anno; }
-
-            matches += 1;
-        }
+            { return anno->key; }
     }
 
-    return NULL;
+    return & humon_nullToken;
 }
 
 
@@ -250,6 +243,34 @@ huComment const * huGetComment(huNode const * node, int commentIdx)
         { return (huComment const *) node->comments.buffer + commentIdx; }
     else
         { return NULL; }
+}
+
+
+huVector huGetCommentsZ(huNode const * node, char const * containedText)
+{
+    return huGetCommentsN(node, containedText, strlen(containedText));
+}
+
+
+huVector huGetCommentsN(huNode const * node, char const * containedText, int containedTextLen)
+{
+    huVector nodesVect;
+    huInitVector(& nodesVect, sizeof(huNode *));
+
+    int na = huGetNumComments(node);
+    for (int i = 0; i < na; ++i)
+    {
+        huComment const * comm = huGetComment(node, i);
+        if (stringInString(comm->commentToken->value.str, comm->commentToken->value.size, 
+                containedText, containedTextLen))
+        {
+            huNode const ** pn = huGrowVector(& nodesVect, 1);                
+            * pn = node;
+            break;
+        }
+    }
+
+    return nodesVect;
 }
 
 

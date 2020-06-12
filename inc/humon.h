@@ -11,7 +11,7 @@ extern "C"
     /// Specifies the kind of data represented by a particular huToken.
     enum huTokenKind
     {
-        HU_TOKENKIND_NULL,          ///< Invalid token. Either malformed, or otherwise nonexistent.
+        HU_TOKENKIND_NULL,          ///< Invalid token. Malformed, or otherwise nonexistent.
         HU_TOKENKIND_EOF,           ///< The end of the token stream or string.
         HU_TOKENKIND_STARTLIST,     ///< The opening '[' of a list.
         HU_TOKENKIND_ENDLIST,       ///< The closing ']' of a list.
@@ -38,7 +38,7 @@ extern "C"
     /// Return a string representation of a huNodeKind.
     char const * huNodeKindToString(int rhs);
 
-    /// Specifies the style of whitespacing in humon text.
+    /// Specifies the style of whitespacing in Humon text.
     enum huOutputFormat
     {
         HU_OUTPUTFORMAT_PRESERVED,  ///< Preserves the original whitespacing as loaded.
@@ -49,7 +49,7 @@ extern "C"
     /// Return a string representation of a huOutputFormat.
    char const * huOutputFormatToString(int rhs);
 
-    /// Specifies a tokizing or parsing error code, or lookup error.
+    /// Specifies a tokenizing or parsing error code, or lookup error.
     enum huErrorCode
     {
         HU_ERROR_NO_ERROR,                  ///< No error.
@@ -125,9 +125,9 @@ extern "C"
     /// Frees the memory owned by a huStringView.
     void huDestroyStringView(huStringView const * string);
 
-    /// Encodes a token read from humon text.
+    /// Encodes a token read from Humon text.
     /** This structure encodes file location and buffer location information about a
-     * particular token in a humon file. Every token is read and tracked with a huToken. */
+     * particular token in a Humon file. Every token is read and tracked with a huToken. */
     typedef struct huToken_tag
     {
         int tokenKind;          ///< A huTokenKind value.
@@ -178,7 +178,7 @@ extern "C"
 
     typedef struct huTrove_tag huTrove;
 
-    /// Encodes a humon data node.
+    /// Encodes a Humon data node.
     /** Humon nodes make up a heirarchical structure, stemming from a single root node.
      * Humon troves contain a reference to the root, and store all nodes in an indexable
      * array. A node is either a list, a dict, or a value node. Any number of comments 
@@ -238,13 +238,13 @@ extern "C"
     huAnnotation const * huGetAnnotation(huNode const * node, int annotationIdx);
 
     /// Return the number of annotations associated to a node with a specific key.
-    int huGetNumAnnotationsByKeyZ(huNode const * node, char const * key);
+    bool huHasAnnotationWithKeyZ(huNode const * node, char const * key);
     /// Return the number of annotations associated to a node with a specific key.
-    int huGetNumAnnotationsByKeyN(huNode const * node, char const * key, int keyLen);
+    bool huHasAnnotationWithKeyN(huNode const * node, char const * key, int keyLen);
     /// Return an annoation object associated to a node, by key and index.
-    huAnnotation const * huGetAnnotationByKeyZ(huNode const * node, char const * key, int annotationIdx);
+    huToken const * huGetAnnotationByKeyZ(huNode const * node, char const * key, int annotationIdx);
     /// Return an annoation object associated to a node, by key and index.
-    huAnnotation const * huGetAnnotationByKeyN(huNode const * node, char const * key, int keyLen, int annotationIdx);
+    huToken const * huGetAnnotationByKeyN(huNode const * node, char const * key, int keyLen, int annotationIdx);
 
     /// Return the number of annotations associated to a node with a specific value.
     int huGetNumAnnotationsByValueZ(huNode const * node, char const * value);
@@ -259,6 +259,12 @@ extern "C"
     int huGetNumComments(huNode const * node);
     /// Return a comment associated to a node, by index.
     huComment const * huGetComment(huNode const * node, int commentIdx);
+    /// Return all comments associated to a node which contain the specified substring.
+    /// @note: user must DestroyVector(retval).
+    huVector huGetCommentsContainingZ(huNode const * node, char const * containedText);
+    /// Return all comments associated to a node which contain the specified substring.
+    /// @note: user must DestroyVector(retval).
+    huVector huGetCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen);
 
     /// Look up a node by relative address to a node.    
     huNode const * huGetNodeByRelativeAddressZ(huNode const * node, char const * address, int * error);
@@ -269,29 +275,28 @@ extern "C"
     /// @note: user must DestroyStringView(retval).
     huStringView huGetNodeAddress(huNode const * node);
 
-    /// Encodes a humon data trove.
-    /** A trove stores all the tokens and nodes in a loaded humon file. It is your main access
-     * to the humon object data. Troves are created by humon functions that load from file or 
-     * string, and can output humon to file or string as well. */
+    /// Encodes a Humon data trove.
+    /** A trove stores all the tokens and nodes in a loaded Humon file. It is your main access
+     * to the Humon object data. Troves are created by Humon functions that load from file or 
+     * string, and can output Humon to file or string as well. */
     typedef struct huTrove_tag
     {
-        char const * dataString;      ///< The buffer containing the humon text as loaded. Owned by the trove. Humon takes care to NULL-terminate this string.
+        char const * dataString;      ///< The buffer containing the Humon text as loaded. Owned by the trove. Humon takes care to NULL-terminate this string.
         int dataStringSize;     ///< The size of the buffer.
-        huVector tokens;        ///< Manages a huToken []. This is the array of tokens lexed from the humon text.
+        huVector tokens;        ///< Manages a huToken []. This is the array of tokens lexed from the Humon text.
         huVector nodes;         ///< Manages a huNode []. This is the array of node objects parsed from tokens.
         huVector errors;        ///< Manages a huError []. This is an array of errors encountered during load.
-        int inputTabSize;       ///< The tab length humon uses to compute column values for tokens.
-        int outputTabSize;      ///< The tab length used when printing humon text.
+        int inputTabSize;       ///< The tab length Humon uses to compute column values for tokens.
         huVector annotations;   ///< Manages a huAnnotation []. Contains the annotations associated to the trove.
         huVector comments;      ///< Manages a huComment[]. Contains the comments associated to the trove.
     } huTrove;
 
-    /// Creates a trove from a NULL-terminated string of humon text.
-    huTrove const * huMakeTroveFromStringZ(char const * data, int inputTabSize, int outputTabSize);
-    /// Creates a trove from a string view of humon text.
-    huTrove const * huMakeTroveFromStringN(char const * data, int dataLen, int inputTabSize, int outputTabSize);
+    /// Creates a trove from a NULL-terminated string of Humon text.
+    huTrove const * huMakeTroveFromStringZ(char const * data, int inputTabSize);
+    /// Creates a trove from a string view of Humon text.
+    huTrove const * huMakeTroveFromStringN(char const * data, int dataLen, int inputTabSize);
     /// Creates a trove from a file.
-    huTrove const * huMakeTroveFromFile(char const * path, int inputTabSize, int outputTabSize);
+    huTrove const * huMakeTroveFromFile(char const * path, int inputTabSize);
 
     /// Reclaims all memory owned by a trove.
     void huDestroyTrove(huTrove const * trove);
@@ -373,24 +378,24 @@ extern "C"
 
     /// Return a collection of all nodes in a trove with a comment which contains specific text.
     /// @note: User must huDestroyVector(retval.buffer);
-    huVector huFindNodesByCommentZ(huTrove const * trove, char const * text);
+    huVector huFindNodesByCommentContainingZ(huTrove const * trove, char const * containedText);
     /// Return a collection of all nodes in a trove with a comment which contains specific text.
     /// @note: User must huDestroyVector(retval.buffer);
-    huVector huFindNodesByCommentN(huTrove const * trove, char const * text, int textLen);    
+    huVector huFindNodesByCommentContainingN(huTrove const * trove, char const * containedText, int containedTextLen);    
 
     /// Serialize a trove to text.
     /// @note: User must huDestroyStringView(retval.str);
-    huStringView huTroveToString(huTrove const * trove, int outputFormat, bool excludeComments, huStringView const * colorTable);
+    huStringView huTroveToString(huTrove const * trove, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable);
 
     /// Serialize a trove to file.
-    size_t huTroveToFile(huTrove const * trove, char const * path, int outputFormat, bool excludeComments, huStringView const * colorTable);
+    size_t huTroveToFile(huTrove const * trove, char const * path, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable);
 
     /// Global null token object. Functions that return null tokens reference this.
-    extern huToken humon_nullToken;
+    extern huToken const humon_nullToken;
     /// Global null node object. Functions that return null nodes reference this.
-    extern huNode humon_nullNode;
+    extern huNode const humon_nullNode;
     /// Global null trove object. Functions that return null troves reference this.
-    extern huTrove humon_nullTrove;
+    extern huTrove const humon_nullTrove;
 
 #ifdef __cplusplus
 } // extern "C"
