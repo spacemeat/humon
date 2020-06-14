@@ -82,11 +82,11 @@ huTrove const * huMakeTroveFromString(char const * data, int inputTabSize)
 
 huTrove const * huMakeTroveFromStringN(char const * data, int dataLen, int inputTabSize)
 {
-    if (data == NULL)
+#ifdef HUMON_CHECK_PARAMS
+    if (data == NULL || dataLen < 0 ||
+        inputTabSize < MIN_INPUT_TAB_SIZE || inputTabSize > MAX_INPUT_TAB_SIZE)
         { return & humon_nullTrove; }
-
-    if (dataLen < 0)
-        { return & humon_nullTrove; }
+#endif
 
     // pad by 4 nulls -- see above
     char * newData = malloc(dataLen + 4);
@@ -111,8 +111,24 @@ huTrove const * huMakeTroveFromStringN(char const * data, int dataLen, int input
 }
 
 
-huTrove const * huMakeTroveFromFile(char const * path, int inputTabSize)
+huTrove const * huMakeTroveFromFileZ(char const * path, int inputTabSize)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (path == NULL)
+        { return & humon_nullTrove; }
+#endif
+
+    return huMakeTroveFromFileN(path, strlen(path), inputTabSize);
+}
+
+
+huTrove const * huMakeTroveFromFileN(char const * path, int pathLen, int inputTabSize)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (path == NULL || inputTabSize < MIN_INPUT_TAB_SIZE || inputTabSize > MAX_INPUT_TAB_SIZE)
+        { return & humon_nullTrove; }
+#endif
+
     FILE * fp = fopen(path, "r");
     if (fp == NULL)
         { return & humon_nullTrove; }
@@ -155,6 +171,11 @@ huTrove const * huMakeTroveFromFile(char const * path, int inputTabSize)
 
 void huDestroyTrove(huTrove const * trove)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == NULL || trove == & humon_nullTrove)
+        { return; }
+#endif
+
     huDestroyVector(& trove->tokens);
     huDestroyVector(& trove->nodes);
     huDestroyVector(& trove->errors);
@@ -168,12 +189,22 @@ void huDestroyTrove(huTrove const * trove)
 
 int huGetNumTokens(huTrove const * trove)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == NULL || trove == & humon_nullTrove)
+        { return 0; }
+#endif
+
     return trove->tokens.numElements;
 }
 
 
 huToken const * huGetToken(huTrove const * trove, int tokenIdx)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == NULL || trove == & humon_nullTrove)
+        { return & humon_nullToken; }
+#endif
+
     if (tokenIdx < trove->tokens.numElements)
         { return (huToken *) trove->tokens.buffer + tokenIdx; }
 
@@ -205,18 +236,33 @@ huToken * allocNewToken(huTrove * trove, int tokenKind,
 
 int huGetNumNodes(huTrove const * trove)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == NULL || trove == & humon_nullTrove)
+        { return 0; }
+#endif
+
     return trove->nodes.numElements;
 }
 
 
 huNode const * huGetRootNode(huTrove const * trove)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == NULL || trove == & humon_nullTrove)
+        { return & humon_nullNode; }
+#endif
+
     return trove->nodes.buffer;
 }
 
 
 huNode const * huGetNode(huTrove const * trove, int nodeIdx)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == NULL || trove == & humon_nullTrove)
+        { return & humon_nullNode; }
+#endif
+
     if (nodeIdx >= 0 && nodeIdx < trove->nodes.numElements)
         { return (huNode *) trove->nodes.buffer + nodeIdx; }
 
@@ -226,12 +272,22 @@ huNode const * huGetNode(huTrove const * trove, int nodeIdx)
 
 int huGetNumErrors(huTrove const * trove)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == NULL)
+        { return 0; }
+#endif
+
     return trove->errors.numElements;
 }
 
 
 huError const * huGetError(huTrove const * trove, int errorIdx)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == NULL || trove == & humon_nullTrove || errorIdx < 0)
+        { return NULL; }
+#endif
+
     if (errorIdx < huGetNumErrors(trove))
     {
         return (huError *) trove->errors.buffer + errorIdx;
@@ -243,12 +299,22 @@ huError const * huGetError(huTrove const * trove, int errorIdx)
 
 int huGetNumTroveAnnotations(huTrove const * trove)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == NULL)
+        { return 0; }
+#endif
+
     return trove->annotations.numElements;
 }
 
 
 huAnnotation const * huGetTroveAnnotation(huTrove const * trove, int annotationIdx)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == NULL || trove == & humon_nullTrove || annotationIdx < 0)
+        { return NULL; }
+#endif
+
     if (annotationIdx < trove->annotations.numElements)
     {
         return (huAnnotation *) trove->annotations.buffer + annotationIdx;
@@ -258,44 +324,59 @@ huAnnotation const * huGetTroveAnnotation(huTrove const * trove, int annotationI
 }
 
 
-int huGetNumTroveAnnotationsByKeyZ(huTrove const * trove, char const * key)
+bool huTroveHasAnnotationWithKeyZ(huTrove const * trove, char const * key)
 {
-    return huGetNumTroveAnnotationsByKeyN(trove, key, strlen(key));
+#ifdef HUMON_CHECK_PARAMS
+    if (key  == NULL)
+        { return false; }
+#endif
+
+    return huTroveHasAnnotationWithKeyN(trove, key, strlen(key));
 }
 
 
-int huGetNumTroveAnnotationsByKeyN(huTrove const * trove, char const * key, int keyLen)
+bool huTroveHasAnnotationWithKeyN(huTrove const * trove, char const * key, int keyLen)
 {
-    int matches = 0;
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == NULL || trove == & humon_nullTrove || key  == NULL || keyLen < 0)
+        { return false; }
+#endif
+
     for (int i = 0; i < trove->annotations.numElements; ++i)
     { 
         huAnnotation * anno = (huAnnotation *) trove->annotations.buffer + i;
         if (strncmp(anno->key->value.str, key, keyLen) == 0)
-            { matches += 1; }
+            { return true; }
     }
 
-    return matches;
+    return false;
 }
 
 
-huAnnotation const * huGetTroveAnnotationByKeyZ(huTrove const * trove, char const * key, int annotationIdx)
+huToken const * huGetTroveAnnotationWithKeyZ(huTrove const * trove, char const * key)
 {
-    return huGetTroveAnnotationByKeyN(trove, key, strlen(key), annotationIdx);
+#ifdef HUMON_CHECK_PARAMS
+    if (key  == NULL)
+        { return NULL; }
+#endif
+
+    return huGetTroveAnnotationWithKeyN(trove, key, strlen(key));
 }
 
 
-huAnnotation const * huGetTroveAnnotationByKeyN(huTrove const * trove, char const * key, int keyLen, int annotationIdx)
+huToken const * huGetTroveAnnotationWithKeyN(huTrove const * trove, char const * key, int keyLen)
 {
-    int matches = 0;
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == NULL || trove == & humon_nullTrove || key  == NULL || keyLen < 0)
+        { return NULL; }
+#endif
+
     for (int i = 0; i < trove->annotations.numElements; ++i)
     { 
         huAnnotation * anno = (huAnnotation *) trove->annotations.buffer + i;
         if (strncmp(anno->key->value.str, key, keyLen) == 0)
         {
-            if (matches == annotationIdx)
-                { return anno; }
-
-            matches += 1;
+            return anno->value;
         }
     }
 
@@ -305,12 +386,22 @@ huAnnotation const * huGetTroveAnnotationByKeyN(huTrove const * trove, char cons
 
 int huGetNumTroveAnnotationsByValueZ(huTrove const * trove, char const * value)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (value == NULL)
+        { return 0; }
+#endif
+
     return huGetNumTroveAnnotationsByValueN(trove, value, strlen(value));
 }
 
 
 int huGetNumTroveAnnotationsByValueN(huTrove const * trove, char const * value, int valueLen)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == NULL || trove == & humon_nullTrove || value  == NULL || valueLen < 0)
+        { return 0; }
+#endif
+
     int matches = 0;
     for (int i = 0; i < trove->annotations.numElements; ++i)
     { 
@@ -323,14 +414,24 @@ int huGetNumTroveAnnotationsByValueN(huTrove const * trove, char const * value, 
 }
 
 
-huAnnotation const * huGetTroveAnnotationByValueZ(huTrove const * trove, char const * value, int annotationIdx)
+huToken const * huGetTroveAnnotationByValueZ(huTrove const * trove, char const * value, int annotationIdx)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (value  == NULL)
+        { return NULL; }
+#endif
+
     return huGetTroveAnnotationByValueN(trove, value, strlen(value), annotationIdx);
 }
 
 
-huAnnotation const * huGetTroveAnnotationByValueN(huTrove const * trove, char const * value, int valueLen, int annotationIdx)
+huToken const * huGetTroveAnnotationByValueN(huTrove const * trove, char const * value, int valueLen, int annotationIdx)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == NULL || trove == & humon_nullTrove || value  == NULL || valueLen < 0 || annotationIdx < 0)
+        { return NULL; }
+#endif
+
     int matches = 0;
     for (int i = 0; i < trove->annotations.numElements; ++i)
     { 
@@ -338,7 +439,7 @@ huAnnotation const * huGetTroveAnnotationByValueN(huTrove const * trove, char co
         if (strncmp(anno->value->value.str, value, valueLen) == 0)
         {
             if (matches == annotationIdx)
-                { return anno; }
+                { return anno->key; }
 
             matches += 1;
         }
@@ -350,12 +451,22 @@ huAnnotation const * huGetTroveAnnotationByValueN(huTrove const * trove, char co
 
 int huGetNumTroveComments(huTrove const * trove)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == NULL || trove == & humon_nullTrove)
+        { return 0; }
+#endif
+
     return trove->comments.numElements;
 }
 
 
 huComment const * huGetTroveComment(huTrove const * trove, int commentIdx)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == NULL || trove == & humon_nullTrove || commentIdx < 0)
+        { return NULL; }
+#endif
+
     if (commentIdx < trove->comments.numElements)
     {
         return (huComment *) trove->comments.buffer + commentIdx;
@@ -367,24 +478,46 @@ huComment const * huGetTroveComment(huTrove const * trove, int commentIdx)
 
 huNode const * huGetNodeByFullAddressZ(huTrove const * trove, char const * address, int * error)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (address == NULL)
+        { return & humon_nullNode; }
+#endif
+
     return huGetNodeByFullAddressN(trove, address, strlen(address), error);
 }
 
 
 huNode const * huGetNodeByFullAddressN(huTrove const * trove, char const * address, int addressLen, int * error)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == NULL || trove == & humon_nullTrove || address == NULL || addressLen < 0)
+        { return & humon_nullNode; }
+#endif
+
     if (error) { * error = HU_ERROR_NO_ERROR; }
 
     // parse address; must start with '/' to start at root
     if (addressLen <= 0)
-        { * error = HU_ERROR_UNEXPECTED_EOF; return & humon_nullNode; }
+    {
+        if (error) 
+            { * error = HU_ERROR_UNEXPECTED_EOF; }
+        return & humon_nullNode;
+    }
 
     if (address[0] != '/')
-        { * error = HU_ERROR_SYNTAX_ERROR; return & humon_nullNode; }
+    {
+        if (error) 
+            { * error = HU_ERROR_SYNTAX_ERROR; }
+        return & humon_nullNode;
+    }
 
-    huNode const * root = huGetRootNode(trove);    
+    huNode const * root = huGetRootNode(trove);
     if (root->kind == HU_NODEKIND_NULL)
-        { * error = HU_ERROR_NOTFOUND; return & humon_nullNode; }
+    {
+        if (error) 
+            { * error = HU_ERROR_NOTFOUND; }
+        return & humon_nullNode;
+    }
 
     return huGetNodeByRelativeAddressN(root, address + 1, addressLen - 1, error);
 }
@@ -393,6 +526,15 @@ huNode const * huGetNodeByFullAddressN(huTrove const * trove, char const * addre
 // User must free(retval.buffer);
 huVector huFindNodesByAnnotationKeyZ(huTrove const * trove, char const * key)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (key == NULL)
+    {
+        huVector nodesVect;
+        huInitVector(& nodesVect, sizeof(huNode *));
+        return nodesVect;
+    }
+#endif
+
     return huFindNodesByAnnotationKeyN(trove, key, strlen(key));
 }
 
@@ -403,6 +545,11 @@ huVector huFindNodesByAnnotationKeyN(huTrove const * trove, char const * key, in
     // grow a vector by looking at every node annotation for match
     huVector nodesVect;
     huInitVector(& nodesVect, sizeof(huNode *));
+
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == NULL || trove == & humon_nullTrove || key == NULL || keyLen < 0)
+        { return nodesVect; }
+#endif
 
     for (int i = 0; i < huGetNumNodes(trove); ++i)
     {
@@ -422,6 +569,15 @@ huVector huFindNodesByAnnotationKeyN(huTrove const * trove, char const * key, in
 // User must free(retval.buffer);
 huVector huFindNodesByAnnotationValueZ(huTrove const * trove, char const * value)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (value == NULL)
+    {
+        huVector nodesVect;
+        huInitVector(& nodesVect, sizeof(huNode *));
+        return nodesVect;
+    }
+#endif
+
     return huFindNodesByAnnotationValueN(trove, value, strlen(value));
 }
 
@@ -432,6 +588,11 @@ huVector huFindNodesByAnnotationValueN(huTrove const * trove, char const * value
     // grow a vector by looking at every node annotation for match
     huVector nodesVect;
     huInitVector(& nodesVect, sizeof(huNode *));
+
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == NULL || trove == & humon_nullTrove || value == NULL || valueLen < 0)
+        { return nodesVect; }
+#endif
 
     for (int i = 0; i < huGetNumNodes(trove); ++i)
     {
@@ -451,6 +612,15 @@ huVector huFindNodesByAnnotationValueN(huTrove const * trove, char const * value
 // User must free(retval.buffer);
 huVector huFindNodesByAnnotationKeyValueZZ(huTrove const * trove, char const * key, char const * value)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (key == NULL || value == NULL)
+    {
+        huVector nodesVect;
+        huInitVector(& nodesVect, sizeof(huNode *));
+        return nodesVect;
+    }
+#endif
+
     return huFindNodesByAnnotationKeyValueNN(trove, key, strlen(key), value, strlen(value));
 }
 
@@ -458,6 +628,15 @@ huVector huFindNodesByAnnotationKeyValueZZ(huTrove const * trove, char const * k
 // User must free(retval.buffer);
 huVector huFindNodesByAnnotationKeyValueNZ(huTrove const * trove, char const * key, int keyLen, char const * value)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (value == NULL)
+    {
+        huVector nodesVect;
+        huInitVector(& nodesVect, sizeof(huNode *));
+        return nodesVect;
+    }
+#endif
+
     return huFindNodesByAnnotationKeyValueNN(trove, key, keyLen, value, strlen(value));
 }
 
@@ -465,6 +644,15 @@ huVector huFindNodesByAnnotationKeyValueNZ(huTrove const * trove, char const * k
 // User must free(retval.buffer);
 huVector huFindNodesByAnnotationKeyValueZN(huTrove const * trove, char const * key, char const * value, int valueLen)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (key == NULL)
+    {
+        huVector nodesVect;
+        huInitVector(& nodesVect, sizeof(huNode *));
+        return nodesVect;
+    }
+#endif
+
     return huFindNodesByAnnotationKeyValueNN(trove, key, strlen(key), value, valueLen);
 }
 
@@ -475,6 +663,11 @@ huVector huFindNodesByAnnotationKeyValueNN(huTrove const * trove, char const * k
     // grow a vector by looking at every node annotation for match
     huVector nodesVect;
     huInitVector(& nodesVect, sizeof(huNode *));
+
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == NULL || trove == & humon_nullTrove || key == NULL || keyLen < 0 || value == NULL || valueLen < 0)
+        { return nodesVect; }
+#endif
 
     for (int i = 0; i < huGetNumNodes(trove); ++i)
     {
@@ -499,6 +692,15 @@ huVector huFindNodesByAnnotationKeyValueNN(huTrove const * trove, char const * k
 // User must free(retval.buffer);
 huVector huFindNodesByCommentContainingZ(huTrove const * trove, char const * containedText)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (containedText == NULL)
+    {
+        huVector nodesVect;
+        huInitVector(& nodesVect, sizeof(huNode *));
+        return nodesVect;
+    }
+#endif
+
     return huFindNodesByCommentContainingN(trove, containedText, strlen(containedText));
 }
 
@@ -509,6 +711,11 @@ huVector huFindNodesByCommentContainingN(huTrove const * trove, char const * con
     // grow a vector by looking at every node annotation for match
     huVector nodesVect;
     huInitVector(& nodesVect, sizeof(huNode *));
+
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == NULL || trove == & humon_nullTrove || containedText == NULL || containedTextLen < 0)
+        { return nodesVect; }
+#endif
 
     for (int i = 0; i < huGetNumNodes(trove); ++i)
     {
@@ -613,7 +820,7 @@ void printComment(huComment const * comment, huVector * str, huStringView const 
 }
 
 
-int printSameLineComents(huNode const * node, int line, bool firstToken, int startingCommentIdx, huVector * str, huStringView const* colorTable)
+int printSameLineComments(huNode const * node, bool firstToken, int startingCommentIdx, huVector * str, huStringView const* colorTable)
 {
     int iCom = startingCommentIdx;
     for (; iCom < huGetNumComments(node); ++iCom)
@@ -621,7 +828,7 @@ int printSameLineComents(huNode const * node, int line, bool firstToken, int sta
         huComment const * comment = huGetComment(node, iCom);
         // If not firstToken, forego the position check. Handles enqueued comments before the end token.
         if (firstToken == false ||
-                (comment->commentToken->line == huGetStartToken(node)->line &&
+                (comment->commentToken->line == node->firstToken->line &&
                  comment->commentToken->col < node->lastValueToken->col))
         {
             appendWs(str, 1);
@@ -719,7 +926,7 @@ void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int 
     for (; iCom < huGetNumComments(node); ++iCom)
     {
         huComment const * comment = huGetComment(node, iCom);
-        if (comment->commentToken->line < huGetStartToken(node)->line)
+        if (comment->commentToken->line < node->firstToken->line)
         {
             if (node->parentNodeIdx != -1)
                 { appendString(str, "\n", 1); }
@@ -802,7 +1009,7 @@ void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int 
         printNodeAnnotations(node, str, colorTable);
 
         // print any same-line comments
-        iCom = printSameLineComents(node, huGetStartToken(node)->line, true, iCom, str, colorTable);
+        iCom = printSameLineComments(node, true, iCom, str, colorTable);
 
         // recursive calls
         int numCh = huGetNumChildren(node);
@@ -837,12 +1044,12 @@ void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int 
             appendString(str, "\n", 1);
             appendWs(str, outputTabSize * depth);
         }
-        printValue(huGetValue(node), str, colorTable);
+        printValue(node->firstValueToken, str, colorTable);
         printNodeAnnotations(node, str, colorTable);
     }
 
     // print post-object comments on same line
-    printSameLineComents(node, huGetEndToken(node)->line, false, iCom, str, colorTable);
+    printSameLineComments(node, false, iCom, str, colorTable);
 }
 
 
@@ -876,6 +1083,14 @@ void troveToPrettyString(huTrove const * trove, huVector * str, int outputFormat
 huStringView huTroveToString(huTrove const * trove, 
     int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == NULL || trove == & humon_nullTrove || outputTabSize < 0)
+    {
+        huStringView sv = { .str = NULL, .size = 0 };
+        return sv;
+    }
+#endif
+
     huVector str;
     huInitVector(& str, sizeof(char));
 
@@ -1059,8 +1274,23 @@ huStringView huTroveToString(huTrove const * trove,
 
 #pragma GCC diagnostic pop
 
-size_t huTroveToFile(huTrove const * trove, char const * path, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable)
+size_t huTroveToFileZ(huTrove const * trove, char const * path, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable)
 {
+#ifdef HUMON_CHECK_PARAMS
+    if (path == NULL)
+        { return 0; }
+#endif
+
+    return huTroveToFileN(trove, path, strlen(path), outputFormat, excludeComments, outputTabSize, colorTable);
+}
+
+size_t huTroveToFileN(huTrove const * trove, char const * path, int pathLen, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == NULL || trove == & humon_nullTrove || path == NULL || outputTabSize < 0)
+        { return 0; }
+#endif
+
     FILE * fp = fopen(path, "w");
     if (fp == NULL)
         { return 0; }
@@ -1068,6 +1298,6 @@ size_t huTroveToFile(huTrove const * trove, char const * path, int outputFormat,
     huStringView str = huTroveToString(trove, outputFormat, excludeComments, outputTabSize, colorTable);
     size_t ret = fwrite(str.str, sizeof(char), str.size, fp);
 
-    free((char *) str.str); // NOTE: We're casting away const here. It's kinda sketchy, but correct.
+    free((char *) str.str);
     return ret;
 }

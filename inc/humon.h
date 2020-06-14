@@ -8,6 +8,15 @@ extern "C"
 {
 #endif
 
+#ifndef HUMON_CHECK_PARAMS
+#if defined(DEBUG) && !defined(HUMON_FORCE_NO_CHECK_PARAMS)
+#define HUMON_CHECK_PARAMS
+#endif
+#endif
+
+    static int const MIN_INPUT_TAB_SIZE = 1;
+    static int const MAX_INPUT_TAB_SIZE = 1024;
+
     /// Specifies the kind of data represented by a particular huToken.
     enum huTokenKind
     {
@@ -23,7 +32,7 @@ extern "C"
         HU_TOKENKIND_COMMENT        ///< Any comment token. An entire comment is considered one token.
     };
 
-    /// Return a string representation of a huTokenKind.
+    /// Returns a string representation of a huTokenKind.
     char const * huTokenKindToString(int rhs);
 
     /// Specifies the kind of node represented by a particular huNode.
@@ -35,7 +44,7 @@ extern "C"
         HU_NODEKIND_VALUE   ///< Value node. The node ontains a string value, and no children.
     };
 
-    /// Return a string representation of a huNodeKind.
+    /// Returns a string representation of a huNodeKind.
     char const * huNodeKindToString(int rhs);
 
     /// Specifies the style of whitespacing in Humon text.
@@ -46,7 +55,7 @@ extern "C"
         HU_OUTPUTFORMAT_PRETTY      ///< Formats the text in a standard, human-friendly way.
     };
 
-    /// Return a string representation of a huOutputFormat.
+    /// Returns a string representation of a huOutputFormat.
    char const * huOutputFormatToString(int rhs);
 
     /// Specifies a tokenizing or parsing error code, or lookup error.
@@ -61,7 +70,7 @@ extern "C"
         HU_ERROR_NOTFOUND                   ///< No node could be found at the address.
     };
 
-    /// Return a string representation of a huErrorCode.
+    /// Returns a string representation of a huErrorCode.
     char const * huOutputErrorToString(int rhs);
 
     /// Specifies a style ID for colorized printing.
@@ -203,75 +212,68 @@ extern "C"
         huVector comments;              ///< Manages a huComment []. Stores the comments associated to this node.
     } huNode;
 
-    /// Get a pointer to a node's parent.
+    /// Gets a pointer to a node's parent.
     huNode const * huGetParentNode(huNode const * node);
-    /// Get the number of children a node has.
+    /// Gets the number of children a node has.
     int huGetNumChildren(huNode const * node);
-    /// Get a child node by child index.
+    /// Gets a child node by child index.
     huNode const * huGetChildNodeByIndex(huNode const * node, int childIdx);
-    /// Get a child node by NULL-terminated key.
+    /// Gets a child node by NULL-terminated key.
     huNode const * huGetChildNodeByKeyZ(huNode const * node, char const * key);
-    /// Get a child node by string view key.
+    /// Gets a child node by string view key.
     huNode const * huGetChildNodeByKeyN(huNode const * node, char const * key, int keyLen);
 
-    /// Return if a node has a key token tracked. (If it's a member of a dict.)
+    /// Returns if a node has a key token tracked. (If it's a member of a dict.)
     bool huHasKey(huNode const * node);
-    /// Return the token containing the key string for a node.
+    /// Returns the token containing the key string for a node.
     huToken const * huGetKey(huNode const * node);
 
-    /// Return if a node has a value token tracked. (In a valid state, it always should.)
+    /// Returns if a node has a value token tracked. (All non-null nodes always should.)
     bool huHasValue(huNode const * node);
-    /// Return the token containing the first value elements.
-    huToken const * huGetValue(huNode const * node);
 
-    /// Return the first token which contributes to this node, including annotations and comments.
-    huToken const * huGetStartToken(huNode const * node);
-    /// Return the last token which contributes to this node, including annotations and comments.
-    huToken const * huGetEndToken(huNode const * node);
-
-    /// Return the next sibling in the child index order of a node.
+    /// Returns the next sibling in the child index order of a node.
     huNode const * huNextSibling(huNode const * node);
 
-    /// Return the number of annotations associated to a node.
+    /// Returns the number of annotations associated to a node.
     int huGetNumAnnotations(huNode const * node);
-    /// Return an annotation object associated to a node, by index.
+    /// Returns an annotation object associated to a node, by index.
     huAnnotation const * huGetAnnotation(huNode const * node, int annotationIdx);
 
-    /// Return the number of annotations associated to a node with a specific key.
+    /// Returns whether there is an annotation associated to a node with a specific key.
     bool huHasAnnotationWithKeyZ(huNode const * node, char const * key);
-    /// Return the number of annotations associated to a node with a specific key.
+    /// Returns whether there is an annotation associated to a node with a specific key.
     bool huHasAnnotationWithKeyN(huNode const * node, char const * key, int keyLen);
-    /// Return an annoation object associated to a node, by key and index.
+    /// Returns the value token of an annoation object associated to a node, with the specified key.
     huToken const * huGetAnnotationByKeyZ(huNode const * node, char const * key);
-    /// Return an annoation object associated to a node, by key and index.
+    /// Returns the value token of an annoation object associated to a node, with the specified key.
     huToken const * huGetAnnotationByKeyN(huNode const * node, char const * key, int keyLen);
 
-    /// Return the number of annotations associated to a node with a specific value.
+    /// Returns the number of annotations associated to a node with a specific value.
     int huGetNumAnnotationsByValueZ(huNode const * node, char const * value);
-    /// Return the number of annotations associated to a node with a specific value.
+    /// Returns the number of annotations associated to a node with a specific value.
     int huGetNumAnnotationsByValueN(huNode const * node, char const * value, int valueLen);
-    /// Return an annoation object associated to a node, by value and index.
-    huAnnotation const * huGetAnnotationByValueZ(huNode const * node, char const * value, int annotationIdx);
-    /// Return an annoation object associated to a node, by value and index.
-    huAnnotation const * huGetAnnotationByValueN(huNode const * node, char const * value, int valueLen, int annotationIdx);
+    /// Returns the key token of an annotation associated to a node, with the specified value and index.
+    huToken const * huGetAnnotationByValueZ(huNode const * node, char const * value, int annotationIdx);
+    /// Returns the key token of an annotation associated to a node, with the specified value and index.
+    huToken const * huGetAnnotationByValueN(huNode const * node, char const * value, int valueLen, int annotationIdx);
 
-    /// Return the number of comments associated to a node.
+    /// Returns the number of comments associated to a node.
     int huGetNumComments(huNode const * node);
-    /// Return a comment associated to a node, by index.
+    /// Returns a comment associated to a node, by index.
     huComment const * huGetComment(huNode const * node, int commentIdx);
-    /// Return all comments associated to a node which contain the specified substring.
+    /// Returns all comments associated to a node which contain the specified substring.
     /// @note: user must DestroyVector(retval).
     huVector huGetCommentsContainingZ(huNode const * node, char const * containedText);
-    /// Return all comments associated to a node which contain the specified substring.
+    /// Returns all comments associated to a node which contain the specified substring.
     /// @note: user must DestroyVector(retval).
     huVector huGetCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen);
 
-    /// Look up a node by relative address to a node.    
+    /// Looks up a node by relative address to a node.    
     huNode const * huGetNodeByRelativeAddressZ(huNode const * node, char const * address, int * error);
-    /// Look up a node by relative address to a node.    
+    /// Looks up a node by relative address to a node.    
     huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * address, int addressLen, int * error);
 
-    /// Return the full address for a node.
+    /// Returns the full address for a node.
     /// @note: user must DestroyStringView(retval).
     huStringView huGetNodeAddress(huNode const * node);
 
@@ -296,7 +298,9 @@ extern "C"
     /// Creates a trove from a string view of Humon text.
     huTrove const * huMakeTroveFromStringN(char const * data, int dataLen, int inputTabSize);
     /// Creates a trove from a file.
-    huTrove const * huMakeTroveFromFile(char const * path, int inputTabSize);
+    huTrove const * huMakeTroveFromFileZ(char const * path, int inputTabSize);
+    /// Creates a trove from a file.
+    huTrove const * huMakeTroveFromFileN(char const * path, int pathLen, int inputTabSize);
 
     /// Reclaims all memory owned by a trove.
     void huDestroyTrove(huTrove const * trove);
@@ -323,72 +327,74 @@ extern "C"
     /// Returns an annotation from a trove by index.
     huAnnotation const * huGetTroveAnnotation(huTrove const * trove, int annotationIdx);
 
-    /// Return the number of annotations associated to a trove with a specific key.
-    int huGetNumTroveAnnotationsByKeyZ(huTrove const * trove, char const * key);
-    /// Return the number of annotations associated to a trove with a specific key.
-    int huGetNumTroveAnnotationsByKeyN(huTrove const * trove, char const * key, int keyLen);
-    /// Return an annoation object associated to a trove, by key and index.
-    huAnnotation const * huGetTroveAnnotationByKeyZ(huTrove const * trove, char const * key, int annotationIdx);
-    /// Return an annoation object associated to a trove, by key and index.
-    huAnnotation const * huGetTroveAnnotationByKeyN(huTrove const * trove, char const * key, int keyLen, int annotationIdx);
+    /// Returns the number of annotations associated to a trove with a specific key.
+    bool huTroveHasAnnotationWithKeyZ(huTrove const * trove, char const * key);
+    /// Returns the number of annotations associated to a trove with a specific key.
+    bool huTroveHasAnnotationWithKeyN(huTrove const * trove, char const * key, int keyLen);
+    /// Returns an annoation object associated to a trove, by key and index.
+    huToken const * huGetTroveAnnotationWithKeyZ(huTrove const * trove, char const * key);
+    /// Returns an annoation object associated to a trove, by key and index.
+    huToken const * huGetTroveAnnotationWithKeyN(huTrove const * trove, char const * key, int keyLen);
 
-    /// Return the number of annotations associated to a trove with a specific value.
+    /// Returns the number of annotations associated to a trove with a specific value.
     int huGetNumTroveAnnotationsByValueZ(huTrove const * trove, char const * value);
-    /// Return the number of annotations associated to a trove with a specific value.
+    /// Returns the number of annotations associated to a trove with a specific value.
     int huGetNumTroveAnnotationsByValueN(huTrove const * trove, char const * value, int valueLen);
-    /// Return an annoation object associated to a trove, by value and index.
-    huAnnotation const * huGetTroveAnnotationByValueZ(huTrove const * trove, char const * value, int annotationIdx);
-    /// Return an annoation object associated to a trove, by value and index.
-    huAnnotation const * huGetTroveAnnotationByValueN(huTrove const * trove, char const * value, int valueLen, int annotationIdx);
+    /// Returns an annoation object associated to a trove, by value and index.
+    huToken const * huGetTroveAnnotationByValueZ(huTrove const * trove, char const * value, int annotationIdx);
+    /// Returns an annoation object associated to a trove, by value and index.
+    huToken const * huGetTroveAnnotationByValueN(huTrove const * trove, char const * value, int valueLen, int annotationIdx);
 
-    /// Return the number of comments associated to a trove.
+    /// Returns the number of comments associated to a trove.
     int huGetNumTroveComments(huTrove const * trove);
-    /// Return a comment associated to a trove by index.
+    /// Returns a comment associated to a trove by index.
     huComment const * huGetTroveComment(huTrove const * trove, int errorIdx);
 
-    /// Return a node by its full address.
+    /// Returns a node by its full address.
     huNode const * huGetNodeByFullAddressZ(huTrove const * trove, char const * address, int * error);
-    /// Return a node by its full address.
+    /// Returns a node by its full address.
     huNode const * huGetNodeByFullAddressN(huTrove const * trove, char const * address, int addressLen, int * error);
 
-    /// Return a collection of all nodes in a trove with a specific annotation key.
+    /// Returns a collection of all nodes in a trove with a specific annotation key.
     /// @note: User must huDestroyVector(retval.buffer);
     huVector huFindNodesByAnnotationKeyZ(huTrove const * trove, char const * key);
-    /// Return a collection of all nodes in a trove with a specific annotation key.
+    /// Returns a collection of all nodes in a trove with a specific annotation key.
     /// @note: User must huDestroyVector(retval.buffer);
     huVector huFindNodesByAnnotationKeyN(huTrove const * trove, char const * key, int keyLen);
-    /// Return a collection of all nodes in a trove with a specific annotation value.
+    /// Returns a collection of all nodes in a trove with a specific annotation value.
     /// @note: User must huDestroyVector(retval.buffer);
     huVector huFindNodesByAnnotationValueZ(huTrove const * trove, char const * value);
-    /// Return a collection of all nodes in a trove with a specific annotation value.
+    /// Returns a collection of all nodes in a trove with a specific annotation value.
     /// @note: User must huDestroyVector(retval.buffer);
     huVector huFindNodesByAnnotationValueN(huTrove const * trove, char const * value, int valueLen);
-    /// Return a collection of all nodes in a trove with a specific annotation key and value.
+    /// Returns a collection of all nodes in a trove with a specific annotation key and value.
     /// @note: User must huDestroyVector(retval.buffer);
     huVector huFindNodesByAnnotationKeyValueZZ(huTrove const * trove, char const * key, char const * value);
-    /// Return a collection of all nodes in a trove with a specific annotation key and value.
+    /// Returns a collection of all nodes in a trove with a specific annotation key and value.
     /// @note: User must huDestroyVector(retval.buffer);
     huVector huFindNodesByAnnotationKeyValueNZ(huTrove const * trove, char const * key, int keyLen, char const * value);
-    /// Return a collection of all nodes in a trove with a specific annotation key and value.
+    /// Returns a collection of all nodes in a trove with a specific annotation key and value.
     /// @note: User must huDestroyVector(retval.buffer);
     huVector huFindNodesByAnnotationKeyValueZN(huTrove const * trove, char const * key, char const * value, int valueLen);
-    /// Return a collection of all nodes in a trove with a specific annotation key and value.
+    /// Returns a collection of all nodes in a trove with a specific annotation key and value.
     /// @note: User must huDestroyVector(retval.buffer);
     huVector huFindNodesByAnnotationKeyValueNN(huTrove const * trove, char const * key, int keyLen, char const * value, int valueLen);
 
-    /// Return a collection of all nodes in a trove with a comment which contains specific text.
+    /// Returns a collection of all nodes in a trove with a comment which contains specific text.
     /// @note: User must huDestroyVector(retval.buffer);
     huVector huFindNodesByCommentContainingZ(huTrove const * trove, char const * containedText);
-    /// Return a collection of all nodes in a trove with a comment which contains specific text.
+    /// Returns a collection of all nodes in a trove with a comment which contains specific text.
     /// @note: User must huDestroyVector(retval.buffer);
     huVector huFindNodesByCommentContainingN(huTrove const * trove, char const * containedText, int containedTextLen);    
 
-    /// Serialize a trove to text.
+    /// Serializes a trove to text.
     /// @note: User must huDestroyStringView(retval.str);
     huStringView huTroveToString(huTrove const * trove, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable);
 
-    /// Serialize a trove to file.
-    size_t huTroveToFile(huTrove const * trove, char const * path, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable);
+    /// Serializes a trove to file.
+    size_t huTroveToFileZ(huTrove const * trove, char const * path, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable);
+    /// Serializes a trove to file.
+    size_t huTroveToFileN(huTrove const * trove, char const * path, int pathLen, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable);
 
     /// Global null token object. Functions that return null tokens reference this.
     extern huToken const humon_nullToken;

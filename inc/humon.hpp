@@ -216,7 +216,7 @@ namespace hu
         return std::string_view(husv.str, husv.size);
     }
 
-    // Frees a const*. That fun intersection of C and C++. 
+    // Frees a const*. I know. But this is Sparta.
     static inline void free_const(void const * t) noexcept
         { free(const_cast<void *>(t)); }
 
@@ -252,7 +252,6 @@ namespace hu
             { return ctoken->endLine; }
         int getEndCol() const noexcept              ///< Returns the column number of the last character of the token in the file.
             { return ctoken->endCol; }
-
         std::string_view operator ()()              ///< String view conversion.
             { return getValue(); }
 
@@ -313,11 +312,11 @@ namespace hu
         bool hasValue() const noexcept          ///< Returns whether the node has a value token. Should always be true.
             { return capi::huHasValue(cnode); }
         Token getValueToken() const noexcept    ///< Returns the first value token that encodes this node.
-            { return Token(capi::huGetValue(cnode)); }
+            { return Token(cnode->firstValueToken); }
         Token getStartToken() const noexcept    ///< Returns the first token that encodes this node, including comments.
-            { return Token(capi::huGetStartToken(cnode)); }
+            { return Token(cnode->firstToken); }
         Token getEndToken() const noexcept      ///< Returns the last token that encodes this node, including comments and annotations.
-            { return Token(capi::huGetEndToken(cnode)); }
+            { return Token(cnode->lastToken); }
         Node getNextSibling() const noexcept    ///< Returns the node ordinally after this one in the parent's children, or the null node if it's the last.
             { return Node(capi::huNextSibling(cnode)); }
 
@@ -367,7 +366,7 @@ namespace hu
         Token getAnnotationKeyByValue(std::string_view value, int idx) const noexcept 
         { 
             auto canno = capi::huGetAnnotationByValueN(cnode, value.data(), value.size(), idx);
-            return Token(canno->key);
+            return Token(canno);
         }
         /// Returns a new collection of all this node's annotations with the specified value.
         /** Creates a new vector of Tokens, each referencing the key of an annotation that 
@@ -414,7 +413,6 @@ namespace hu
             }
             return vec;
         }
-
         /// Returns this node's key, or a zero-length string.
         std::string_view getKey() const noexcept 
         {
@@ -425,7 +423,6 @@ namespace hu
 
             return "";
         }
-
         /// Returns whether the specified index is a valid child index of this list or dict node.
         template <class IntType, 
             typename std::enable_if<
@@ -437,7 +434,6 @@ namespace hu
                 { return cidx >= 0 && cidx < getNumChildren(); }
             return false;
         }
-
         /// Returns whether the specified key is a valid child key of this dict node.
         bool operator % (std::string_view key) const noexcept
         {
@@ -445,7 +441,6 @@ namespace hu
                 { return getChild(key).isValid(); }
             return false;
         }
-
         /// Returns the `idx`th child of this node.
         template <class IntType, 
             typename std::enable_if<
@@ -455,7 +450,6 @@ namespace hu
         /// Returns the child of this node by key.
         Node operator / (std::string_view key) const noexcept
             { return getChild(key); }
-
         /// Returns the converted value of this value node.
         /** Converts the string value of this value node into a `U`. The conversion is 
          * performed by passing a dummy object of type value<U> which, if implemented
@@ -480,7 +474,6 @@ namespace hu
                 { return U {}; }
             return ve.extract(getValue());
         }
-
         /// Returns the string value of this value node.
         std::string_view getValue() const noexcept 
         {
@@ -493,7 +486,6 @@ namespace hu
 
             return "";
         }
-
         /// Generates and returns the address of this node.
         /** Each node in a trove has a unique address, separate from its node index, 
          * which is represented by a series of keys or index values from the root,
@@ -539,8 +531,8 @@ namespace hu
         static Trove fromFile(std::string_view path,
             int inputTabSize = 4) noexcept
         {
-            return Trove(capi::huMakeTroveFromFile(
-                path.data(), inputTabSize));
+            return Trove(capi::huMakeTroveFromFileN(
+                path.data(), path.size(), inputTabSize));
         }
                 
         /// Creates a Trove from a UTF8 stream.
@@ -679,31 +671,14 @@ namespace hu
         }
         /// Return the number of trove annotations associated to this trove (not to any node) with 
         /// the specified key.
-        int getNumAnnotationsByKey(std::string_view key) const noexcept
-            { return capi::huGetNumTroveAnnotationsByKeyN(ctrove, key.data(), key.size()); }
+        bool hasAnnotationWithKey(std::string_view key) const noexcept
+            { return capi::huTroveHasAnnotationWithKeyN(ctrove, key.data(), key.size()); }
         /// Returns the value of the `idx`th annotation associated to this trove (not to any node)
         /// with the specified key.
-        Token getAnnotationByKey(std::string_view key, int idx) const noexcept 
+        Token getAnnotationWithKey(std::string_view key) const noexcept 
         { 
-            auto canno = capi::huGetTroveAnnotationByKeyN(ctrove, key.data(), key.size(), idx);
-            return Token(canno->value);
-        }
-        /// Returns a new collection of all annotation values associated to this trove (not to any node)
-        /// with the specified key.
-        /** A node or the trove object can have multiple annotations with the same key. Since 
-         * annotations can be "out of domain" of a Humon structure, it may be useful for multiple
-         * users of a file to each adopt their own annotation conventions. Key collisions will
-         * be nondestructive in that case--though users must be on the lookout for -- oh fuck it, this policy sucks, let's just enforce unique keys. :(
-         * 
-         */
-        std::vector<Token> getAnnotationsByKey(std::string_view key) const
-        {
-            std::vector<Token> vec;
-            int numAnnos = getNumAnnotationsByKey(key);
-            vec.reserve(numAnnos);
-            for (int i = 0; i < numAnnos; ++i)
-                { vec[i] = getAnnotationByKey(key, i); }
-            return vec;
+            auto canno = capi::huGetTroveAnnotationWithKeyN(ctrove, key.data(), key.size());
+            return Token(canno);
         }
         /// Return the number of trove annotations associated to this trove (not to any node) with 
         /// the specified value.
@@ -714,7 +689,7 @@ namespace hu
         Token getAnnotationByValue(std::string_view value, int idx) const noexcept 
         { 
             auto canno = capi::huGetTroveAnnotationByValueN(ctrove, value.data(), value.size(), idx);
-            return Token(canno->value);
+            return Token(canno);
         }
         /// Returns a new collection of all the keys of annotations associated to this trove (not 
         /// to any node) with the specified value.

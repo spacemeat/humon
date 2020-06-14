@@ -1,11 +1,14 @@
 DONE THIS CHECKIN:
-P1 Sync'd up hu*ToString enum printers.
-P1 Fixed build errors. How embarassing.
+P1 Trimming some C APIs that are just accessors into structs.
+P1 Normalize trove annotation access functions to having unique keys.
+P1 Some more anno API fixes.
+P1 Normalize document tense--"Returns a thing" instead of "Return a thing"
 
 TODO:
 P1 CMake, vcpkg
 P1 doxygen
 P1 review (and actually validate) code in readme.
+P1 change readme to reflect unique anno keys
 P1 much more API testing
     - C++: test value<T>, from_chars(... T&), etc.
 P2 UTF8 digits for addressing

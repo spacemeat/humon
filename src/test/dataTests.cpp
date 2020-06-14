@@ -457,7 +457,6 @@ TEST(listWithOneValue, childValue)
   CHECK_TEXT(node->firstValueToken->value.str != NULL, "value set");
   LONGS_EQUAL_TEXT(3, node->firstValueToken->value.size, "value.size");
   STRNCMP_EQUAL_TEXT("one", node->firstValueToken->value.str, 3, "valueToken");
-  STRNCMP_EQUAL_TEXT("one", huGetValue(node)->value.str, 3, "getValue()");
 }
 
 
@@ -609,7 +608,6 @@ TEST(dictWithOneValue, childValue)
   CHECK_TEXT(node->firstValueToken->value.str != NULL, "value set");
   LONGS_EQUAL_TEXT(3, node->firstValueToken->value.size, "value.size");
   STRNCMP_EQUAL_TEXT("two", node->firstValueToken->value.str, 3, "valueToken");
-  STRNCMP_EQUAL_TEXT("two", huGetValue(node)->value.str, 3, "getValue()");
 }
 
 TEST(dictWithOneValue, childLastValue)
@@ -734,7 +732,6 @@ TEST(listWithTwoValues, twoValue)
   CHECK_TEXT(node->firstValueToken->value.str != NULL, "value set");
   LONGS_EQUAL_TEXT(3, node->firstValueToken->value.size, "value.size");
   STRNCMP_EQUAL_TEXT("two", node->firstValueToken->value.str, 3, "valueToken");
-  STRNCMP_EQUAL_TEXT("two", huGetValue(node)->value.str, 3, "getValue()");
 }
 
 TEST(listWithTwoValues, threeNodeKind)
@@ -776,7 +773,6 @@ TEST(listWithTwoValues, threeValue)
   CHECK_TEXT(node->firstValueToken->value.str != NULL, "value set");
   LONGS_EQUAL_TEXT(5, node->firstValueToken->value.size, "value.size");
   STRNCMP_EQUAL_TEXT("three", node->firstValueToken->value.str, 5, "valueToken");
-  STRNCMP_EQUAL_TEXT("three", huGetValue(node)->value.str, 5, "getValue()");
 }
 
 TEST_GROUP(dictWithTwoValues)
@@ -895,7 +891,6 @@ TEST(dictWithTwoValues, twoKey)
   CHECK_TEXT(node->keyToken->value.str != NULL, "key set");
   LONGS_EQUAL_TEXT(3, node->keyToken->value.size, "key.size");
   STRNCMP_EQUAL_TEXT("two", node->keyToken->value.str, 3, "keyToken");
-  STRNCMP_EQUAL_TEXT("two", huGetKey(node)->value.str, 3, "getKey()");
 }
 
 TEST(dictWithTwoValues, twoValue)
@@ -908,7 +903,6 @@ TEST(dictWithTwoValues, twoValue)
   CHECK_TEXT(node->firstValueToken->value.str != NULL, "value set");
   LONGS_EQUAL_TEXT(3, node->firstValueToken->value.size, "value.size");
   STRNCMP_EQUAL_TEXT("red", node->firstValueToken->value.str, 3, "valueToken");
-  STRNCMP_EQUAL_TEXT("red", huGetValue(node)->value.str, 3, "getValue()");
 }
 
 TEST(dictWithTwoValues, threeNodeKind)
@@ -952,7 +946,6 @@ TEST(dictWithTwoValues, threeKey)
   CHECK_TEXT(node->keyToken->value.str != NULL, "key set");
   LONGS_EQUAL_TEXT(5, node->keyToken->value.size, "key.size");
   STRNCMP_EQUAL_TEXT("three", node->keyToken->value.str, 5, "keyToken");
-  STRNCMP_EQUAL_TEXT("three", huGetKey(node)->value.str, 5, "getKey()");
 }
 
 TEST(dictWithTwoValues, threeValue)
@@ -965,7 +958,6 @@ TEST(dictWithTwoValues, threeValue)
   CHECK_TEXT(node->firstValueToken->value.str != NULL, "value set");
   LONGS_EQUAL_TEXT(4, node->firstValueToken->value.size, "value.size");
   STRNCMP_EQUAL_TEXT("blue", node->firstValueToken->value.str, 4, "valueToken");
-  STRNCMP_EQUAL_TEXT("blue", huGetValue(node)->value.str, 4, "getValue()");
 }
 
 
@@ -1315,7 +1307,7 @@ TEST(multipleNestedLists, values)
         huNode const * ch2 = huGetChildNodeByIndex(ch1, k);
         CHECK_TEXT(ch2->firstValueToken != NULL, "value set");
         LONGS_EQUAL_TEXT(1, ch2->firstValueToken->value.size, "value.size");
-        STRNCMP_EQUAL_TEXT(c, huGetValue(ch2)->value.str, 1, c);
+        STRNCMP_EQUAL_TEXT(c, ch2->firstValueToken->value.str, 1, c);
         c[0] += 1;
       }
     }

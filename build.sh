@@ -2,11 +2,11 @@
 [[ -d bin ]] || mkdir bin
 
 build_obj() {
-    gcc -std=c99 -Wall -c -g -O0 -Iinc -o obj/$1-d.o src/$1.c
-    gcc -std=c99 -Wall -c    -O3 -Iinc -o obj/$1.o   src/$1.c
+    gcc -std=c99 -Wall -c -ggdb3 -O0 -DDEBUG -Iinc -o obj/$1-d.o src/$1.c
+    gcc -std=c99 -Wall -c        -O3         -Iinc -o obj/$1.o   src/$1.c
 
-    gcc -std=c99 -Wall -c -fPIC -g -O0 -Iinc -o obj/$1-rd.o src/$1.c
-    gcc -std=c99 -Wall -c -fPIC    -O3 -Iinc -o obj/$1-r.o  src/$1.c
+    gcc -std=c99 -Wall -c -fPIC -ggdb3 -O0 -DDEBUG -Iinc -o obj/$1-rd.o src/$1.c
+    gcc -std=c99 -Wall -c -fPIC        -O3         -Iinc -o obj/$1-r.o  src/$1.c
 }
 
 echo Building C objects...
@@ -36,7 +36,7 @@ g++ --std=c++17 -Wall -shared -Wl,-soname,libhumon-r.so.0  -o bin/libhumon-r.so.
 echo Done.
 
 echo Building tests...
-g++ --std=c++17 -Wall -g -O0 src/test/testMain.cpp src/test/utf8Tests.cpp src/test/dataTests.cpp src/test/cppTests.cpp -Iinc -Lbin -lhumon-d -lCppUTest -lCppUTestExt -o bin/test
+g++ --std=c++17 -Wall -ggdb3 -O0 -DDEBUG src/test/testMain.cpp src/test/apiTests.cpp src/test/utf8Tests.cpp src/test/dataTests.cpp src/test/cppTests.cpp -Iinc -Lbin -lhumon-d -lCppUTest -lCppUTestExt -o bin/test
 
 echo Done.
 

@@ -50,15 +50,11 @@ void assignEnqueuedComments(huVector * commentQueue, huVector * commentVector, h
 }
 
 
-void assignSameLineComments(huNode * node, huToken ** ppCur)
+void assignSameLineComment(huNode * node, huToken ** ppCur)
 {
-    while ((* ppCur)->tokenKind == HU_TOKENKIND_COMMENT &&
-        node->lastToken->line == (* ppCur)->line)
-    {
-        assignComment(node, * ppCur);
-        node->lastToken = * ppCur;
-        *ppCur += 1;
-    }
+    assignComment(node, * ppCur);
+    node->lastToken = * ppCur;
+    *ppCur += 1;
 }
 
 
@@ -85,7 +81,7 @@ void parseAnnotations(huTrove * trove, huNode * owner, huToken ** ppCur)
     while (scanning)
     {
         if (state == APS_ANTICIPATE_ANNOTATE && 
-                (* ppCur)->tokenKind != HU_TOKENKIND_ANNOTATE)
+            (* ppCur)->tokenKind != HU_TOKENKIND_ANNOTATE)
             { break; }
         
         switch ((* ppCur)->tokenKind)
@@ -271,7 +267,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
         {
         case HU_TOKENKIND_EOF:
             if (state == PS_TOP_LEVEL_EXPECT_START_OR_VALUE ||
-                    state == PS_DONE)
+                state == PS_DONE)
             {
                 scanning = false;
                 assignEnqueuedComments(commentQueue, & trove->comments, NULL);
@@ -280,13 +276,13 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
 
         case HU_TOKENKIND_STARTLIST:
             if (state == PS_TOP_LEVEL_EXPECT_START_OR_VALUE ||
-                    state == PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END ||
-                    state == PS_IN_DICT_EXPECT_START_OR_VALUE)
+                state == PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END ||
+                state == PS_IN_DICT_EXPECT_START_OR_VALUE)
             {
                 huNode * newNode = NULL;
 
                 if (state == PS_TOP_LEVEL_EXPECT_START_OR_VALUE ||
-                        state == PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END)
+                    state == PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END)
                 {
                     newNode = allocNewNode(trove, HU_NODEKIND_LIST, * ppCur);
                     newNode->firstToken = * ppCur;
@@ -324,11 +320,22 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
                     dictEntry->idx = newNode->childIdx;
                 }
 
+                int nodeTokenLine = (* ppCur)->line;
                 * ppCur += 1;
 
                 assignEnqueuedComments(commentQueue, & newNode->comments, newNode);
-                assignSameLineComments(newNode, & * ppCur);
-                parseAnnotations(trove, newNode, & * ppCur);
+
+                // While ppCur->line is this token's line, assign comments or annos 
+                // to this node.
+                while ((* ppCur)->line == nodeTokenLine)
+                {
+                    if ((* ppCur)->tokenKind == HU_TOKENKIND_COMMENT)
+                        { assignSameLineComment(newNode, ppCur); }
+                    else if ((* ppCur)->tokenKind == HU_TOKENKIND_ANNOTATE)
+                        { parseAnnotations(trove, newNode, ppCur); }
+                    else
+                        { break; }
+                }
 
                 parseTroveRecursive(trove, ppCur, 
                     newNode->nodeIdx, PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END, commentQueue);
@@ -350,12 +357,22 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
                 parentNode->lastValueToken = * ppCur;
                 scanning = false;
 
+                int nodeTokenLine = (* ppCur)->line;
                 * ppCur += 1;
 
                 assignEnqueuedComments(commentQueue, & parentNode->comments, parentNode);
-                // TODO: These can be arbitrarily ordered on one line. Also, fix this for all instances of these invocations.
-                assignSameLineComments(parentNode, ppCur);
-                parseAnnotations(trove, parentNode, ppCur);
+
+                // While ppCur->line is this token's line, assign comments or annos 
+                // to this node.
+                while ((* ppCur)->line == nodeTokenLine)
+                {
+                    if ((* ppCur)->tokenKind == HU_TOKENKIND_COMMENT)
+                        { assignSameLineComment(parentNode, ppCur); }
+                    else if ((* ppCur)->tokenKind == HU_TOKENKIND_ANNOTATE)
+                        { parseAnnotations(trove, parentNode, ppCur); }
+                    else
+                        { break; }
+                }
             }
             else
             {
@@ -414,11 +431,22 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
                     dictEntry->idx = newNode->childIdx;
                 }
 
+                int nodeTokenLine = (* ppCur)->line;
                 * ppCur += 1;
 
                 assignEnqueuedComments(commentQueue, & newNode->comments, newNode);
-                assignSameLineComments(newNode, ppCur);
-                parseAnnotations(trove, newNode, ppCur);
+
+                // While ppCur->line is this token's line, assign comments or annos 
+                // to this node.
+                while ((* ppCur)->line == nodeTokenLine)
+                {
+                    if ((* ppCur)->tokenKind == HU_TOKENKIND_COMMENT)
+                        { assignSameLineComment(newNode, ppCur); }
+                    else if ((* ppCur)->tokenKind == HU_TOKENKIND_ANNOTATE)
+                        { parseAnnotations(trove, newNode, ppCur); }
+                    else
+                        { break; }
+                }
 
                 parseTroveRecursive(trove, ppCur, 
                     newNode->nodeIdx, PS_IN_DICT_EXPECT_KEY_OR_END, commentQueue);
@@ -440,11 +468,22 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
                 parentNode->lastValueToken = * ppCur;
                 scanning = false;
 
+                int nodeTokenLine = (* ppCur)->line;
                 * ppCur += 1;
 
                 assignEnqueuedComments(commentQueue, & parentNode->comments, parentNode);
-                assignSameLineComments(parentNode, ppCur);
-                parseAnnotations(trove, parentNode, ppCur);
+
+                // While ppCur->line is this token's line, assign comments or annos 
+                // to this node.
+                while ((* ppCur)->line == nodeTokenLine)
+                {
+                    if ((* ppCur)->tokenKind == HU_TOKENKIND_COMMENT)
+                        { assignSameLineComment(parentNode, ppCur); }
+                    else if ((* ppCur)->tokenKind == HU_TOKENKIND_ANNOTATE)
+                        { parseAnnotations(trove, parentNode, ppCur); }
+                    else
+                        { break; }
+                }
             }
             else
             {
@@ -464,10 +503,21 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
 
                 huNode * lastNode = (huNode *) trove->nodes.buffer + trove->nodes.numElements - 1;
                 lastNode->lastToken = * ppCur;
+                int nodeTokenLine = (* ppCur)->line;
                 * ppCur += 1;
                 assignEnqueuedComments(commentQueue, & lastNode->comments, lastNode);
-                assignSameLineComments(lastNode, ppCur);
-                parseAnnotations(trove, lastNode, ppCur);
+
+                // While ppCur->line is this token's line, assign comments or annos 
+                // to this node.
+                while ((* ppCur)->line == nodeTokenLine)
+                {
+                    if ((* ppCur)->tokenKind == HU_TOKENKIND_COMMENT)
+                        { assignSameLineComment(lastNode, ppCur); }
+                    else if ((* ppCur)->tokenKind == HU_TOKENKIND_ANNOTATE)
+                        { parseAnnotations(trove, lastNode, ppCur); }
+                    else
+                        { break; }
+                }
             }
             else
             {
@@ -488,11 +538,23 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
                 newNode->lastValueToken = * ppCur;
                 newNode->lastToken = * ppCur;
                 parentNode = (huNode *) huGetNode(trove, parentNodeIdx);
+                int nodeTokenLine = (* ppCur)->line;
                 * ppCur += 1;
 
                 assignEnqueuedComments(commentQueue, & newNode->comments, newNode);
-                assignSameLineComments(newNode, ppCur);
-                parseAnnotations(trove, newNode, ppCur);
+
+                // While ppCur->line is this token's line, assign comments or annos 
+                // to this node.
+                while ((* ppCur)->line == nodeTokenLine)
+                {
+                    if ((* ppCur)->tokenKind == HU_TOKENKIND_COMMENT)
+                        { assignSameLineComment(newNode, ppCur); }
+                    else if ((* ppCur)->tokenKind == HU_TOKENKIND_ANNOTATE)
+                        { parseAnnotations(trove, newNode, ppCur); }
+                    else
+                        { break; }
+                }
+
             }
             else if (state == PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END)
             {
@@ -504,6 +566,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
                 newNode->lastValueToken = * ppCur;
                 newNode->lastToken = * ppCur;
                 parentNode = (huNode *) huGetNode(trove, parentNodeIdx);
+                int nodeTokenLine = (* ppCur)->line;
                 * ppCur += 1;
 
                 // parentage
@@ -512,8 +575,18 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
                 newNode->childIdx = parentNode->childNodeIdxs.numElements - 1;
 
                 assignEnqueuedComments(commentQueue, & newNode->comments, newNode);
-                assignSameLineComments(newNode, ppCur);
-                parseAnnotations(trove, newNode, ppCur);
+
+                // While ppCur->line is this token's line, assign comments or annos 
+                // to this node.
+                while ((* ppCur)->line == nodeTokenLine)
+                {
+                    if ((* ppCur)->tokenKind == HU_TOKENKIND_COMMENT)
+                        { assignSameLineComment(newNode, ppCur); }
+                    else if ((* ppCur)->tokenKind == HU_TOKENKIND_ANNOTATE)
+                        { parseAnnotations(trove, newNode, ppCur); }
+                    else
+                        { break; }
+                }
             }
             else if (state == PS_IN_DICT_EXPECT_KEY_OR_END)
             {
@@ -522,11 +595,22 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
                 huNode * newNode = allocNewNode(trove, HU_NODEKIND_NULL, * ppCur);
                 newNode->keyToken = * ppCur;
                 parentNode = (huNode *) huGetNode(trove, parentNodeIdx);
+                int nodeTokenLine = (* ppCur)->line;
                 * ppCur += 1;
 
                 assignEnqueuedComments(commentQueue, & newNode->comments, newNode);
-                assignSameLineComments(newNode, ppCur);
-                parseAnnotations(trove, newNode, ppCur);
+
+                // While ppCur->line is this token's line, assign comments or annos 
+                // to this node.
+                while ((* ppCur)->line == nodeTokenLine)
+                {
+                    if ((* ppCur)->tokenKind == HU_TOKENKIND_COMMENT)
+                        { assignSameLineComment(newNode, ppCur); }
+                    else if ((* ppCur)->tokenKind == HU_TOKENKIND_ANNOTATE)
+                        { parseAnnotations(trove, newNode, ppCur); }
+                    else
+                        { break; }
+                }
             }
             else if (state == PS_IN_DICT_EXPECT_START_OR_VALUE)
             {
@@ -538,6 +622,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
                 lastNode->firstValueToken = * ppCur;
                 lastNode->lastValueToken = * ppCur;
                 lastNode->lastToken = * ppCur;
+                int nodeTokenLine = (* ppCur)->line;
                 * ppCur += 1;
 
                 // parentage
@@ -552,8 +637,18 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
                 dictEntry->idx = lastNode->childIdx;
 
                 assignEnqueuedComments(commentQueue, & lastNode->comments, lastNode);
-                assignSameLineComments(lastNode, ppCur);
-                parseAnnotations(trove, lastNode, ppCur);
+
+                // While ppCur->line is this token's line, assign comments or annos 
+                // to this node.
+                while ((* ppCur)->line == nodeTokenLine)
+                {
+                    if ((* ppCur)->tokenKind == HU_TOKENKIND_COMMENT)
+                        { assignSameLineComment(lastNode, ppCur); }
+                    else if ((* ppCur)->tokenKind == HU_TOKENKIND_ANNOTATE)
+                        { parseAnnotations(trove, lastNode, ppCur); }
+                    else
+                        { break; }
+                }
             }
             else
             {
