@@ -460,19 +460,19 @@ int huGetNumTroveComments(huTrove const * trove)
 }
 
 
-huComment const * huGetTroveComment(huTrove const * trove, int commentIdx)
+huToken const * huGetTroveComment(huTrove const * trove, int commentIdx)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == NULL || trove == & humon_nullTrove || commentIdx < 0)
-        { return NULL; }
+        { return & humon_nullToken; }
 #endif
 
     if (commentIdx < trove->comments.numElements)
     {
-        return (huComment *) trove->comments.buffer + commentIdx;
+        return ((huComment *) trove->comments.buffer + commentIdx)->commentToken;
     }
 
-    return NULL;
+    return & humon_nullToken;
 }
 
 
@@ -724,9 +724,8 @@ huVector huFindNodesByCommentContainingN(huTrove const * trove, char const * con
         int na = huGetNumComments(node);
         for (int j = 0; j < na; ++j)
         {
-            huComment const * comm = huGetComment(node, j);
-            if (stringInString(comm->commentToken->value.str, comm->commentToken->value.size, 
-                    containedText, containedTextLen))
+            huToken const * comm = huGetComment(node, j);
+            if (stringInString(comm->value.str, comm->value.size, containedText, containedTextLen))
             {
                 huNode const ** pn = huGrowVector(& nodesVect, 1);                
                 * pn = node;
@@ -812,9 +811,9 @@ void appendColoredString(huVector * str, char const * addend, int size, huString
 }
 
 
-void printComment(huComment const * comment, huVector * str, huStringView const * colorTable)
+void printComment(huToken const * comment, huVector * str, huStringView const * colorTable)
 {
-    huStringView const * comstr = & comment->commentToken->value;
+    huStringView const * comstr = & comment->value;
     appendColoredString(str, comstr->str, comstr->size, 
         colorTable, HU_COLORKIND_COMMENT);
 }
@@ -825,11 +824,11 @@ int printSameLineComments(huNode const * node, bool firstToken, int startingComm
     int iCom = startingCommentIdx;
     for (; iCom < huGetNumComments(node); ++iCom)
     {
-        huComment const * comment = huGetComment(node, iCom);
+        huToken const * comment = huGetComment(node, iCom);
         // If not firstToken, forego the position check. Handles enqueued comments before the end token.
         if (firstToken == false ||
-                (comment->commentToken->line == node->firstToken->line &&
-                 comment->commentToken->col < node->lastValueToken->col))
+                (comment->line == node->firstToken->line &&
+                 comment->col < node->lastValueToken->col))
         {
             appendWs(str, 1);
             printComment(comment, str, colorTable);
@@ -925,8 +924,8 @@ void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int 
     int iCom = 0;
     for (; iCom < huGetNumComments(node); ++iCom)
     {
-        huComment const * comment = huGetComment(node, iCom);
-        if (comment->commentToken->line < node->firstToken->line)
+        huToken const * comment = huGetComment(node, iCom);
+        if (comment->line < node->firstToken->line)
         {
             if (node->parentNodeIdx != -1)
                 { appendString(str, "\n", 1); }
@@ -1067,7 +1066,7 @@ void troveToPrettyString(huTrove const * trove, huVector * str, int outputFormat
 
     for (int iCom = 0; iCom < huGetNumTroveComments(trove); ++iCom)
     {
-        huComment const * comment = huGetTroveComment(trove, iCom);
+        huToken const * comment = huGetTroveComment(trove, iCom);
         printComment(comment, str, colorTable);
         appendString(str, "\n", 1);
     }

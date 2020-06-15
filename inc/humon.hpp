@@ -389,7 +389,7 @@ namespace hu
         Token getComment(int idx) const noexcept 
         {
             auto ccomm = capi::huGetComment(cnode, idx);
-            return Token(ccomm->commentToken);
+            return Token(ccomm);
         }
         /// Returns a new collection of all comments associated to this node.
         std::vector<Token> getComments() const
@@ -709,7 +709,7 @@ namespace hu
         std::tuple<Token, Node> getComment(int idx) const noexcept 
         {
             auto ccomm = capi::huGetTroveComment(ctrove, idx);
-            return { Token(ccomm->commentToken), nullptr };
+            return { Token(ccomm), nullptr };
         }
         /// Returns a new collection of all comments associated to this trove (not to any node).
         std::vector<std::tuple<Token, Node>> getComments() const

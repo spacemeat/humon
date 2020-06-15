@@ -67,7 +67,8 @@ extern "C"
         HU_ERROR_UNFINISHED_CSTYLECOMMENT,  ///< The C-style comment was not closed.
         HU_ERROR_SYNTAX_ERROR,              ///< General syntax error.
         HU_ERROR_START_END_MISMATCH,        ///< Braces ({,}) or brackets ([,]) are not properly nested.
-        HU_ERROR_NOTFOUND                   ///< No node could be found at the address.
+        HU_ERROR_NOTFOUND,                  ///< No node could be found at the address.
+        HU_ERROR_ILLEGAL                    ///< The address or node was illegal.
     };
 
     /// Returns a string representation of a huErrorCode.
@@ -259,12 +260,12 @@ extern "C"
 
     /// Returns the number of comments associated to a node.
     int huGetNumComments(huNode const * node);
-    /// Returns a comment associated to a node, by index.
-    huComment const * huGetComment(huNode const * node, int commentIdx);
-    /// Returns all comments associated to a node which contain the specified substring.
+    /// Returns a comment token associated to a node, by index.
+    huToken const * huGetComment(huNode const * node, int commentIdx);
+    /// Returns all comment tokens associated to a node which contain the specified substring.
     /// @note: user must DestroyVector(retval).
     huVector huGetCommentsContainingZ(huNode const * node, char const * containedText);
-    /// Returns all comments associated to a node which contain the specified substring.
+    /// Returns all comment tokens associated to a node which contain the specified substring.
     /// @note: user must DestroyVector(retval).
     huVector huGetCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen);
 
@@ -348,7 +349,7 @@ extern "C"
     /// Returns the number of comments associated to a trove.
     int huGetNumTroveComments(huTrove const * trove);
     /// Returns a comment associated to a trove by index.
-    huComment const * huGetTroveComment(huTrove const * trove, int errorIdx);
+    huToken const * huGetTroveComment(huTrove const * trove, int errorIdx);
 
     /// Returns a node by its full address.
     huNode const * huGetNodeByFullAddressZ(huTrove const * trove, char const * address, int * error);

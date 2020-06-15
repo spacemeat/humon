@@ -12,11 +12,11 @@ R"( @{tx:ta, ta:ta, tb:tb}
 [               @name:root  @otherName:root
     // This is a aaaa right here.
     a           @a:a        @type:value     // aaaa
-    // This is a bbbb right here.
+    // This is a bp right here.
     [
         b       @b:b        @type:value     // bbbb
     ]           @b:bp       @type:list      // bp
-    // This is a cccc right here.
+    // This is a cpp right here.
     [
         [
             c   @c:c        @type:value     // cccc
@@ -61,11 +61,11 @@ R"( @{tx:ta, ta:ta, tb:tb}
 {                   @name:root  @otherName:root
     // This is a aaaa right here.
     ak:a            @a:a        @type:value     // aaaa
-    // This is a bbbb right here.
+    // This is a bp right here.
     bk:{
         bk:b        @b:b        @type:value     // bbbb
     }               @b:bp       @type:dict      // bp
-    // This is a cccc right here.
+    // This is a cpp right here.
     ck:{
         ck:{
             ck:c    @c:c        @type:value     // cccc

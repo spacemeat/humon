@@ -1,8 +1,5 @@
 DONE THIS CHECKIN:
-P1 Trimming some C APIs that are just accessors into structs.
-P1 Normalize trove annotation access functions to having unique keys.
-P1 Some more anno API fixes.
-P1 Normalize document tense--"Returns a thing" instead of "Return a thing"
+P1 More API testing, and resultant bug fixes.
 
 TODO:
 P1 CMake, vcpkg

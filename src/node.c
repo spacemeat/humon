@@ -328,17 +328,17 @@ int huGetNumComments(huNode const * node)
 }
 
 
-huComment const * huGetComment(huNode const * node, int commentIdx)
+huToken const * huGetComment(huNode const * node, int commentIdx)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (node == NULL || node == & humon_nullNode || commentIdx < 0)
-        { return NULL; }
+        { return & humon_nullToken; }
 #endif
 
     if (commentIdx < node->comments.numElements)
-        { return (huComment const *) node->comments.buffer + commentIdx; }
+        { return ((huComment const *) node->comments.buffer + commentIdx)->commentToken; }
     else
-        { return NULL; }
+        { return & humon_nullToken; }
 }
 
 
@@ -360,7 +360,7 @@ huVector huGetCommentsContainingZ(huNode const * node, char const * containedTex
 huVector huGetCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen)
 {
     huVector nodesVect;
-    huInitVector(& nodesVect, sizeof(huNode *));
+    huInitVector(& nodesVect, sizeof(huToken *));
 
 #ifdef HUMON_CHECK_PARAMS
     if (node == NULL || node == & humon_nullNode || containedText == NULL || containedTextLen < 0)
@@ -370,13 +370,12 @@ huVector huGetCommentsContainingN(huNode const * node, char const * containedTex
     int na = huGetNumComments(node);
     for (int i = 0; i < na; ++i)
     {
-        huComment const * comm = huGetComment(node, i);
-        if (stringInString(comm->commentToken->value.str, comm->commentToken->value.size, 
+        huToken const * comm = huGetComment(node, i);
+        if (stringInString(comm->value.str, comm->value.size, 
                 containedText, containedTextLen))
         {
-            huNode const ** pn = huGrowVector(& nodesVect, 1);                
-            * pn = node;
-            break;
+            huToken const ** pn = huGrowVector(& nodesVect, 1);                
+            * pn = comm;
         }
     }
 
@@ -472,7 +471,10 @@ huNode const * huGetNodeByRelativeAddressZ(huNode const * node, char const * add
 {
 #ifdef HUMON_CHECK_PARAMS
     if (address == NULL)
-        { return & humon_nullNode; }
+    {
+        if (error) { * error = HU_ERROR_ILLEGAL; }
+        return & humon_nullNode;
+    }
 #endif
 
     return huGetNodeByRelativeAddressN(node, address, strlen(address), error);
@@ -489,7 +491,10 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
 {
 #ifdef HUMON_CHECK_PARAMS
     if (node == NULL || node == & humon_nullNode || address == NULL || addressLen < 0)
-        { return & humon_nullNode; }
+    {
+        if (error) { * error = HU_ERROR_ILLEGAL; }
+        return & humon_nullNode;
+    }
 #endif
 
     if (error) { * error = HU_ERROR_NO_ERROR; }
@@ -497,9 +502,6 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
     // When the last node is reached in the address, we're it.
     if (addressLen == 0)
         { return node; }
-
-    if (addressLen < 0)
-        { if (error) { * error = HU_ERROR_UNEXPECTED_EOF; } return & humon_nullNode; }
 
     // malformed
     if (address[0] == '/')
@@ -522,14 +524,17 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
         return node;
     case '"':
         eatQuotedAddressWord(& cur, '"', & len, & col, error);
+        wordStart += 1;
         quoted = true;
         break;
     case '\'':
         eatQuotedAddressWord(& cur, '\'', & len, & col, error);
+        wordStart += 1;
         quoted = true;
         break;
     case '`':
         eatQuotedAddressWord(& cur, '`', & len, & col, error);
+        wordStart += 1;
         quoted = true;
         break;
     default:
@@ -537,29 +542,35 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
         break;
     }
 
-    if (error)
+    if (* error != HU_ERROR_NO_ERROR)
        { return & humon_nullNode; }
 
-    huNode const * childNode = & humon_nullNode;
-    // if numeric, and not quoted, use as an index
-    char * wordEnd;
-    int index = strtol(address + col, & wordEnd, 10);
-    if (quoted == false && wordEnd - wordStart == len)
-        { childNode = huGetChildNodeByIndex(node, index); }
+    huNode const * nextNode = & humon_nullNode;
+    // if '..', go up a level if we can
+    if (quoted == false && len == 2 && wordStart[0] == '.' && wordStart[1] == '.')
+        { nextNode = huGetParentNode(node); }
     else
-        { childNode = huGetChildNodeByKeyN(node, wordStart, len); }   
-    // If the key or index is invalid, childNode wil be set to & humon_nullNode.
-    if (childNode->kind == HU_NODEKIND_NULL)
+    {
+        // if numeric, and not quoted, use as an index
+        char * wordEnd;
+        int index = strtol(wordStart, & wordEnd, 10);
+        if (quoted == false && wordEnd - wordStart == len)
+            { nextNode = huGetChildNodeByIndex(node, index); }
+        else
+            { nextNode = huGetChildNodeByKeyN(node, wordStart, len); }   
+    }
+    // If the key or index is invalid, nextNode wil be set to & humon_nullNode.
+    if (nextNode->kind == HU_NODEKIND_NULL)
         { if (error) { * error = HU_ERROR_NOTFOUND; } return & humon_nullNode; }
     
     eatWs(& cur, 1, & line, & col);
 
     if (address[col] == '\0')
-        { return childNode; }
+        { return nextNode; }
     else if (address[col] == '/')
     {
         return huGetNodeByRelativeAddressN(
-            childNode, address + col + 1, addressLen - col - 1, error);
+            nextNode, address + col + 1, addressLen - col - 1, error);
     }
     else
       { if (error) { * error = HU_ERROR_SYNTAX_ERROR; } return & humon_nullNode; }
@@ -607,10 +618,13 @@ huStringView huGetNodeAddress(huNode const * node)
     int addressLen = 0;
 
     huNode const * n = node;
-    while (n != & humon_nullNode)
+    if (n->parentNodeIdx == -1)
+        { addressLen = 1; }
+
+    while (n->parentNodeIdx != -1)
     {
         huNode const * parentN = huGetParentNode(n);
-        if (parentN->kind == HU_NODEKIND_LIST)
+        if (parentN->kind == HU_NODEKIND_DICT)
         {
             addressLen += huGetKey(n)->value.size;
         }
@@ -635,19 +649,30 @@ huStringView huGetNodeAddress(huNode const * node)
     huStringView sv = { .str = str, .size = addressLen };
     char * cur = str + addressLen;
     n = node;
-    while (n != & humon_nullNode)
+    if (n->parentNodeIdx == -1)
+    {
+        str[0] = '/';
+        cur = str;
+    }
+    while (n->parentNodeIdx != -1)
     {
         huNode const * parentN = huGetParentNode(n);
-        if (parentN->kind == HU_NODEKIND_LIST)
+        if (parentN->kind == HU_NODEKIND_DICT)
         {
             huStringView const * key = & huGetKey(n)->value;
-            cur -= addressLen;
+            cur -= key->size;
             memcpy(cur, key->str, key->size);
         }
         else if (parentN->kind == HU_NODEKIND_LIST)
         {
-            cur -= log10i((unsigned int) n->childIdx) + 1;
-            strtol(cur, NULL, 10);
+            int numBytes = log10i((unsigned int) n->childIdx) + 1;
+            int cv = n->childIdx;
+            for (int i = 0; i < numBytes; ++i)
+            {
+                cur -= 1;
+                * cur = '0' + cv % 10;
+                cv /= 10;
+            }
         }
 
         cur -= 1;

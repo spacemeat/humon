@@ -1005,3 +1005,781 @@ TEST(huGetAnnotationByValue, pathological)
     POINTERS_EQUAL_TEXT(& humon_nullToken, huGetAnnotationByValueZ(l.root, "root", 3), "root.anno v3 root == null");
 }
 
+
+TEST_GROUP(huGetNumComments)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+TEST(huGetNumComments, lists)
+{
+    LONGS_EQUAL_TEXT(0, huGetNumComments(l.root), "root.gnc == 0");
+    LONGS_EQUAL_TEXT(2, huGetNumComments(l.a), "a.gnc == 2");
+    LONGS_EQUAL_TEXT(2, huGetNumComments(l.bp), "bp.gnc == 2");
+    LONGS_EQUAL_TEXT(1, huGetNumComments(l.b), "b.gnc == 1");
+    LONGS_EQUAL_TEXT(2, huGetNumComments(l.cpp), "cpp.gnc == 2");
+    LONGS_EQUAL_TEXT(1, huGetNumComments(l.cp), "cp.gnc == 1");
+    LONGS_EQUAL_TEXT(1, huGetNumComments(l.c), "c.gnc == 1");
+}
+
+TEST(huGetNumComments, dicts)
+{
+    LONGS_EQUAL_TEXT(0, huGetNumComments(d.root), "root.gnc == 0");
+    LONGS_EQUAL_TEXT(2, huGetNumComments(d.a), "a.gnc == 2");
+    LONGS_EQUAL_TEXT(2, huGetNumComments(d.bp), "bp.gnc == 2");
+    LONGS_EQUAL_TEXT(1, huGetNumComments(d.b), "b.gnc == 1");
+    LONGS_EQUAL_TEXT(2, huGetNumComments(d.cpp), "cpp.gnc == 2");
+    LONGS_EQUAL_TEXT(1, huGetNumComments(d.cp), "cp.gnc == 1");
+    LONGS_EQUAL_TEXT(1, huGetNumComments(d.c), "c.gnc == 1");
+}
+
+TEST(huGetNumComments, pathological)
+{
+    LONGS_EQUAL_TEXT(0, huGetNumComments(NULL), "NULL.gnc == 0");
+    LONGS_EQUAL_TEXT(0, huGetNumComments(& humon_nullNode), "null.gnc == 0");
+}
+
+
+TEST_GROUP(huGetComment)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+TEST(huGetComment, lists)
+{
+    auto comm = huGetComment(l.a, 0)->value;
+    auto exp = "// This is a aaaa right here.";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "a.comm 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "a.comm 0 == exp");
+    comm = huGetComment(l.a, 1)->value;
+    exp = "// aaaa";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "a.comm 1 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "a.comm 1 == exp");
+
+    comm = huGetComment(l.bp, 0)->value;
+    exp = "// This is a bp right here.";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "bp.comm 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "bp.comm 0 == exp");
+    comm = huGetComment(l.bp, 1)->value;
+    exp = "// bp";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "bp.comm 1 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "bp.comm 1 == exp");
+
+    comm = huGetComment(l.b, 0)->value;
+    exp = "// bbbb";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "b.comm 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "b.comm 0 == exp");
+
+    comm = huGetComment(l.cpp, 0)->value;
+    exp = "// This is a cpp right here.";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cpp.comm 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "cpp.comm 0 == exp");
+    comm = huGetComment(l.cpp, 1)->value;
+    exp = "// cpp";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cpp.comm 1 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "cpp.comm 1 == exp");
+
+    comm = huGetComment(l.cp, 0)->value;
+    exp = "// cp";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cp.comm 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "cp.comm 0 == exp");
+
+    comm = huGetComment(l.c, 0)->value;
+    exp = "// cccc";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "c.comm 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "c.comm 0 == exp");
+}
+
+TEST(huGetComment, dicts)
+{
+    auto comm = huGetComment(d.a, 0)->value;
+    auto exp = "// This is a aaaa right here.";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "a.comm 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "a.comm 0 == exp");
+    comm = huGetComment(d.a, 1)->value;
+    exp = "// aaaa";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "a.comm 1 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "a.comm 1 == exp");
+
+    comm = huGetComment(d.bp, 0)->value;
+    exp = "// This is a bp right here.";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "bp.comm 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "bp.comm 0 == exp");
+    comm = huGetComment(d.bp, 1)->value;
+    exp = "// bp";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "bp.comm 1 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "bp.comm 1 == exp");
+
+    comm = huGetComment(d.b, 0)->value;
+    exp = "// bbbb";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "b.comm 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "b.comm 0 == exp");
+
+    comm = huGetComment(d.cpp, 0)->value;
+    exp = "// This is a cpp right here.";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cpp.comm 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "cpp.comm 0 == exp");
+    comm = huGetComment(d.cpp, 1)->value;
+    exp = "// cpp";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cpp.comm 1 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "cpp.comm 1 == exp");
+
+    comm = huGetComment(d.cp, 0)->value;
+    exp = "// cp";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cp.comm 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "cp.comm 0 == exp");
+
+    comm = huGetComment(d.c, 0)->value;
+    exp = "// cccc";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "c.comm 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "c.comm 0 == exp");
+}
+
+TEST(huGetComment, pathological)
+{
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetComment(NULL, 0), "NULL.comm 0 == null");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetComment(& humon_nullNode, 0), "null.comm 0 == null");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetComment(l.root, 0), "root.comm 0 == null");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetComment(l.root, -1), "root.comm -1 == null");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetComment(l.a, 2), "root.comm 2 == null");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetComment(l.a, -1), "root.comm -1 == null");
+}
+
+
+TEST_GROUP(huGetCommentsContaining)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+TEST(huGetCommentsContaining, lists)
+{
+    huVector comms = huGetCommentsContainingZ(l.a, "aaa");
+    LONGS_EQUAL_TEXT(2, comms.numElements, "a.gcc aaa size = 2");
+    auto comm = (*((huToken **) huGetVectorElement(& comms, 0)))->value;
+    auto exp = "// This is a aaaa right here.";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "a.gcc aaa 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "a.gcc aaa 0 == exp");
+    comm = (*((huToken **) huGetVectorElement(& comms, 1)))->value;
+    exp = "// aaaa";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "a.gcc aaa 1 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "a.gcc aaa 1 == exp");
+    huDestroyVector(& comms);
+
+    comms = huGetCommentsContainingZ(l.a, "right here");
+    LONGS_EQUAL_TEXT(1, comms.numElements, "a.gcc right_here size = 1");
+    comm = (*((huToken **) huGetVectorElement(& comms, 0)))->value;
+    exp = "// This is a aaaa right here.";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "a.gcc aaa 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "a.gcc aaa 0 == exp");
+    huDestroyVector(& comms);
+
+    comms = huGetCommentsContainingZ(l.bp, "bp");
+    LONGS_EQUAL_TEXT(2, comms.numElements, "bp.gcc bp size = 2");
+    comm = (*((huToken **) huGetVectorElement(& comms, 0)))->value;
+    exp = "// This is a bp right here.";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "bp.gcc bp 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "bp.gcc bp 0 == exp");
+    comm = (*((huToken **) huGetVectorElement(& comms, 1)))->value;
+    exp = "// bp";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "bp.gcc bp 1 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "bp.gcc bp 1 == exp");
+    huDestroyVector(& comms);
+
+    comms = huGetCommentsContainingZ(l.bp, "right here");
+    LONGS_EQUAL_TEXT(1, comms.numElements, "bp.gcc right_here size = 1");
+    comm = (*((huToken **) huGetVectorElement(& comms, 0)))->value;
+    exp = "// This is a bp right here.";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "bp.gcc bp 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "bp.gcc bp 0 == exp");
+    huDestroyVector(& comms);
+
+    comms = huGetCommentsContainingZ(l.b, "bbb");
+    LONGS_EQUAL_TEXT(1, comms.numElements, "b.gcc bbb size = 1");
+    comm = (*((huToken **) huGetVectorElement(& comms, 0)))->value;
+    exp = "// bbbb";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "b.gcc bbb 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "b.gcc bbb 0 == exp");
+    huDestroyVector(& comms);
+
+    comms = huGetCommentsContainingZ(l.cpp, "cpp");
+    LONGS_EQUAL_TEXT(2, comms.numElements, "cpp.gcc cpp size = 2");
+    comm = (*((huToken **) huGetVectorElement(& comms, 0)))->value;
+    exp = "// This is a cpp right here.";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cpp.gcc cpp 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "cpp.gcc cpp 0 == exp");
+    comm = (*((huToken **) huGetVectorElement(& comms, 1)))->value;
+    exp = "// cpp";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cpp.gcc cpp 1 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "cpp.gcc cpp 1 == exp");
+    huDestroyVector(& comms);
+
+    comms = huGetCommentsContainingZ(l.cpp, "right here");
+    LONGS_EQUAL_TEXT(1, comms.numElements, "cpp.gcc right_here size = 1");
+    comm = (*((huToken **) huGetVectorElement(& comms, 0)))->value;
+    exp = "// This is a cpp right here.";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cpp.gcc cpp 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "cpp.gcc cpp 0 == exp");
+    huDestroyVector(& comms);
+
+    comms = huGetCommentsContainingZ(l.cp, "cp");
+    LONGS_EQUAL_TEXT(1, comms.numElements, "cp.gcc cp size = 1");
+    comm = (*((huToken **) huGetVectorElement(& comms, 0)))->value;
+    exp = "// cp";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cp.gcc cp 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "cp.gcc cp 0 == exp");
+    huDestroyVector(& comms);
+
+    comms = huGetCommentsContainingZ(l.c, "ccc");
+    LONGS_EQUAL_TEXT(1, comms.numElements, "c.gcc ccc size = 1");
+    comm = (*((huToken **) huGetVectorElement(& comms, 0)))->value;
+    exp = "// cccc";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "c.gcc ccc 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "cp.gcc ccc 0 == exp");
+    huDestroyVector(& comms);
+}
+
+TEST(huGetCommentsContaining, dicts)
+{
+    huVector comms = huGetCommentsContainingZ(d.a, "aaa");
+    LONGS_EQUAL_TEXT(2, comms.numElements, "a.gcc aaa size = 2");
+    auto comm = (*((huToken **) huGetVectorElement(& comms, 0)))->value;
+    auto exp = "// This is a aaaa right here.";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "a.gcc aaa 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "a.gcc aaa 0 == exp");
+    comm = (*((huToken **) huGetVectorElement(& comms, 1)))->value;
+    exp = "// aaaa";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "a.gcc aaa 1 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "a.gcc aaa 1 == exp");
+    huDestroyVector(& comms);
+
+    comms = huGetCommentsContainingZ(d.a, "right here");
+    LONGS_EQUAL_TEXT(1, comms.numElements, "a.gcc right_here size = 1");
+    comm = (*((huToken **) huGetVectorElement(& comms, 0)))->value;
+    exp = "// This is a aaaa right here.";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "a.gcc aaa 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "a.gcc aaa 0 == exp");
+    huDestroyVector(& comms);
+
+    comms = huGetCommentsContainingZ(d.bp, "bp");
+    LONGS_EQUAL_TEXT(2, comms.numElements, "bp.gcc bp size = 2");
+    comm = (*((huToken **) huGetVectorElement(& comms, 0)))->value;
+    exp = "// This is a bp right here.";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "bp.gcc bp 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "bp.gcc bp 0 == exp");
+    comm = (*((huToken **) huGetVectorElement(& comms, 1)))->value;
+    exp = "// bp";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "bp.gcc bp 1 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "bp.gcc bp 1 == exp");
+    huDestroyVector(& comms);
+
+    comms = huGetCommentsContainingZ(d.bp, "right here");
+    LONGS_EQUAL_TEXT(1, comms.numElements, "bp.gcc right_here size = 1");
+    comm = (*((huToken **) huGetVectorElement(& comms, 0)))->value;
+    exp = "// This is a bp right here.";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "bp.gcc bp 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "bp.gcc bp 0 == exp");
+    huDestroyVector(& comms);
+
+    comms = huGetCommentsContainingZ(d.b, "bbb");
+    LONGS_EQUAL_TEXT(1, comms.numElements, "b.gcc bbb size = 1");
+    comm = (*((huToken **) huGetVectorElement(& comms, 0)))->value;
+    exp = "// bbbb";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "b.gcc bbb 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "b.gcc bbb 0 == exp");
+    huDestroyVector(& comms);
+
+    comms = huGetCommentsContainingZ(d.cpp, "cpp");
+    LONGS_EQUAL_TEXT(2, comms.numElements, "cpp.gcc cpp size = 2");
+    comm = (*((huToken **) huGetVectorElement(& comms, 0)))->value;
+    exp = "// This is a cpp right here.";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cpp.gcc cpp 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "cpp.gcc cpp 0 == exp");
+    comm = (*((huToken **) huGetVectorElement(& comms, 1)))->value;
+    exp = "// cpp";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cpp.gcc cpp 1 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "cpp.gcc cpp 1 == exp");
+    huDestroyVector(& comms);
+
+    comms = huGetCommentsContainingZ(d.cpp, "right here");
+    LONGS_EQUAL_TEXT(1, comms.numElements, "cpp.gcc right_here size = 1");
+    comm = (*((huToken **) huGetVectorElement(& comms, 0)))->value;
+    exp = "// This is a cpp right here.";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cpp.gcc cpp 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "cpp.gcc cpp 0 == exp");
+    huDestroyVector(& comms);
+
+    comms = huGetCommentsContainingZ(d.cp, "cp");
+    LONGS_EQUAL_TEXT(1, comms.numElements, "cp.gcc cp size = 1");
+    comm = (*((huToken **) huGetVectorElement(& comms, 0)))->value;
+    exp = "// cp";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cp.gcc cp 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "cp.gcc cp 0 == exp");
+    huDestroyVector(& comms);
+
+    comms = huGetCommentsContainingZ(d.c, "ccc");
+    LONGS_EQUAL_TEXT(1, comms.numElements, "c.gcc ccc size = 1");
+    comm = (*((huToken **) huGetVectorElement(& comms, 0)))->value;
+    exp = "// cccc";
+    LONGS_EQUAL_TEXT(strlen(exp), comm.size, "c.gcc ccc 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "cp.gcc ccc 0 == exp");
+    huDestroyVector(& comms);
+}
+
+TEST(huGetCommentsContaining, pathological)
+{
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetComment(NULL, 0), "NULL.comm 0 == null");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetComment(& humon_nullNode, 0), "null.comm 0 == null");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetComment(l.root, 0), "root.comm 0 == null");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetComment(l.root, -1), "root.comm -1 == null");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetComment(l.a, 2), "a.comm 2 == null");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetComment(l.a, -1), "a.comm -1 == null");
+}
+
+
+TEST_GROUP(huGetNodeByRelativeAddress)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+TEST(huGetNodeByRelativeAddress, lists)
+{
+    int err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(l.a, huGetNodeByRelativeAddressZ(l.root, "0", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(l.root, huGetNodeByRelativeAddressZ(l.root, "0/..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(l.root, huGetNodeByRelativeAddressZ(l.a, "..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(l.b, huGetNodeByRelativeAddressZ(l.bp, "0", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(l.bp, huGetNodeByRelativeAddressZ(l.bp, "0/..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(l.root, huGetNodeByRelativeAddressZ(l.bp, "0/../..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(l.cp, huGetNodeByRelativeAddressZ(l.cpp, "0", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(l.c, huGetNodeByRelativeAddressZ(l.cpp, "0/0", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(l.cpp, huGetNodeByRelativeAddressZ(l.cpp, "0/0/../..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(l.c, huGetNodeByRelativeAddressZ(l.cp, "0", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(l.cpp, huGetNodeByRelativeAddressZ(l.cp, "..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(l.cp, huGetNodeByRelativeAddressZ(l.c, "..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(l.cpp, huGetNodeByRelativeAddressZ(l.c, "../..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(l.root, huGetNodeByRelativeAddressZ(l.c, "../../..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(l.b, huGetNodeByRelativeAddressZ(l.a, "../1/0", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(l.c, huGetNodeByRelativeAddressZ(l.a, "../2/0/0", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(l.a, huGetNodeByRelativeAddressZ(l.b, "../../0", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(l.c, huGetNodeByRelativeAddressZ(l.b, "../../2/0/0", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(l.a, huGetNodeByRelativeAddressZ(l.c, "../../../0", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(l.b, huGetNodeByRelativeAddressZ(l.c, "../../../1/0", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(l.c, huGetNodeByRelativeAddressZ(l.b, " .. / .. / 2 / 0 / 0 ", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(& humon_nullNode, huGetNodeByRelativeAddressZ(l.root, "..", & err));
+    LONGS_EQUAL(HU_ERROR_NOTFOUND, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(& humon_nullNode, huGetNodeByRelativeAddressZ(l.a, "0", & err));
+    LONGS_EQUAL(HU_ERROR_NOTFOUND, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(& humon_nullNode, huGetNodeByRelativeAddressZ(l.root, "3", & err));
+    LONGS_EQUAL(HU_ERROR_NOTFOUND, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(& humon_nullNode, huGetNodeByRelativeAddressZ(l.root, "0/0", & err));
+    LONGS_EQUAL(HU_ERROR_NOTFOUND, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(& humon_nullNode, huGetNodeByRelativeAddressZ(l.root, "1/1", & err));
+    LONGS_EQUAL(HU_ERROR_NOTFOUND, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(& humon_nullNode, huGetNodeByRelativeAddressZ(l.root, "1/0/0", & err));
+    LONGS_EQUAL(HU_ERROR_NOTFOUND, err);
+}
+
+TEST(huGetNodeByRelativeAddress, dicts)
+{
+    int err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.a, huGetNodeByRelativeAddressZ(d.root, "0", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.root, "0/..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.a, "..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.b, huGetNodeByRelativeAddressZ(d.bp, "0", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.bp, huGetNodeByRelativeAddressZ(d.bp, "0/..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.bp, "0/../..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.cp, huGetNodeByRelativeAddressZ(d.cpp, "0", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.cpp, "0/0", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.cpp, huGetNodeByRelativeAddressZ(d.cpp, "0/0/../..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.cp, "0", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.cpp, huGetNodeByRelativeAddressZ(d.cp, "..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.cp, huGetNodeByRelativeAddressZ(d.c, "..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.cpp, huGetNodeByRelativeAddressZ(d.c, "../..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.c, "../../..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.b, huGetNodeByRelativeAddressZ(d.a, "../1/0", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.a, "../2/0/0", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.a, huGetNodeByRelativeAddressZ(d.b, "../../0", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.b, "../../2/0/0", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.a, huGetNodeByRelativeAddressZ(d.c, "../../../0", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.b, huGetNodeByRelativeAddressZ(d.c, "../../../1/0", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.b, " .. / .. / 2 / 0 / 0 ", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+
+    POINTERS_EQUAL(d.a, huGetNodeByRelativeAddressZ(d.root, "ak", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.root, "ak/..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.a, "..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.b, huGetNodeByRelativeAddressZ(d.bp, "bk", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.bp, huGetNodeByRelativeAddressZ(d.bp, "bk/..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.bp, "bk/../..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.cp, huGetNodeByRelativeAddressZ(d.cpp, "ck", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.cpp, "ck/ck", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.cpp, huGetNodeByRelativeAddressZ(d.cpp, "ck/ck/../..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.cp, "ck", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.cpp, huGetNodeByRelativeAddressZ(d.cp, "..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.cp, huGetNodeByRelativeAddressZ(d.c, "..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.cpp, huGetNodeByRelativeAddressZ(d.c, "../..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.c, "../../..", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.b, huGetNodeByRelativeAddressZ(d.a, "../bk/bk", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.a, "../ck/ck/ck", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.a, huGetNodeByRelativeAddressZ(d.b, "../../ak", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.b, "../../ck/ck/ck", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.a, huGetNodeByRelativeAddressZ(d.c, "../../../ak", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.b, huGetNodeByRelativeAddressZ(d.c, "../../../bk/bk", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.b, " .. / .. / ck / ck / ck ", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.b, "../../`ck`/'ck'/\"ck\"", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.b, " .. / .. / `ck` / 'ck' / \"ck\" ", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(& humon_nullNode, huGetNodeByRelativeAddressZ(d.root, "..", & err));
+    LONGS_EQUAL(HU_ERROR_NOTFOUND, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(& humon_nullNode, huGetNodeByRelativeAddressZ(d.a, "0", & err));
+    LONGS_EQUAL(HU_ERROR_NOTFOUND, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(& humon_nullNode, huGetNodeByRelativeAddressZ(d.root, "3", & err));
+    LONGS_EQUAL(HU_ERROR_NOTFOUND, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(& humon_nullNode, huGetNodeByRelativeAddressZ(d.root, "0/0", & err));
+    LONGS_EQUAL(HU_ERROR_NOTFOUND, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(& humon_nullNode, huGetNodeByRelativeAddressZ(d.root, "1/1", & err));
+    LONGS_EQUAL(HU_ERROR_NOTFOUND, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(& humon_nullNode, huGetNodeByRelativeAddressZ(d.root, "1/0/0", & err));
+    LONGS_EQUAL(HU_ERROR_NOTFOUND, err);
+}
+
+TEST(huGetNodeByRelativeAddress, pathological)
+{
+    int err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(& humon_nullNode, huGetNodeByRelativeAddressZ(NULL, "0", & err));
+    LONGS_EQUAL(HU_ERROR_ILLEGAL, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(& humon_nullNode, huGetNodeByRelativeAddressZ(& humon_nullNode, "0", & err));
+    LONGS_EQUAL(HU_ERROR_ILLEGAL, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(& humon_nullNode, huGetNodeByRelativeAddressZ(l.root, "-1", & err));
+    LONGS_EQUAL(HU_ERROR_NOTFOUND, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(& humon_nullNode, huGetNodeByRelativeAddressZ(l.a, "-1", & err));
+    LONGS_EQUAL(HU_ERROR_NOTFOUND, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(& humon_nullNode, huGetNodeByRelativeAddressZ(l.root, NULL, & err));
+    LONGS_EQUAL(HU_ERROR_ILLEGAL, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(l.root, huGetNodeByRelativeAddressZ(l.root, "", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.root, "", & err));
+    LONGS_EQUAL(HU_ERROR_NO_ERROR, err);
+    err = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL(& humon_nullNode, huGetNodeByRelativeAddressZ(l.root, "/", & err));
+    LONGS_EQUAL(HU_ERROR_SYNTAX_ERROR, err);
+}
+
+
+TEST_GROUP(huGetNodeAddress)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+TEST(huGetNodeAddress, lists)
+{
+    huStringView sv = huGetNodeAddress(l.root);
+    auto exp = "/";
+    LONGS_EQUAL(strlen(exp), sv.size);
+    STRNCMP_EQUAL(exp, sv.str, sv.size);
+    huDestroyStringView(& sv);
+
+    sv = huGetNodeAddress(l.a);
+    exp = "/0";
+    LONGS_EQUAL(strlen(exp), sv.size);
+    STRNCMP_EQUAL(exp, sv.str, sv.size);
+    huDestroyStringView(& sv);
+
+    sv = huGetNodeAddress(l.bp);
+    exp = "/1";
+    LONGS_EQUAL(strlen(exp), sv.size);
+    STRNCMP_EQUAL(exp, sv.str, sv.size);
+    huDestroyStringView(& sv);
+
+    sv = huGetNodeAddress(l.b);
+    exp = "/1/0";
+    LONGS_EQUAL(strlen(exp), sv.size);
+    STRNCMP_EQUAL(exp, sv.str, sv.size);
+    huDestroyStringView(& sv);
+
+    sv = huGetNodeAddress(l.cpp);
+    exp = "/2";
+    LONGS_EQUAL(strlen(exp), sv.size);
+    STRNCMP_EQUAL(exp, sv.str, sv.size);
+    huDestroyStringView(& sv);
+
+    sv = huGetNodeAddress(l.cp);
+    exp = "/2/0";
+    LONGS_EQUAL(strlen(exp), sv.size);
+    STRNCMP_EQUAL(exp, sv.str, sv.size);
+    huDestroyStringView(& sv);
+
+    sv = huGetNodeAddress(l.c);
+    exp = "/2/0/0";
+    LONGS_EQUAL(strlen(exp), sv.size);
+    STRNCMP_EQUAL(exp, sv.str, sv.size);
+    huDestroyStringView(& sv);
+}
+
+
+TEST(huGetNodeAddress, dicts)
+{
+    huStringView sv = huGetNodeAddress(d.root);
+    auto exp = "/";
+    LONGS_EQUAL(strlen(exp), sv.size);
+    STRNCMP_EQUAL(exp, sv.str, sv.size);
+    huDestroyStringView(& sv);
+
+    sv = huGetNodeAddress(d.a);
+    exp = "/ak";
+    LONGS_EQUAL(strlen(exp), sv.size);
+    STRNCMP_EQUAL(exp, sv.str, sv.size);
+    huDestroyStringView(& sv);
+
+    sv = huGetNodeAddress(d.bp);
+    exp = "/bk";
+    LONGS_EQUAL(strlen(exp), sv.size);
+    STRNCMP_EQUAL(exp, sv.str, sv.size);
+    huDestroyStringView(& sv);
+
+    sv = huGetNodeAddress(d.b);
+    exp = "/bk/bk";
+    LONGS_EQUAL(strlen(exp), sv.size);
+    STRNCMP_EQUAL(exp, sv.str, sv.size);
+    huDestroyStringView(& sv);
+
+    sv = huGetNodeAddress(d.cpp);
+    exp = "/ck";
+    LONGS_EQUAL(strlen(exp), sv.size);
+    STRNCMP_EQUAL(exp, sv.str, sv.size);
+    huDestroyStringView(& sv);
+
+    sv = huGetNodeAddress(d.cp);
+    exp = "/ck/ck";
+    LONGS_EQUAL(strlen(exp), sv.size);
+    STRNCMP_EQUAL(exp, sv.str, sv.size);
+    huDestroyStringView(& sv);
+
+    sv = huGetNodeAddress(d.c);
+    exp = "/ck/ck/ck";
+    LONGS_EQUAL(strlen(exp), sv.size);
+    STRNCMP_EQUAL(exp, sv.str, sv.size);
+    huDestroyStringView(& sv);
+}
+
+TEST(huGetNodeAddress, pathological)
+{
+    huStringView sv = huGetNodeAddress(NULL);
+    POINTERS_EQUAL(NULL, sv.str);
+    huDestroyStringView(& sv);
+
+    sv = huGetNodeAddress(& humon_nullNode);
+    POINTERS_EQUAL(NULL, sv.str);
+    huDestroyStringView(& sv);
+}

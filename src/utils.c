@@ -6,7 +6,7 @@
 bool stringInString(char const * haystack, int haystackLen, char const * needle, int needleLen)
 {
     // I'm unconcerned about O(m*n).
-    for (int i = 0; i < haystackLen - needleLen; ++i)
+    for (int i = 0; i < haystackLen - needleLen + 1; ++i)
     {
         if (strncmp(haystack + i, needle, needleLen) == 0)
             { return true; }
