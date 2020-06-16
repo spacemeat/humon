@@ -1,10 +1,13 @@
 #include <string.h>
 #include <string_view>
+#include <unistd.h>
 #include "humon.h"
 #include "ansiColors.h"
 #include <CppUTest/TestHarness.h>
 
 #include "testData.h"
+
+// ------------------------------ NODE API TESTS
 
 TEST_GROUP(huGetParentNode)
 {
@@ -1783,3 +1786,1451 @@ TEST(huGetNodeAddress, pathological)
     POINTERS_EQUAL(NULL, sv.str);
     huDestroyStringView(& sv);
 }
+
+
+// ------------------------------ TROVE API TESTS
+
+TEST_GROUP(huMakeTroveFromString)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+// Patho cases only for this method. Used extensively elsewhere.
+TEST(huMakeTroveFromString, pathological)
+{
+    huTrove const * trove;
+    trove = huMakeTroveFromStringZ(NULL, 4);
+    POINTERS_EQUAL_TEXT(& humon_nullTrove, trove, "fromString NULL == NULL");
+
+    trove = huMakeTroveFromStringZ("", 4);
+    CHECK_TEXT(& humon_nullTrove != trove, "fromString '' != NULL");
+    huDestroyTrove(trove);
+
+    trove = huMakeTroveFromStringZ("[]", -1);
+    POINTERS_EQUAL_TEXT(& humon_nullTrove, trove, "tabs=-1 == NULL");
+}
+
+
+TEST_GROUP(huMakeTroveFromFile)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+// Patho cases only for this method. Used extensively elsewhere.
+TEST(huMakeTroveFromFile, pathological)
+{
+    huTrove const * trove;
+    trove = huMakeTroveFromFileZ(NULL, 4);
+    POINTERS_EQUAL_TEXT(& humon_nullTrove, trove, "fromFile NULL == NULL");
+
+    trove = huMakeTroveFromFileZ("", 4);
+    POINTERS_EQUAL_TEXT(& humon_nullTrove, trove, "fromFile '' == NULL");
+
+    trove = huMakeTroveFromFileZ("..", 4);
+    POINTERS_EQUAL_TEXT(& humon_nullTrove, trove, "fromFile .. == NULL");
+
+    trove = huMakeTroveFromFileZ("/", 4);
+    POINTERS_EQUAL_TEXT(& humon_nullTrove, trove, "fromFile / == NULL");
+
+    trove = huMakeTroveFromFileZ("src/test/testFiles/utf8.hu", -1);
+    POINTERS_EQUAL_TEXT(& humon_nullTrove, trove, "fromFile tabSize=-1 == NULL");
+}
+
+
+TEST_GROUP(huDestroyTrove)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+// Patho cases only for this method. Used extensively elsewhere.
+TEST(huDestroyTrove, pathological)
+{
+    // These guys just fail if they throw.
+    huDestroyTrove(NULL);
+    huDestroyTrove(& humon_nullTrove);
+}
+
+
+TEST_GROUP(huGetNumTokens)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+TEST(huGetNumTokens, normal)
+{
+    LONGS_EQUAL_TEXT(91, huGetNumTokens(l.trove), "l numTokens == 90");
+    LONGS_EQUAL_TEXT(103, huGetNumTokens(d.trove), "d numTokens == 102");
+}
+
+TEST(huGetNumTokens, pathological)
+{
+    LONGS_EQUAL_TEXT(0, huGetNumTokens(NULL), "NULL numTokens == 0");
+    LONGS_EQUAL_TEXT(0, huGetNumTokens(& humon_nullTrove), "null numTokens == 0");
+}
+
+
+TEST_GROUP(huGetToken)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+TEST(huGetToken, normal)
+{
+    LONGS_EQUAL_TEXT(HU_TOKENKIND_EOF, huGetToken(l.trove, 90)->tokenKind, "l tok last == eof");
+    LONGS_EQUAL_TEXT(HU_TOKENKIND_EOF, huGetToken(d.trove, 102)->tokenKind, "l tok last == eof");
+}
+
+TEST(huGetToken, pathological)
+{
+    LONGS_EQUAL_TEXT(HU_TOKENKIND_NULL, huGetToken(NULL, 0)->tokenKind, "NULL tok 0 == null");
+    LONGS_EQUAL_TEXT(HU_TOKENKIND_NULL, huGetToken(& humon_nullTrove, 0)->tokenKind, "null tok 0 == null");
+}
+
+
+TEST_GROUP(huGetNumNodes)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+TEST(huGetNumNodes, normal)
+{
+    LONGS_EQUAL_TEXT(7, huGetNumNodes(l.trove), "l numNodes == 7");
+    LONGS_EQUAL_TEXT(7, huGetNumNodes(d.trove), "d numNodes == 7");
+}
+
+TEST(huGetNumNodes, pathological)
+{
+    LONGS_EQUAL_TEXT(0, huGetNumNodes(NULL), "NULL numNodes == 0");
+    LONGS_EQUAL_TEXT(0, huGetNumNodes(& humon_nullTrove), "null numNodes == 0");
+}
+
+
+TEST_GROUP(huGetRootNode)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+TEST(huGetRootNode, normal)
+{
+    LONGS_EQUAL_TEXT(HU_NODEKIND_LIST, huGetRootNode(l.trove)->kind, "l grn == list");
+    LONGS_EQUAL_TEXT(-1, huGetRootNode(l.trove)->parentNodeIdx, "l grn == root");
+    LONGS_EQUAL_TEXT(HU_NODEKIND_DICT, huGetRootNode(d.trove)->kind, "d grn == dict");
+    LONGS_EQUAL_TEXT(-1, huGetRootNode(d.trove)->parentNodeIdx, "d grn == root");
+}
+
+TEST(huGetRootNode, pathological)
+{
+    LONGS_EQUAL_TEXT(HU_NODEKIND_NULL, huGetRootNode(NULL)->kind, "NULL grn == null");
+    LONGS_EQUAL_TEXT(HU_NODEKIND_NULL, huGetRootNode(& humon_nullTrove)->kind, "null grn == null");
+}
+
+
+TEST_GROUP(huGetNode)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+TEST(huGetNode, normal)
+{
+    LONGS_EQUAL_TEXT(HU_NODEKIND_LIST, huGetNode(l.trove, 0)->kind, "l gn 0 == list");
+    LONGS_EQUAL_TEXT(-1, huGetNode(l.trove, 0)->parentNodeIdx, "l gn 0 == root");
+    LONGS_EQUAL_TEXT(HU_NODEKIND_DICT, huGetNode(d.trove, 0)->kind, "d gn 0 == dict");
+    LONGS_EQUAL_TEXT(-1, huGetNode(d.trove, 0)->parentNodeIdx, "d gn 0 == root");
+
+    LONGS_EQUAL_TEXT(HU_NODEKIND_VALUE, huGetNode(l.trove, 1)->kind, "l gn 1 == list");
+    LONGS_EQUAL_TEXT(0, huGetNode(l.trove, 1)->parentNodeIdx, "l gn 1 == child of root");
+    LONGS_EQUAL_TEXT(HU_NODEKIND_VALUE, huGetNode(d.trove, 1)->kind, "d gn 1 == dict");
+    LONGS_EQUAL_TEXT(0, huGetNode(d.trove, 1)->parentNodeIdx, "d gn 1 == child of root");
+}
+
+TEST(huGetNode, pathological)
+{
+    LONGS_EQUAL_TEXT(HU_NODEKIND_NULL, huGetNode(NULL, 0)->kind, "NULL gn 0 == null");
+    LONGS_EQUAL_TEXT(HU_NODEKIND_NULL, huGetNode(& humon_nullTrove, 0)->kind, "null gn 0 == null");
+}
+
+
+TEST_GROUP(huGetNumErrors)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+    htd_erroneous e;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+        e.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+        e.teardown();
+    }
+};
+
+TEST(huGetNumErrors, normal)
+{
+    LONGS_EQUAL_TEXT(0, huGetNumErrors(l.trove), "l numErrors == 0");
+    LONGS_EQUAL_TEXT(0, huGetNumErrors(d.trove), "d numErrors == 0");
+    LONGS_EQUAL_TEXT(2, huGetNumErrors(e.trove), "e numErrors == 0");
+}
+
+TEST(huGetNumErrors, pathological)
+{
+    LONGS_EQUAL_TEXT(0, huGetNumErrors(NULL), "NULL numErrors == 0");
+    LONGS_EQUAL_TEXT(0, huGetNumErrors(& humon_nullTrove), "null numErrors == 0");
+}
+
+
+TEST_GROUP(huGetError)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+    htd_erroneous e;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+        e.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+        e.teardown();
+    }
+};
+
+TEST(huGetError, normal)
+{
+    POINTERS_EQUAL_TEXT(NULL, huGetError(l.trove, 0), "l ge 0 == 0");
+    POINTERS_EQUAL_TEXT(NULL, huGetError(d.trove, 0), "d ge 0 == 0");
+
+    LONGS_EQUAL_TEXT(HU_ERROR_SYNTAX_ERROR, huGetError(e.trove, 0)->errorCode, "e ge 0 == syntax error");
+    POINTERS_EQUAL_TEXT(11, huGetError(e.trove, 0)->errorToken->line, "e ge 0 line == 11");
+    POINTERS_EQUAL_TEXT(12, huGetError(e.trove, 0)->errorToken->col, "e ge 0 col == 12");
+}
+
+TEST(huGetError, pathological)
+{
+    POINTERS_EQUAL_TEXT(NULL, huGetError(NULL, 0), "NULL numErrors == 0");
+    POINTERS_EQUAL_TEXT(NULL, huGetError(& humon_nullTrove, 0), "null numErrors == 0");
+    POINTERS_EQUAL_TEXT(NULL, huGetError(e.trove, -1), "e ge 0 == syntax error");
+}
+
+
+
+TEST_GROUP(huGetNumTroveAnnotations)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+TEST(huGetNumTroveAnnotations, normal)
+{
+    LONGS_EQUAL_TEXT(3, huGetNumTroveAnnotations(l.trove), "l gnta == 3");
+    LONGS_EQUAL_TEXT(3, huGetNumTroveAnnotations(d.trove), "d gnta == 3");
+}
+
+TEST(huGetNumTroveAnnotations, pathological)
+{
+    LONGS_EQUAL_TEXT(0, huGetNumTroveAnnotations(NULL), "NULL gnta == 0");
+    LONGS_EQUAL_TEXT(0, huGetNumTroveAnnotations(& humon_nullTrove), "null gnta == 0");
+}
+
+
+TEST_GROUP(huGetTroveAnnotation)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+TEST(huGetTroveAnnotation, normal)
+{
+    auto anno = huGetTroveAnnotation(l.trove, 0);
+    CHECK_TEXT(anno != NULL, "l anno 0 not NULL");
+    LONGS_EQUAL_TEXT(2, anno->key->value.size, "l anno 0 k sz == 2");
+    STRNCMP_EQUAL_TEXT("tx", anno->key->value.str, anno->key->value.size, "l anno 0 k == tx");
+    LONGS_EQUAL_TEXT(2, anno->value->value.size, "l anno 0 v sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->value->value.str, anno->value->value.size, "l anno 0 v == ta");
+
+    anno = huGetTroveAnnotation(l.trove, 1);
+    CHECK_TEXT(anno != NULL, "l anno 1 not NULL");
+    LONGS_EQUAL_TEXT(2, anno->key->value.size, "l anno 1 k sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->key->value.str, anno->key->value.size, "l anno 1 k == ta");
+    LONGS_EQUAL_TEXT(2, anno->value->value.size, "l anno 1 v sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->value->value.str, anno->value->value.size, "l anno 1 v == ta");
+
+    anno = huGetTroveAnnotation(l.trove, 2);
+    CHECK_TEXT(anno != NULL, "l anno 2 not NULL");
+    LONGS_EQUAL_TEXT(2, anno->key->value.size, "l anno 2 k sz == 2");
+    STRNCMP_EQUAL_TEXT("tb", anno->key->value.str, anno->key->value.size, "l anno 2 k == tb");
+    LONGS_EQUAL_TEXT(2, anno->value->value.size, "l anno 2 v sz == 2");
+    STRNCMP_EQUAL_TEXT("tb", anno->value->value.str, anno->value->value.size, "l anno 2 v == tb");
+
+    anno = huGetTroveAnnotation(d.trove, 0);
+    CHECK_TEXT(anno != NULL, "d anno 0 not NULL");
+    LONGS_EQUAL_TEXT(2, anno->key->value.size, "d anno 0 k sz == 2");
+    STRNCMP_EQUAL_TEXT("tx", anno->key->value.str, anno->key->value.size, "d anno 0 k == tx");
+    LONGS_EQUAL_TEXT(2, anno->value->value.size, "d anno 0 v sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->value->value.str, anno->value->value.size, "d anno 0 v == ta");
+
+    anno = huGetTroveAnnotation(d.trove, 1);
+    CHECK_TEXT(anno != NULL, "d anno 1 not NULL");
+    LONGS_EQUAL_TEXT(2, anno->key->value.size, "d anno 1 k sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->key->value.str, anno->key->value.size, "d anno 1 k == ta");
+    LONGS_EQUAL_TEXT(2, anno->value->value.size, "d anno 1 v sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->value->value.str, anno->value->value.size, "d anno 1 v == ta");
+
+    anno = huGetTroveAnnotation(d.trove, 2);
+    CHECK_TEXT(anno != NULL, "d anno 2 not NULL");
+    LONGS_EQUAL_TEXT(2, anno->key->value.size, "d anno 2 k sz == 2");
+    STRNCMP_EQUAL_TEXT("tb", anno->key->value.str, anno->key->value.size, "d anno 2 k == tb");
+    LONGS_EQUAL_TEXT(2, anno->value->value.size, "d anno 2 v sz == 2");
+    STRNCMP_EQUAL_TEXT("tb", anno->value->value.str, anno->value->value.size, "d anno 2 v == tb");
+}
+
+TEST(huGetTroveAnnotation, pathological)
+{
+    POINTERS_EQUAL_TEXT(NULL, huGetTroveAnnotation(NULL, 0), "NULL anno 0 == NULL");
+    POINTERS_EQUAL_TEXT(NULL, huGetTroveAnnotation(& humon_nullTrove, 0), "NULL anno 0 == NULL");
+}
+
+
+TEST_GROUP(huTroveHasAnnotationWithKey)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+TEST(huTroveHasAnnotationWithKey, normal)
+{
+    CHECK_TEXT(huTroveHasAnnotationWithKeyZ(l.trove, "tx"), "l thawk tx");
+    CHECK_TEXT(huTroveHasAnnotationWithKeyZ(l.trove, "ta"), "l thawk ta");
+    CHECK_TEXT(huTroveHasAnnotationWithKeyZ(l.trove, "tb"), "l thawk tb");
+    CHECK_TEXT(huTroveHasAnnotationWithKeyZ(l.trove, "foo") == false, "l thawk foo == false");
+
+    CHECK_TEXT(huTroveHasAnnotationWithKeyZ(d.trove, "tx"), "d thawk tx");
+    CHECK_TEXT(huTroveHasAnnotationWithKeyZ(d.trove, "ta"), "d thawk ta");
+    CHECK_TEXT(huTroveHasAnnotationWithKeyZ(d.trove, "tb"), "d thawk tb");
+    CHECK_TEXT(huTroveHasAnnotationWithKeyZ(d.trove, "foo") == false, "d thawk foo == false");
+}
+
+TEST(huTroveHasAnnotationWithKey, pathological)
+{
+    CHECK_TEXT(false == huTroveHasAnnotationWithKeyZ(NULL, 0), "NULL thawk 0 == false");
+    CHECK_TEXT(false == huTroveHasAnnotationWithKeyZ(& humon_nullTrove, 0), "NULL thawk 0 == false");
+}
+
+
+TEST_GROUP(huGetTroveAnnotationWithKey)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+TEST(huGetTroveAnnotationWithKey, normal)
+{
+    auto anno = huGetTroveAnnotationWithKeyZ(l.trove, "tx");
+    CHECK_TEXT(anno != & humon_nullToken, "l anno tx not NULL");
+    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno tx v sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->value.str, anno->value.size, "l anno tx v == ta");
+
+    anno = huGetTroveAnnotationWithKeyZ(l.trove, "ta");
+    CHECK_TEXT(anno != & humon_nullToken, "l anno ta not NULL");
+    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno ta v sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->value.str, anno->value.size, "l anno ta v == ta");
+
+    anno = huGetTroveAnnotationWithKeyZ(l.trove, "tb");
+    CHECK_TEXT(anno != & humon_nullToken, "l anno tb not NULL");
+    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno tb v sz == 2");
+    STRNCMP_EQUAL_TEXT("tb", anno->value.str, anno->value.size, "l anno tb v == tb");
+
+    anno = huGetTroveAnnotationWithKeyZ(d.trove, "tx");
+    CHECK_TEXT(anno != & humon_nullToken, "l anno tx not NULL");
+    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno tx v sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->value.str, anno->value.size, "l anno tx v == ta");
+
+    anno = huGetTroveAnnotationWithKeyZ(d.trove, "ta");
+    CHECK_TEXT(anno != & humon_nullToken, "l anno ta not NULL");
+    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno ta v sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->value.str, anno->value.size, "l anno ta v == ta");
+
+    anno = huGetTroveAnnotationWithKeyZ(d.trove, "tb");
+    CHECK_TEXT(anno != & humon_nullToken, "l anno tb not NULL");
+    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno tb v sz == 2");
+    STRNCMP_EQUAL_TEXT("tb", anno->value.str, anno->value.size, "l anno tb v == tb");
+}
+
+TEST(huGetTroveAnnotationWithKey, pathological)
+{
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetTroveAnnotationWithKeyZ(NULL, "tx"), "NULL anno tx == NULL");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetTroveAnnotationWithKeyZ(& humon_nullTrove, "tx"), "null anno tx == NULL");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetTroveAnnotationWithKeyZ(l.trove, "tq"), "l anno tq == NULL");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetTroveAnnotationWithKeyZ(l.trove, ""), "l anno '' == NULL");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetTroveAnnotationWithKeyZ(l.trove, NULL), "l anno NULL == NULL");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetTroveAnnotationWithKeyZ(d.trove, "tq"), "d anno tq == NULL");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetTroveAnnotationWithKeyZ(d.trove, ""), "d anno '' == NULL");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetTroveAnnotationWithKeyZ(d.trove, NULL), "d anno NULL == NULL");
+}
+
+
+TEST_GROUP(huGetNumTroveAnnotationsByValue)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+TEST(huGetNumTroveAnnotationsByValue, normal)
+{
+    LONGS_EQUAL_TEXT(2, huGetNumTroveAnnotationsByValueZ(l.trove, "ta"), "l gntabv ta == 2");
+    LONGS_EQUAL_TEXT(1, huGetNumTroveAnnotationsByValueZ(l.trove, "tb"), "l gntabv tb == 2");
+    LONGS_EQUAL_TEXT(0, huGetNumTroveAnnotationsByValueZ(l.trove, "tc"), "l gntabv tb == 0");
+    LONGS_EQUAL_TEXT(2, huGetNumTroveAnnotationsByValueZ(d.trove, "ta"), "d gntabv ta == 2");
+    LONGS_EQUAL_TEXT(1, huGetNumTroveAnnotationsByValueZ(d.trove, "tb"), "d gntabv tb == 2");
+    LONGS_EQUAL_TEXT(0, huGetNumTroveAnnotationsByValueZ(d.trove, "tc"), "d gntabv tb == 0");
+}
+
+TEST(huGetNumTroveAnnotationsByValue, pathological)
+{
+    LONGS_EQUAL_TEXT(0, huGetNumTroveAnnotationsByValueZ(NULL, "ta"), "NULL gntabv ta == 0");
+    LONGS_EQUAL_TEXT(0, huGetNumTroveAnnotationsByValueZ(& humon_nullTrove, "ta"), "null gntabv ta == 0");
+    LONGS_EQUAL_TEXT(0, huGetNumTroveAnnotationsByValueZ(l.trove, NULL), "l gntabv NULL == 0");
+}
+
+
+TEST_GROUP(huGetTroveAnnotationByValue)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+TEST(huGetTroveAnnotationByValue, normal)
+{
+    auto anno = huGetTroveAnnotationByValueZ(l.trove, "ta", 0);
+    CHECK_TEXT(anno != & humon_nullToken, "l anno v ta 0 not NULL");
+    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno v ta 0 sz == 2");
+    STRNCMP_EQUAL_TEXT("tx", anno->value.str, anno->value.size, "l anno v ta 0 == tx");
+
+    anno = huGetTroveAnnotationByValueZ(l.trove, "ta", 1);
+    CHECK_TEXT(anno != & humon_nullToken, "l anno v ta 1 not NULL");
+    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno v ta 1 sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->value.str, anno->value.size, "l anno v ta 1 == ta");
+
+    anno = huGetTroveAnnotationByValueZ(l.trove, "tb", 0);
+    CHECK_TEXT(anno != & humon_nullToken, "l anno v tb 0 not NULL");
+    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno v tb 0 sz == 2");
+    STRNCMP_EQUAL_TEXT("tb", anno->value.str, anno->value.size, "l anno v tb 0 == tb");
+
+    anno = huGetTroveAnnotationByValueZ(d.trove, "ta", 0);
+    CHECK_TEXT(anno != & humon_nullToken, "l anno v ta 0 not NULL");
+    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno v ta 0 sz == 2");
+    STRNCMP_EQUAL_TEXT("tx", anno->value.str, anno->value.size, "l anno v ta 0 == tx");
+
+    anno = huGetTroveAnnotationByValueZ(d.trove, "ta", 1);
+    CHECK_TEXT(anno != & humon_nullToken, "l anno v ta 1 not NULL");
+    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno v ta 1 sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->value.str, anno->value.size, "l anno v ta 1 == ta");
+
+    anno = huGetTroveAnnotationByValueZ(d.trove, "tb", 0);
+    CHECK_TEXT(anno != & humon_nullToken, "l anno v tb 0 not NULL");
+    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno v tb 0 sz == 2");
+    STRNCMP_EQUAL_TEXT("tb", anno->value.str, anno->value.size, "l anno v tb 0 == tb");
+}
+
+TEST(huGetTroveAnnotationByValue, pathological)
+{
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetTroveAnnotationByValueZ(NULL, "ta", 0), "NULL anno v ta 0 == null");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetTroveAnnotationByValueZ(& humon_nullTrove, "ta", 0), "null anno v ta 0 == null");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetTroveAnnotationByValueZ(l.trove, NULL, 0), "l anno v NULL 0 == null");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetTroveAnnotationByValueZ(l.trove, "ta", 3), "l anno v ta 3 == null");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetTroveAnnotationByValueZ(l.trove, "ta", -1), "l anno v ta -1 == null");
+}
+
+
+TEST_GROUP(huGetNumTroveComments)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+TEST(huGetNumTroveComments, normal)
+{
+    LONGS_EQUAL_TEXT(2, huGetNumTroveComments(l.trove), "l gntc == 2");
+    LONGS_EQUAL_TEXT(2, huGetNumTroveComments(d.trove), "l gntc == 2");
+}
+
+TEST(huGetNumTroveComments, pathological)
+{
+    LONGS_EQUAL_TEXT(0, huGetNumTroveComments(NULL), "NULL gntc == 0");
+    LONGS_EQUAL_TEXT(0, huGetNumTroveComments(& humon_nullTrove), "null gntc == 0");
+}
+
+
+TEST_GROUP(huGetTroveComment)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+TEST(huGetTroveComment, normal)
+{
+    auto comm = huGetTroveComment(l.trove, 0);
+    auto exp = "// This is a trove comment."sv;
+    LONGS_EQUAL_TEXT(exp.size(), comm->value.size, "l comm 0 sz == exp sz");
+    STRNCMP_EQUAL_TEXT(exp.data(), comm->value.str, exp.size(), "l comm 0 == exp");
+
+    comm = huGetTroveComment(l.trove, 1);
+    exp = "// This is also a trove comment."sv;
+    LONGS_EQUAL_TEXT(exp.size(), comm->value.size, "l comm 1 sz == exp sz");
+    STRNCMP_EQUAL_TEXT(exp.data(), comm->value.str, exp.size(), "l comm 1 == exp");
+}
+
+TEST(huGetTroveComment, pathological)
+{
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetTroveComment(NULL, 0), "NULL comm 0 == null");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetTroveComment(& humon_nullTrove, 0), "null comm 0 == null");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetTroveComment(l.trove, 2), "l comm 2 == null");
+    POINTERS_EQUAL_TEXT(& humon_nullToken, huGetTroveComment(l.trove, -1), "l comm -1 == null");
+}
+
+
+TEST_GROUP(huGetNodeByFullAddress)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+TEST(huGetNodeByFullAddress, lists)
+{
+    int error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(l.root, huGetNodeByFullAddressZ(l.trove, "/", & error), "l gnbfa '/' == root");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "l gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(l.a, huGetNodeByFullAddressZ(l.trove, "/0", & error), "l gnbfa '/0' == a");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "l gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(l.bp, huGetNodeByFullAddressZ(l.trove, "/1", & error), "l gnbfa '/1' == bp");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "l gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(l.b, huGetNodeByFullAddressZ(l.trove, "/1/0", & error), "l gnbfa '/1/0'== b");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "l gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(l.cpp, huGetNodeByFullAddressZ(l.trove, "/2", & error), "l gnbfa '/2'== cpp");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "l gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(l.cp, huGetNodeByFullAddressZ(l.trove, "/2/0", & error), "l gnbfa '/2/0'== cp");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "l gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(l.c, huGetNodeByFullAddressZ(l.trove, "/2/0/0", & error), "l gnbfa '/2/0/0'== c");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "l gnbfa '' no error");
+
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(l.c, huGetNodeByFullAddressZ(l.trove, "/0/../2/0/0", & error), "l gnbfa '/0/../2/0/0'== c");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "l gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(l.c, huGetNodeByFullAddressZ(l.trove, "/0/../1/0/../../2/0/0", & error), "l gnbfa '/0/../1/0/../../2/0/0'== c");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "l gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(l.c, huGetNodeByFullAddressZ(l.trove, " / 0 / .. / 2 / 0 / 0 ", & error), "l gnbfa ' / 0 / .. / 2 / 0 / 0 '== c");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "l gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(l.c, huGetNodeByFullAddressZ(l.trove, " / 0 / .. / 1 / 0 / .. / .. / 2 / 0 / 0 ", & error), "l gnbfa ' / 0 / .. / 1 / 0 / .. / .. / 2 / 0 / 0 '== c");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "l gnbfa '' no error");
+}
+
+TEST(huGetNodeByFullAddress, dicts)
+{
+    int error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.root, huGetNodeByFullAddressZ(d.trove, "/", & error), "d gnbfa '/' == a");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.a, huGetNodeByFullAddressZ(d.trove, "/0", & error), "d gnbfa '/0'== a");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.bp, huGetNodeByFullAddressZ(d.trove, "/1", & error), "d gnbfa '/1'== bp");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.b, huGetNodeByFullAddressZ(d.trove, "/1/0", & error), "d gnbfa '/1/0'== b");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.cpp, huGetNodeByFullAddressZ(d.trove, "/2", & error), "d gnbfa '/2'== cpp");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.cp, huGetNodeByFullAddressZ(d.trove, "/2/0", & error), "d gnbfa '/2/0'== cp");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, "/2/0/0", & error), "d gnbfa '/2/0/0'== c");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, "/0/../2/0/0", & error), "d gnbfa '/0/../2/0/0'== c");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, "/0/../1/0/../../2/0/0", & error), "d gnbfa '/0/../1/0/../../2/0/0'== c");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, " / 0 / .. / 2 / 0 / 0 ", & error), "d gnbfa ' / 0 / .. / 2 / 0 / 0 '== c");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, " / 0 / .. / 1 / 0 / .. / .. / 2 / 0 / 0 ", & error), "d gnbfa ' / 0 / .. / 1 / 0 / .. / .. / 2 / 0 / 0 '== c");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.root, huGetNodeByFullAddressZ(d.trove, "/", & error), "d gnbfa '/' == a");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.a, huGetNodeByFullAddressZ(d.trove, "/ak", & error), "d gnbfa '/ak'== a");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.bp, huGetNodeByFullAddressZ(d.trove, "/bk", & error), "d gnbfa '/bk'== bp");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.b, huGetNodeByFullAddressZ(d.trove, "/bk/bk", & error), "d gnbfa '/bk/bk'== b");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.cpp, huGetNodeByFullAddressZ(d.trove, "/ck", & error), "d gnbfa '/ck'== cpp");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.cp, huGetNodeByFullAddressZ(d.trove, "/ck/ck", & error), "d gnbfa '/ck/ck'== cp");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, "/ck/ck/ck", & error), "d gnbfa '/ck/ck/ck'== c");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, "/ak/../ck/ck/ck", & error), "d gnbfa '/ak/../ck/ck/ck'== c");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, "/ak/../bk/bk/../../ck/ck/ck", & error), "d gnbfa '/ak/../bk/bk/../../ck/ck/ck'== c");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, " / ak / .. / ck / ck / ck ", & error), "d gnbfa ' / ak / .. / ck / ck / ck '== c");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, " / ak / .. / bk / bk / .. / .. / ck / ck / ck ", & error), "d gnbfa ' / ak / .. / bk / bk / .. / .. / ck / ck / ck '== c");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, "/ak/../`ck`/'ck'/\"ck\"", & error), "d gnbfa '/ak/../`ck`/'ck'/\"ck\"'== c");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, " / ak / .. / `ck` / 'ck' / \"ck\" ", & error), "d gnbfa ' / ak / .. / `ck` / 'ck' / \"ck\" '== c");
+    LONGS_EQUAL_TEXT(HU_ERROR_NO_ERROR, error, "d gnbfa '' no error");
+}
+
+TEST(huGetNodeByFullAddress, pathological)
+{
+    int error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(& humon_nullNode, huGetNodeByFullAddressZ(NULL, "/", & error), "NULL gnbfa '/' == null");
+    LONGS_EQUAL_TEXT(HU_ERROR_ILLEGAL, error, "NULL gnbfa '/' illegal");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(& humon_nullNode, huGetNodeByFullAddressZ(& humon_nullTrove, "/", & error), "null gnbfa '/' == c");
+    LONGS_EQUAL_TEXT(HU_ERROR_ILLEGAL, error, "null gnbfa '/' illegal");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(& humon_nullNode, huGetNodeByFullAddressZ(l.trove, "/..", & error), "l gnbfa '/..' == null");
+    LONGS_EQUAL_TEXT(HU_ERROR_NOTFOUND, error, "l gnbfa '/..' not found");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(& humon_nullNode, huGetNodeByFullAddressZ(l.trove, "..", & error), "l gnbfa '..' == null");
+    LONGS_EQUAL_TEXT(HU_ERROR_SYNTAX_ERROR, error, "l gnbfa '..' not found");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(& humon_nullNode, huGetNodeByFullAddressZ(l.trove, "0", & error), "l gnbfa '0' == null");
+    LONGS_EQUAL_TEXT(HU_ERROR_SYNTAX_ERROR, error, "l gnbfa '0' syntax error");
+    error = HU_ERROR_NO_ERROR;
+    POINTERS_EQUAL_TEXT(& humon_nullNode, huGetNodeByFullAddressZ(l.trove, "//", & error), "l gnbfa '//' == null");
+    LONGS_EQUAL_TEXT(HU_ERROR_SYNTAX_ERROR, error, "l gnbfa '//' syntax error");
+}
+
+
+TEST_GROUP(huFindNodesByAnnotationKey)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+TEST(huFindNodesByAnnotationKey, normal)
+{
+    huVector nodes = huFindNodesByAnnotationKeyZ(l.trove, "a");
+    LONGS_EQUAL_TEXT(1, huGetVectorSize(& nodes), "l fnbak a sz == 1");
+    POINTERS_EQUAL_TEXT(l.a, *(huNode**)huGetVectorElement(& nodes, 0), "l fnbak a 0 == a");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyZ(l.trove, "b");
+    LONGS_EQUAL_TEXT(2, huGetVectorSize(& nodes), "l fnbak b sz == 2");
+    POINTERS_EQUAL_TEXT(l.bp, *(huNode**)huGetVectorElement(& nodes, 0), "l fnbak b 0 == bp");
+    POINTERS_EQUAL_TEXT(l.b, *(huNode**)huGetVectorElement(& nodes, 1), "l fnbak b 1 == b");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyZ(l.trove, "c");
+    LONGS_EQUAL_TEXT(3, huGetVectorSize(& nodes), "l fnbak b sz == 2");
+    POINTERS_EQUAL_TEXT(l.cpp, *(huNode**)huGetVectorElement(& nodes, 0), "l fnbak b 0 == cpp");
+    POINTERS_EQUAL_TEXT(l.cp, *(huNode**)huGetVectorElement(& nodes, 1), "l fnbak b 1 == cp");
+    POINTERS_EQUAL_TEXT(l.c, *(huNode**)huGetVectorElement(& nodes, 2), "l fnbak b 2 == c");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyZ(l.trove, "type");
+    LONGS_EQUAL_TEXT(6, huGetVectorSize(& nodes), "l fnbak type sz == 6");
+    POINTERS_EQUAL_TEXT(l.a, *(huNode**)huGetVectorElement(& nodes, 0), "l fnbak type 0 == a");
+    POINTERS_EQUAL_TEXT(l.bp, *(huNode**)huGetVectorElement(& nodes, 1), "l fnbak type 1 == bp");
+    POINTERS_EQUAL_TEXT(l.b, *(huNode**)huGetVectorElement(& nodes, 2), "l fnbak type 2 == b");
+    POINTERS_EQUAL_TEXT(l.cpp, *(huNode**)huGetVectorElement(& nodes, 3), "l fnbak type 3 == cpp");
+    POINTERS_EQUAL_TEXT(l.cp, *(huNode**)huGetVectorElement(& nodes, 4), "l fnbak type 4 == cp");
+    POINTERS_EQUAL_TEXT(l.c, *(huNode**)huGetVectorElement(& nodes, 5), "l fnbak type 5 == c");
+    huDestroyVector(& nodes);
+    
+    nodes = huFindNodesByAnnotationKeyZ(l.trove, "foo");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "l fnbak foo sz == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyZ(d.trove, "a");
+    LONGS_EQUAL_TEXT(1, huGetVectorSize(& nodes), "d fnbak a sz == 1");
+    POINTERS_EQUAL_TEXT(d.a, *(huNode**)huGetVectorElement(& nodes, 0), "d fnbak a 0 == a");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyZ(d.trove, "b");
+    LONGS_EQUAL_TEXT(2, huGetVectorSize(& nodes), "d fnbak b sz == 2");
+    POINTERS_EQUAL_TEXT(d.bp, *(huNode**)huGetVectorElement(& nodes, 0), "d fnbak b 0 == bp");
+    POINTERS_EQUAL_TEXT(d.b, *(huNode**)huGetVectorElement(& nodes, 1), "d fnbak b 1 == b");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyZ(d.trove, "c");
+    LONGS_EQUAL_TEXT(3, huGetVectorSize(& nodes), "d fnbak b sz == 2");
+    POINTERS_EQUAL_TEXT(d.cpp, *(huNode**)huGetVectorElement(& nodes, 0), "d fnbak b 0 == cpp");
+    POINTERS_EQUAL_TEXT(d.cp, *(huNode**)huGetVectorElement(& nodes, 1), "d fnbak b 1 == cp");
+    POINTERS_EQUAL_TEXT(d.c, *(huNode**)huGetVectorElement(& nodes, 2), "d fnbak b 2 == c");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyZ(d.trove, "type");
+    LONGS_EQUAL_TEXT(6, huGetVectorSize(& nodes), "d fnbak type sz == 6");
+    POINTERS_EQUAL_TEXT(d.a, *(huNode**)huGetVectorElement(& nodes, 0), "d fnbak type 0 == a");
+    POINTERS_EQUAL_TEXT(d.bp, *(huNode**)huGetVectorElement(& nodes, 1), "d fnbak type 1 == bp");
+    POINTERS_EQUAL_TEXT(d.b, *(huNode**)huGetVectorElement(& nodes, 2), "d fnbak type 2 == b");
+    POINTERS_EQUAL_TEXT(d.cpp, *(huNode**)huGetVectorElement(& nodes, 3), "d fnbak type 3 == cpp");
+    POINTERS_EQUAL_TEXT(d.cp, *(huNode**)huGetVectorElement(& nodes, 4), "d fnbak type 4 == cp");
+    POINTERS_EQUAL_TEXT(d.c, *(huNode**)huGetVectorElement(& nodes, 5), "d fnbak type 5 == c");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyZ(d.trove, "foo");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "d fnbak foo sz == 0");
+    huDestroyVector(& nodes);
+}
+
+TEST(huFindNodesByAnnotationKey, pathological)
+{
+    huVector nodes = huFindNodesByAnnotationKeyZ(NULL, "type");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "NULL fnbak type == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyZ(& humon_nullTrove, "type");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "null fnbak foo == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyZ(l.trove, NULL);
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "l fnbak NULL == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyZ(l.trove, "");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "l fnbak '' == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyZ(d.trove, NULL);
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "l fnbak NULL == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyZ(d.trove, "");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "l fnbak '' == 0");
+    huDestroyVector(& nodes);
+}
+
+
+TEST_GROUP(huFindNodesByAnnotationValue)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+TEST(huFindNodesByAnnotationValue, normal)
+{
+    huVector nodes = huFindNodesByAnnotationValueZ(l.trove, "a");
+    LONGS_EQUAL_TEXT(1, huGetVectorSize(& nodes), "l fnbav a sz == 1");
+    POINTERS_EQUAL_TEXT(l.a, *(huNode**)huGetVectorElement(& nodes, 0), "l fnbav a 0 == a");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationValueZ(l.trove, "b");
+    LONGS_EQUAL_TEXT(1, huGetVectorSize(& nodes), "l fnbav b sz == 1");
+    POINTERS_EQUAL_TEXT(l.b, *(huNode**)huGetVectorElement(& nodes, 0), "l fnbav b 0 == b");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationValueZ(l.trove, "c");
+    LONGS_EQUAL_TEXT(1, huGetVectorSize(& nodes), "l fnbav b sz == 1");
+    POINTERS_EQUAL_TEXT(l.c, *(huNode**)huGetVectorElement(& nodes, 0), "l fnbav b 0 == c");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationValueZ(l.trove, "value");
+    LONGS_EQUAL_TEXT(3, huGetVectorSize(& nodes), "l fnbav value sz == 3");
+    POINTERS_EQUAL_TEXT(l.a, *(huNode**)huGetVectorElement(& nodes, 0), "l fnbav type 0 == a");
+    POINTERS_EQUAL_TEXT(l.b, *(huNode**)huGetVectorElement(& nodes, 1), "l fnbav type 1 == b");
+    POINTERS_EQUAL_TEXT(l.c, *(huNode**)huGetVectorElement(& nodes, 2), "l fnbav type 2 == c");
+
+    nodes = huFindNodesByAnnotationValueZ(l.trove, "list");
+    LONGS_EQUAL_TEXT(3, huGetVectorSize(& nodes), "l fnbav list sz == 3");
+    POINTERS_EQUAL_TEXT(l.bp, *(huNode**)huGetVectorElement(& nodes, 0), "l fnbav list 0 == bp");
+    POINTERS_EQUAL_TEXT(l.cpp, *(huNode**)huGetVectorElement(& nodes, 1), "l fnbav list 1 == cpp");
+    POINTERS_EQUAL_TEXT(l.cp, *(huNode**)huGetVectorElement(& nodes, 2), "l fnbav list 2 == cp");
+    huDestroyVector(& nodes);
+    
+    nodes = huFindNodesByAnnotationValueZ(l.trove, "foo");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "l fnbav foo sz == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationValueZ(d.trove, "a");
+    LONGS_EQUAL_TEXT(1, huGetVectorSize(& nodes), "d fnbav a sz == 1");
+    POINTERS_EQUAL_TEXT(d.a, *(huNode**)huGetVectorElement(& nodes, 0), "d fnbav a 0 == a");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationValueZ(d.trove, "b");
+    LONGS_EQUAL_TEXT(1, huGetVectorSize(& nodes), "d fnbav b sz == 1");
+    POINTERS_EQUAL_TEXT(d.b, *(huNode**)huGetVectorElement(& nodes, 0), "d fnbav b 0 == b");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationValueZ(d.trove, "c");
+    LONGS_EQUAL_TEXT(1, huGetVectorSize(& nodes), "d fnbav b sz == 1");
+    POINTERS_EQUAL_TEXT(d.c, *(huNode**)huGetVectorElement(& nodes, 0), "d fnbav b 0 == c");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationValueZ(d.trove, "value");
+    LONGS_EQUAL_TEXT(3, huGetVectorSize(& nodes), "d fnbav value sz == 3");
+    POINTERS_EQUAL_TEXT(d.a, *(huNode**)huGetVectorElement(& nodes, 0), "d fnbav type 0 == a");
+    POINTERS_EQUAL_TEXT(d.b, *(huNode**)huGetVectorElement(& nodes, 1), "d fnbav type 1 == b");
+    POINTERS_EQUAL_TEXT(d.c, *(huNode**)huGetVectorElement(& nodes, 2), "d fnbav type 2 == c");
+
+    nodes = huFindNodesByAnnotationValueZ(d.trove, "dict");
+    LONGS_EQUAL_TEXT(3, huGetVectorSize(& nodes), "d fnbav dict sz == 3");
+    POINTERS_EQUAL_TEXT(d.bp, *(huNode**)huGetVectorElement(& nodes, 0), "d fnbav dict 0 == bp");
+    POINTERS_EQUAL_TEXT(d.cpp, *(huNode**)huGetVectorElement(& nodes, 1), "d fnbav dict 1 == cpp");
+    POINTERS_EQUAL_TEXT(d.cp, *(huNode**)huGetVectorElement(& nodes, 2), "d fnbav dict 2 == cp");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationValueZ(d.trove, "foo");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "d fnbav foo sz == 0");
+    huDestroyVector(& nodes);
+}
+
+TEST(huFindNodesByAnnotationValue, pathological)
+{
+    huVector nodes = huFindNodesByAnnotationValueZ(NULL, "type");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "NULL fnbav type == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationValueZ(& humon_nullTrove, "type");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "null fnbav foo == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationValueZ(l.trove, NULL);
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "l fnbav NULL == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationValueZ(l.trove, "");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "l fnbav '' == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationValueZ(d.trove, NULL);
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "l fnbav NULL == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationValueZ(d.trove, "");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "l fnbav '' == 0");
+    huDestroyVector(& nodes);
+}
+
+
+TEST_GROUP(huFindNodesByAnnotationKeyValue)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+TEST(huFindNodesByAnnotationKeyValue, normal)
+{
+    huVector nodes = huFindNodesByAnnotationKeyValueZZ(l.trove, "a", "a");
+    LONGS_EQUAL_TEXT(1, huGetVectorSize(& nodes), "l fnbakv a a sz == 1");
+    POINTERS_EQUAL_TEXT(l.a, *(huNode**)huGetVectorElement(& nodes, 0), "l fnbakv a a 0 == a");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyValueZZ(l.trove, "b", "bp");
+    LONGS_EQUAL_TEXT(1, huGetVectorSize(& nodes), "l fnbakv b bp sz == 1");
+    POINTERS_EQUAL_TEXT(l.bp, *(huNode**)huGetVectorElement(& nodes, 0), "l fnbakv b bp 0 == bp");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyValueZZ(l.trove, "c", "c");
+    LONGS_EQUAL_TEXT(1, huGetVectorSize(& nodes), "l fnbakv c c sz == 1");
+    POINTERS_EQUAL_TEXT(l.c, *(huNode**)huGetVectorElement(& nodes, 0), "l fnbakv c c 0 == c");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyValueZZ(l.trove, "type", "value");
+    LONGS_EQUAL_TEXT(3, huGetVectorSize(& nodes), "l fnbakv type value sz == 3");
+    POINTERS_EQUAL_TEXT(l.a, *(huNode**)huGetVectorElement(& nodes, 0), "l fnbakv type value 0 == a");
+    POINTERS_EQUAL_TEXT(l.b, *(huNode**)huGetVectorElement(& nodes, 1), "l fnbakv type value 1 == b");
+    POINTERS_EQUAL_TEXT(l.c, *(huNode**)huGetVectorElement(& nodes, 2), "l fnbakv type value 2 == c");
+
+    nodes = huFindNodesByAnnotationKeyValueZZ(l.trove, "type", "list");
+    LONGS_EQUAL_TEXT(3, huGetVectorSize(& nodes), "l fnbakv type list sz == 3");
+    POINTERS_EQUAL_TEXT(l.bp, *(huNode**)huGetVectorElement(& nodes, 0), "l fnbakv type list 0 == bp");
+    POINTERS_EQUAL_TEXT(l.cpp, *(huNode**)huGetVectorElement(& nodes, 1), "l fnbakv type list 1 == cpp");
+    POINTERS_EQUAL_TEXT(l.cp, *(huNode**)huGetVectorElement(& nodes, 2), "l fnbakv type list 2 == cp");
+    huDestroyVector(& nodes);
+    
+    nodes = huFindNodesByAnnotationKeyValueZZ(l.trove, "foo", "bar");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "l fnbakv foo bar sz == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyValueZZ(l.trove, "a", "foo");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "l fnbakv a foo sz == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyValueZZ(d.trove, "a", "a");
+    LONGS_EQUAL_TEXT(1, huGetVectorSize(& nodes), "d fnbakv a a sz == 1");
+    POINTERS_EQUAL_TEXT(d.a, *(huNode**)huGetVectorElement(& nodes, 0), "d fnbakv a a 0 == a");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyValueZZ(d.trove, "b", "bp");
+    LONGS_EQUAL_TEXT(1, huGetVectorSize(& nodes), "d fnbakv b bp sz == 1");
+    POINTERS_EQUAL_TEXT(d.bp, *(huNode**)huGetVectorElement(& nodes, 0), "d fnbakv b bp 0 == b");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyValueZZ(d.trove, "c", "c");
+    LONGS_EQUAL_TEXT(1, huGetVectorSize(& nodes), "d fnbakv c c sz == 1");
+    POINTERS_EQUAL_TEXT(d.c, *(huNode**)huGetVectorElement(& nodes, 0), "d fnbakv c c == c");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyValueZZ(d.trove, "type", "value");
+    LONGS_EQUAL_TEXT(3, huGetVectorSize(& nodes), "d fnbakv type value sz == 3");
+    POINTERS_EQUAL_TEXT(d.a, *(huNode**)huGetVectorElement(& nodes, 0), "d fnbakv type value 0 == a");
+    POINTERS_EQUAL_TEXT(d.b, *(huNode**)huGetVectorElement(& nodes, 1), "d fnbakv type value 1 == b");
+    POINTERS_EQUAL_TEXT(d.c, *(huNode**)huGetVectorElement(& nodes, 2), "d fnbakv type value 2 == c");
+
+    nodes = huFindNodesByAnnotationKeyValueZZ(d.trove, "type", "dict");
+    LONGS_EQUAL_TEXT(3, huGetVectorSize(& nodes), "d fnbakv type dict sz == 3");
+    POINTERS_EQUAL_TEXT(d.bp, *(huNode**)huGetVectorElement(& nodes, 0), "d fnbakv type dict 0 == bp");
+    POINTERS_EQUAL_TEXT(d.cpp, *(huNode**)huGetVectorElement(& nodes, 1), "d fnbakv type dict 1 == cpp");
+    POINTERS_EQUAL_TEXT(d.cp, *(huNode**)huGetVectorElement(& nodes, 2), "d fnbakv type dict 2 == cp");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyValueZZ(d.trove, "foo", "bar");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "d fnbakv foo bar sz == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyValueZZ(d.trove, "a", "foo");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "d fnbakv a foo sz == 0");
+    huDestroyVector(& nodes);
+}
+
+TEST(huFindNodesByAnnotationKeyValue, pathological)
+{
+    huVector nodes = huFindNodesByAnnotationKeyValueZZ(NULL, "type", "value");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "NULL fnbakv type == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyValueZZ(& humon_nullTrove, "type", "value");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "null fnbakv foo == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyValueZZ(l.trove, NULL, "a");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "l fnbakv NULL == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyValueZZ(l.trove, "a", NULL);
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "l fnbakv NULL == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyValueZZ(l.trove, "", "a");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "l fnbakv '' == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyValueZZ(l.trove, "a", "");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "l fnbakv '' == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyValueZZ(d.trove, NULL, "a");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "l fnbakv NULL == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyValueZZ(d.trove, "a", NULL);
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "l fnbakv NULL == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyValueZZ(d.trove, "", "a");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "l fnbakv '' == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByAnnotationKeyValueZZ(d.trove, "a", "");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "l fnbakv '' == 0");
+    huDestroyVector(& nodes);
+}
+
+
+TEST_GROUP(huFindNodesByCommentContaining)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+TEST(huFindNodesByCommentContaining, normal)
+{
+    auto exp = "This is a "sv;
+    huVector nodes = huFindNodesByCommentContainingN(l.trove, exp.data(), exp.size());
+    LONGS_EQUAL_TEXT(3, huGetVectorSize(& nodes), "l fnbcc This is a == 3");
+    POINTERS_EQUAL_TEXT(l.a, *(huNode**)huGetVectorElement(& nodes, 0), "l fnbcc This is a 0 == a");
+    POINTERS_EQUAL_TEXT(l.bp, *(huNode**)huGetVectorElement(& nodes, 1), "l fnbcc This is a 1 == bp");
+    POINTERS_EQUAL_TEXT(l.cpp, *(huNode**)huGetVectorElement(& nodes, 2), "l fnbcc This is a 2 == cpp");
+    huDestroyVector(& nodes);
+
+    exp = "aaaa"sv;
+    nodes = huFindNodesByCommentContainingN(l.trove, exp.data(), exp.size());
+    LONGS_EQUAL_TEXT(1, huGetVectorSize(& nodes), "l fnbcc aaaa == 1");
+    POINTERS_EQUAL_TEXT(l.a, *(huNode**)huGetVectorElement(& nodes, 0), "l fnbcc aaaa 0 == a");
+    huDestroyVector(& nodes);
+
+    exp = "cp"sv;
+    nodes = huFindNodesByCommentContainingN(l.trove, exp.data(), exp.size());
+    LONGS_EQUAL_TEXT(2, huGetVectorSize(& nodes), "l fnbcc cp == 2");
+    POINTERS_EQUAL_TEXT(l.cpp, *(huNode**)huGetVectorElement(& nodes, 0), "l fnbcc cp 1 == cpp");
+    POINTERS_EQUAL_TEXT(l.cp, *(huNode**)huGetVectorElement(& nodes, 1), "l fnbcc cp 0 == cp");
+    huDestroyVector(& nodes);
+
+    exp = "This is a "sv;
+    nodes = huFindNodesByCommentContainingN(d.trove, exp.data(), exp.size());
+    LONGS_EQUAL_TEXT(3, huGetVectorSize(& nodes), "d fnbcc This is a == 3");
+    POINTERS_EQUAL_TEXT(d.a, *(huNode**)huGetVectorElement(& nodes, 0), "d fnbcc This is a 0 == a");
+    POINTERS_EQUAL_TEXT(d.bp, *(huNode**)huGetVectorElement(& nodes, 1), "d fnbcc This is a 1 == bp");
+    POINTERS_EQUAL_TEXT(d.cpp, *(huNode**)huGetVectorElement(& nodes, 2), "d fnbcc This is a 2 == cpp");
+    huDestroyVector(& nodes);
+
+    exp = "aaaa"sv;
+    nodes = huFindNodesByCommentContainingN(d.trove, exp.data(), exp.size());
+    LONGS_EQUAL_TEXT(1, huGetVectorSize(& nodes), "d fnbcc aaaa == 1");
+    POINTERS_EQUAL_TEXT(d.a, *(huNode**)huGetVectorElement(& nodes, 0), "d fnbcc aaaa 0 == a");
+    huDestroyVector(& nodes);
+
+    exp = "cp"sv;
+    nodes = huFindNodesByCommentContainingN(d.trove, exp.data(), exp.size());
+    LONGS_EQUAL_TEXT(2, huGetVectorSize(& nodes), "d fnbcc cp == 2");
+    POINTERS_EQUAL_TEXT(d.cpp, *(huNode**)huGetVectorElement(& nodes, 0), "d fnbcc cp 1 == cpp");
+    POINTERS_EQUAL_TEXT(d.cp, *(huNode**)huGetVectorElement(& nodes, 1), "d fnbcc cp 0 == cp");
+    huDestroyVector(& nodes);
+}
+
+TEST(huFindNodesByCommentContaining, pathological)
+{
+    huVector nodes = huFindNodesByCommentContainingZ(NULL, "This");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "NULL fnbcc This == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByCommentContainingZ(& humon_nullTrove, "This");
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "null fnbcc This == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByCommentContainingZ(l.trove, NULL);
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "l fnbcc NULL == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByCommentContainingZ(l.trove, "");
+    LONGS_EQUAL_TEXT(6, huGetVectorSize(& nodes), "l fnbcc '' == 6");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByCommentContainingZ(d.trove, NULL);
+    LONGS_EQUAL_TEXT(0, huGetVectorSize(& nodes), "d fnbcc NULL == 0");
+    huDestroyVector(& nodes);
+
+    nodes = huFindNodesByCommentContainingZ(d.trove, "");
+    LONGS_EQUAL_TEXT(6, huGetVectorSize(& nodes), "d fnbcc '' == 6");
+    huDestroyVector(& nodes);
+}
+
+
+TEST_GROUP(huTroveToString)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+// Just doing patho tests -- this is heavily function-tested elsewhere.
+TEST(huTroveToString, pathological)
+{
+    huStringView sv;
+    sv = huTroveToString(NULL, HU_OUTPUTFORMAT_PRESERVED, false, 4, NULL);
+    LONGS_EQUAL_TEXT(0, sv.size, "NULL->str sz == 0");
+    POINTERS_EQUAL_TEXT(NULL, sv.str, "NULL->str == NULL");
+    huDestroyStringView(& sv);
+
+    sv = huTroveToString(& humon_nullTrove, HU_OUTPUTFORMAT_PRESERVED, false, 4, NULL);
+    LONGS_EQUAL_TEXT(0, sv.size, "null->str sz == 0");
+    POINTERS_EQUAL_TEXT(NULL, sv.str, "null->str == NULL");
+    huDestroyStringView(& sv);
+
+    sv = huTroveToString(l.trove, 3, false, 4, NULL);
+    LONGS_EQUAL_TEXT(0, sv.size, "null->str sz == 0");
+    POINTERS_EQUAL_TEXT(NULL, sv.str, "null->str == NULL");
+    huDestroyStringView(& sv);
+
+    sv = huTroveToString(l.trove, -1, false, 4, NULL);
+    LONGS_EQUAL_TEXT(0, sv.size, "null->str sz == 0");
+    POINTERS_EQUAL_TEXT(NULL, sv.str, "null->str == NULL");
+    huDestroyStringView(& sv);
+
+    sv = huTroveToString(l.trove, HU_OUTPUTFORMAT_PRESERVED, false, -1, NULL);
+    LONGS_EQUAL_TEXT(0, sv.size, "null->str sz == 0");
+    POINTERS_EQUAL_TEXT(NULL, sv.str, "null->str == NULL");
+    huDestroyStringView(& sv);
+}
+
+
+TEST_GROUP(huTroveToFile)
+{
+    htd_listOfLists l;
+    htd_dictOfDicts d;
+
+    void setup()
+    {
+        l.setup();
+        d.setup();
+    }
+
+    void teardown()
+    {
+        d.teardown();
+        l.teardown();
+    }
+};
+
+// Just doing patho tests -- this is heavily function-tested elsewhere.
+TEST(huTroveToFile, pathological)
+{
+    auto validFile = "src/test/testFiles/testout.hu";
+
+    // Remove this file if it exists.
+    int acc = access(validFile, F_OK);
+    if (acc != -1)
+        { remove(validFile); }
+
+    int sv;
+    sv = huTroveToFileZ(NULL, validFile, HU_OUTPUTFORMAT_PRESERVED, false, 4, NULL);
+    LONGS_EQUAL_TEXT(0, sv, "NULL->file sz == 0");
+    acc = access(validFile, F_OK);
+    LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
+    if (acc != -1)
+        { remove(validFile); }
+
+    sv = huTroveToFileZ(& humon_nullTrove, validFile, HU_OUTPUTFORMAT_PRESERVED, false, 4, NULL);
+    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+
+    sv = huTroveToFileZ(& humon_nullTrove, NULL, HU_OUTPUTFORMAT_PRESERVED, false, 4, NULL);
+    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+
+    sv = huTroveToFileZ(& humon_nullTrove, "", HU_OUTPUTFORMAT_PRESERVED, false, 4, NULL);
+    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+
+    sv = huTroveToFileZ(& humon_nullTrove, "..", HU_OUTPUTFORMAT_PRESERVED, false, 4, NULL);
+    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+
+    sv = huTroveToFileZ(& humon_nullTrove, "/", HU_OUTPUTFORMAT_PRESERVED, false, 4, NULL);
+    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+
+    sv = huTroveToFileZ(l.trove, validFile, 3, false, 4, NULL);
+    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+    acc = access(validFile, F_OK);
+    LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
+    if (acc != -1)
+        { remove(validFile); }
+
+    sv = huTroveToFileZ(l.trove, validFile, -1, false, 4, NULL);
+    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+    acc = access(validFile, F_OK);
+    LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
+    if (acc != -1)
+        { remove(validFile); }
+
+    sv = huTroveToFileZ(l.trove, validFile, HU_OUTPUTFORMAT_PRESERVED, false, -1, NULL);
+    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+    acc = access(validFile, F_OK);
+    LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
+    if (acc != -1)
+        { remove(validFile); }
+}
+

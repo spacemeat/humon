@@ -328,9 +328,9 @@ extern "C"
     /// Returns an annotation from a trove by index.
     huAnnotation const * huGetTroveAnnotation(huTrove const * trove, int annotationIdx);
 
-    /// Returns the number of annotations associated to a trove with a specific key.
+    /// Returns whether any annotations are associated to a trove with a specific key.
     bool huTroveHasAnnotationWithKeyZ(huTrove const * trove, char const * key);
-    /// Returns the number of annotations associated to a trove with a specific key.
+    /// Returns whether any annotations are associated to a trove with a specific key.
     bool huTroveHasAnnotationWithKeyN(huTrove const * trove, char const * key, int keyLen);
     /// Returns an annoation object associated to a trove, by key and index.
     huToken const * huGetTroveAnnotationWithKeyZ(huTrove const * trove, char const * key);

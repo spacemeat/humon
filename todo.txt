@@ -1,11 +1,12 @@
 DONE THIS CHECKIN:
-P1 More API testing, and resultant bug fixes.
+P1 More API testing for node functions, and resultant bug fixes.
 
 TODO:
 P1 CMake, vcpkg
 P1 doxygen
 P1 review (and actually validate) code in readme.
 P1 change readme to reflect unique anno keys
+P1 normalize HU_ERROR_THINGS_WITH_UNDERSCORES
 P1 much more API testing
     - C++: test value<T>, from_chars(... T&), etc.
 P2 UTF8 digits for addressing
