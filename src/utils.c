@@ -85,6 +85,19 @@ void huInitVector(huVector * vector, int elementSize)
 }
 
 
+void huInitVectorPreallocated(huVector * vector, int elementSize, void * buffer, int numElements)
+{
+    vector->buffer = buffer;
+    vector->elementSize = elementSize;
+    vector->numElements = 0;
+
+    int cap = numElements;
+    if (cap % 16 != 0)
+        { cap = ((numElements / 16) + 1) * 16; }
+    vector->vectorCapacity = cap;
+}
+
+
 void huDestroyVector(huVector const * vector)
 {
     // you bet your sweet bippy I'm casting away the const
@@ -116,14 +129,25 @@ void * huGrowVector(huVector * vector, int numElements)
 {
     if (vector->numElements == 0)
     {
+        vector->numElements = numElements;
+
         // round up to a group of 16 elements
         int cap = numElements;
         if (cap % 16 != 0)
             { cap = ((numElements / 16) + 1) * 16; }
 
-        vector->vectorCapacity = cap;
-        vector->numElements = numElements;
-        vector->buffer = malloc(cap * vector->elementSize);
+        // capacity can be set even if numElements is 0.
+        if (cap > vector->vectorCapacity)
+        {
+            if (vector->buffer)
+                { free(vector->buffer); vector->buffer = NULL; }
+
+            vector->vectorCapacity = cap;
+
+            // If elementSize is 0, we're just counting, no malloc
+            if (vector->elementSize > 0)
+                { vector->buffer = malloc(cap * vector->elementSize); }
+        }
 
         return vector->buffer;
     }
@@ -137,21 +161,14 @@ void * huGrowVector(huVector * vector, int numElements)
         if (cap > vector->vectorCapacity)
         {
             vector->vectorCapacity = cap;
-            vector->buffer = realloc(vector->buffer, cap * vector->elementSize);
+            if (vector->elementSize > 0)
+                { vector->buffer = realloc(vector->buffer, cap * vector->elementSize); }
             if (vector->buffer == NULL)
                 { return NULL; }
         }
 
         return vector->buffer + (vector->numElements - numElements) * vector->elementSize;
     }
-}
-
-
-void huDestroyStringView(huStringView const * string)
-{
-    // here too, ya hoser
-    if (string->str != NULL)
-        { free((void *) string->str); }
 }
 
 

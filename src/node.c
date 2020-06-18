@@ -342,44 +342,39 @@ huToken const * huGetComment(huNode const * node, int commentIdx)
 }
 
 
-huVector huGetCommentsContainingZ(huNode const * node, char const * containedText)
+huToken const * huGetCommentsContainingZ(huNode const * node, char const * containedText, huToken const * startWith)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (containedText == NULL)
-    {
-        huVector nodesVect;
-        huInitVector(& nodesVect, sizeof(huNode *));
-        return nodesVect;
-    }
+        { return & humon_nullToken; }
 #endif
 
-    return huGetCommentsContainingN(node, containedText, strlen(containedText));
+    return huGetCommentsContainingN(node, containedText, strlen(containedText), startWith);
 }
 
 
-huVector huGetCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen)
+huToken const * huGetCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen, huToken const * startWith)
 {
-    huVector nodesVect;
-    huInitVector(& nodesVect, sizeof(huToken *));
-
 #ifdef HUMON_CHECK_PARAMS
     if (node == NULL || node == & humon_nullNode || containedText == NULL || containedTextLen < 0)
-        { return nodesVect; }
+        { return & humon_nullToken; }
 #endif
+
+    bool foundLast = startWith == NULL;
 
     int na = huGetNumComments(node);
     for (int i = 0; i < na; ++i)
     {
         huToken const * comm = huGetComment(node, i);
-        if (stringInString(comm->value.str, comm->value.size, 
+        if (foundLast && stringInString(comm->value.str, comm->value.size, 
                 containedText, containedTextLen))
-        {
-            huToken const ** pn = huGrowVector(& nodesVect, 1);                
-            * pn = comm;
-        }
+            { return comm; }
+
+        if (foundLast == false && comm == startWith)
+            { foundLast = true; }
     }
 
-    return nodesVect;
+    return & humon_nullToken;
 }
 
 
@@ -417,7 +412,7 @@ void eatAddressWord(huCursor * cursor, int * len, int * col)
 }
 
 
-void eatQuotedAddressWord(huCursor * cursor, char quoteChar, int * len, int * col, int * error)
+void eatQuotedAddressWord(huCursor * cursor, char quoteChar, int * len, int * col)
 {
     // The first character is already confirmed quoteChar, so, next please.
     * col += 1;
@@ -428,11 +423,7 @@ void eatQuotedAddressWord(huCursor * cursor, char quoteChar, int * len, int * co
     {
         analyzeWhitespace(cursor);
         if (cursor->character[0] == '\0')
-        { 
-          if (error)
-            { * error = HU_ERROR_UNFINISHED_QUOTE; } 
-          eating = false;
-        }
+            { eating = false; }
         else if (cursor->ws_line)
         {
             * len += cursor->charLength;
@@ -467,17 +458,14 @@ void eatQuotedAddressWord(huCursor * cursor, char quoteChar, int * len, int * co
 }
 
 
-huNode const * huGetNodeByRelativeAddressZ(huNode const * node, char const * address, int * error)
+huNode const * huGetNodeByRelativeAddressZ(huNode const * node, char const * address)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (address == NULL)
-    {
-        if (error) { * error = HU_ERROR_ILLEGAL; }
-        return & humon_nullNode;
-    }
+        { return & humon_nullNode; }
 #endif
 
-    return huGetNodeByRelativeAddressN(node, address, strlen(address), error);
+    return huGetNodeByRelativeAddressN(node, address, strlen(address));
 }
 
 
@@ -487,17 +475,12 @@ huNode const * huGetNodeByRelativeAddressZ(huNode const * node, char const * add
     foo\u2000/3/bar
     error can be NULL
 */
-huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * address, int addressLen, int * error)
+huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * address, int addressLen)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (node == NULL || node == & humon_nullNode || address == NULL || addressLen < 0)
-    {
-        if (error) { * error = HU_ERROR_ILLEGAL; }
-        return & humon_nullNode;
-    }
+        { return & humon_nullNode; }
 #endif
-
-    if (error) { * error = HU_ERROR_NO_ERROR; }
 
     // When the last node is reached in the address, we're it.
     if (addressLen == 0)
@@ -505,7 +488,7 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
 
     // malformed
     if (address[0] == '/')
-        { if (error) { * error = HU_ERROR_SYNTAX_ERROR; } return & humon_nullNode; }
+        { return & humon_nullNode; }
 
     huCursor cur = 
         { .trove = NULL, 
@@ -523,17 +506,17 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
     case '\0':
         return node;
     case '"':
-        eatQuotedAddressWord(& cur, '"', & len, & col, error);
+        eatQuotedAddressWord(& cur, '"', & len, & col);
         wordStart += 1;
         quoted = true;
         break;
     case '\'':
-        eatQuotedAddressWord(& cur, '\'', & len, & col, error);
+        eatQuotedAddressWord(& cur, '\'', & len, & col);
         wordStart += 1;
         quoted = true;
         break;
     case '`':
-        eatQuotedAddressWord(& cur, '`', & len, & col, error);
+        eatQuotedAddressWord(& cur, '`', & len, & col);
         wordStart += 1;
         quoted = true;
         break;
@@ -542,7 +525,7 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
         break;
     }
 
-    if (* error != HU_ERROR_NO_ERROR)
+    if (len == 0)
        { return & humon_nullNode; }
 
     huNode const * nextNode = & humon_nullNode;
@@ -561,7 +544,7 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
     }
     // If the key or index is invalid, nextNode wil be set to & humon_nullNode.
     if (nextNode->kind == HU_NODEKIND_NULL)
-        { if (error) { * error = HU_ERROR_NOTFOUND; } return & humon_nullNode; }
+        { return & humon_nullNode; }
     
     eatWs(& cur, 1, & line, & col);
 
@@ -570,10 +553,10 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
     else if (address[col] == '/')
     {
         return huGetNodeByRelativeAddressN(
-            nextNode, address + col + 1, addressLen - col - 1, error);
+            nextNode, address + col + 1, addressLen - col - 1);
     }
     else
-      { if (error) { * error = HU_ERROR_SYNTAX_ERROR; } return & humon_nullNode; }
+      { return & humon_nullNode; }
 }
 
 
@@ -603,24 +586,19 @@ int log10i(unsigned int x)
     else { return 18; }
 }
 
-// TODO: doc how this guy returns a null string
-huStringView huGetNodeAddress(huNode const * node)
+
+int huGetNodeAddressLength(huNode const * node)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (node == NULL || node == & humon_nullNode)
-    {
-        huStringView sv = { .str = NULL, .size = 0 };
-        return sv;
-    }
+        { return 0; }
 #endif
 
-    // measure, alloc, fill
-    int addressLen = 0;
+    int addressLen = 0; 
 
     huNode const * n = node;
     if (n->parentNodeIdx == -1)
-        { addressLen = 1; }
-
+        { return 1; } // for the root if node is root
     while (n->parentNodeIdx != -1)
     {
         huNode const * parentN = huGetParentNode(n);
@@ -633,27 +611,107 @@ huStringView huGetNodeAddress(huNode const * node)
             addressLen += log10i((unsigned int) n->childIdx) + 1;
         }
 
-        addressLen += 1;  // for the '/'!
-
+        addressLen += 1;  // for the node '/'
         n = parentN;
     }
 
-    char * str = malloc(addressLen + 1);
-    if (str == NULL)
+    return addressLen;
+}
+
+
+void getNodeAddressRec(huNode const * node, huVector * str)
+{
+    if (node->parentNodeIdx != -1)
+        { getNodeAddressRec(huGetParentNode(node), str); }
+    else
+        { return; }
+    
+    huNode const * parentNode = huGetParentNode(node);
+
+    appendString(str, "/", 1);    
+    
+    if (parentNode->kind == HU_NODEKIND_LIST)
     {
-        huStringView sv = { .str = NULL, .size = 0 };
-        return sv;
+        int numBytes = log10i((unsigned int) node->childIdx) + 1;
+        char * nn = huGrowVector(str, numBytes);
+
+        // If we're printing the string and not just counting,
+        if (str->elementSize > 0)
+        {
+            nn += numBytes; // set nn to past the end of the new bits so we can print it in reverse
+            int cv = node->childIdx;
+            for (int i = 0; i < numBytes; ++i)
+            {
+                nn -= 1;
+                * nn = '0' + cv % 10;
+                cv /= 10;
+            }
+        }
+    }
+    else if (parentNode->kind == HU_NODEKIND_DICT)
+    {
+        huStringView const * key = & huGetKey(node)->value;
+        appendString(str, key->str, key->size);
+    }
+}
+
+void huGetNodeAddress(huNode const * node, char * dest, int * destLen)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (node == NULL || node == & humon_nullNode || destLen == NULL)
+        { return; }
+#endif
+
+    // if node is root, do special return "/"
+    if (node->parentNodeIdx == -1)
+    { 
+        * destLen = 1;
+        if (dest != NULL)
+            { dest[0] = '/'; }
+        return;
     }
 
-    str[addressLen] = '\0';
-    huStringView sv = { .str = str, .size = addressLen };
-    char * cur = str + addressLen;
-    n = node;
-    if (n->parentNodeIdx == -1)
+    huVector str;
+    if (dest == NULL)
     {
-        str[0] = '/';
-        cur = str;
+        huInitVector(& str, 0); // counting only
     }
+    else
+    {
+        huInitVectorPreallocated(& str, sizeof(char), dest, * destLen);
+    }
+
+    getNodeAddressRec(node, & str);
+    * destLen = str.numElements;
+}
+
+/*
+void huGetNodeAddress(huNode const * node, char * address, int * addressLen)
+{
+    address[0] = '\0';
+
+#ifdef HUMON_CHECK_PARAMS
+    if (node == NULL || node == & humon_nullNode || address == NULL || addressLen < 1)
+        { return; }
+#endif
+
+    huVector str;
+    if (address == NULL)
+    {
+        huInitVector(& str, 0); // counting only
+    }
+    else
+    {
+        huInitVector(& str, sizeof(char));
+        str.buffer = address;
+    }
+
+
+    char * cur = address + addressLen;
+    
+    huNode const * n = node;
+    if (n->parentNodeIdx == -1)
+        { cur -= 1; cur[0] = '/'; }
     while (n->parentNodeIdx != -1)
     {
         huNode const * parentN = huGetParentNode(n);
@@ -661,6 +719,8 @@ huStringView huGetNodeAddress(huNode const * node)
         {
             huStringView const * key = & huGetKey(n)->value;
             cur -= key->size;
+            if (cur < address)
+                { address[0] = '\0'; return; }
             memcpy(cur, key->str, key->size);
         }
         else if (parentN->kind == HU_NODEKIND_LIST)
@@ -670,24 +730,23 @@ huStringView huGetNodeAddress(huNode const * node)
             for (int i = 0; i < numBytes; ++i)
             {
                 cur -= 1;
+                if (cur < address)
+                    { address[0] = '\0'; return; }
                 * cur = '0' + cv % 10;
                 cv /= 10;
             }
         }
 
         cur -= 1;
+        if (cur < address)
+            { address[0] = '\0'; return; }
         * cur = '/';
 
         n = parentN;
     }
 
-    if (str[addressLen] != '\0' || cur != str)
-    {
-        free((void *) sv.str);
-        sv.str = NULL;
-        sv.size = 0;
-        return sv;
-    }
-
-    return sv;
+    if (cur != address)
+        { address[0] = '\0'; }
 }
+
+*/

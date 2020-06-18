@@ -1,5 +1,12 @@
 DONE THIS CHECKIN:
-P1 More API testing for node functions, and resultant bug fixes.
+P1 Removed error coding from getByAddress.
+P1 Split huGetNodeAddress into length query and string-filler.
+P1 Convert things that return huStringView to size/print.
+P1 Convert things that return huVector to iterated calls.
+P1 Privatize huVector and huString functions.
+P1 Remove all references to free_const and all requirements to free() returned values.
+P1 Part out printing into its own src.
+P1 Some C++ sugar tests.
 
 TODO:
 P1 CMake, vcpkg

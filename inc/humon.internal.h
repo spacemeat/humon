@@ -11,7 +11,18 @@ extern "C"
 
     bool stringInString(char const * haystack, int haystackLen, char const * needle, int needleLen);
 
+    /// Initializes a vector to zero size. Does not allocate.
     void huInitVector(huVector * vector, int elementSize);
+    /// Initializes a vector with a preallocated buffer. Can still grow.
+    void huInitVectorPreallocated(huVector * vector, int elementSize, void * buffer, int numElements);
+
+    /// Frees the memory owned by a huVector.
+    void huDestroyVector(huVector const * vector);
+    /// Returns the number of elements in a huVector.
+    int huGetVectorSize(huVector const * vector);
+    /// Returns a pointer to an element in a huVector.
+    void * huGetVectorElement(huVector const * vector, int idx);
+
     void huResetVector(huVector * vector);
     void * huGrowVector(huVector * vector, int numElements);
 
@@ -41,7 +52,26 @@ extern "C"
 
     void huTokenizeTrove(huTrove * trove);
     void huParseTrove(huTrove * trove);
-    
+
+    // printing
+    void appendString(huVector * str, char const * addend, int size);
+    void appendWs(huVector * str, int numChars);
+    void appendColor(huVector * str, huStringView const * colorTable, int colorCode);
+    void endColor(huVector * str, huStringView const * colorTable);
+    void appendColoredString(huVector * str, char const * addend, int size, huStringView const * colorTable, int colorCode);
+    void printComment(huToken const * comment, huVector * str, huStringView const * colorTable);
+    int printSameLineComments(huNode const * node, bool firstToken, int startingCommentIdx, huVector * str, huStringView const* colorTable);
+    void printAnnotations(huAnnotation const * annos, int numAnno, bool troveOwned, huVector * str, huStringView const * colorTable);
+    void printTroveAnnotations(huTrove const * trove, huVector * str, huStringView const * colorTable);
+    void printNodeAnnotations(huNode const * node, huVector * str, huStringView const * colorTable);
+    void printKey(huToken const * keyToken, huVector * str, huStringView const * colorTable);
+    void printValue(huToken const * valueToken, huVector * str, huStringView const * colorTable);
+    void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable);
+    void troveToPrettyString(huTrove const * trove, huVector * str, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable);
+
+
+
+
 
 #ifdef __cplusplus
 } // extern "C"

@@ -104,36 +104,25 @@ extern "C"
      * parameters, and there is no public functions that
      * initialize a huVector. The huVector object always owns
      * its memory buffer, so when one goes out of scope, the
-     * user should free() the buffer pointer. */
+     * user should free() the buffer pointer.
+     * If the elementSize is set to 0, the vector does not track
+     * memory in `buffer`; it remains set to NULL.*/
     typedef struct huVector_tag
     {
         void * buffer;          ///< The owned buffer for the array.
-        int elementSize;        ///< The size of one element of the array.
+        int elementSize;        ///< The size of one element of the array. If set to 0, the vector does not manage memory.
         int numElements;        ///< The number of elements currently managed by the array.
         int vectorCapacity;     ///< The maximum capacity of the array.
     } huVector;
 
-    /// Frees the memory owned by a huVector.
-    void huDestroyVector(huVector const * vector);
-    /// Returns the number of elements in a huVector.
-    int huGetVectorSize(huVector const * vector);
-    /// Returns a pointer to an element in a huVector.
-    void * huGetVectorElement(huVector const * vector, int idx);
-
-    /// Stores a pointer to a string, and its size. May or may not own the string.
+    /// Stores a pointer to a string, and its size. Does not own the string.
     /** Represents a view of a string. The string is unlikely to be NULL-terminated.
-     * It is also not likely to point directly to an allocation, but to a substring.
-     * If the string memory is owned by the huStringView object, documentation will
-     * specify that the user must use huDestroyStringView(). if not, a huStringView
-     * object must simply be descoped. */
+     * It is also not likely to point directly to an allocation, but to a substring. */
     typedef struct huStringView_tag
     {
         char const * str;       ///< The beginning of the string in memory.
         int size;               ///< The size of the string in bytes.
     } huStringView;
-
-    /// Frees the memory owned by a huStringView.
-    void huDestroyStringView(huStringView const * string);
 
     /// Encodes a token read from Humon text.
     /** This structure encodes file location and buffer location information about a
@@ -195,22 +184,22 @@ extern "C"
      * and annotations can be associated to a node. */
     typedef struct huNode_tag
     {
-        huTrove const * trove;                ///< The trove tracking this node.
-        int nodeIdx;                    ///< The index of this node in the tracking array.
-        int kind;                       ///< A huNodeKind value.
-        huToken const * firstToken;           ///< The first token which contributes to this node, including any annotation and comment tokens.
-        huToken const * keyToken;             ///< The key token if the node is inside a dict.
-        huToken const * firstValueToken;      ///< The first token of this node's actual value; for a container, it points to the opening brac(e|ket).
-        huToken const * lastValueToken;       ///< The last token of this node's actual value; for a container, it points to the closing brac(e|ket).
-        huToken const * lastToken;            ///< The last token of this node, including any annotation and comment tokens.
+        huTrove const * trove;              ///< The trove tracking this node.
+        int nodeIdx;                        ///< The index of this node in the tracking array.
+        int kind;                           ///< A huNodeKind value.
+        huToken const * firstToken;         ///< The first token which contributes to this node, including any annotation and comment tokens.
+        huToken const * keyToken;           ///< The key token if the node is inside a dict.
+        huToken const * firstValueToken;    ///< The first token of this node's actual value; for a container, it points to the opening brac(e|ket).
+        huToken const * lastValueToken;     ///< The last token of this node's actual value; for a container, it points to the closing brac(e|ket).
+        huToken const * lastToken;          ///< The last token of this node, including any annotation and comment tokens.
 
-        int parentNodeIdx;              ///< The parent node's index, or -1 if this node is the root.
-        int childIdx;                   ///< The index of this node vis a vis its sibling nodes (starting at 0).
+        int parentNodeIdx;                  ///< The parent node's index, or -1 if this node is the root.
+        int childIdx;                       ///< The index of this node vis a vis its sibling nodes (starting at 0).
 
-        huVector childNodeIdxs;         ///< Manages a int []. Stores the node inexes of each child node, if this node is a collection.
-        huVector childDictKeys;         ///< Manages a huDictEntry []. Stores the key-index associations for a dict.
-        huVector annotations;           ///< Manages a huAnnotation []. Stores the annotations associated to this node.
-        huVector comments;              ///< Manages a huComment []. Stores the comments associated to this node.
+        huVector childNodeIdxs;             ///< Manages a int []. Stores the node inexes of each child node, if this node is a collection.
+        huVector childDictKeys;             ///< Manages a huDictEntry []. Stores the key-index associations for a dict.
+        huVector annotations;               ///< Manages a huAnnotation []. Stores the annotations associated to this node.
+        huVector comments;                  ///< Manages a huComment []. Stores the comments associated to this node.
     } huNode;
 
     /// Gets a pointer to a node's parent.
@@ -263,20 +252,17 @@ extern "C"
     /// Returns a comment token associated to a node, by index.
     huToken const * huGetComment(huNode const * node, int commentIdx);
     /// Returns all comment tokens associated to a node which contain the specified substring.
-    /// @note: user must DestroyVector(retval).
-    huVector huGetCommentsContainingZ(huNode const * node, char const * containedText);
+    huToken const * huGetCommentsContainingZ(huNode const * node, char const * containedText, huToken const * startWith);
     /// Returns all comment tokens associated to a node which contain the specified substring.
-    /// @note: user must DestroyVector(retval).
-    huVector huGetCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen);
+    huToken const * huGetCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen, huToken const * startWith);
 
     /// Looks up a node by relative address to a node.    
-    huNode const * huGetNodeByRelativeAddressZ(huNode const * node, char const * address, int * error);
+    huNode const * huGetNodeByRelativeAddressZ(huNode const * node, char const * address);
     /// Looks up a node by relative address to a node.    
-    huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * address, int addressLen, int * error);
+    huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * address, int addressLen);
 
-    /// Returns the full address for a node.
-    /// @note: user must DestroyStringView(retval).
-    huStringView huGetNodeAddress(huNode const * node);
+    /// Gets the full address of a node, or the length of that address.
+    void huGetNodeAddress(huNode const * node, char * address, int * addressLen);
 
     /// Encodes a Humon data trove.
     /** A trove stores all the tokens and nodes in a loaded Humon file. It is your main access
@@ -352,45 +338,34 @@ extern "C"
     huToken const * huGetTroveComment(huTrove const * trove, int errorIdx);
 
     /// Returns a node by its full address.
-    huNode const * huGetNodeByFullAddressZ(huTrove const * trove, char const * address, int * error);
+    huNode const * huGetNodeByFullAddressZ(huTrove const * trove, char const * address);
     /// Returns a node by its full address.
-    huNode const * huGetNodeByFullAddressN(huTrove const * trove, char const * address, int addressLen, int * error);
+    huNode const * huGetNodeByFullAddressN(huTrove const * trove, char const * address, int addressLen);
 
     /// Returns a collection of all nodes in a trove with a specific annotation key.
-    /// @note: User must huDestroyVector(retval.buffer);
-    huVector huFindNodesByAnnotationKeyZ(huTrove const * trove, char const * key);
+    huNode const * huFindNodesByAnnotationKeyZ(huTrove const * trove, char const * key, huNode const * startWith);
     /// Returns a collection of all nodes in a trove with a specific annotation key.
-    /// @note: User must huDestroyVector(retval.buffer);
-    huVector huFindNodesByAnnotationKeyN(huTrove const * trove, char const * key, int keyLen);
+    huNode const * huFindNodesByAnnotationKeyN(huTrove const * trove, char const * key, int keyLen, huNode const * startWith);
     /// Returns a collection of all nodes in a trove with a specific annotation value.
-    /// @note: User must huDestroyVector(retval.buffer);
-    huVector huFindNodesByAnnotationValueZ(huTrove const * trove, char const * value);
+    huNode const * huFindNodesByAnnotationValueZ(huTrove const * trove, char const * value, huNode const * startWith);
     /// Returns a collection of all nodes in a trove with a specific annotation value.
-    /// @note: User must huDestroyVector(retval.buffer);
-    huVector huFindNodesByAnnotationValueN(huTrove const * trove, char const * value, int valueLen);
+    huNode const * huFindNodesByAnnotationValueN(huTrove const * trove, char const * value, int valueLen, huNode const * startWith);
     /// Returns a collection of all nodes in a trove with a specific annotation key and value.
-    /// @note: User must huDestroyVector(retval.buffer);
-    huVector huFindNodesByAnnotationKeyValueZZ(huTrove const * trove, char const * key, char const * value);
+    huNode const * huFindNodesByAnnotationKeyValueZZ(huTrove const * trove, char const * key, char const * value, huNode const * startWith);
     /// Returns a collection of all nodes in a trove with a specific annotation key and value.
-    /// @note: User must huDestroyVector(retval.buffer);
-    huVector huFindNodesByAnnotationKeyValueNZ(huTrove const * trove, char const * key, int keyLen, char const * value);
+    huNode const * huFindNodesByAnnotationKeyValueNZ(huTrove const * trove, char const * key, int keyLen, char const * value, huNode const * startWith);
     /// Returns a collection of all nodes in a trove with a specific annotation key and value.
-    /// @note: User must huDestroyVector(retval.buffer);
-    huVector huFindNodesByAnnotationKeyValueZN(huTrove const * trove, char const * key, char const * value, int valueLen);
+    huNode const * huFindNodesByAnnotationKeyValueZN(huTrove const * trove, char const * key, char const * value, int valueLen, huNode const * startWith);
     /// Returns a collection of all nodes in a trove with a specific annotation key and value.
-    /// @note: User must huDestroyVector(retval.buffer);
-    huVector huFindNodesByAnnotationKeyValueNN(huTrove const * trove, char const * key, int keyLen, char const * value, int valueLen);
+    huNode const * huFindNodesByAnnotationKeyValueNN(huTrove const * trove, char const * key, int keyLen, char const * value, int valueLen, huNode const * startWith);
 
     /// Returns a collection of all nodes in a trove with a comment which contains specific text.
-    /// @note: User must huDestroyVector(retval.buffer);
-    huVector huFindNodesByCommentContainingZ(huTrove const * trove, char const * containedText);
+    huNode const * huFindNodesByCommentContainingZ(huTrove const * trove, char const * containedText, huNode const * startWith);
     /// Returns a collection of all nodes in a trove with a comment which contains specific text.
-    /// @note: User must huDestroyVector(retval.buffer);
-    huVector huFindNodesByCommentContainingN(huTrove const * trove, char const * containedText, int containedTextLen);    
+    huNode const * huFindNodesByCommentContainingN(huTrove const * trove, char const * containedText, int containedTextLen, huNode const * startWith);
 
     /// Serializes a trove to text.
-    /// @note: User must huDestroyStringView(retval.str);
-    huStringView huTroveToString(huTrove const * trove, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable);
+    void huTroveToString(huTrove const * trove, char * dest, int * destLength, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable);
 
     /// Serializes a trove to file.
     size_t huTroveToFileZ(huTrove const * trove, char const * path, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable);
