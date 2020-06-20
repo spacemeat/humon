@@ -9,11 +9,11 @@ void huInitNode(huNode * node, huTrove const * trove)
     node->trove = trove;
     node->nodeIdx = -1;
     node->kind = HU_NODEKIND_NULL;
-    node->firstToken = & humon_nullToken;
-    node->keyToken = & humon_nullToken;
-    node->firstValueToken = & humon_nullToken;
-    node->lastValueToken = & humon_nullToken;
-    node->lastToken = & humon_nullToken;
+    node->firstToken = hu_nullToken;
+    node->keyToken = hu_nullToken;
+    node->valueToken = hu_nullToken;
+    node->lastValueToken = hu_nullToken;
+    node->lastToken = hu_nullToken;
     node->childIdx = 0;
     node->parentNodeIdx = -1;
     huInitVector(& node->childNodeIdxs, sizeof(int));
@@ -26,7 +26,7 @@ void huInitNode(huNode * node, huTrove const * trove)
 void huDestroyNode(huNode const * node)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (node == NULL || node == & humon_nullNode)
+    if (node == NULL || node == hu_nullNode)
         { return; }
 #endif
 
@@ -40,8 +40,8 @@ void huDestroyNode(huNode const * node)
 huNode const * huGetParentNode(huNode const * node)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (node == NULL || node == & humon_nullNode)
-        { return & humon_nullNode; }
+    if (node == NULL || node == hu_nullNode)
+        { return hu_nullNode; }
 #endif
 
     return huGetNode(node->trove, node->parentNodeIdx);
@@ -51,7 +51,7 @@ huNode const * huGetParentNode(huNode const * node)
 int huGetNumChildren(huNode const * node)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (node == NULL || node == & humon_nullNode)
+    if (node == NULL || node == hu_nullNode)
         { return 0; }
 #endif
 
@@ -59,41 +59,41 @@ int huGetNumChildren(huNode const * node)
 }
 
 
-huNode const * huGetChildNodeByIndex(huNode const * node, int childIdx)
+huNode const * huGetChildByIndex(huNode const * node, int childIdx)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (node == NULL || node == & humon_nullNode || childIdx < 0)
-        { return & humon_nullNode; }
+    if (node == NULL || node == hu_nullNode || childIdx < 0)
+        { return hu_nullNode; }
 #endif
 
     if (childIdx >= huGetNumChildren(node))
-        { return & humon_nullNode; }
+        { return hu_nullNode; }
 
     return huGetNode(node->trove, 
         * (int *) huGetVectorElement(& node->childNodeIdxs, childIdx));
 }
 
 
-huNode const * huGetChildNodeByKeyZ(huNode const * node, char const * key)
+huNode const * huGetChildByKeyZ(huNode const * node, char const * key)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (key == NULL)
-        { return & humon_nullNode; }
+        { return hu_nullNode; }
 #endif
 
-    return huGetChildNodeByKeyN(node, key, strlen(key));
+    return huGetChildByKeyN(node, key, strlen(key));
 }
 
 
-huNode const * huGetChildNodeByKeyN(huNode const * node, char const * key, int keyLen)
+huNode const * huGetChildByKeyN(huNode const * node, char const * key, int keyLen)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (node == NULL || node == & humon_nullNode || key == NULL || keyLen < 0)
-        { return & humon_nullNode; }
+    if (node == NULL || node == hu_nullNode || key == NULL || keyLen < 0)
+        { return hu_nullNode; }
 #endif
 
     if (node->kind != HU_NODEKIND_DICT)
-        { return & humon_nullNode; }
+        { return hu_nullNode; }
 
     huDictEntry * dictEntries = (huDictEntry *) huGetVectorElement(
         & node->childDictKeys, 0);
@@ -103,30 +103,67 @@ huNode const * huGetChildNodeByKeyN(huNode const * node, char const * key, int k
         if (keyLen == dictEntry->key->value.size &&
             strncmp(dictEntry->key->value.str, key, keyLen) == 0)
         {
-           return huGetChildNodeByIndex(node, dictEntry->idx);
+           return huGetChildByIndex(node, dictEntry->idx);
         }
     }
 
-    return & humon_nullNode;
+    return hu_nullNode;
+}
+
+
+huNode const * huGetFirstChild(huNode const * node)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (node == NULL || node == hu_nullNode)
+        { return hu_nullNode; }
+#endif
+
+    if (huGetNumChildren(node) == 0)
+        { return hu_nullNode; }
+
+    return huGetNode(node->trove, 
+        * (int *) huGetVectorElement(& node->childNodeIdxs, 0));
+}
+
+
+huNode const * huGetNextSibling(huNode const * node)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (node == NULL || node == hu_nullNode)
+        { return hu_nullNode; }
+#endif
+
+    if (node->parentNodeIdx != -1)
+    {
+        huNode const * parentNode = huGetParentNode(node);
+
+        if (huGetNumChildren(parentNode) > node->childIdx + 1)
+        {
+           return huGetChildByIndex(parentNode, node->childIdx + 1);
+        }
+    }
+
+    return hu_nullNode;
 }
 
 
 bool huHasKey(huNode const * node)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (node == NULL || node == & humon_nullNode)
+    if (node == NULL || node == hu_nullNode)
         { return false; }
 #endif
 
-    return node->keyToken->tokenKind != HU_TOKENKIND_NULL;
+    return node->keyToken != hu_nullToken &&
+           node->keyToken->tokenKind != HU_TOKENKIND_NULL;
 }
 
 
 huToken const * huGetKey(huNode const * node)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (node == NULL || node == & humon_nullNode)
-        { return & humon_nullToken; }
+    if (node == NULL || node == hu_nullNode)
+        { return hu_nullToken; }
 #endif
 
     return node->keyToken;
@@ -136,39 +173,18 @@ huToken const * huGetKey(huNode const * node)
 bool huHasValue(huNode const * node)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (node == NULL || node == & humon_nullNode)
+    if (node == NULL || node == hu_nullNode)
         { return false; }
 #endif
 
-    return node->firstValueToken->tokenKind != HU_TOKENKIND_NULL;
-}
-
-
-huNode const * huNextSibling(huNode const * node)
-{
-#ifdef HUMON_CHECK_PARAMS
-    if (node == NULL || node == & humon_nullNode)
-        { return & humon_nullNode; }
-#endif
-
-    if (node->parentNodeIdx != -1)
-    {
-        huNode const * parentNode = huGetParentNode(node);
-
-        if (huGetNumChildren(parentNode) > node->childIdx + 1)
-        {
-           return huGetChildNodeByIndex(parentNode, node->childIdx + 1);
-        }
-    }
-
-    return & humon_nullNode;
+    return node->valueToken->tokenKind != HU_TOKENKIND_NULL;
 }
 
 
 int huGetNumAnnotations(huNode const * node)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (node == NULL || node == & humon_nullNode)
+    if (node == NULL || node == hu_nullNode)
         { return 0; }
 #endif
 
@@ -179,7 +195,7 @@ int huGetNumAnnotations(huNode const * node)
 huAnnotation const * huGetAnnotation(huNode const * node, int annotationIdx)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (node == NULL || node == & humon_nullNode || annotationIdx < 0)
+    if (node == NULL || node == hu_nullNode || annotationIdx < 0)
         { return NULL; }
 #endif
 
@@ -204,7 +220,7 @@ bool huHasAnnotationWithKeyZ(huNode const * node, char const * key)
 bool huHasAnnotationWithKeyN(huNode const * node, char const * key, int keyLen)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (node == NULL || node == & humon_nullNode || key == NULL || keyLen < 0)
+    if (node == NULL || node == hu_nullNode || key == NULL || keyLen < 0)
         { return false; }
 #endif
 
@@ -224,7 +240,7 @@ huToken const * huGetAnnotationByKeyZ(huNode const * node, char const * key)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (key == NULL)
-        { return & humon_nullToken; }
+        { return hu_nullToken; }
 #endif
 
     return huGetAnnotationByKeyN(node, key, strlen(key));
@@ -234,8 +250,8 @@ huToken const * huGetAnnotationByKeyZ(huNode const * node, char const * key)
 huToken const * huGetAnnotationByKeyN(huNode const * node, char const * key, int keyLen)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (node == NULL || node == & humon_nullNode || key == NULL || keyLen < 0)
-        { return & humon_nullToken; }
+    if (node == NULL || node == hu_nullNode || key == NULL || keyLen < 0)
+        { return hu_nullToken; }
 #endif
 
     for (int i = 0; i < node->annotations.numElements; ++i)
@@ -246,7 +262,7 @@ huToken const * huGetAnnotationByKeyN(huNode const * node, char const * key, int
             { return anno->value; }
     }
 
-    return & humon_nullToken;
+    return hu_nullToken;
 }
 
 
@@ -264,7 +280,7 @@ int huGetNumAnnotationsByValueZ(huNode const * node, char const * value)
 int huGetNumAnnotationsByValueN(huNode const * node, char const * value, int valueLen)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (node == NULL || node == & humon_nullNode || value == NULL || valueLen < 0)
+    if (node == NULL || node == hu_nullNode || value == NULL || valueLen < 0)
         { return 0; }
 #endif
 
@@ -285,7 +301,7 @@ huToken const * huGetAnnotationByValueZ(huNode const * node, char const * value,
 {
 #ifdef HUMON_CHECK_PARAMS
     if (value == NULL)
-        { return & humon_nullToken; }
+        { return hu_nullToken; }
 #endif
 
     return huGetAnnotationByValueN(node, value, strlen(value), annotationIdx);
@@ -295,8 +311,8 @@ huToken const * huGetAnnotationByValueZ(huNode const * node, char const * value,
 huToken const * huGetAnnotationByValueN(huNode const * node, char const * value, int valueLen, int annotationIdx)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (node == NULL || node == & humon_nullNode || value == NULL || valueLen < 0 || annotationIdx < 0)
-        { return & humon_nullToken; }
+    if (node == NULL || node == hu_nullNode || value == NULL || valueLen < 0 || annotationIdx < 0)
+        { return hu_nullToken; }
 #endif
 
     int matches = 0;
@@ -313,14 +329,14 @@ huToken const * huGetAnnotationByValueN(huNode const * node, char const * value,
         }
     }
 
-    return & humon_nullToken;
+    return hu_nullToken;
 }
 
 
 int huGetNumComments(huNode const * node)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (node == NULL || node == & humon_nullNode)
+    if (node == NULL || node == hu_nullNode)
         { return 0; }
 #endif
 
@@ -331,14 +347,14 @@ int huGetNumComments(huNode const * node)
 huToken const * huGetComment(huNode const * node, int commentIdx)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (node == NULL || node == & humon_nullNode || commentIdx < 0)
-        { return & humon_nullToken; }
+    if (node == NULL || node == hu_nullNode || commentIdx < 0)
+        { return hu_nullToken; }
 #endif
 
     if (commentIdx < node->comments.numElements)
         { return ((huComment const *) node->comments.buffer + commentIdx)->commentToken; }
     else
-        { return & humon_nullToken; }
+        { return hu_nullToken; }
 }
 
 
@@ -346,7 +362,7 @@ huToken const * huGetCommentsContainingZ(huNode const * node, char const * conta
 {
 #ifdef HUMON_CHECK_PARAMS
     if (containedText == NULL)
-        { return & humon_nullToken; }
+        { return hu_nullToken; }
 #endif
 
     return huGetCommentsContainingN(node, containedText, strlen(containedText), startWith);
@@ -356,8 +372,8 @@ huToken const * huGetCommentsContainingZ(huNode const * node, char const * conta
 huToken const * huGetCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen, huToken const * startWith)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (node == NULL || node == & humon_nullNode || containedText == NULL || containedTextLen < 0)
-        { return & humon_nullToken; }
+    if (node == NULL || node == hu_nullNode || containedText == NULL || containedTextLen < 0)
+        { return hu_nullToken; }
 #endif
 
     bool foundLast = startWith == NULL;
@@ -374,7 +390,7 @@ huToken const * huGetCommentsContainingN(huNode const * node, char const * conta
             { foundLast = true; }
     }
 
-    return & humon_nullToken;
+    return hu_nullToken;
 }
 
 
@@ -462,7 +478,7 @@ huNode const * huGetNodeByRelativeAddressZ(huNode const * node, char const * add
 {
 #ifdef HUMON_CHECK_PARAMS
     if (address == NULL)
-        { return & humon_nullNode; }
+        { return hu_nullNode; }
 #endif
 
     return huGetNodeByRelativeAddressN(node, address, strlen(address));
@@ -478,8 +494,8 @@ huNode const * huGetNodeByRelativeAddressZ(huNode const * node, char const * add
 huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * address, int addressLen)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (node == NULL || node == & humon_nullNode || address == NULL || addressLen < 0)
-        { return & humon_nullNode; }
+    if (node == NULL || node == hu_nullNode || address == NULL || addressLen < 0)
+        { return hu_nullNode; }
 #endif
 
     // When the last node is reached in the address, we're it.
@@ -488,7 +504,7 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
 
     // malformed
     if (address[0] == '/')
-        { return & humon_nullNode; }
+        { return hu_nullNode; }
 
     huCursor cur = 
         { .trove = NULL, 
@@ -526,9 +542,9 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
     }
 
     if (len == 0)
-       { return & humon_nullNode; }
+       { return hu_nullNode; }
 
-    huNode const * nextNode = & humon_nullNode;
+    huNode const * nextNode = hu_nullNode;
     // if '..', go up a level if we can
     if (quoted == false && len == 2 && wordStart[0] == '.' && wordStart[1] == '.')
         { nextNode = huGetParentNode(node); }
@@ -538,13 +554,13 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
         char * wordEnd;
         int index = strtol(wordStart, & wordEnd, 10);
         if (quoted == false && wordEnd - wordStart == len)
-            { nextNode = huGetChildNodeByIndex(node, index); }
+            { nextNode = huGetChildByIndex(node, index); }
         else
-            { nextNode = huGetChildNodeByKeyN(node, wordStart, len); }   
+            { nextNode = huGetChildByKeyN(node, wordStart, len); }   
     }
-    // If the key or index is invalid, nextNode wil be set to & humon_nullNode.
-    if (nextNode->kind == HU_NODEKIND_NULL)
-        { return & humon_nullNode; }
+    // If the key or index is invalid, nextNode wil be set to hu_nullNode.
+    if (nextNode == hu_nullNode)
+        { return hu_nullNode; }
     
     eatWs(& cur, 1, & line, & col);
 
@@ -556,7 +572,7 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
             nextNode, address + col + 1, addressLen - col - 1);
     }
     else
-      { return & humon_nullNode; }
+      { return hu_nullNode; }
 }
 
 
@@ -590,7 +606,7 @@ int log10i(unsigned int x)
 int huGetNodeAddressLength(huNode const * node)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (node == NULL || node == & humon_nullNode)
+    if (node == NULL || node == hu_nullNode)
         { return 0; }
 #endif
 
@@ -658,7 +674,7 @@ void getNodeAddressRec(huNode const * node, huVector * str)
 void huGetNodeAddress(huNode const * node, char * dest, int * destLen)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (node == NULL || node == & humon_nullNode || destLen == NULL)
+    if (node == NULL || node == hu_nullNode || destLen == NULL)
         { return; }
 #endif
 
@@ -691,7 +707,7 @@ void huGetNodeAddress(huNode const * node, char * address, int * addressLen)
     address[0] = '\0';
 
 #ifdef HUMON_CHECK_PARAMS
-    if (node == NULL || node == & humon_nullNode || address == NULL || addressLen < 1)
+    if (node == NULL || node == hu_nullNode || address == NULL || addressLen < 1)
         { return; }
 #endif
 

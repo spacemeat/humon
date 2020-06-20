@@ -87,7 +87,7 @@ void parseAnnotations(huTrove * trove, huNode * owner, huToken ** ppCur)
         switch ((* ppCur)->tokenKind)
         {
         case HU_TOKENKIND_EOF:
-            recordError(trove, HU_ERROR_UNEXPECTED_EOF, * ppCur);
+            recordError(trove, HU_ERROR_UNEXPECTEDEOF, * ppCur);
             scanning = false;
             break;
         
@@ -121,7 +121,7 @@ void parseAnnotations(huTrove * trove, huNode * owner, huToken ** ppCur)
             }
             else
             {
-                recordError(trove, HU_ERROR_SYNTAX_ERROR, * ppCur);
+                recordError(trove, HU_ERROR_SYNTAXERROR, * ppCur);
                 * ppCur += 1;
                 scanning = false;
             }
@@ -138,7 +138,7 @@ void parseAnnotations(huTrove * trove, huNode * owner, huToken ** ppCur)
             }
             else
             {
-                recordError(trove, HU_ERROR_SYNTAX_ERROR, * ppCur);
+                recordError(trove, HU_ERROR_SYNTAXERROR, * ppCur);
                 * ppCur += 1;
                 scanning = false;
             }
@@ -161,7 +161,7 @@ void parseAnnotations(huTrove * trove, huNode * owner, huToken ** ppCur)
             }
             else
             {
-                recordError(trove, HU_ERROR_SYNTAX_ERROR, * ppCur);
+                recordError(trove, HU_ERROR_SYNTAXERROR, * ppCur);
                 * ppCur += 1;
                 scanning = false;
             }
@@ -230,7 +230,7 @@ void parseAnnotations(huTrove * trove, huNode * owner, huToken ** ppCur)
             break;
         
         default:
-            recordError(trove, HU_ERROR_SYNTAX_ERROR, * ppCur);
+            recordError(trove, HU_ERROR_SYNTAXERROR, * ppCur);
             * ppCur += 1;
             scanning = false;
         }
@@ -286,7 +286,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
                 {
                     newNode = allocNewNode(trove, HU_NODEKIND_LIST, * ppCur);
                     newNode->firstToken = * ppCur;
-                    newNode->firstValueToken = * ppCur;
+                    newNode->valueToken = * ppCur;
                     parentNode = (huNode *) huGetNode(trove, parentNodeIdx);
                 }
 
@@ -304,7 +304,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
                     newNode = (huNode *) trove->nodes.buffer + trove->nodes.numElements - 1;
                     newNode->kind = HU_NODEKIND_LIST;
                     newNode->firstToken = * ppCur;
-                    newNode->firstValueToken = * ppCur;
+                    newNode->valueToken = * ppCur;
 
                     state = PS_IN_DICT_EXPECT_KEY_OR_END;
 
@@ -344,7 +344,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
             }
             else
             {
-                recordError(trove, HU_ERROR_SYNTAX_ERROR, * ppCur);
+                recordError(trove, HU_ERROR_SYNTAXERROR, * ppCur);
                 * ppCur += 1;
                 scanning = false;
             }
@@ -377,9 +377,9 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
             else
             {
                 if (state == PS_IN_DICT_EXPECT_KEY_OR_END)
-                    { recordError(trove, HU_ERROR_START_END_MISMATCH, * ppCur); }
+                    { recordError(trove, HU_ERROR_STARTENDMISMATCH, * ppCur); }
                 else
-                    { recordError(trove, HU_ERROR_SYNTAX_ERROR, * ppCur); }
+                    { recordError(trove, HU_ERROR_SYNTAXERROR, * ppCur); }
                 * ppCur += 1;
                 scanning = false;
             }
@@ -397,7 +397,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
                 {
                     newNode = allocNewNode(trove, HU_NODEKIND_DICT, * ppCur);
                     newNode->firstToken = * ppCur;
-                    newNode->firstValueToken = * ppCur;
+                    newNode->valueToken = * ppCur;
                     parentNode = (huNode *) huGetNode(trove, parentNodeIdx);
                 }
 
@@ -415,7 +415,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
                     newNode = (huNode *) trove->nodes.buffer + trove->nodes.numElements - 1;
                     newNode->kind = HU_NODEKIND_DICT;
                     newNode->firstToken = * ppCur;
-                    newNode->firstValueToken = * ppCur;
+                    newNode->valueToken = * ppCur;
 
                     state = PS_IN_DICT_EXPECT_KEY_OR_END;
 
@@ -455,7 +455,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
             }
             else
             {
-                recordError(trove, HU_ERROR_SYNTAX_ERROR, * ppCur);
+                recordError(trove, HU_ERROR_SYNTAXERROR, * ppCur);
                 * ppCur += 1;
                 scanning = false;
             }            
@@ -488,9 +488,9 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
             else
             {
                 if (state == PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END)
-                    { recordError(trove, HU_ERROR_START_END_MISMATCH, * ppCur); }
+                    { recordError(trove, HU_ERROR_STARTENDMISMATCH, * ppCur); }
                 else
-                    { recordError(trove, HU_ERROR_SYNTAX_ERROR, * ppCur); }
+                    { recordError(trove, HU_ERROR_SYNTAXERROR, * ppCur); }
                 * ppCur += 1;
                 scanning = false;
             }            
@@ -521,7 +521,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
             }
             else
             {
-                recordError(trove, HU_ERROR_SYNTAX_ERROR, * ppCur);
+                recordError(trove, HU_ERROR_SYNTAXERROR, * ppCur);
                 * ppCur += 1;
                 scanning = false;
             }            
@@ -534,7 +534,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
 
                 huNode * newNode = allocNewNode(trove, HU_NODEKIND_VALUE, * ppCur);
                 newNode->firstToken = * ppCur;
-                newNode->firstValueToken = * ppCur;
+                newNode->valueToken = * ppCur;
                 newNode->lastValueToken = * ppCur;
                 newNode->lastToken = * ppCur;
                 parentNode = (huNode *) huGetNode(trove, parentNodeIdx);
@@ -562,7 +562,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
 
                 huNode * newNode = allocNewNode(trove, HU_NODEKIND_VALUE, * ppCur);
                 newNode->firstToken = * ppCur;
-                newNode->firstValueToken = * ppCur;
+                newNode->valueToken = * ppCur;
                 newNode->lastValueToken = * ppCur;
                 newNode->lastToken = * ppCur;
                 parentNode = (huNode *) huGetNode(trove, parentNodeIdx);
@@ -619,7 +619,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
                 // get the last node made when we found a key
                 huNode * lastNode = (huNode *) trove->nodes.buffer + trove->nodes.numElements - 1;
                 lastNode->kind = HU_NODEKIND_VALUE;
-                lastNode->firstValueToken = * ppCur;
+                lastNode->valueToken = * ppCur;
                 lastNode->lastValueToken = * ppCur;
                 lastNode->lastToken = * ppCur;
                 int nodeTokenLine = (* ppCur)->line;
@@ -652,7 +652,7 @@ void parseTroveRecursive(huTrove * trove, huToken ** ppCur, int parentNodeIdx, i
             }
             else
             {
-                recordError(trove, HU_ERROR_SYNTAX_ERROR, * ppCur);
+                recordError(trove, HU_ERROR_SYNTAXERROR, * ppCur);
                 * ppCur += 1;
                 scanning = false;
             }            

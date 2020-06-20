@@ -61,12 +61,12 @@ extern "C"
     /// Specifies a tokenizing or parsing error code, or lookup error.
     enum huErrorCode
     {
-        HU_ERROR_NO_ERROR,                  ///< No error.
-        HU_ERROR_UNEXPECTED_EOF,            ///< The text ended early.
-        HU_ERROR_UNFINISHED_QUOTE,          ///< The quoted text was not endquoted.
-        HU_ERROR_UNFINISHED_CSTYLECOMMENT,  ///< The C-style comment was not closed.
-        HU_ERROR_SYNTAX_ERROR,              ///< General syntax error.
-        HU_ERROR_START_END_MISMATCH,        ///< Braces ({,}) or brackets ([,]) are not properly nested.
+        HU_ERROR_NOERROR,                   ///< No error.
+        HU_ERROR_UNEXPECTEDEOF,             ///< The text ended early.
+        HU_ERROR_UNFINISHEDQUOTE,           ///< The quoted text was not endquoted.
+        HU_ERROR_UNFINISHEDCSTYLECOMMENT,   ///< The C-style comment was not closed.
+        HU_ERROR_SYNTAXERROR,               ///< General syntax error.
+        HU_ERROR_STARTENDMISMATCH,          ///< Braces ({,}) or brackets ([,]) are not properly nested.
         HU_ERROR_NOTFOUND,                  ///< No node could be found at the address.
         HU_ERROR_ILLEGAL                    ///< The address or node was illegal.
     };
@@ -189,7 +189,7 @@ extern "C"
         int kind;                           ///< A huNodeKind value.
         huToken const * firstToken;         ///< The first token which contributes to this node, including any annotation and comment tokens.
         huToken const * keyToken;           ///< The key token if the node is inside a dict.
-        huToken const * firstValueToken;    ///< The first token of this node's actual value; for a container, it points to the opening brac(e|ket).
+        huToken const * valueToken;    ///< The first token of this node's actual value; for a container, it points to the opening brac(e|ket).
         huToken const * lastValueToken;     ///< The last token of this node's actual value; for a container, it points to the closing brac(e|ket).
         huToken const * lastToken;          ///< The last token of this node, including any annotation and comment tokens.
 
@@ -206,12 +206,16 @@ extern "C"
     huNode const * huGetParentNode(huNode const * node);
     /// Gets the number of children a node has.
     int huGetNumChildren(huNode const * node);
-    /// Gets a child node by child index.
-    huNode const * huGetChildNodeByIndex(huNode const * node, int childIdx);
-    /// Gets a child node by NULL-terminated key.
-    huNode const * huGetChildNodeByKeyZ(huNode const * node, char const * key);
-    /// Gets a child node by string view key.
-    huNode const * huGetChildNodeByKeyN(huNode const * node, char const * key, int keyLen);
+    /// Gets a child of a node by child index.
+    huNode const * huGetChildByIndex(huNode const * node, int childIdx);
+    /// Gets a child of a node by key.
+    huNode const * huGetChildByKeyZ(huNode const * node, char const * key);
+    /// Gets a child of a node by key.
+    huNode const * huGetChildByKeyN(huNode const * node, char const * key, int keyLen);
+    /// Gets the first child of node (index 0).
+    huNode const * huGetFirstChild(huNode const * node);
+    /// Returns the next sibling in the child index order of a node.
+    huNode const * huGetNextSibling(huNode const * node);
 
     /// Returns if a node has a key token tracked. (If it's a member of a dict.)
     bool huHasKey(huNode const * node);
@@ -220,9 +224,6 @@ extern "C"
 
     /// Returns if a node has a value token tracked. (All non-null nodes always should.)
     bool huHasValue(huNode const * node);
-
-    /// Returns the next sibling in the child index order of a node.
-    huNode const * huNextSibling(huNode const * node);
 
     /// Returns the number of annotations associated to a node.
     int huGetNumAnnotations(huNode const * node);
@@ -270,14 +271,14 @@ extern "C"
      * string, and can output Humon to file or string as well. */
     typedef struct huTrove_tag
     {
-        char const * dataString;      ///< The buffer containing the Humon text as loaded. Owned by the trove. Humon takes care to NULL-terminate this string.
-        int dataStringSize;     ///< The size of the buffer.
-        huVector tokens;        ///< Manages a huToken []. This is the array of tokens lexed from the Humon text.
-        huVector nodes;         ///< Manages a huNode []. This is the array of node objects parsed from tokens.
-        huVector errors;        ///< Manages a huError []. This is an array of errors encountered during load.
-        int inputTabSize;       ///< The tab length Humon uses to compute column values for tokens.
-        huVector annotations;   ///< Manages a huAnnotation []. Contains the annotations associated to the trove.
-        huVector comments;      ///< Manages a huComment[]. Contains the comments associated to the trove.
+        char const * dataString;    ///< The buffer containing the Humon text as loaded. Owned by the trove. Humon takes care to NULL-terminate this string.
+        int dataStringSize;         ///< The size of the buffer.
+        huVector tokens;            ///< Manages a huToken []. This is the array of tokens lexed from the Humon text.
+        huVector nodes;             ///< Manages a huNode []. This is the array of node objects parsed from tokens.
+        huVector errors;            ///< Manages a huError []. This is an array of errors encountered during load.
+        int inputTabSize;           ///< The tab length Humon uses to compute column values for tokens.
+        huVector annotations;       ///< Manages a huAnnotation []. Contains the annotations associated to the trove.
+        huVector comments;          ///< Manages a huComment[]. Contains the comments associated to the trove.
     } huTrove;
 
     /// Creates a trove from a NULL-terminated string of Humon text.
@@ -378,6 +379,10 @@ extern "C"
     extern huNode const humon_nullNode;
     /// Global null trove object. Functions that return null troves reference this.
     extern huTrove const humon_nullTrove;
+
+    extern huToken const * hu_nullToken;
+    extern huNode const * hu_nullNode;
+    extern huTrove const * hu_nullTrove;
 
 #ifdef __cplusplus
 } // extern "C"

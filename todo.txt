@@ -1,19 +1,15 @@
 DONE THIS CHECKIN:
-P1 Removed error coding from getByAddress.
-P1 Split huGetNodeAddress into length query and string-filler.
-P1 Convert things that return huStringView to size/print.
-P1 Convert things that return huVector to iterated calls.
-P1 Privatize huVector and huString functions.
-P1 Remove all references to free_const and all requirements to free() returned values.
-P1 Part out printing into its own src.
-P1 Some C++ sugar tests.
+P1 normalize HU_ERROR_THINGS_WITH_UNDERSCORES
+P1 rename to huGetNextSibling
+P1 review (and actually validate) code in readme.
+P1 change readme to reflect unique anno keys
+P1 general edits to readme
+P1 null objects -> NULL. API fixes to accommodate, while still not signaling. This is better.
+P1 add huGetFirstChild()
 
 TODO:
 P1 CMake, vcpkg
 P1 doxygen
-P1 review (and actually validate) code in readme.
-P1 change readme to reflect unique anno keys
-P1 normalize HU_ERROR_THINGS_WITH_UNDERSCORES
 P1 much more API testing
     - C++: test value<T>, from_chars(... T&), etc.
 P2 UTF8 digits for addressing
@@ -21,6 +17,4 @@ P2 consider sorting dict keys and doing BSP search.
 P2 allow user to spec index type (int32, int64, etc)
 P2 custom memory allocator fns
 P2 insertion ops
-P2 string value transformers (getDecodedValue())
 P2 exceptional C++ version?
-P2 hashed dictionary access in C?

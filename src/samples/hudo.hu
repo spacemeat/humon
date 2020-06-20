@@ -1,0 +1,8 @@
+@{ app: hudo, hudo-version: 0.1.1 }
+{
+    player: { @testAcct: true
+        userId:     int
+        username:   string
+        friends:    { type:vector of:string }
+    }
+}

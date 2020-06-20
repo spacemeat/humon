@@ -187,7 +187,7 @@ void eatCStyleComment(huCursor * cursor, int tabSize, int * len, int * line, int
         else
         {
           eating = false;
-          recordError(cursor->trove, HU_ERROR_UNFINISHED_CSTYLECOMMENT, NULL);
+          recordError(cursor->trove, HU_ERROR_UNFINISHEDCSTYLECOMMENT, NULL);
         }
     }
 }
@@ -259,7 +259,7 @@ void eatQuotedWord(huCursor * cursor, char quoteChar, int tabSize, int * len, in
         if (cursor->character[0] == '\0')
         {
           eating = false;
-          recordError(cursor->trove, HU_ERROR_UNFINISHED_QUOTE, NULL);
+          recordError(cursor->trove, HU_ERROR_UNFINISHEDQUOTE, NULL);
         }
         else if (cursor->ws_line)
         {

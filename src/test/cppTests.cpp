@@ -6,6 +6,8 @@
 #include "ansiColors.h"
 #include <CppUTest/TestHarness.h>
 
+#include <iostream>
+
 #include "testDataCpp.h"
 
 using namespace std::literals;
@@ -88,11 +90,4 @@ TEST(cppSugar, sugar)
     STRNCMP_EQUAL_TEXT("foo", nstring.data(), 3, "string");
     auto nbool = t.trove / 4 / hu::value<bool>{};
     LONGS_EQUAL_TEXT(true, nbool, "bool");
-
-    CHECK_EQUAL_TEXT(t.root, t.trove.getNode("/"), "gn /");
-    auto valsv = t.root.getValue();
-    LONGS_EQUAL_TEXT(t.ts.size() - 1, valsv.size(), "compound value size");
-    STRNCMP_EQUAL_TEXT(t.ts.data(), valsv.data(), valsv.size(), "compound value");
-
-    
 }

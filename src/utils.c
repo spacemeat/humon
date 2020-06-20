@@ -64,12 +64,12 @@ char const * huOutputErrorToString(int rhs)
 {
     switch(rhs)
     {
-    case HU_ERROR_NO_ERROR: return "no error";
-    case HU_ERROR_UNEXPECTED_EOF: return "unexpected EOF";
-    case HU_ERROR_UNFINISHED_QUOTE: return "unfinished quote";
-    case HU_ERROR_UNFINISHED_CSTYLECOMMENT: return "unfinished C-style comment";
-    case HU_ERROR_SYNTAX_ERROR: return "syntax error";
-    case HU_ERROR_START_END_MISMATCH: return "start/end mismatch";
+    case HU_ERROR_NOERROR: return "no error";
+    case HU_ERROR_UNEXPECTEDEOF: return "unexpected EOF";
+    case HU_ERROR_UNFINISHEDQUOTE: return "unfinished quote";
+    case HU_ERROR_UNFINISHEDCSTYLECOMMENT: return "unfinished C-style comment";
+    case HU_ERROR_SYNTAXERROR: return "syntax error";
+    case HU_ERROR_STARTENDMISMATCH: return "start/end mismatch";
     case HU_ERROR_NOTFOUND: return "not found";
     default: return "!!unknown!!";
     }
@@ -172,6 +172,10 @@ void * huGrowVector(huVector * vector, int numElements)
 }
 
 
+huToken const * hu_nullToken = NULL; //& humon_nullToken;
+huNode const * hu_nullNode = NULL; //& humon_nullNode;
+huTrove const * hu_nullTrove = NULL; //& humon_nullTrove;
+
 huToken const humon_nullToken = 
 {
     .tokenKind = HU_TOKENKIND_NULL,
@@ -192,7 +196,7 @@ huNode const humon_nullNode =
     .kind = HU_NODEKIND_NULL,
     .firstToken = & humon_nullToken,
     .keyToken = & humon_nullToken,
-    .firstValueToken = & humon_nullToken,
+    .valueToken = & humon_nullToken,
     .lastValueToken = & humon_nullToken,
     .lastToken = & humon_nullToken,
     .childIdx = 0,
@@ -259,3 +263,4 @@ huTrove const humon_nullTrove =
         .vectorCapacity = 0
     }
 };
+

@@ -30,14 +30,19 @@ echo -- static release...
 ar cr -o bin/libhumon.a   obj/trove.o   obj/tokenize.o   obj/parse.o   obj/node.o   obj/printing.o   obj/utils.o   obj/ansiColors.o
 
 echo -- shared debug...
-g++ --std=c++17 -Wall -shared -Wl,-soname,libhumon-rd.so.0 -o bin/libhumon-rd.so.0.0.0 obj/trove-rd.o obj/tokenize-rd.o obj/parse-rd.o obj/node-rd.o obj/printing-rd.o obj/utils-rd.o obj/ansiColors-rd.o
+g++ -std=c++17 -Wall -shared -Wl,-soname,libhumon-rd.so.0 -o bin/libhumon-rd.so.0.0.0 obj/trove-rd.o obj/tokenize-rd.o obj/parse-rd.o obj/node-rd.o obj/printing-rd.o obj/utils-rd.o obj/ansiColors-rd.o
 echo -- shared release...
-g++ --std=c++17 -Wall -shared -Wl,-soname,libhumon-r.so.0  -o bin/libhumon-r.so.0.0.0  obj/trove-r.o  obj/tokenize-r.o  obj/parse-r.o  obj/node-r.o  obj/printing-r.o  obj/utils-r.o  obj/ansiColors-r.o
+g++ -std=c++17 -Wall -shared -Wl,-soname,libhumon-r.so.0  -o bin/libhumon-r.so.0.0.0  obj/trove-r.o  obj/tokenize-r.o  obj/parse-r.o  obj/node-r.o  obj/printing-r.o  obj/utils-r.o  obj/ansiColors-r.o
 
 echo Done.
 
 echo Building tests...
-g++ --std=c++17 -Wall -ggdb3 -O0 -DDEBUG src/test/testMain.cpp src/test/apiTests.cpp src/test/utf8Tests.cpp src/test/dataTests.cpp src/test/cppTests.cpp -Iinc -Lbin -lhumon-d -lCppUTest -lCppUTestExt -o bin/test
+g++ -std=c++17 -Wall -ggdb3 -O0 -DDEBUG src/test/testMain.cpp src/test/apiTests.cpp src/test/utf8Tests.cpp src/test/dataTests.cpp src/test/cppTests.cpp -Iinc -Lbin -lhumon-d -lCppUTest -lCppUTestExt -o bin/test
+
+echo Building samples...
+gcc -std=c99 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o src/samples/sample-usage-c-d src/samples/usage.c -Lbin -lhumon-d
+g++ -std=c++17 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o src/samples/sample-usage-cpp-d src/samples/usage.cpp -Lbin -lhumon-d
+
 
 echo Done.
 

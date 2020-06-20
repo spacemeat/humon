@@ -249,7 +249,7 @@ void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int 
         int numCh = huGetNumChildren(node);
         for (int i = 0; i < numCh; ++i)
         {
-            huNode const * chNode = huGetChildNodeByIndex(node, i);
+            huNode const * chNode = huGetChildByIndex(node, i);
             troveToPrettyStringRec(chNode, str, depth + 1, outputFormat, excludeComments, outputTabSize, colorTable);
         }
 
@@ -273,12 +273,12 @@ void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int 
     {
         if (node->keyToken == NULL && 
                  (node->parentNodeIdx != -1 ||
-                    node->firstToken != node->firstValueToken))
+                    node->firstToken != node->valueToken))
         {
             appendString(str, "\n", 1);
             appendWs(str, outputTabSize * depth);
         }
-        printValue(node->firstValueToken, str, colorTable);
+        printValue(node->valueToken, str, colorTable);
         printNodeAnnotations(node, str, colorTable);
     }
 

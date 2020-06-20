@@ -40,12 +40,12 @@ R"( @{tx:ta, ta:ta, tb:tb}
     {
         trove = huMakeTroveFromStringN(ts.data(), ts.size(), 4);
         root = huGetRootNode(trove);
-        a = huGetChildNodeByIndex(root, 0);
-        bp = huGetChildNodeByIndex(root, 1);
-        cpp = huGetChildNodeByIndex(root, 2);
-        b = huGetChildNodeByIndex(bp, 0);
-        cp = huGetChildNodeByIndex(cpp, 0);
-        c = huGetChildNodeByIndex(cp, 0);
+        a = huGetChildByIndex(root, 0);
+        bp = huGetChildByIndex(root, 1);
+        cpp = huGetChildByIndex(root, 2);
+        b = huGetChildByIndex(bp, 0);
+        cp = huGetChildByIndex(cpp, 0);
+        c = huGetChildByIndex(cp, 0);
     }
 
     void teardown()
@@ -89,12 +89,12 @@ R"( @{tx:ta, ta:ta, tb:tb}
     {
         trove = huMakeTroveFromStringN(ts.data(), ts.size(), 4);
         root = huGetRootNode(trove);
-        a = huGetChildNodeByIndex(root, 0);
-        bp = huGetChildNodeByIndex(root, 1);
-        cpp = huGetChildNodeByIndex(root, 2);
-        b = huGetChildNodeByIndex(bp, 0);
-        cp = huGetChildNodeByIndex(cpp, 0);
-        c = huGetChildNodeByIndex(cp, 0);
+        a = huGetChildByIndex(root, 0);
+        bp = huGetChildByIndex(root, 1);
+        cpp = huGetChildByIndex(root, 2);
+        b = huGetChildByIndex(bp, 0);
+        cp = huGetChildByIndex(cpp, 0);
+        c = huGetChildByIndex(cp, 0);
     }
 
     void teardown()
@@ -139,12 +139,12 @@ R"( @{tx:ta, ta:ta, tb:tb}
     {
         trove = huMakeTroveFromStringN(ts.data(), ts.size(), 4);
         root = huGetRootNode(trove);
-        a = huGetChildNodeByIndex(root, 0);
-        bp = huGetChildNodeByIndex(root, 1);
-        cpp = huGetChildNodeByIndex(root, 2);
-        b = huGetChildNodeByIndex(bp, 0);
-        cp = huGetChildNodeByIndex(cpp, 0);
-        c = huGetChildNodeByIndex(cp, 0);
+        a = huGetChildByIndex(root, 0);
+        bp = huGetChildByIndex(root, 1);
+        cpp = huGetChildByIndex(root, 2);
+        b = huGetChildByIndex(bp, 0);
+        cp = huGetChildByIndex(cpp, 0);
+        c = huGetChildByIndex(cp, 0);
     }
 
     void teardown()
