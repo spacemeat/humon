@@ -31,7 +31,7 @@ struct Version
 
 int main()
 {
-    if (auto trove = hu::Trove::fromFile("src/samples/materials.hu");
+    if (auto trove = hu::Trove::fromFile("samples/sampleFiles/materials.hu");
         trove)
     {
         auto extentsNode = trove.node("/assets/brick-diffuse/importData/extents"sv);
@@ -41,7 +41,7 @@ int main()
     }
 
 
-    if (auto trove = hu::Trove::fromFile("src/samples/hudo.hu");
+    if (auto trove = hu::Trove::fromFile("samples/sampleFiles/hudo.hu");
         trove)
     {
         if (trove.annotationWithKey("app") != "hudo"sv)

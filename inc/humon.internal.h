@@ -48,6 +48,7 @@ extern "C"
     huToken * allocNewToken(huTrove * trove, int tokenKind, char const * str, int size, int line, int col, int endLine, int endCol, char quoteChar);
     huNode * allocNewNode(huTrove * trove, int nodeKind, huToken const * firstToken);
 
+    void recordTokenizeError(huTrove * trove, int errorCode, int line, int col);
     void recordError(huTrove * trove, int errorCode, huToken const * pCur);
 
     void huTokenizeTrove(huTrove * trove);

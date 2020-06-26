@@ -141,7 +141,11 @@ void eatDoubleSlashComment(huCursor * cursor, int tabSize, int * len, int * line
 
 void eatCStyleComment(huCursor * cursor, int tabSize, int * len, int * line, int * col)
 {
-    // The first two characters are already confirmed /*, so, next please.
+    // record the location for error reporting
+    int tokenStartLine = * line;
+    int tokenStartCol = * col;
+
+    // The first two characters are already confirmed /*, so, next please.    
     nextCharacter(cursor);
     nextCharacter(cursor);
     * len += 2;
@@ -187,7 +191,8 @@ void eatCStyleComment(huCursor * cursor, int tabSize, int * len, int * line, int
         else
         {
           eating = false;
-          recordError(cursor->trove, HU_ERROR_UNFINISHEDCSTYLECOMMENT, NULL);
+          recordTokenizeError(cursor->trove, HU_ERROR_UNFINISHEDCSTYLECOMMENT, 
+            tokenStartLine, tokenStartCol);
         }
     }
 }
@@ -248,6 +253,10 @@ void eatWord(huCursor * cursor, int * len, int * line, int * col)
 
 void eatQuotedWord(huCursor * cursor, char quoteChar, int tabSize, int * len, int * line, int * col)
 {
+    // record the location for error reporting
+    int tokenStartLine = * line;
+    int tokenStartCol = * col;
+
     // The first character is already confirmed quoteChar, so, next please.
     * col += 1;
     nextCharacter(cursor);
@@ -259,7 +268,8 @@ void eatQuotedWord(huCursor * cursor, char quoteChar, int tabSize, int * len, in
         if (cursor->character[0] == '\0')
         {
           eating = false;
-          recordError(cursor->trove, HU_ERROR_UNFINISHEDQUOTE, NULL);
+          recordTokenizeError(cursor->trove, HU_ERROR_UNFINISHEDQUOTE, 
+            tokenStartLine, tokenStartCol);
         }
         else if (cursor->ws_line)
         {

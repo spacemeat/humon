@@ -2245,8 +2245,11 @@ TEST(huGetError, normal)
     POINTERS_EQUAL_TEXT(NULL, huGetError(d.trove, 0), "d ge 0 == 0");
 
     LONGS_EQUAL_TEXT(HU_ERROR_SYNTAXERROR, huGetError(e.trove, 0)->errorCode, "e ge 0 == syntax error");
-    POINTERS_EQUAL_TEXT(11, huGetError(e.trove, 0)->errorToken->line, "e ge 0 line == 11");
-    POINTERS_EQUAL_TEXT(12, huGetError(e.trove, 0)->errorToken->col, "e ge 0 col == 12");
+    LONGS_EQUAL_TEXT(11, huGetError(e.trove, 0)->errorToken->line, "e ge 0 line == 11");
+    LONGS_EQUAL_TEXT(12, huGetError(e.trove, 0)->errorToken->col, "e ge 0 col == 12");
+
+    LONGS_EQUAL_TEXT(11, huGetError(e.trove, 0)->line, "e ge 0 line == 11");
+    LONGS_EQUAL_TEXT(12, huGetError(e.trove, 0)->col, "e ge 0 col == 12");
 }
 
 TEST(huGetError, pathological)

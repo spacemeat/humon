@@ -42,9 +42,9 @@ echo Building tests...
 g++ -std=c++17 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o test/bin/test test/testMain.cpp test/apiTests.cpp test/utf8Tests.cpp test/dataTests.cpp test/cppTests.cpp test/commentTests.cpp -Lbin -lhumon-d -lCppUTest -lCppUTestExt
 
 echo Building samples...
-gcc -std=c99 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o samples/bin/sample-usage-c-d samples/usage.c -Lbin -lhumon-d
-g++ -std=c++17 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o samples/bin/sample-usage-cpp-d samples/usage.cpp -Lbin -lhumon-d
-g++ -std=c++17 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o samples/bin/hux samples/hux.cpp -Lbin -lhumon-d
+gcc -std=c99 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o samples/bin/sample-usage-c-d samples/usage-c/usage.c -Lbin -lhumon-d
+g++ -std=c++17 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o samples/bin/sample-usage-cpp-d samples/usage-cpp/usage.cpp -Lbin -lhumon-d
+g++ -std=c++17 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o samples/bin/hux samples/hux/hux.cpp -Lbin -lhumon-d
 
 
 echo Done.

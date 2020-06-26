@@ -707,6 +707,25 @@ huNode * allocNewNode(huTrove * trove, int nodeKind, huToken const * firstToken)
 }
 
 
+void recordTokenizeError(huTrove * trove, int errorCode, int line, int col)
+{
+#ifdef HUMON_ERRORS_TO_STDERR
+    fprintf (stderr, "%sError%s: line: %d    col: %d    %s\n", lightRed, off, 
+        pCur->line, pCur->col, huOutputErrorToString(errorCode));
+#endif
+
+    int num = 1;
+    huError * error = huGrowVector(& trove->errors, & num);
+    if (num)
+    {
+        error->errorCode = errorCode;
+        error->errorToken = NULL;
+        error->line = line;
+        error->col = col;
+    }
+}
+
+
 void recordError(huTrove * trove, int errorCode, huToken const * pCur)
 {
 #ifdef HUMON_ERRORS_TO_STDERR
@@ -720,6 +739,8 @@ void recordError(huTrove * trove, int errorCode, huToken const * pCur)
     {
         error->errorCode = errorCode;
         error->errorToken = pCur;
+        error->line = pCur->line;
+        error->col = pCur->col;
     }
 }
 

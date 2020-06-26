@@ -93,7 +93,7 @@ R"({
 
 struct htd_comments
 {
-    std::string_view file = "../testFiles/comments.hu";
+    std::string_view file = "test/testFiles/comments.hu";
 
     hu::Trove trove;
     hu::Node root;

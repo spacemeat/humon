@@ -62,6 +62,9 @@ extern "C"
     {
         HU_ERROR_NOERROR,                   ///< No error.
         HU_ERROR_UNEXPECTEDEOF,             ///< The text ended early.
+
+        HU_ERROR_TOOMANYROOTS,              ///< There is more than one root node detected.
+
         HU_ERROR_UNFINISHEDQUOTE,           ///< The quoted text was not endquoted.
         HU_ERROR_UNFINISHEDCSTYLECOMMENT,   ///< The C-style comment was not closed.
         HU_ERROR_SYNTAXERROR,               ///< General syntax error.
@@ -164,6 +167,8 @@ extern "C"
     {
         int errorCode;                  ///< A huErrorCode value.
         huToken const * errorToken;     ///< The token that seems to be erroneous.
+        int line;                       ///< Location info for tokenizer errors.
+        int col;                        ///< Location info for tokenizer errors.
     } huError;
 
 
