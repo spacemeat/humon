@@ -1,13 +1,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include "humon.internal.h"
+#include "ansiColors.h"
 
 
 void appendString(huVector * str, char const * addend, int size)
 {
-    char * dest = huGrowVector(str, size);
-    if (dest != NULL)       // if we're only counting, dest is NULL
-        { memcpy(dest, addend, size); } 
+    huAppendToVector(str, addend, size);
 }
 
 
@@ -46,9 +45,21 @@ void appendColoredString(huVector * str, char const * addend, int size, huString
 }
 
 
+void appendColoredToken(huVector * str, huToken const * token, huStringView const * colorTable, int colorCode)
+{
+    appendColor(str, colorTable, colorCode);
+    if (token->quoteChar != '\0')
+        { appendString(str, & token->quoteChar, 1); }
+    appendString(str, token->str.str, token->str.size);
+    if (token->quoteChar != '\0')
+        { appendString(str, & token->quoteChar, 1); }
+    appendColor(str, colorTable, HU_COLORKIND_END);
+}
+
+
 void printComment(huToken const * comment, huVector * str, huStringView const * colorTable)
 {
-    huStringView const * comstr = & comment->value;
+    huStringView const * comstr = & comment->str;
     appendColoredString(str, comstr->str, comstr->size, 
         colorTable, HU_COLORKIND_COMMENT);
 }
@@ -99,12 +110,9 @@ void printAnnotations(huAnnotation const * annos, int numAnno, bool troveOwned, 
         if (iAnno > 0)
             { appendWs(str, 1); }
 
-        appendColoredString(str, anno->key->value.str, anno->key->value.size,
-            colorTable, HU_COLORKIND_ANNOKEY);
-        appendColoredString(str, ": ", 2,
-            colorTable, HU_COLORKIND_PUNCANNOTATEKEYVALUESEP);
-        appendColoredString(str, anno->value->value.str, anno->value->value.size,
-            colorTable, HU_COLORKIND_ANNOVALUE);
+        appendColoredToken(str, anno->key, colorTable, HU_COLORKIND_ANNOKEY);
+        appendColoredString(str, ": ", 2, colorTable, HU_COLORKIND_PUNCANNOTATEKEYVALUESEP);
+        appendColoredToken(str, anno->value, colorTable, HU_COLORKIND_ANNOVALUE);
     }
 
     if (numAnno > 1)
@@ -137,34 +145,36 @@ void printNodeAnnotations(huNode const * node, huVector * str, huStringView cons
 
 void printKey(huToken const * keyToken, huVector * str, huStringView const * colorTable)
 {
-    appendColoredString(str, keyToken->value.str, keyToken->value.size,
-        colorTable, HU_COLORKIND_KEY);
-    appendColoredString(str, ": ", 2,
-        colorTable, HU_COLORKIND_PUNCKEYVALUESEP);
+    appendColoredToken(str, keyToken, colorTable, HU_COLORKIND_KEY);
+    appendColoredString(str, ": ", 2, colorTable, HU_COLORKIND_PUNCKEYVALUESEP);
 }
 
 
 void printValue(huToken const * valueToken, huVector * str, huStringView const * colorTable)
 {
-    appendColoredString(str, valueToken->value.str, valueToken->value.size,
-        colorTable, HU_COLORKIND_VALUE);
+    appendColoredToken(str, valueToken, colorTable, HU_COLORKIND_VALUE);
 }
 
 
-void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable)
+void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int outputFormat, bool excludeComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable)
 {
     bool lineIsDirty = false;
 
     // print preceeding comments
+    huToken const * commentsBeforeToken = node->firstToken;
+    if (huHasKey(node))
+        { commentsBeforeToken = node->keyToken; }
+
     int iCom = 0;
     for (; iCom < huGetNumComments(node); ++iCom)
     {
         huToken const * comment = huGetComment(node, iCom);
-        if (comment->line < node->firstToken->line)
+        if (comment->line < commentsBeforeToken->line)
         {
             if (node->parentNodeIdx != -1)
-                { appendString(str, "\n", 1); }
-            appendWs(str, outputTabSize * depth);
+                { appendString(str, newline, newlineSize); }
+            if (outputFormat != HU_OUTPUTFORMAT_MINIMAL)
+                { appendWs(str, outputTabSize * depth); }
             printComment(comment, str, colorTable);
             lineIsDirty = true;
         }
@@ -172,15 +182,14 @@ void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int 
             { break; }
     }
     
-    huToken const * keyToken = huGetKey(node);
-
     // if node has a key, print key:
-    if (keyToken != NULL)
+    if (node->keyToken != NULL)
     {
-        appendString(str, "\n", 1);
-        appendWs(str, outputTabSize * depth);
+        appendString(str, newline, newlineSize);
+        if (outputFormat != HU_OUTPUTFORMAT_MINIMAL)
+            { appendWs(str, outputTabSize * depth); }
 
-        printKey(keyToken, str, colorTable);
+        printKey(node->keyToken, str, colorTable);
         lineIsDirty = true;
     }
 
@@ -189,20 +198,21 @@ void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int 
     {
         if (node->keyToken == NULL)
         {
-            if (node->childIdx == -1)
+            /*
+            if (node->childOrdinal == -1)
             {
                 if (lineIsDirty)
-                    { appendString(str, "\n", 1); }
+                    { appendString(str, newline, newlineSize); }
                 else
                 {
                     if (node->nodeIdx != 0)
                         { appendWs(str, 1); }
                 }
             }
-            else
+            else */
             {
                 if (lineIsDirty)
-                    { appendString(str, "\n", 1); }
+                    { appendString(str, newline, newlineSize); }
                 else
                     { appendWs(str, 1); }
             }
@@ -214,20 +224,21 @@ void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int 
     {
         if (node->keyToken == NULL)
         {
-            if (node->childIdx == -1)
+            /*
+            if (node->childOrdinal == -1)
             {
                 if (lineIsDirty)
-                    { appendString(str, "\n", 1); }
+                    { appendString(str, newline, newlineSize); }
                 else
                 {
                     if (node->nodeIdx != 0)
                         { appendWs(str, 1); }
                 }
             }
-            else
+            else */
             {
                 if (lineIsDirty)
-                    { appendString(str, "\n", 1); }
+                    { appendString(str, newline, newlineSize); }
                 else
                     { appendWs(str, 1); }
             }
@@ -237,7 +248,7 @@ void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int 
     }
 
     if (node->kind == HU_NODEKIND_LIST ||
-            node->kind == HU_NODEKIND_DICT)
+        node->kind == HU_NODEKIND_DICT)
     {
         // print annotations on one line
         printNodeAnnotations(node, str, colorTable);
@@ -250,20 +261,20 @@ void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int 
         for (int i = 0; i < numCh; ++i)
         {
             huNode const * chNode = huGetChildByIndex(node, i);
-            troveToPrettyStringRec(chNode, str, depth + 1, outputFormat, excludeComments, outputTabSize, colorTable);
+            troveToPrettyStringRec(chNode, str, depth + 1, outputFormat, excludeComments, outputTabSize, newline, newlineSize, colorTable);
         }
 
         // print ]
         if (node->kind == HU_NODEKIND_LIST)
         {
-            appendString(str, "\n", 1);
+            appendString(str, newline, newlineSize);
             appendWs(str, outputTabSize * depth);
             appendColoredString(str, "]", 1, 
                 colorTable, HU_COLORKIND_PUNCLIST);
         }
         else
         {
-            appendString(str, "\n", 1);
+            appendString(str, newline, newlineSize);
             appendWs(str, outputTabSize * depth);
             appendColoredString(str, "}", 1, 
                 colorTable, HU_COLORKIND_PUNCLIST);
@@ -272,10 +283,10 @@ void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int 
     else if (node->kind == HU_NODEKIND_VALUE)
     {
         if (node->keyToken == NULL && 
-                 (node->parentNodeIdx != -1 ||
-                    node->firstToken != node->valueToken))
+            (node->parentNodeIdx != -1 ||
+             node->firstToken != node->valueToken))
         {
-            appendString(str, "\n", 1);
+            appendString(str, newline, newlineSize);
             appendWs(str, outputTabSize * depth);
         }
         printValue(node->valueToken, str, colorTable);
@@ -287,7 +298,7 @@ void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int 
 }
 
 
-void troveToPrettyString(huTrove const * trove, huVector * str, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable)
+void troveToPrettyString(huTrove const * trove, huVector * str, int outputFormat, bool excludeComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable)
 {
     printTroveAnnotations(trove, str, colorTable);
 
@@ -295,17 +306,40 @@ void troveToPrettyString(huTrove const * trove, huVector * str, int outputFormat
 
     if (nodes != NULL)
     {
-        troveToPrettyStringRec(& nodes[0], str, 0, outputFormat, excludeComments, outputTabSize, colorTable);
-        appendString(str, "\n", 1);
+        troveToPrettyStringRec(& nodes[0], str, 0, outputFormat, excludeComments, outputTabSize, newline, newlineSize, colorTable);
+        appendString(str, newline, newlineSize);
     }
 
     for (int iCom = 0; iCom < huGetNumTroveComments(trove); ++iCom)
     {
         huToken const * comment = huGetTroveComment(trove, iCom);
         printComment(comment, str, colorTable);
-        appendString(str, "\n", 1);
+        appendString(str, newline, newlineSize);
     }
+}
 
-    //appendString(str, "\0", 1);
+
+void setTableEntry(huStringView table[], int colorKind, char const * str)
+{
+    table[colorKind].str = str; table[colorKind].size = strlen(str);
+}
+
+
+void huFillAnsiColorTable(huStringView table[])
+{
+    setTableEntry(table, HU_COLORKIND_NONE, darkGray);
+    setTableEntry(table, HU_COLORKIND_END, "");
+    setTableEntry(table, HU_COLORKIND_PUNCLIST, white);
+    setTableEntry(table, HU_COLORKIND_PUNCDICT, white);
+    setTableEntry(table, HU_COLORKIND_PUNCKEYVALUESEP, white);
+    setTableEntry(table, HU_COLORKIND_PUNCANNOTATE, darkBlue);
+    setTableEntry(table, HU_COLORKIND_PUNCANNOTATEDICT, darkBlue);
+    setTableEntry(table, HU_COLORKIND_PUNCANNOTATEKEYVALUESEP, darkBlue);
+    setTableEntry(table, HU_COLORKIND_KEY, darkCyan);
+    setTableEntry(table, HU_COLORKIND_VALUE, lightCyan);
+    setTableEntry(table, HU_COLORKIND_COMMENT, darkGreen);
+    setTableEntry(table, HU_COLORKIND_ANNOKEY, darkMagenta);
+    setTableEntry(table, HU_COLORKIND_ANNOVALUE, lightMagenta);
+    setTableEntry(table, HU_COLORKIND_WHITESPACE, darkGray);
 }
 

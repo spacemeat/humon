@@ -40,13 +40,13 @@ R"( @{tx:ta, ta:ta, tb:tb}
     void setup()
     {
         trove = hu::Trove::fromString(ts);
-        root = trove.getRootNode();
-        a = root.getChild(0);
-        bp = root.getChild(1);
-        cpp = root.getChild(2);
-        b = bp.getChild(0);
-        cp = cpp.getChild(0);
-        c = cp.getChild(0);
+        root = trove.rootNode();
+        a = root.child(0);
+        bp = root.child(1);
+        cpp = root.child(2);
+        b = bp.child(0);
+        cp = cpp.child(0);
+        c = cp.child(0);
     }
 
     void teardown()
@@ -78,12 +78,36 @@ R"({
     void setup()
     {
         trove = hu::Trove::fromString(ts);
-        root = trove.getRootNode();
-        nint = root.getChild(0);
-        nfloat = root.getChild(1);
-        ndouble = root.getChild(2);
-        nstring = root.getChild(3);
-        nbool = root.getChild(4);
+        root = trove.rootNode();
+        nint = root.child(0);
+        nfloat = root.child(1);
+        ndouble = root.child(2);
+        nstring = root.child(3);
+        nbool = root.child(4);
+    }
+
+    void teardown()
+    {
+    }
+};
+
+struct htd_comments
+{
+    std::string_view file = "../testFiles/comments.hu";
+
+    hu::Trove trove;
+    hu::Node root;
+    hu::Node k0;
+    hu::Node k1;
+    hu::Node k10;
+
+    void setup()
+    {
+        trove = hu::Trove::fromFile(file);
+        root = trove.rootNode();
+        k0 = root / "k0";
+        k1 = root / "k1";
+        k10 = k1 / 0;
     }
 
     void teardown()

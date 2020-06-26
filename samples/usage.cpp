@@ -34,9 +34,9 @@ int main()
     if (auto trove = hu::Trove::fromFile("src/samples/materials.hu");
         trove)
     {
-        auto extentsNode = trove.getNode("/assets/brick-diffuse/importData/extents"sv);
-        tuple xyExtents = { extentsNode / 0 / hu::value<int>{}, 
-                            extentsNode / 1 / hu::value<int>{} };
+        auto extentsNode = trove.node("/assets/brick-diffuse/importData/extents"sv);
+        tuple xyExtents = { extentsNode / 0 / hu::val<int>{}, 
+                            extentsNode / 1 / hu::val<int>{} };
         std::cout << "Extents: (" << get<0>(xyExtents) << ", " << get<1>(xyExtents) << ")\n";
     }
 
@@ -44,15 +44,14 @@ int main()
     if (auto trove = hu::Trove::fromFile("src/samples/hudo.hu");
         trove)
     {
-        if (auto annoValue = trove.getAnnotationWithKey("app");
-            annoValue != "hudo"sv)
+        if (trove.annotationWithKey("app") != "hudo"sv)
             { throw runtime_error("File is not a hudo file."); }
 
-        auto versionString = trove.getAnnotationWithKey("hudo-version");
+        auto versionString = trove.annotationWithKey("hudo-version");
         auto version = Version<3> { versionString };
-        if (version < Version<3> { 0, 1, 0 }) {  }
-        else if (version < Version<3> { 0, 2, 0 }) {  }
-        //else ...
+        if (version < Version<3> { 0, 1, 0 }) { /*...*/ }
+        else if (version < Version<3> { 0, 2, 0 }) { /*...*/ }
+        // else ...
     }
 
     return 0;

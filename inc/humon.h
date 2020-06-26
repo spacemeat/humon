@@ -8,11 +8,10 @@ extern "C"
 {
 #endif
 
-#ifndef HUMON_CHECK_PARAMS
-#if defined(DEBUG) && !defined(HUMON_FORCE_NO_CHECK_PARAMS)
+// The following are options you can set before #include <humon.h>
 #define HUMON_CHECK_PARAMS
-#endif
-#endif
+// #define HUMON_CAVEPERSON_DEBUGGING
+// #define HUMON_ERRORS_TO_STDERR
 
     static int const MIN_INPUT_TAB_SIZE = 1;
     static int const MAX_INPUT_TAB_SIZE = 1024;
@@ -113,6 +112,7 @@ extern "C"
         int elementSize;        ///< The size of one element of the array. If set to 0, the vector does not manage memory.
         int numElements;        ///< The number of elements currently managed by the array.
         int vectorCapacity;     ///< The maximum capacity of the array.
+        bool canGrowCapacity;   ///< Whether the vector can grow. Preallocaed buffers might be static.
     } huVector;
 
     /// Stores a pointer to a string, and its size. Does not own the string.
@@ -129,30 +129,22 @@ extern "C"
      * particular token in a Humon file. Every token is read and tracked with a huToken. */
     typedef struct huToken_tag
     {
-        int tokenKind;          ///< A huTokenKind value.
-        huStringView value;     ///< A view of the token string.
+        short tokenKind;        ///< A huTokenKind value.
+        char quoteChar;         ///< Whether the token is a quoted string.
+        huStringView str;       ///< A view of the token string.
         int line;               ///< The line number in the file where the token begins.
         int col;                ///< The column number in the file where the token begins.
         int endLine;            ///< The line number in the file where the token ends.
         int endCol;             ///< the column number in the file where the token end.
     } huToken;
 
-    /// Encodes a dict entry's key-index association.
-    /** Dicts store their child nodes in order like lists, but also maintain a lookup table
-     * of huDictEntry objects for quicker access by key. */
-    typedef struct huDictEntry_tag
-    {
-        huToken const * key;      ///< The key token owned by the child node.
-        int idx;            ///< The index of the node in the child node array.
-    } huDictEntry;
-
     /// Encodes an annotation entry for a node or trove.
     /** Nodes and troves can have a plurality of annotations. They are always key-value string
      * pairs, which are referenced by huAnnotation objets. */
     typedef struct huAnnotation_tag
     {
-        huToken const * key;      ///< The annotation key token.
-        huToken const * value;    ///< The annotation value token.
+        huToken const * key;    ///< The annotation key token.
+        huToken const * value;  ///< The annotation value token.
     } huAnnotation;
 
     typedef struct huNode_tag huNode;
@@ -162,16 +154,16 @@ extern "C"
      * owner is NULL, the comment is associated to the trove. */
     typedef struct huComment_tag
     {
-        huToken const * commentToken;     ///< The comment token.
-        huNode const * owner;             ///< The associated node. NULL indicated association to a trove.
+        huToken const * commentToken;   ///< The comment token.
+        huNode const * owner;           ///< The associated node. NULL indicated association to a trove.
     } huComment;
 
     /// Encodes an error tracked by the tokenizer or parser.
     /** Errors are tracked for reporting to the user. */
     typedef struct huError_tag
     {
-        int errorCode;              ///< A huErrorCode value.
-        huToken const * errorToken;       ///< The token that seems to be erroneous.
+        int errorCode;                  ///< A huErrorCode value.
+        huToken const * errorToken;     ///< The token that seems to be erroneous.
     } huError;
 
 
@@ -189,15 +181,14 @@ extern "C"
         int kind;                           ///< A huNodeKind value.
         huToken const * firstToken;         ///< The first token which contributes to this node, including any annotation and comment tokens.
         huToken const * keyToken;           ///< The key token if the node is inside a dict.
-        huToken const * valueToken;    ///< The first token of this node's actual value; for a container, it points to the opening brac(e|ket).
+        huToken const * valueToken;         ///< The first token of this node's actual value; for a container, it points to the opening brac(e|ket).
         huToken const * lastValueToken;     ///< The last token of this node's actual value; for a container, it points to the closing brac(e|ket).
         huToken const * lastToken;          ///< The last token of this node, including any annotation and comment tokens.
 
         int parentNodeIdx;                  ///< The parent node's index, or -1 if this node is the root.
-        int childIdx;                       ///< The index of this node vis a vis its sibling nodes (starting at 0).
+        int childOrdinal;                   ///< The index of this node vis a vis its sibling nodes (starting at 0).
 
         huVector childNodeIdxs;             ///< Manages a int []. Stores the node inexes of each child node, if this node is a collection.
-        huVector childDictKeys;             ///< Manages a huDictEntry []. Stores the key-index associations for a dict.
         huVector annotations;               ///< Manages a huAnnotation []. Stores the annotations associated to this node.
         huVector comments;                  ///< Manages a huComment []. Stores the comments associated to this node.
     } huNode;
@@ -207,7 +198,7 @@ extern "C"
     /// Gets the number of children a node has.
     int huGetNumChildren(huNode const * node);
     /// Gets a child of a node by child index.
-    huNode const * huGetChildByIndex(huNode const * node, int childIdx);
+    huNode const * huGetChildByIndex(huNode const * node, int childOrdinal);
     /// Gets a child of a node by key.
     huNode const * huGetChildByKeyZ(huNode const * node, char const * key);
     /// Gets a child of a node by key.
@@ -219,8 +210,6 @@ extern "C"
 
     /// Returns if a node has a key token tracked. (If it's a member of a dict.)
     bool huHasKey(huNode const * node);
-    /// Returns the token containing the key string for a node.
-    huToken const * huGetKey(huNode const * node);
 
     /// Returns if a node has a value token tracked. (All non-null nodes always should.)
     bool huHasValue(huNode const * node);
@@ -366,12 +355,14 @@ extern "C"
     huNode const * huFindNodesByCommentContainingN(huTrove const * trove, char const * containedText, int containedTextLen, huNode const * startWith);
 
     /// Serializes a trove to text.
-    void huTroveToString(huTrove const * trove, char * dest, int * destLength, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable);
+    void huTroveToString(huTrove const * trove, char * dest, int * destLength, int outputFormat, bool excludeComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable);
 
     /// Serializes a trove to file.
-    size_t huTroveToFileZ(huTrove const * trove, char const * path, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable);
+    size_t huTroveToFileZ(huTrove const * trove, char const * path, int outputFormat, bool excludeComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable);
     /// Serializes a trove to file.
-    size_t huTroveToFileN(huTrove const * trove, char const * path, int pathLen, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable);
+    size_t huTroveToFileN(huTrove const * trove, char const * path, int pathLen, int outputFormat, bool excludeComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable);
+
+    void huFillAnsiColorTable(huStringView table[]);
 
     /// Global null token object. Functions that return null tokens reference this.
     extern huToken const humon_nullToken;

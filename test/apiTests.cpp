@@ -457,132 +457,132 @@ TEST(huGetAnnotation, lists)
 {
     huAnnotation const * anno = huGetAnnotation(l.root, 0);
     CHECK_TEXT(anno != NULL, "root.anno 0 != NULL");
-    STRNCMP_EQUAL_TEXT("name", anno->key->value.str, anno->key->value.size, "a.anno 0 k=name");
-    STRNCMP_EQUAL_TEXT("root", anno->value->value.str, anno->value->value.size, "a.anno 0 v=root");
+    STRNCMP_EQUAL_TEXT("name", anno->key->str.str, anno->key->str.size, "a.anno 0 k=name");
+    STRNCMP_EQUAL_TEXT("root", anno->value->str.str, anno->value->str.size, "a.anno 0 v=root");
     anno = huGetAnnotation(l.root, 1);
     CHECK_TEXT(anno != NULL, "root.anno 1 != NULL");
-    STRNCMP_EQUAL_TEXT("otherName", anno->key->value.str, anno->key->value.size, "a.anno 1 k=otherName");
-    STRNCMP_EQUAL_TEXT("root", anno->value->value.str, anno->value->value.size, "a.anno 1 k=root");
+    STRNCMP_EQUAL_TEXT("otherName", anno->key->str.str, anno->key->str.size, "a.anno 1 k=otherName");
+    STRNCMP_EQUAL_TEXT("root", anno->value->str.str, anno->value->str.size, "a.anno 1 k=root");
 
     anno = huGetAnnotation(l.a, 0);
     CHECK_TEXT(anno != NULL, "a.anno 0 != NULL");
-    STRNCMP_EQUAL_TEXT("a", anno->key->value.str, anno->key->value.size, "a.anno 0 k=a");
-    STRNCMP_EQUAL_TEXT("a", anno->value->value.str, anno->value->value.size, "a.anno 0 v=a");
+    STRNCMP_EQUAL_TEXT("a", anno->key->str.str, anno->key->str.size, "a.anno 0 k=a");
+    STRNCMP_EQUAL_TEXT("a", anno->value->str.str, anno->value->str.size, "a.anno 0 v=a");
     anno = huGetAnnotation(l.a, 1);
     CHECK_TEXT(anno != NULL, "a.anno 1 != NULL");
-    STRNCMP_EQUAL_TEXT("type", anno->key->value.str, anno->key->value.size, "a.anno 1 k=type");
-    STRNCMP_EQUAL_TEXT("value", anno->value->value.str, anno->value->value.size, "a.anno 1 k=value");
+    STRNCMP_EQUAL_TEXT("type", anno->key->str.str, anno->key->str.size, "a.anno 1 k=type");
+    STRNCMP_EQUAL_TEXT("value", anno->value->str.str, anno->value->str.size, "a.anno 1 k=value");
 
     anno = huGetAnnotation(l.bp, 0);
     CHECK_TEXT(anno != NULL, "bp.anno 0 != NULL");
-    STRNCMP_EQUAL_TEXT("b", anno->key->value.str, anno->key->value.size, "bp.anno 0 k=b");
-    STRNCMP_EQUAL_TEXT("bp", anno->value->value.str, anno->value->value.size, "bp.anno 0 v=bp");
+    STRNCMP_EQUAL_TEXT("b", anno->key->str.str, anno->key->str.size, "bp.anno 0 k=b");
+    STRNCMP_EQUAL_TEXT("bp", anno->value->str.str, anno->value->str.size, "bp.anno 0 v=bp");
     anno = huGetAnnotation(l.bp, 1);
     CHECK_TEXT(anno != NULL, "bp.anno 1 != NULL");
-    STRNCMP_EQUAL_TEXT("type", anno->key->value.str, anno->key->value.size, "bp.anno 1 k=type");
-    STRNCMP_EQUAL_TEXT("list", anno->value->value.str, anno->value->value.size, "bp.anno 1 k=list");
+    STRNCMP_EQUAL_TEXT("type", anno->key->str.str, anno->key->str.size, "bp.anno 1 k=type");
+    STRNCMP_EQUAL_TEXT("list", anno->value->str.str, anno->value->str.size, "bp.anno 1 k=list");
 
     anno = huGetAnnotation(l.b, 0);
     CHECK_TEXT(anno != NULL, "b.anno 0 != NULL");
-    STRNCMP_EQUAL_TEXT("b", anno->key->value.str, anno->key->value.size, "b.anno 0 k=b");
-    STRNCMP_EQUAL_TEXT("b", anno->value->value.str, anno->value->value.size, "b.anno 0 v=b");
+    STRNCMP_EQUAL_TEXT("b", anno->key->str.str, anno->key->str.size, "b.anno 0 k=b");
+    STRNCMP_EQUAL_TEXT("b", anno->value->str.str, anno->value->str.size, "b.anno 0 v=b");
     anno = huGetAnnotation(l.b, 1);
     CHECK_TEXT(anno != NULL, "b.anno 1 != NULL");
-    STRNCMP_EQUAL_TEXT("type", anno->key->value.str, anno->key->value.size, "b.anno 1 k=type");
-    STRNCMP_EQUAL_TEXT("value", anno->value->value.str, anno->value->value.size, "b.anno 1 k=value");
+    STRNCMP_EQUAL_TEXT("type", anno->key->str.str, anno->key->str.size, "b.anno 1 k=type");
+    STRNCMP_EQUAL_TEXT("value", anno->value->str.str, anno->value->str.size, "b.anno 1 k=value");
 
     anno = huGetAnnotation(l.cpp, 0);
     CHECK_TEXT(anno != NULL, "cpp.anno 0 != NULL");
-    STRNCMP_EQUAL_TEXT("c", anno->key->value.str, anno->key->value.size, "cpp.anno 0 k=c");
-    STRNCMP_EQUAL_TEXT("cpp", anno->value->value.str, anno->value->value.size, "cpp.anno 0 v=cpp");
+    STRNCMP_EQUAL_TEXT("c", anno->key->str.str, anno->key->str.size, "cpp.anno 0 k=c");
+    STRNCMP_EQUAL_TEXT("cpp", anno->value->str.str, anno->value->str.size, "cpp.anno 0 v=cpp");
     anno = huGetAnnotation(l.cpp, 1);
     CHECK_TEXT(anno != NULL, "cpp.anno 1 != NULL");
-    STRNCMP_EQUAL_TEXT("type", anno->key->value.str, anno->key->value.size, "cpp.anno 1 k=type");
-    STRNCMP_EQUAL_TEXT("list", anno->value->value.str, anno->value->value.size, "cpp.anno 1 k=list");
+    STRNCMP_EQUAL_TEXT("type", anno->key->str.str, anno->key->str.size, "cpp.anno 1 k=type");
+    STRNCMP_EQUAL_TEXT("list", anno->value->str.str, anno->value->str.size, "cpp.anno 1 k=list");
 
     anno = huGetAnnotation(l.cp, 0);
     CHECK_TEXT(anno != NULL, "cp.anno 0 != NULL");
-    STRNCMP_EQUAL_TEXT("c", anno->key->value.str, anno->key->value.size, "cp.anno 0 k=c");
-    STRNCMP_EQUAL_TEXT("cp", anno->value->value.str, anno->value->value.size, "cp.anno 0 v=cp");
+    STRNCMP_EQUAL_TEXT("c", anno->key->str.str, anno->key->str.size, "cp.anno 0 k=c");
+    STRNCMP_EQUAL_TEXT("cp", anno->value->str.str, anno->value->str.size, "cp.anno 0 v=cp");
     anno = huGetAnnotation(l.cp, 1);
     CHECK_TEXT(anno != NULL, "cp.anno 1 != NULL");
-    STRNCMP_EQUAL_TEXT("type", anno->key->value.str, anno->key->value.size, "cp.anno 1 k=type");
-    STRNCMP_EQUAL_TEXT("list", anno->value->value.str, anno->value->value.size, "cp.anno 1 k=list");
+    STRNCMP_EQUAL_TEXT("type", anno->key->str.str, anno->key->str.size, "cp.anno 1 k=type");
+    STRNCMP_EQUAL_TEXT("list", anno->value->str.str, anno->value->str.size, "cp.anno 1 k=list");
 
     anno = huGetAnnotation(l.c, 0);
     CHECK_TEXT(anno != NULL, "c.anno 0 != NULL");
-    STRNCMP_EQUAL_TEXT("c", anno->key->value.str, anno->key->value.size, "c.anno 0 k=c");
-    STRNCMP_EQUAL_TEXT("c", anno->value->value.str, anno->value->value.size, "c.anno 0 v=c");
+    STRNCMP_EQUAL_TEXT("c", anno->key->str.str, anno->key->str.size, "c.anno 0 k=c");
+    STRNCMP_EQUAL_TEXT("c", anno->value->str.str, anno->value->str.size, "c.anno 0 v=c");
     anno = huGetAnnotation(l.c, 1);
     CHECK_TEXT(anno != NULL, "c.anno 1 != NULL");
-    STRNCMP_EQUAL_TEXT("type", anno->key->value.str, anno->key->value.size, "c.anno 1 k=type");
-    STRNCMP_EQUAL_TEXT("value", anno->value->value.str, anno->value->value.size, "c.anno 1 k=value");
+    STRNCMP_EQUAL_TEXT("type", anno->key->str.str, anno->key->str.size, "c.anno 1 k=type");
+    STRNCMP_EQUAL_TEXT("value", anno->value->str.str, anno->value->str.size, "c.anno 1 k=value");
 }
 
 TEST(huGetAnnotation, dicts)
 {
     huAnnotation const * anno = huGetAnnotation(d.root, 0);
     CHECK_TEXT(anno != NULL, "root.anno 0 != NULL");
-    STRNCMP_EQUAL_TEXT("name", anno->key->value.str, anno->key->value.size, "a.anno 0 k=name");
-    STRNCMP_EQUAL_TEXT("root", anno->value->value.str, anno->value->value.size, "a.anno 0 v=root");
+    STRNCMP_EQUAL_TEXT("name", anno->key->str.str, anno->key->str.size, "a.anno 0 k=name");
+    STRNCMP_EQUAL_TEXT("root", anno->value->str.str, anno->value->str.size, "a.anno 0 v=root");
     anno = huGetAnnotation(d.root, 1);
     CHECK_TEXT(anno != NULL, "root.anno 1 != NULL");
-    STRNCMP_EQUAL_TEXT("otherName", anno->key->value.str, anno->key->value.size, "a.anno 1 k=otherName");
-    STRNCMP_EQUAL_TEXT("root", anno->value->value.str, anno->value->value.size, "a.anno 1 k=root");
+    STRNCMP_EQUAL_TEXT("otherName", anno->key->str.str, anno->key->str.size, "a.anno 1 k=otherName");
+    STRNCMP_EQUAL_TEXT("root", anno->value->str.str, anno->value->str.size, "a.anno 1 k=root");
 
     anno = huGetAnnotation(d.a, 0);
     CHECK_TEXT(anno != NULL, "a.anno 0 != NULL");
-    STRNCMP_EQUAL_TEXT("a", anno->key->value.str, anno->key->value.size, "a.anno 0 k=a");
-    STRNCMP_EQUAL_TEXT("a", anno->value->value.str, anno->value->value.size, "a.anno 0 v=a");
+    STRNCMP_EQUAL_TEXT("a", anno->key->str.str, anno->key->str.size, "a.anno 0 k=a");
+    STRNCMP_EQUAL_TEXT("a", anno->value->str.str, anno->value->str.size, "a.anno 0 v=a");
     anno = huGetAnnotation(d.a, 1);
     CHECK_TEXT(anno != NULL, "a.anno 1 != NULL");
-    STRNCMP_EQUAL_TEXT("type", anno->key->value.str, anno->key->value.size, "a.anno 1 k=type");
-    STRNCMP_EQUAL_TEXT("value", anno->value->value.str, anno->value->value.size, "a.anno 1 k=value");
+    STRNCMP_EQUAL_TEXT("type", anno->key->str.str, anno->key->str.size, "a.anno 1 k=type");
+    STRNCMP_EQUAL_TEXT("value", anno->value->str.str, anno->value->str.size, "a.anno 1 k=value");
 
     anno = huGetAnnotation(d.bp, 0);
     CHECK_TEXT(anno != NULL, "bp.anno 0 != NULL");
-    STRNCMP_EQUAL_TEXT("b", anno->key->value.str, anno->key->value.size, "bp.anno 0 k=b");
-    STRNCMP_EQUAL_TEXT("bp", anno->value->value.str, anno->value->value.size, "bp.anno 0 v=bp");
+    STRNCMP_EQUAL_TEXT("b", anno->key->str.str, anno->key->str.size, "bp.anno 0 k=b");
+    STRNCMP_EQUAL_TEXT("bp", anno->value->str.str, anno->value->str.size, "bp.anno 0 v=bp");
     anno = huGetAnnotation(d.bp, 1);
     CHECK_TEXT(anno != NULL, "bp.anno 1 != NULL");
-    STRNCMP_EQUAL_TEXT("type", anno->key->value.str, anno->key->value.size, "bp.anno 1 k=type");
-    STRNCMP_EQUAL_TEXT("dict", anno->value->value.str, anno->value->value.size, "bp.anno 1 k=dict");
+    STRNCMP_EQUAL_TEXT("type", anno->key->str.str, anno->key->str.size, "bp.anno 1 k=type");
+    STRNCMP_EQUAL_TEXT("dict", anno->value->str.str, anno->value->str.size, "bp.anno 1 k=dict");
 
     anno = huGetAnnotation(d.b, 0);
     CHECK_TEXT(anno != NULL, "b.anno 0 != NULL");
-    STRNCMP_EQUAL_TEXT("b", anno->key->value.str, anno->key->value.size, "b.anno 0 k=b");
-    STRNCMP_EQUAL_TEXT("b", anno->value->value.str, anno->value->value.size, "b.anno 0 v=b");
+    STRNCMP_EQUAL_TEXT("b", anno->key->str.str, anno->key->str.size, "b.anno 0 k=b");
+    STRNCMP_EQUAL_TEXT("b", anno->value->str.str, anno->value->str.size, "b.anno 0 v=b");
     anno = huGetAnnotation(d.b, 1);
     CHECK_TEXT(anno != NULL, "b.anno 1 != NULL");
-    STRNCMP_EQUAL_TEXT("type", anno->key->value.str, anno->key->value.size, "b.anno 1 k=type");
-    STRNCMP_EQUAL_TEXT("value", anno->value->value.str, anno->value->value.size, "b.anno 1 k=value");
+    STRNCMP_EQUAL_TEXT("type", anno->key->str.str, anno->key->str.size, "b.anno 1 k=type");
+    STRNCMP_EQUAL_TEXT("value", anno->value->str.str, anno->value->str.size, "b.anno 1 k=value");
 
     anno = huGetAnnotation(d.cpp, 0);
     CHECK_TEXT(anno != NULL, "cpp.anno 0 != NULL");
-    STRNCMP_EQUAL_TEXT("c", anno->key->value.str, anno->key->value.size, "cpp.anno 0 k=c");
-    STRNCMP_EQUAL_TEXT("cpp", anno->value->value.str, anno->value->value.size, "cpp.anno 0 v=cpp");
+    STRNCMP_EQUAL_TEXT("c", anno->key->str.str, anno->key->str.size, "cpp.anno 0 k=c");
+    STRNCMP_EQUAL_TEXT("cpp", anno->value->str.str, anno->value->str.size, "cpp.anno 0 v=cpp");
     anno = huGetAnnotation(d.cpp, 1);
     CHECK_TEXT(anno != NULL, "cpp.anno 1 != NULL");
-    STRNCMP_EQUAL_TEXT("type", anno->key->value.str, anno->key->value.size, "cpp.anno 1 k=type");
-    STRNCMP_EQUAL_TEXT("dict", anno->value->value.str, anno->value->value.size, "cpp.anno 1 k=dict");
+    STRNCMP_EQUAL_TEXT("type", anno->key->str.str, anno->key->str.size, "cpp.anno 1 k=type");
+    STRNCMP_EQUAL_TEXT("dict", anno->value->str.str, anno->value->str.size, "cpp.anno 1 k=dict");
 
     anno = huGetAnnotation(d.cp, 0);
     CHECK_TEXT(anno != NULL, "cp.anno 0 != NULL");
-    STRNCMP_EQUAL_TEXT("c", anno->key->value.str, anno->key->value.size, "cp.anno 0 k=c");
-    STRNCMP_EQUAL_TEXT("cp", anno->value->value.str, anno->value->value.size, "cp.anno 0 v=cp");
+    STRNCMP_EQUAL_TEXT("c", anno->key->str.str, anno->key->str.size, "cp.anno 0 k=c");
+    STRNCMP_EQUAL_TEXT("cp", anno->value->str.str, anno->value->str.size, "cp.anno 0 v=cp");
     anno = huGetAnnotation(d.cp, 1);
     CHECK_TEXT(anno != NULL, "cp.anno 1 != NULL");
-    STRNCMP_EQUAL_TEXT("type", anno->key->value.str, anno->key->value.size, "cp.anno 1 k=type");
-    STRNCMP_EQUAL_TEXT("dict", anno->value->value.str, anno->value->value.size, "cp.anno 1 k=dict");
+    STRNCMP_EQUAL_TEXT("type", anno->key->str.str, anno->key->str.size, "cp.anno 1 k=type");
+    STRNCMP_EQUAL_TEXT("dict", anno->value->str.str, anno->value->str.size, "cp.anno 1 k=dict");
 
     anno = huGetAnnotation(d.c, 0);
     CHECK_TEXT(anno != NULL, "c.anno 0 != NULL");
-    STRNCMP_EQUAL_TEXT("c", anno->key->value.str, anno->key->value.size, "c.anno 0 k=c");
-    STRNCMP_EQUAL_TEXT("c", anno->value->value.str, anno->value->value.size, "c.anno 0 v=c");
+    STRNCMP_EQUAL_TEXT("c", anno->key->str.str, anno->key->str.size, "c.anno 0 k=c");
+    STRNCMP_EQUAL_TEXT("c", anno->value->str.str, anno->value->str.size, "c.anno 0 v=c");
     anno = huGetAnnotation(d.c, 1);
     CHECK_TEXT(anno != NULL, "c.anno 1 != NULL");
-    STRNCMP_EQUAL_TEXT("type", anno->key->value.str, anno->key->value.size, "c.anno 1 k=type");
-    STRNCMP_EQUAL_TEXT("value", anno->value->value.str, anno->value->value.size, "c.anno 1 k=value");
+    STRNCMP_EQUAL_TEXT("type", anno->key->str.str, anno->key->str.size, "c.anno 1 k=type");
+    STRNCMP_EQUAL_TEXT("value", anno->value->str.str, anno->value->str.size, "c.anno 1 k=value");
 }
 
 TEST(huGetAnnotation, pathological)
@@ -707,58 +707,58 @@ TEST_GROUP(huGetAnnotationByKey)
 
 TEST(huGetAnnotationByKey, lists)
 {
-    auto anno = huGetAnnotationByKeyZ(l.root, "name")->value;
+    auto anno = huGetAnnotationByKeyZ(l.root, "name")->str;
     LONGS_EQUAL_TEXT(strlen("root"), anno.size, "root.anno name size = sz root");
     STRNCMP_EQUAL_TEXT("root", anno.str, anno.size, "root.anno name == root");
-    anno = huGetAnnotationByKeyZ(l.root, "otherName")->value;
+    anno = huGetAnnotationByKeyZ(l.root, "otherName")->str;
     LONGS_EQUAL_TEXT(strlen("root"), anno.size, "root.anno otherName size = sz root");
     STRNCMP_EQUAL_TEXT("root", anno.str, anno.size, "root.anno otherName == root");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByKeyZ(l.root, "foo"), "root.hawk foo == false");
 
-    anno = huGetAnnotationByKeyZ(l.a, "a")->value;
+    anno = huGetAnnotationByKeyZ(l.a, "a")->str;
     LONGS_EQUAL_TEXT(strlen("a"), anno.size, "a.anno a size = sz a");
     STRNCMP_EQUAL_TEXT("a", anno.str, anno.size, "a.anno a == a");
-    anno = huGetAnnotationByKeyZ(l.a, "type")->value;
+    anno = huGetAnnotationByKeyZ(l.a, "type")->str;
     LONGS_EQUAL_TEXT(strlen("value"), anno.size, "a.anno type size = sz value");
     STRNCMP_EQUAL_TEXT("value", anno.str, anno.size, "a.anno type == value");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByKeyZ(l.a, "foo"), "a.anno foo == null");
 
-    anno = huGetAnnotationByKeyZ(l.bp, "b")->value;
+    anno = huGetAnnotationByKeyZ(l.bp, "b")->str;
     LONGS_EQUAL_TEXT(strlen("bp"), anno.size, "bp.anno b size = sz bp");
     STRNCMP_EQUAL_TEXT("bp", anno.str, anno.size, "bp.anno a == bp");
-    anno = huGetAnnotationByKeyZ(l.bp, "type")->value;
+    anno = huGetAnnotationByKeyZ(l.bp, "type")->str;
     LONGS_EQUAL_TEXT(strlen("list"), anno.size, "bp.anno type size = sz list");
     STRNCMP_EQUAL_TEXT("list", anno.str, anno.size, "bp.anno type == list");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByKeyZ(l.bp, "foo"), "bp.anno foo == null");
 
-    anno = huGetAnnotationByKeyZ(l.b, "b")->value;
+    anno = huGetAnnotationByKeyZ(l.b, "b")->str;
     LONGS_EQUAL_TEXT(strlen("b"), anno.size, "b.anno b size = sz b");
     STRNCMP_EQUAL_TEXT("b", anno.str, anno.size, "b.anno b == b");
-    anno = huGetAnnotationByKeyZ(l.b, "type")->value;
+    anno = huGetAnnotationByKeyZ(l.b, "type")->str;
     LONGS_EQUAL_TEXT(strlen("value"), anno.size, "b.anno type size = sz value");
     STRNCMP_EQUAL_TEXT("value", anno.str, anno.size, "b.anno type == value");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByKeyZ(l.b, "foo"), "b.anno foo == null");
 
-    anno = huGetAnnotationByKeyZ(l.cpp, "c")->value;
+    anno = huGetAnnotationByKeyZ(l.cpp, "c")->str;
     LONGS_EQUAL_TEXT(strlen("cpp"), anno.size, "cpp.anno b size = sz cpp");
     STRNCMP_EQUAL_TEXT("cpp", anno.str, anno.size, "cpp.anno b == cpp");
-    anno = huGetAnnotationByKeyZ(l.cpp, "type")->value;
+    anno = huGetAnnotationByKeyZ(l.cpp, "type")->str;
     LONGS_EQUAL_TEXT(strlen("list"), anno.size, "cpp.anno type size = sz list");
     STRNCMP_EQUAL_TEXT("list", anno.str, anno.size, "cpp.anno type == list");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByKeyZ(l.cpp, "foo"), "cpp.anno foo == null");
 
-    anno = huGetAnnotationByKeyZ(l.cp, "c")->value;
+    anno = huGetAnnotationByKeyZ(l.cp, "c")->str;
     LONGS_EQUAL_TEXT(strlen("cp"), anno.size, "cp.anno c size = sz cp");
     STRNCMP_EQUAL_TEXT("cp", anno.str, anno.size, "cp.anno c == cp");
-    anno = huGetAnnotationByKeyZ(l.cp, "type")->value;
+    anno = huGetAnnotationByKeyZ(l.cp, "type")->str;
     LONGS_EQUAL_TEXT(strlen("list"), anno.size, "cp.anno type size = sz list");
     STRNCMP_EQUAL_TEXT("list", anno.str, anno.size, "cp.anno type == list");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByKeyZ(l.cp, "foo"), "cp.anno foo == null");
 
-    anno = huGetAnnotationByKeyZ(l.c, "c")->value;
+    anno = huGetAnnotationByKeyZ(l.c, "c")->str;
     LONGS_EQUAL_TEXT(strlen("c"), anno.size, "c.anno c size = sz c");
     STRNCMP_EQUAL_TEXT("c", anno.str, anno.size, "c.anno c == c");
-    anno = huGetAnnotationByKeyZ(l.c, "type")->value;
+    anno = huGetAnnotationByKeyZ(l.c, "type")->str;
     LONGS_EQUAL_TEXT(strlen("value"), anno.size, "c.anno type size = sz value");
     STRNCMP_EQUAL_TEXT("value", anno.str, anno.size, "c.anno type == value");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByKeyZ(l.c, "foo"), "c.anno foo == null");
@@ -766,58 +766,58 @@ TEST(huGetAnnotationByKey, lists)
 
 TEST(huGetAnnotationByKey, dicts)
 {
-    auto anno = huGetAnnotationByKeyZ(d.root, "name")->value;
+    auto anno = huGetAnnotationByKeyZ(d.root, "name")->str;
     LONGS_EQUAL_TEXT(strlen("root"), anno.size, "root.anno name size = sz root");
     STRNCMP_EQUAL_TEXT("root", anno.str, anno.size, "root.anno name == root");
-    anno = huGetAnnotationByKeyZ(d.root, "otherName")->value;
+    anno = huGetAnnotationByKeyZ(d.root, "otherName")->str;
     LONGS_EQUAL_TEXT(strlen("root"), anno.size, "root.anno otherName size = sz root");
     STRNCMP_EQUAL_TEXT("root", anno.str, anno.size, "root.anno otherName == root");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByKeyZ(d.root, "foo"), "root.hawk foo == false");
 
-    anno = huGetAnnotationByKeyZ(d.a, "a")->value;
+    anno = huGetAnnotationByKeyZ(d.a, "a")->str;
     LONGS_EQUAL_TEXT(strlen("a"), anno.size, "a.anno a size = sz a");
     STRNCMP_EQUAL_TEXT("a", anno.str, anno.size, "a.anno a == a");
-    anno = huGetAnnotationByKeyZ(d.a, "type")->value;
+    anno = huGetAnnotationByKeyZ(d.a, "type")->str;
     LONGS_EQUAL_TEXT(strlen("value"), anno.size, "a.anno type size = sz value");
     STRNCMP_EQUAL_TEXT("value", anno.str, anno.size, "a.anno type == value");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByKeyZ(d.a, "foo"), "a.anno foo == null");
 
-    anno = huGetAnnotationByKeyZ(d.bp, "b")->value;
+    anno = huGetAnnotationByKeyZ(d.bp, "b")->str;
     LONGS_EQUAL_TEXT(strlen("bp"), anno.size, "bp.anno b size = sz bp");
     STRNCMP_EQUAL_TEXT("bp", anno.str, anno.size, "bp.anno b == bp");
-    anno = huGetAnnotationByKeyZ(d.bp, "type")->value;
+    anno = huGetAnnotationByKeyZ(d.bp, "type")->str;
     LONGS_EQUAL_TEXT(strlen("dict"), anno.size, "bp.anno type size = sz dict");
     STRNCMP_EQUAL_TEXT("dict", anno.str, anno.size, "bp.anno type == dict");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByKeyZ(d.bp, "foo"), "bp.anno foo == null");
 
-    anno = huGetAnnotationByKeyZ(d.b, "b")->value;
+    anno = huGetAnnotationByKeyZ(d.b, "b")->str;
     LONGS_EQUAL_TEXT(strlen("b"), anno.size, "b.anno b size = sz b");
     STRNCMP_EQUAL_TEXT("b", anno.str, anno.size, "b.anno b == b");
-    anno = huGetAnnotationByKeyZ(d.b, "type")->value;
+    anno = huGetAnnotationByKeyZ(d.b, "type")->str;
     LONGS_EQUAL_TEXT(strlen("value"), anno.size, "b.anno type size = sz value");
     STRNCMP_EQUAL_TEXT("value", anno.str, anno.size, "b.anno type == value");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByKeyZ(d.b, "foo"), "b.anno foo == null");
 
-    anno = huGetAnnotationByKeyZ(d.cpp, "c")->value;
+    anno = huGetAnnotationByKeyZ(d.cpp, "c")->str;
     LONGS_EQUAL_TEXT(strlen("cpp"), anno.size, "cpp.anno b size = sz cpp");
     STRNCMP_EQUAL_TEXT("cpp", anno.str, anno.size, "cpp.anno b == cpp");
-    anno = huGetAnnotationByKeyZ(d.cpp, "type")->value;
+    anno = huGetAnnotationByKeyZ(d.cpp, "type")->str;
     LONGS_EQUAL_TEXT(strlen("dict"), anno.size, "cpp.anno type size = sz dict");
     STRNCMP_EQUAL_TEXT("dict", anno.str, anno.size, "cpp.anno type == dict");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByKeyZ(d.cpp, "foo"), "cpp.anno foo == null");
 
-    anno = huGetAnnotationByKeyZ(d.cp, "c")->value;
+    anno = huGetAnnotationByKeyZ(d.cp, "c")->str;
     LONGS_EQUAL_TEXT(strlen("cp"), anno.size, "cp.anno c size = sz cp");
     STRNCMP_EQUAL_TEXT("cp", anno.str, anno.size, "cp.anno c == cp");
-    anno = huGetAnnotationByKeyZ(d.cp, "type")->value;
+    anno = huGetAnnotationByKeyZ(d.cp, "type")->str;
     LONGS_EQUAL_TEXT(strlen("dict"), anno.size, "cp.anno type size = sz dict");
     STRNCMP_EQUAL_TEXT("dict", anno.str, anno.size, "cp.anno type == dict");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByKeyZ(d.cp, "foo"), "cp.anno foo == null");
 
-    anno = huGetAnnotationByKeyZ(d.c, "c")->value;
+    anno = huGetAnnotationByKeyZ(d.c, "c")->str;
     LONGS_EQUAL_TEXT(strlen("c"), anno.size, "c.anno c size = sz c");
     STRNCMP_EQUAL_TEXT("c", anno.str, anno.size, "c.anno c == c");
-    anno = huGetAnnotationByKeyZ(d.c, "type")->value;
+    anno = huGetAnnotationByKeyZ(d.c, "type")->str;
     LONGS_EQUAL_TEXT(strlen("value"), anno.size, "c.anno type size = sz value");
     STRNCMP_EQUAL_TEXT("value", anno.str, anno.size, "c.anno type == value");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByKeyZ(d.c, "foo"), "c.anno foo == null");
@@ -917,58 +917,58 @@ TEST_GROUP(huGetAnnotationByValue)
 
 TEST(huGetAnnotationByValue, lists)
 {
-    auto anno = huGetAnnotationByValueZ(l.root, "root", 0)->value;
+    auto anno = huGetAnnotationByValueZ(l.root, "root", 0)->str;
     LONGS_EQUAL_TEXT(strlen("name"), anno.size, "root.anno v0 name size = sz root");
     STRNCMP_EQUAL_TEXT("name", anno.str, anno.size, "root.anno v0 name == root");
-    anno = huGetAnnotationByValueZ(l.root, "root", 1)->value;
+    anno = huGetAnnotationByValueZ(l.root, "root", 1)->str;
     LONGS_EQUAL_TEXT(strlen("otherName"), anno.size, "root.anno v1 otherName size = sz root");
     STRNCMP_EQUAL_TEXT("otherName", anno.str, anno.size, "root.anno v1 otherName == root");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByValueZ(l.root, "foo", 0), "root.hawk foo == false");
 
-    anno = huGetAnnotationByValueZ(l.a, "a", 0)->value;
+    anno = huGetAnnotationByValueZ(l.a, "a", 0)->str;
     LONGS_EQUAL_TEXT(strlen("a"), anno.size, "a.anno v0 a size = sz a");
     STRNCMP_EQUAL_TEXT("a", anno.str, anno.size, "a.anno v0 a == a");
-    anno = huGetAnnotationByValueZ(l.a, "value", 0)->value;
+    anno = huGetAnnotationByValueZ(l.a, "value", 0)->str;
     LONGS_EQUAL_TEXT(strlen("type"), anno.size, "a.anno v0 value size = sz type");
     STRNCMP_EQUAL_TEXT("type", anno.str, anno.size, "a.anno v0 value == type");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByValueZ(l.a, "foo", 0), "a.anno foo == null");
 
-    anno = huGetAnnotationByValueZ(l.bp, "bp", 0)->value;
+    anno = huGetAnnotationByValueZ(l.bp, "bp", 0)->str;
     LONGS_EQUAL_TEXT(strlen("b"), anno.size, "bp.anno v0 bp size = sz b");
     STRNCMP_EQUAL_TEXT("b", anno.str, anno.size, "bp.anno v0 bp == b");
-    anno = huGetAnnotationByValueZ(l.bp, "list", 0)->value;
+    anno = huGetAnnotationByValueZ(l.bp, "list", 0)->str;
     LONGS_EQUAL_TEXT(strlen("type"), anno.size, "bp.anno v0 list size = sz type");
     STRNCMP_EQUAL_TEXT("type", anno.str, anno.size, "bp.anno v0 list == type");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByValueZ(l.bp, "foo", 0), "bp.anno foo == null");
 
-    anno = huGetAnnotationByValueZ(l.b, "b", 0)->value;
+    anno = huGetAnnotationByValueZ(l.b, "b", 0)->str;
     LONGS_EQUAL_TEXT(strlen("b"), anno.size, "b.anno v0 b size = sz b");
     STRNCMP_EQUAL_TEXT("b", anno.str, anno.size, "b.anno v0 b == b");
-    anno = huGetAnnotationByValueZ(l.b, "value", 0)->value;
+    anno = huGetAnnotationByValueZ(l.b, "value", 0)->str;
     LONGS_EQUAL_TEXT(strlen("type"), anno.size, "b.anno v0 value size = sz type");
     STRNCMP_EQUAL_TEXT("type", anno.str, anno.size, "b.anno v0 value == type");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByValueZ(l.b, "foo", 0), "b.anno foo == null");
 
-    anno = huGetAnnotationByValueZ(l.cpp, "cpp", 0)->value;
+    anno = huGetAnnotationByValueZ(l.cpp, "cpp", 0)->str;
     LONGS_EQUAL_TEXT(strlen("c"), anno.size, "cpp.anno v0 cpp size = sz c");
     STRNCMP_EQUAL_TEXT("c", anno.str, anno.size, "cpp.anno v0 cpp == c");
-    anno = huGetAnnotationByValueZ(l.cpp, "list", 0)->value;
+    anno = huGetAnnotationByValueZ(l.cpp, "list", 0)->str;
     LONGS_EQUAL_TEXT(strlen("type"), anno.size, "cpp.anno v0 list size = sz type");
     STRNCMP_EQUAL_TEXT("type", anno.str, anno.size, "cpp.anno v0 list == type");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByValueZ(l.cpp, "foo", 0), "cpp.anno foo == null");
 
-    anno = huGetAnnotationByValueZ(l.cp, "cp", 0)->value;
+    anno = huGetAnnotationByValueZ(l.cp, "cp", 0)->str;
     LONGS_EQUAL_TEXT(strlen("c"), anno.size, "cp.anno v0 cp size = sz c");
     STRNCMP_EQUAL_TEXT("c", anno.str, anno.size, "cp.anno v0 cp == c");
-    anno = huGetAnnotationByValueZ(l.cp, "list", 0)->value;
+    anno = huGetAnnotationByValueZ(l.cp, "list", 0)->str;
     LONGS_EQUAL_TEXT(strlen("type"), anno.size, "cp.anno v0 list size = sz type");
     STRNCMP_EQUAL_TEXT("type", anno.str, anno.size, "cp.anno v0 list == type");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByValueZ(l.cp, "foo", 0), "cp.anno foo == null");
 
-    anno = huGetAnnotationByValueZ(l.c, "c", 0)->value;
+    anno = huGetAnnotationByValueZ(l.c, "c", 0)->str;
     LONGS_EQUAL_TEXT(strlen("c"), anno.size, "c.anno v0 c size = sz c");
     STRNCMP_EQUAL_TEXT("c", anno.str, anno.size, "c.anno v0 c == c");
-    anno = huGetAnnotationByValueZ(l.c, "value", 0)->value;
+    anno = huGetAnnotationByValueZ(l.c, "value", 0)->str;
     LONGS_EQUAL_TEXT(strlen("type"), anno.size, "c.anno v0 value size = sz type");
     STRNCMP_EQUAL_TEXT("type", anno.str, anno.size, "c.anno v0 value == type");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByValueZ(l.c, "foo", 0), "c.anno foo == null");
@@ -976,58 +976,58 @@ TEST(huGetAnnotationByValue, lists)
 
 TEST(huGetAnnotationByValue, dicts)
 {
-    auto anno = huGetAnnotationByValueZ(d.root, "root", 0)->value;
+    auto anno = huGetAnnotationByValueZ(d.root, "root", 0)->str;
     LONGS_EQUAL_TEXT(strlen("name"), anno.size, "root.anno v0 name size = sz root");
     STRNCMP_EQUAL_TEXT("name", anno.str, anno.size, "root.anno v0 name == root");
-    anno = huGetAnnotationByValueZ(d.root, "root", 1)->value;
+    anno = huGetAnnotationByValueZ(d.root, "root", 1)->str;
     LONGS_EQUAL_TEXT(strlen("otherName"), anno.size, "root.anno v1 otherName size = sz root");
     STRNCMP_EQUAL_TEXT("otherName", anno.str, anno.size, "root.anno v1 otherName == root");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByValueZ(d.root, "foo", 0), "root.hawk foo == false");
 
-    anno = huGetAnnotationByValueZ(d.a, "a", 0)->value;
+    anno = huGetAnnotationByValueZ(d.a, "a", 0)->str;
     LONGS_EQUAL_TEXT(strlen("a"), anno.size, "a.anno v0 a size = sz a");
     STRNCMP_EQUAL_TEXT("a", anno.str, anno.size, "a.anno v0 a == a");
-    anno = huGetAnnotationByValueZ(d.a, "value", 0)->value;
+    anno = huGetAnnotationByValueZ(d.a, "value", 0)->str;
     LONGS_EQUAL_TEXT(strlen("type"), anno.size, "a.anno v0 value size = sz type");
     STRNCMP_EQUAL_TEXT("type", anno.str, anno.size, "a.anno v0 value == type");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByValueZ(d.a, "foo", 0), "a.anno foo == null");
 
-    anno = huGetAnnotationByValueZ(d.bp, "bp", 0)->value;
+    anno = huGetAnnotationByValueZ(d.bp, "bp", 0)->str;
     LONGS_EQUAL_TEXT(strlen("b"), anno.size, "bp.anno v0 bp size = sz b");
     STRNCMP_EQUAL_TEXT("b", anno.str, anno.size, "bp.anno v0 bp == b");
-    anno = huGetAnnotationByValueZ(d.bp, "dict", 0)->value;
+    anno = huGetAnnotationByValueZ(d.bp, "dict", 0)->str;
     LONGS_EQUAL_TEXT(strlen("type"), anno.size, "bp.anno v0 dict size = sz type");
     STRNCMP_EQUAL_TEXT("type", anno.str, anno.size, "bp.anno v0 dict == type");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByValueZ(d.bp, "foo", 0), "bp.anno foo == null");
 
-    anno = huGetAnnotationByValueZ(d.b, "b", 0)->value;
+    anno = huGetAnnotationByValueZ(d.b, "b", 0)->str;
     LONGS_EQUAL_TEXT(strlen("b"), anno.size, "b.anno v0 b size = sz b");
     STRNCMP_EQUAL_TEXT("b", anno.str, anno.size, "b.anno v0 b == b");
-    anno = huGetAnnotationByValueZ(d.b, "value", 0)->value;
+    anno = huGetAnnotationByValueZ(d.b, "value", 0)->str;
     LONGS_EQUAL_TEXT(strlen("type"), anno.size, "b.anno v0 value size = sz type");
     STRNCMP_EQUAL_TEXT("type", anno.str, anno.size, "b.anno v0 value == type");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByValueZ(d.b, "foo", 0), "b.anno foo == null");
 
-    anno = huGetAnnotationByValueZ(d.cpp, "cpp", 0)->value;
+    anno = huGetAnnotationByValueZ(d.cpp, "cpp", 0)->str;
     LONGS_EQUAL_TEXT(strlen("c"), anno.size, "cpp.anno v0 cpp size = sz c");
     STRNCMP_EQUAL_TEXT("c", anno.str, anno.size, "cpp.anno v0 cpp == c");
-    anno = huGetAnnotationByValueZ(d.cpp, "dict", 0)->value;
+    anno = huGetAnnotationByValueZ(d.cpp, "dict", 0)->str;
     LONGS_EQUAL_TEXT(strlen("type"), anno.size, "cpp.anno v0 dict size = sz type");
     STRNCMP_EQUAL_TEXT("type", anno.str, anno.size, "cpp.anno v0 dict == type");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByValueZ(d.cpp, "foo", 0), "cpp.anno foo == null");
 
-    anno = huGetAnnotationByValueZ(d.cp, "cp", 0)->value;
+    anno = huGetAnnotationByValueZ(d.cp, "cp", 0)->str;
     LONGS_EQUAL_TEXT(strlen("c"), anno.size, "cp.anno v0 cp size = sz c");
     STRNCMP_EQUAL_TEXT("c", anno.str, anno.size, "cp.anno v0 cp == c");
-    anno = huGetAnnotationByValueZ(d.cp, "dict", 0)->value;
+    anno = huGetAnnotationByValueZ(d.cp, "dict", 0)->str;
     LONGS_EQUAL_TEXT(strlen("type"), anno.size, "cp.anno v0 dict size = sz type");
     STRNCMP_EQUAL_TEXT("type", anno.str, anno.size, "cp.anno v0 dict == type");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByValueZ(d.cp, "foo", 0), "cp.anno foo == null");
 
-    anno = huGetAnnotationByValueZ(d.c, "c", 0)->value;
+    anno = huGetAnnotationByValueZ(d.c, "c", 0)->str;
     LONGS_EQUAL_TEXT(strlen("c"), anno.size, "c.anno v0 c size = sz c");
     STRNCMP_EQUAL_TEXT("c", anno.str, anno.size, "c.anno v0 c == c");
-    anno = huGetAnnotationByValueZ(d.c, "value", 0)->value;
+    anno = huGetAnnotationByValueZ(d.c, "value", 0)->str;
     LONGS_EQUAL_TEXT(strlen("type"), anno.size, "c.anno v0 value size = sz type");
     STRNCMP_EQUAL_TEXT("type", anno.str, anno.size, "c.anno v0 value == type");
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetAnnotationByValueZ(d.c, "foo", 0), "c.anno foo == null");
@@ -1113,44 +1113,44 @@ TEST_GROUP(huGetComment)
 
 TEST(huGetComment, lists)
 {
-    auto comm = huGetComment(l.a, 0)->value;
+    auto comm = huGetComment(l.a, 0)->str;
     auto exp = "// This is a aaaa right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "a.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "a.comm 0 == exp");
-    comm = huGetComment(l.a, 1)->value;
+    comm = huGetComment(l.a, 1)->str;
     exp = "// aaaa";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "a.comm 1 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "a.comm 1 == exp");
 
-    comm = huGetComment(l.bp, 0)->value;
+    comm = huGetComment(l.bp, 0)->str;
     exp = "// This is a bp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "bp.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "bp.comm 0 == exp");
-    comm = huGetComment(l.bp, 1)->value;
+    comm = huGetComment(l.bp, 1)->str;
     exp = "// bp";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "bp.comm 1 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "bp.comm 1 == exp");
 
-    comm = huGetComment(l.b, 0)->value;
+    comm = huGetComment(l.b, 0)->str;
     exp = "// bbbb";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "b.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "b.comm 0 == exp");
 
-    comm = huGetComment(l.cpp, 0)->value;
+    comm = huGetComment(l.cpp, 0)->str;
     exp = "// This is a cpp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cpp.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "cpp.comm 0 == exp");
-    comm = huGetComment(l.cpp, 1)->value;
+    comm = huGetComment(l.cpp, 1)->str;
     exp = "// cpp";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cpp.comm 1 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "cpp.comm 1 == exp");
 
-    comm = huGetComment(l.cp, 0)->value;
+    comm = huGetComment(l.cp, 0)->str;
     exp = "// cp";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cp.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "cp.comm 0 == exp");
 
-    comm = huGetComment(l.c, 0)->value;
+    comm = huGetComment(l.c, 0)->str;
     exp = "// cccc";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "c.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "c.comm 0 == exp");
@@ -1158,44 +1158,44 @@ TEST(huGetComment, lists)
 
 TEST(huGetComment, dicts)
 {
-    auto comm = huGetComment(d.a, 0)->value;
+    auto comm = huGetComment(d.a, 0)->str;
     auto exp = "// This is a aaaa right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "a.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "a.comm 0 == exp");
-    comm = huGetComment(d.a, 1)->value;
+    comm = huGetComment(d.a, 1)->str;
     exp = "// aaaa";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "a.comm 1 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "a.comm 1 == exp");
 
-    comm = huGetComment(d.bp, 0)->value;
+    comm = huGetComment(d.bp, 0)->str;
     exp = "// This is a bp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "bp.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "bp.comm 0 == exp");
-    comm = huGetComment(d.bp, 1)->value;
+    comm = huGetComment(d.bp, 1)->str;
     exp = "// bp";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "bp.comm 1 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "bp.comm 1 == exp");
 
-    comm = huGetComment(d.b, 0)->value;
+    comm = huGetComment(d.b, 0)->str;
     exp = "// bbbb";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "b.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "b.comm 0 == exp");
 
-    comm = huGetComment(d.cpp, 0)->value;
+    comm = huGetComment(d.cpp, 0)->str;
     exp = "// This is a cpp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cpp.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "cpp.comm 0 == exp");
-    comm = huGetComment(d.cpp, 1)->value;
+    comm = huGetComment(d.cpp, 1)->str;
     exp = "// cpp";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cpp.comm 1 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "cpp.comm 1 == exp");
 
-    comm = huGetComment(d.cp, 0)->value;
+    comm = huGetComment(d.cp, 0)->str;
     exp = "// cp";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cp.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "cp.comm 0 == exp");
 
-    comm = huGetComment(d.c, 0)->value;
+    comm = huGetComment(d.c, 0)->str;
     exp = "// cccc";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "c.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.str, comm.size, "c.comm 0 == exp");
@@ -1234,76 +1234,76 @@ TEST(huGetCommentsContaining, lists)
 {
     huToken const * comm = huGetCommentsContainingZ(l.a, "aaa", NULL);
     auto exp = "// This is a aaaa right here.";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "a.gcc aaa 0 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "a.gcc aaa 0 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "a.gcc aaa 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "a.gcc aaa 0 == exp");
     comm = huGetCommentsContainingZ(l.a, "aaa", comm);
     exp = "// aaaa";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "a.gcc aaa 1 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "a.gcc aaa 1 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "a.gcc aaa 1 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "a.gcc aaa 1 == exp");
     comm = huGetCommentsContainingZ(l.a, "aaa", comm);
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc aaa 2 = null");
     
     comm = huGetCommentsContainingZ(l.a, "right here", NULL);
     exp = "// This is a aaaa right here.";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "a.gcc aaa 0 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "a.gcc aaa 0 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "a.gcc aaa 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "a.gcc aaa 0 == exp");
     comm = huGetCommentsContainingZ(l.a, "right here", comm);
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc right here 1 = null");
 
     comm = huGetCommentsContainingZ(l.bp, "bp", NULL);
     exp = "// This is a bp right here.";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "bp.gcc bp 0 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "bp.gcc bp 0 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "bp.gcc bp 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "bp.gcc bp 0 == exp");
     comm = huGetCommentsContainingZ(l.bp, "bp", comm);
     exp = "// bp";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "bp.gcc bp 1 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "bp.gcc bp 1 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "bp.gcc bp 1 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "bp.gcc bp 1 == exp");
     comm = huGetCommentsContainingZ(l.bp, "bp", comm);
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc bp 2 = null");
 
     comm = huGetCommentsContainingZ(l.bp, "right here", NULL);
     exp = "// This is a bp right here.";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "bp.gcc bp 0 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "bp.gcc bp 0 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "bp.gcc bp 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "bp.gcc bp 0 == exp");
     comm = huGetCommentsContainingZ(l.bp, "right here", comm);
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc bp 1 = null");
 
     comm = huGetCommentsContainingZ(l.b, "bbb", NULL);
     exp = "// bbbb";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "b.gcc bbb 0 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "b.gcc bbb 0 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "b.gcc bbb 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "b.gcc bbb 0 == exp");
     comm = huGetCommentsContainingZ(l.b, "bbb", comm);
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc b 1 = null");
 
     comm = huGetCommentsContainingZ(l.cpp, "cpp", NULL);
     exp = "// This is a cpp right here.";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "cpp.gcc cpp 0 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "cpp.gcc cpp 0 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cpp.gcc cpp 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "cpp.gcc cpp 0 == exp");
     comm = huGetCommentsContainingZ(l.cpp, "cpp", comm);
     exp = "// cpp";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "cpp.gcc cpp 1 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "cpp.gcc cpp 1 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cpp.gcc cpp 1 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "cpp.gcc cpp 1 == exp");
     comm = huGetCommentsContainingZ(l.cpp, "cpp", comm);
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc cpp 2 = null");
 
     comm = huGetCommentsContainingZ(l.cpp, "right here", NULL);
     exp = "// This is a cpp right here.";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "cpp.gcc cpp 0 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "cpp.gcc cpp 0 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cpp.gcc cpp 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "cpp.gcc cpp 0 == exp");
     comm = huGetCommentsContainingZ(l.cpp, "right here", comm);
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "cpp.gcc right here 1 = null");
 
     comm = huGetCommentsContainingZ(l.cp, "cp", NULL);
     exp = "// cp";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "cp.gcc cp 0 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "cp.gcc cp 0 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cp.gcc cp 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "cp.gcc cp 0 == exp");
     comm = huGetCommentsContainingZ(l.cp, "cp", comm);
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "cp.gcc cp 1 = null");
 
     comm = huGetCommentsContainingZ(l.c, "ccc", NULL);
     exp = "// cccc";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "c.gcc ccc 0 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "cp.gcc ccc 0 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "c.gcc ccc 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "cp.gcc ccc 0 == exp");
     comm = huGetCommentsContainingZ(l.c, "ccc", comm);
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "c.gcc ccc 1 = null");
 }
@@ -1312,76 +1312,76 @@ TEST(huGetCommentsContaining, dicts)
 {
     huToken const * comm = huGetCommentsContainingZ(d.a, "aaa", NULL);
     auto exp = "// This is a aaaa right here.";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "a.gcc aaa 0 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "a.gcc aaa 0 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "a.gcc aaa 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "a.gcc aaa 0 == exp");
     comm = huGetCommentsContainingZ(d.a, "aaa", comm);
     exp = "// aaaa";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "a.gcc aaa 1 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "a.gcc aaa 1 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "a.gcc aaa 1 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "a.gcc aaa 1 == exp");
     comm = huGetCommentsContainingZ(d.a, "aaa", comm);
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc aaa 2 = null");
     
     comm = huGetCommentsContainingZ(d.a, "right here", NULL);
     exp = "// This is a aaaa right here.";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "a.gcc aaa 0 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "a.gcc aaa 0 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "a.gcc aaa 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "a.gcc aaa 0 == exp");
     comm = huGetCommentsContainingZ(d.a, "right here", comm);
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc right here 1 = null");
 
     comm = huGetCommentsContainingZ(d.bp, "bp", NULL);
     exp = "// This is a bp right here.";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "bp.gcc bp 0 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "bp.gcc bp 0 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "bp.gcc bp 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "bp.gcc bp 0 == exp");
     comm = huGetCommentsContainingZ(d.bp, "bp", comm);
     exp = "// bp";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "bp.gcc bp 1 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "bp.gcc bp 1 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "bp.gcc bp 1 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "bp.gcc bp 1 == exp");
     comm = huGetCommentsContainingZ(d.bp, "bp", comm);
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc bp 2 = null");
 
     comm = huGetCommentsContainingZ(d.bp, "right here", NULL);
     exp = "// This is a bp right here.";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "bp.gcc bp 0 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "bp.gcc bp 0 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "bp.gcc bp 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "bp.gcc bp 0 == exp");
     comm = huGetCommentsContainingZ(d.bp, "right here", comm);
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc bp 1 = null");
 
     comm = huGetCommentsContainingZ(d.b, "bbb", NULL);
     exp = "// bbbb";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "b.gcc bbb 0 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "b.gcc bbb 0 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "b.gcc bbb 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "b.gcc bbb 0 == exp");
     comm = huGetCommentsContainingZ(d.b, "bbb", comm);
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc b 1 = null");
 
     comm = huGetCommentsContainingZ(d.cpp, "cpp", NULL);
     exp = "// This is a cpp right here.";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "cpp.gcc cpp 0 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "cpp.gcc cpp 0 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cpp.gcc cpp 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "cpp.gcc cpp 0 == exp");
     comm = huGetCommentsContainingZ(d.cpp, "cpp", comm);
     exp = "// cpp";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "cpp.gcc cpp 1 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "cpp.gcc cpp 1 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cpp.gcc cpp 1 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "cpp.gcc cpp 1 == exp");
     comm = huGetCommentsContainingZ(d.cpp, "cpp", comm);
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc cpp 2 = null");
 
     comm = huGetCommentsContainingZ(d.cpp, "right here", NULL);
     exp = "// This is a cpp right here.";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "cpp.gcc cpp 0 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "cpp.gcc cpp 0 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cpp.gcc cpp 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "cpp.gcc cpp 0 == exp");
     comm = huGetCommentsContainingZ(d.cpp, "right here", comm);
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "cpp.gcc right here 1 = null");
 
     comm = huGetCommentsContainingZ(d.cp, "cp", NULL);
     exp = "// cp";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "cp.gcc cp 0 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "cp.gcc cp 0 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cp.gcc cp 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "cp.gcc cp 0 == exp");
     comm = huGetCommentsContainingZ(d.cp, "cp", comm);
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "cp.gcc cp 1 = null");
 
     comm = huGetCommentsContainingZ(d.c, "ccc", NULL);
     exp = "// cccc";
-    LONGS_EQUAL_TEXT(strlen(exp), comm->value.size, "c.gcc ccc 0 size = sz exp");
-    STRNCMP_EQUAL_TEXT(exp, comm->value.str, comm->value.size, "cp.gcc ccc 0 == exp");
+    LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "c.gcc ccc 0 size = sz exp");
+    STRNCMP_EQUAL_TEXT(exp, comm->str.str, comm->str.size, "cp.gcc ccc 0 == exp");
     comm = huGetCommentsContainingZ(d.c, "ccc", comm);
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "c.gcc ccc 1 = null");
 }
@@ -1519,17 +1519,20 @@ TEST_GROUP(huGetNodeAddress)
 {
     htd_listOfLists l;
     htd_dictOfDicts d;
+    htd_withFunkyAddresses a;
 
     void setup()
     {
         l.setup();
         d.setup();
+        a.setup();
     }
 
     void teardown()
     {
         d.teardown();
         l.teardown();
+        a.teardown();
     }
 };
 
@@ -1677,6 +1680,222 @@ TEST(huGetNodeAddress, dicts)
     exp = "/ck/ck/ck";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
+    delete [] s;
+}
+
+TEST(huGetNodeAddress, overflow)
+{
+    int addressLen = 0;
+    huGetNodeAddress(d.c, NULL, & addressLen);
+    char * s = new char[addressLen + 1];
+    s[addressLen] = '\0';
+    addressLen = 3;
+    s[addressLen] = '!';
+    huGetNodeAddress(d.c, s, & addressLen);
+    char const * exp = "/ck!";             // contains "/ck/ck/ck"
+    LONGS_EQUAL(3, addressLen);
+    STRNCMP_EQUAL(exp, s, 4);
+    delete [] s;
+}
+
+TEST(huGetNodeAddress, funky)
+{
+    int addressLen = 0;
+    huGetNodeAddress(a.a, NULL, & addressLen);
+    char * s = new char[addressLen + 1];
+    s[addressLen] = '\0';
+    huGetNodeAddress(a.a, s, & addressLen);
+    auto exp = "/\"/\"";
+    LONGS_EQUAL(strlen(exp), addressLen);
+    STRNCMP_EQUAL(exp, s, addressLen);
+    POINTERS_EQUAL(a.a, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    delete [] s;
+
+    addressLen = 0;
+    huGetNodeAddress(a.b, NULL, & addressLen);
+    s = new char[addressLen + 1];
+    s[addressLen] = '\0';
+    huGetNodeAddress(a.b, s, & addressLen);
+    exp = "/\"a/b\"";
+    LONGS_EQUAL(strlen(exp), addressLen);
+    STRNCMP_EQUAL(exp, s, addressLen);
+    POINTERS_EQUAL(a.b, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    delete [] s;
+
+    addressLen = 0;
+    huGetNodeAddress(a.c, NULL, & addressLen);
+    s = new char[addressLen + 1];
+    s[addressLen] = '\0';
+    huGetNodeAddress(a.c, s, & addressLen);
+    exp = "/\"/b\"";
+    LONGS_EQUAL(strlen(exp), addressLen);
+    STRNCMP_EQUAL(exp, s, addressLen);
+    POINTERS_EQUAL(a.c, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    delete [] s;
+
+    addressLen = 0;
+    huGetNodeAddress(a.d, NULL, & addressLen);
+    s = new char[addressLen + 1];
+    s[addressLen] = '\0';
+    huGetNodeAddress(a.d, s, & addressLen);
+    exp = "/\"a/\"";
+    LONGS_EQUAL(strlen(exp), addressLen);
+    STRNCMP_EQUAL(exp, s, addressLen);
+    POINTERS_EQUAL(a.d, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    delete [] s;
+
+    addressLen = 0;
+    huGetNodeAddress(a.e, NULL, & addressLen);
+    s = new char[addressLen + 1];
+    s[addressLen] = '\0';
+    huGetNodeAddress(a.e, s, & addressLen);
+    exp = "/\"/\\\"foo\\\"\"";      //        /"/\"foo\"
+    LONGS_EQUAL(strlen(exp), addressLen);
+    STRNCMP_EQUAL(exp, s, addressLen);
+    POINTERS_EQUAL(a.e, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    delete [] s;
+
+    addressLen = 0;
+    huGetNodeAddress(a.f, NULL, & addressLen);
+    s = new char[addressLen + 1];
+    s[addressLen] = '\0';
+    huGetNodeAddress(a.f, s, & addressLen);
+    exp = "/\"/\\\"foo'bar'\\\"\"";
+    LONGS_EQUAL(strlen(exp), addressLen);
+    STRNCMP_EQUAL(exp, s, addressLen);
+    POINTERS_EQUAL(a.f, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    delete [] s;
+
+    addressLen = 0;
+    huGetNodeAddress(a.g, NULL, & addressLen);
+    s = new char[addressLen + 1];
+    s[addressLen] = '\0';
+    huGetNodeAddress(a.g, s, & addressLen);
+    exp = "/\"/\\\"foo'bar`baz`'\\\"\"";
+    LONGS_EQUAL(strlen(exp), addressLen);
+    STRNCMP_EQUAL(exp, s, addressLen);
+    POINTERS_EQUAL(a.g, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    delete [] s;
+
+    addressLen = 0;
+    huGetNodeAddress(a.h, NULL, & addressLen);
+    s = new char[addressLen + 1];
+    s[addressLen] = '\0';
+    huGetNodeAddress(a.h, s, & addressLen);
+    exp = "/\"/'foo`bar\\\"baz\\\"`'\"";
+    LONGS_EQUAL(strlen(exp), addressLen);
+    STRNCMP_EQUAL(exp, s, addressLen);
+    POINTERS_EQUAL(a.h, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    delete [] s;
+
+    addressLen = 0;
+    huGetNodeAddress(a.i, NULL, & addressLen);
+    s = new char[addressLen + 1];
+    s[addressLen] = '\0';
+    huGetNodeAddress(a.i, s, & addressLen);
+    exp = "/\"/`foo\\\"bar'baz'\\\"`\"";
+    LONGS_EQUAL(strlen(exp), addressLen);
+    STRNCMP_EQUAL(exp, s, addressLen);
+    POINTERS_EQUAL(a.i, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    delete [] s;
+
+    addressLen = 0;
+    huGetNodeAddress(a.j, NULL, & addressLen);
+    s = new char[addressLen + 1];
+    s[addressLen] = '\0';
+    huGetNodeAddress(a.j, s, & addressLen);
+    exp = "/\"a\\\"foo\\\"/\"";
+    LONGS_EQUAL(strlen(exp), addressLen);
+    STRNCMP_EQUAL(exp, s, addressLen);
+    POINTERS_EQUAL(a.j, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    delete [] s;
+
+    addressLen = 0;
+    huGetNodeAddress(a.k, NULL, & addressLen);
+    s = new char[addressLen + 1];
+    s[addressLen] = '\0';
+    huGetNodeAddress(a.k, s, & addressLen);
+    exp = "/\"a\\\"foo'bar'\\\"/\"";
+    LONGS_EQUAL(strlen(exp), addressLen);
+    STRNCMP_EQUAL(exp, s, addressLen);
+    POINTERS_EQUAL(a.k, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    delete [] s;
+
+    addressLen = 0;
+    huGetNodeAddress(a.l, NULL, & addressLen);
+    s = new char[addressLen + 1];
+    s[addressLen] = '\0';
+    huGetNodeAddress(a.l, s, & addressLen);
+    exp = "/\"a\\\"foo'bar`baz`'\\\"/\"";
+    LONGS_EQUAL(strlen(exp), addressLen);
+    STRNCMP_EQUAL(exp, s, addressLen);
+    POINTERS_EQUAL(a.l, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    delete [] s;
+
+    addressLen = 0;
+    huGetNodeAddress(a.m, NULL, & addressLen);
+    s = new char[addressLen + 1];
+    s[addressLen] = '\0';
+    huGetNodeAddress(a.m, s, & addressLen);
+    exp = "/\"a'foo`bar\\\"baz\\\"`'/\"";
+    LONGS_EQUAL(strlen(exp), addressLen);
+    STRNCMP_EQUAL(exp, s, addressLen);
+    POINTERS_EQUAL(a.m, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    delete [] s;
+
+    addressLen = 0;
+    huGetNodeAddress(a.n, NULL, & addressLen);
+    s = new char[addressLen + 1];
+    s[addressLen] = '\0';
+    huGetNodeAddress(a.n, s, & addressLen);
+    exp = "/\"a`foo\\\"bar'baz'\\\"`/\"";
+    LONGS_EQUAL(strlen(exp), addressLen);
+    STRNCMP_EQUAL(exp, s, addressLen);
+    POINTERS_EQUAL(a.n, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    delete [] s;
+
+    addressLen = 0;
+    huGetNodeAddress(a.o, NULL, & addressLen);
+    s = new char[addressLen + 1];
+    s[addressLen] = '\0';
+    huGetNodeAddress(a.o, s, & addressLen);
+    exp = "/\"0\"";
+    LONGS_EQUAL(strlen(exp), addressLen);
+    STRNCMP_EQUAL(exp, s, addressLen);
+    POINTERS_EQUAL(a.o, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    delete [] s;
+
+    addressLen = 0;
+    huGetNodeAddress(a.p, NULL, & addressLen);
+    s = new char[addressLen + 1];
+    s[addressLen] = '\0';
+    huGetNodeAddress(a.p, s, & addressLen);
+    exp = "/01m";
+    LONGS_EQUAL(strlen(exp), addressLen);
+    STRNCMP_EQUAL(exp, s, addressLen);
+    POINTERS_EQUAL(a.p, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    delete [] s;
+
+    addressLen = 0;
+    huGetNodeAddress(a.q, NULL, & addressLen);
+    s = new char[addressLen + 1];
+    s[addressLen] = '\0';
+    huGetNodeAddress(a.q, s, & addressLen);
+    exp = "/\"/\\\"0123456789012345678901234567890123456789\\\"\"";
+    LONGS_EQUAL(strlen(exp), addressLen);
+    STRNCMP_EQUAL(exp, s, addressLen);
+    POINTERS_EQUAL(a.q, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    delete [] s;
+
+    addressLen = 0;
+    huGetNodeAddress(a.r, NULL, & addressLen);
+    s = new char[addressLen + 1];
+    s[addressLen] = '\0';
+    huGetNodeAddress(a.r, s, & addressLen);
+    exp = "/\"a\\\"0123456789012345678901234567890123456789\\\"/\"";
+    LONGS_EQUAL(strlen(exp), addressLen);
+    STRNCMP_EQUAL(exp, s, addressLen);
+    POINTERS_EQUAL(a.r, huGetNodeByFullAddressN(a.trove, s, addressLen));
     delete [] s;
 }
 
@@ -1989,7 +2208,7 @@ TEST(huGetNumErrors, normal)
 {
     LONGS_EQUAL_TEXT(0, huGetNumErrors(l.trove), "l numErrors == 0");
     LONGS_EQUAL_TEXT(0, huGetNumErrors(d.trove), "d numErrors == 0");
-    LONGS_EQUAL_TEXT(2, huGetNumErrors(e.trove), "e numErrors == 0");
+    LONGS_EQUAL_TEXT(3, huGetNumErrors(e.trove), "e numErrors == 0");
 }
 
 TEST(huGetNumErrors, pathological)
@@ -2092,45 +2311,45 @@ TEST(huGetTroveAnnotation, normal)
 {
     auto anno = huGetTroveAnnotation(l.trove, 0);
     CHECK_TEXT(anno != NULL, "l anno 0 not NULL");
-    LONGS_EQUAL_TEXT(2, anno->key->value.size, "l anno 0 k sz == 2");
-    STRNCMP_EQUAL_TEXT("tx", anno->key->value.str, anno->key->value.size, "l anno 0 k == tx");
-    LONGS_EQUAL_TEXT(2, anno->value->value.size, "l anno 0 v sz == 2");
-    STRNCMP_EQUAL_TEXT("ta", anno->value->value.str, anno->value->value.size, "l anno 0 v == ta");
+    LONGS_EQUAL_TEXT(2, anno->key->str.size, "l anno 0 k sz == 2");
+    STRNCMP_EQUAL_TEXT("tx", anno->key->str.str, anno->key->str.size, "l anno 0 k == tx");
+    LONGS_EQUAL_TEXT(2, anno->value->str.size, "l anno 0 v sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->value->str.str, anno->value->str.size, "l anno 0 v == ta");
 
     anno = huGetTroveAnnotation(l.trove, 1);
     CHECK_TEXT(anno != NULL, "l anno 1 not NULL");
-    LONGS_EQUAL_TEXT(2, anno->key->value.size, "l anno 1 k sz == 2");
-    STRNCMP_EQUAL_TEXT("ta", anno->key->value.str, anno->key->value.size, "l anno 1 k == ta");
-    LONGS_EQUAL_TEXT(2, anno->value->value.size, "l anno 1 v sz == 2");
-    STRNCMP_EQUAL_TEXT("ta", anno->value->value.str, anno->value->value.size, "l anno 1 v == ta");
+    LONGS_EQUAL_TEXT(2, anno->key->str.size, "l anno 1 k sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->key->str.str, anno->key->str.size, "l anno 1 k == ta");
+    LONGS_EQUAL_TEXT(2, anno->value->str.size, "l anno 1 v sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->value->str.str, anno->value->str.size, "l anno 1 v == ta");
 
     anno = huGetTroveAnnotation(l.trove, 2);
     CHECK_TEXT(anno != NULL, "l anno 2 not NULL");
-    LONGS_EQUAL_TEXT(2, anno->key->value.size, "l anno 2 k sz == 2");
-    STRNCMP_EQUAL_TEXT("tb", anno->key->value.str, anno->key->value.size, "l anno 2 k == tb");
-    LONGS_EQUAL_TEXT(2, anno->value->value.size, "l anno 2 v sz == 2");
-    STRNCMP_EQUAL_TEXT("tb", anno->value->value.str, anno->value->value.size, "l anno 2 v == tb");
+    LONGS_EQUAL_TEXT(2, anno->key->str.size, "l anno 2 k sz == 2");
+    STRNCMP_EQUAL_TEXT("tb", anno->key->str.str, anno->key->str.size, "l anno 2 k == tb");
+    LONGS_EQUAL_TEXT(2, anno->value->str.size, "l anno 2 v sz == 2");
+    STRNCMP_EQUAL_TEXT("tb", anno->value->str.str, anno->value->str.size, "l anno 2 v == tb");
 
     anno = huGetTroveAnnotation(d.trove, 0);
     CHECK_TEXT(anno != NULL, "d anno 0 not NULL");
-    LONGS_EQUAL_TEXT(2, anno->key->value.size, "d anno 0 k sz == 2");
-    STRNCMP_EQUAL_TEXT("tx", anno->key->value.str, anno->key->value.size, "d anno 0 k == tx");
-    LONGS_EQUAL_TEXT(2, anno->value->value.size, "d anno 0 v sz == 2");
-    STRNCMP_EQUAL_TEXT("ta", anno->value->value.str, anno->value->value.size, "d anno 0 v == ta");
+    LONGS_EQUAL_TEXT(2, anno->key->str.size, "d anno 0 k sz == 2");
+    STRNCMP_EQUAL_TEXT("tx", anno->key->str.str, anno->key->str.size, "d anno 0 k == tx");
+    LONGS_EQUAL_TEXT(2, anno->value->str.size, "d anno 0 v sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->value->str.str, anno->value->str.size, "d anno 0 v == ta");
 
     anno = huGetTroveAnnotation(d.trove, 1);
     CHECK_TEXT(anno != NULL, "d anno 1 not NULL");
-    LONGS_EQUAL_TEXT(2, anno->key->value.size, "d anno 1 k sz == 2");
-    STRNCMP_EQUAL_TEXT("ta", anno->key->value.str, anno->key->value.size, "d anno 1 k == ta");
-    LONGS_EQUAL_TEXT(2, anno->value->value.size, "d anno 1 v sz == 2");
-    STRNCMP_EQUAL_TEXT("ta", anno->value->value.str, anno->value->value.size, "d anno 1 v == ta");
+    LONGS_EQUAL_TEXT(2, anno->key->str.size, "d anno 1 k sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->key->str.str, anno->key->str.size, "d anno 1 k == ta");
+    LONGS_EQUAL_TEXT(2, anno->value->str.size, "d anno 1 v sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->value->str.str, anno->value->str.size, "d anno 1 v == ta");
 
     anno = huGetTroveAnnotation(d.trove, 2);
     CHECK_TEXT(anno != NULL, "d anno 2 not NULL");
-    LONGS_EQUAL_TEXT(2, anno->key->value.size, "d anno 2 k sz == 2");
-    STRNCMP_EQUAL_TEXT("tb", anno->key->value.str, anno->key->value.size, "d anno 2 k == tb");
-    LONGS_EQUAL_TEXT(2, anno->value->value.size, "d anno 2 v sz == 2");
-    STRNCMP_EQUAL_TEXT("tb", anno->value->value.str, anno->value->value.size, "d anno 2 v == tb");
+    LONGS_EQUAL_TEXT(2, anno->key->str.size, "d anno 2 k sz == 2");
+    STRNCMP_EQUAL_TEXT("tb", anno->key->str.str, anno->key->str.size, "d anno 2 k == tb");
+    LONGS_EQUAL_TEXT(2, anno->value->str.size, "d anno 2 v sz == 2");
+    STRNCMP_EQUAL_TEXT("tb", anno->value->str.str, anno->value->str.size, "d anno 2 v == tb");
 }
 
 TEST(huGetTroveAnnotation, pathological)
@@ -2200,33 +2419,33 @@ TEST(huGetTroveAnnotationWithKey, normal)
 {
     auto anno = huGetTroveAnnotationWithKeyZ(l.trove, "tx");
     CHECK_TEXT(anno != hu_nullToken, "l anno tx not NULL");
-    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno tx v sz == 2");
-    STRNCMP_EQUAL_TEXT("ta", anno->value.str, anno->value.size, "l anno tx v == ta");
+    LONGS_EQUAL_TEXT(2, anno->str.size, "l anno tx v sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->str.str, anno->str.size, "l anno tx v == ta");
 
     anno = huGetTroveAnnotationWithKeyZ(l.trove, "ta");
     CHECK_TEXT(anno != hu_nullToken, "l anno ta not NULL");
-    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno ta v sz == 2");
-    STRNCMP_EQUAL_TEXT("ta", anno->value.str, anno->value.size, "l anno ta v == ta");
+    LONGS_EQUAL_TEXT(2, anno->str.size, "l anno ta v sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->str.str, anno->str.size, "l anno ta v == ta");
 
     anno = huGetTroveAnnotationWithKeyZ(l.trove, "tb");
     CHECK_TEXT(anno != hu_nullToken, "l anno tb not NULL");
-    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno tb v sz == 2");
-    STRNCMP_EQUAL_TEXT("tb", anno->value.str, anno->value.size, "l anno tb v == tb");
+    LONGS_EQUAL_TEXT(2, anno->str.size, "l anno tb v sz == 2");
+    STRNCMP_EQUAL_TEXT("tb", anno->str.str, anno->str.size, "l anno tb v == tb");
 
     anno = huGetTroveAnnotationWithKeyZ(d.trove, "tx");
     CHECK_TEXT(anno != hu_nullToken, "l anno tx not NULL");
-    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno tx v sz == 2");
-    STRNCMP_EQUAL_TEXT("ta", anno->value.str, anno->value.size, "l anno tx v == ta");
+    LONGS_EQUAL_TEXT(2, anno->str.size, "l anno tx v sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->str.str, anno->str.size, "l anno tx v == ta");
 
     anno = huGetTroveAnnotationWithKeyZ(d.trove, "ta");
     CHECK_TEXT(anno != hu_nullToken, "l anno ta not NULL");
-    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno ta v sz == 2");
-    STRNCMP_EQUAL_TEXT("ta", anno->value.str, anno->value.size, "l anno ta v == ta");
+    LONGS_EQUAL_TEXT(2, anno->str.size, "l anno ta v sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->str.str, anno->str.size, "l anno ta v == ta");
 
     anno = huGetTroveAnnotationWithKeyZ(d.trove, "tb");
     CHECK_TEXT(anno != hu_nullToken, "l anno tb not NULL");
-    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno tb v sz == 2");
-    STRNCMP_EQUAL_TEXT("tb", anno->value.str, anno->value.size, "l anno tb v == tb");
+    LONGS_EQUAL_TEXT(2, anno->str.size, "l anno tb v sz == 2");
+    STRNCMP_EQUAL_TEXT("tb", anno->str.str, anno->str.size, "l anno tb v == tb");
 }
 
 TEST(huGetTroveAnnotationWithKey, pathological)
@@ -2300,33 +2519,33 @@ TEST(huGetTroveAnnotationByValue, normal)
 {
     auto anno = huGetTroveAnnotationByValueZ(l.trove, "ta", 0);
     CHECK_TEXT(anno != hu_nullToken, "l anno v ta 0 not NULL");
-    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno v ta 0 sz == 2");
-    STRNCMP_EQUAL_TEXT("tx", anno->value.str, anno->value.size, "l anno v ta 0 == tx");
+    LONGS_EQUAL_TEXT(2, anno->str.size, "l anno v ta 0 sz == 2");
+    STRNCMP_EQUAL_TEXT("tx", anno->str.str, anno->str.size, "l anno v ta 0 == tx");
 
     anno = huGetTroveAnnotationByValueZ(l.trove, "ta", 1);
     CHECK_TEXT(anno != hu_nullToken, "l anno v ta 1 not NULL");
-    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno v ta 1 sz == 2");
-    STRNCMP_EQUAL_TEXT("ta", anno->value.str, anno->value.size, "l anno v ta 1 == ta");
+    LONGS_EQUAL_TEXT(2, anno->str.size, "l anno v ta 1 sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->str.str, anno->str.size, "l anno v ta 1 == ta");
 
     anno = huGetTroveAnnotationByValueZ(l.trove, "tb", 0);
     CHECK_TEXT(anno != hu_nullToken, "l anno v tb 0 not NULL");
-    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno v tb 0 sz == 2");
-    STRNCMP_EQUAL_TEXT("tb", anno->value.str, anno->value.size, "l anno v tb 0 == tb");
+    LONGS_EQUAL_TEXT(2, anno->str.size, "l anno v tb 0 sz == 2");
+    STRNCMP_EQUAL_TEXT("tb", anno->str.str, anno->str.size, "l anno v tb 0 == tb");
 
     anno = huGetTroveAnnotationByValueZ(d.trove, "ta", 0);
     CHECK_TEXT(anno != hu_nullToken, "l anno v ta 0 not NULL");
-    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno v ta 0 sz == 2");
-    STRNCMP_EQUAL_TEXT("tx", anno->value.str, anno->value.size, "l anno v ta 0 == tx");
+    LONGS_EQUAL_TEXT(2, anno->str.size, "l anno v ta 0 sz == 2");
+    STRNCMP_EQUAL_TEXT("tx", anno->str.str, anno->str.size, "l anno v ta 0 == tx");
 
     anno = huGetTroveAnnotationByValueZ(d.trove, "ta", 1);
     CHECK_TEXT(anno != hu_nullToken, "l anno v ta 1 not NULL");
-    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno v ta 1 sz == 2");
-    STRNCMP_EQUAL_TEXT("ta", anno->value.str, anno->value.size, "l anno v ta 1 == ta");
+    LONGS_EQUAL_TEXT(2, anno->str.size, "l anno v ta 1 sz == 2");
+    STRNCMP_EQUAL_TEXT("ta", anno->str.str, anno->str.size, "l anno v ta 1 == ta");
 
     anno = huGetTroveAnnotationByValueZ(d.trove, "tb", 0);
     CHECK_TEXT(anno != hu_nullToken, "l anno v tb 0 not NULL");
-    LONGS_EQUAL_TEXT(2, anno->value.size, "l anno v tb 0 sz == 2");
-    STRNCMP_EQUAL_TEXT("tb", anno->value.str, anno->value.size, "l anno v tb 0 == tb");
+    LONGS_EQUAL_TEXT(2, anno->str.size, "l anno v tb 0 sz == 2");
+    STRNCMP_EQUAL_TEXT("tb", anno->str.str, anno->str.size, "l anno v tb 0 == tb");
 }
 
 TEST(huGetTroveAnnotationByValue, pathological)
@@ -2392,13 +2611,13 @@ TEST(huGetTroveComment, normal)
 {
     auto comm = huGetTroveComment(l.trove, 0);
     auto exp = "// This is a trove comment."sv;
-    LONGS_EQUAL_TEXT(exp.size(), comm->value.size, "l comm 0 sz == exp sz");
-    STRNCMP_EQUAL_TEXT(exp.data(), comm->value.str, exp.size(), "l comm 0 == exp");
+    LONGS_EQUAL_TEXT(exp.size(), comm->str.size, "l comm 0 sz == exp sz");
+    STRNCMP_EQUAL_TEXT(exp.data(), comm->str.str, exp.size(), "l comm 0 == exp");
 
     comm = huGetTroveComment(l.trove, 1);
     exp = "// This is also a trove comment."sv;
-    LONGS_EQUAL_TEXT(exp.size(), comm->value.size, "l comm 1 sz == exp sz");
-    STRNCMP_EQUAL_TEXT(exp.data(), comm->value.str, exp.size(), "l comm 1 == exp");
+    LONGS_EQUAL_TEXT(exp.size(), comm->str.size, "l comm 1 sz == exp sz");
+    STRNCMP_EQUAL_TEXT(exp.data(), comm->str.str, exp.size(), "l comm 1 == exp");
 
     POINTERS_EQUAL_TEXT(hu_nullToken, huGetTroveComment(l.trove, 2), "l comm 2 == null");
 }
@@ -2999,25 +3218,33 @@ TEST_GROUP(huTroveToString)
 TEST(huTroveToString, pathological)
 {
     int strLen = 1024;
-    huTroveToString(NULL, NULL, & strLen, HU_OUTPUTFORMAT_PRESERVED, false, 4, NULL);
+    huTroveToString(NULL, NULL, & strLen, HU_OUTPUTFORMAT_PRESERVED, false, 4, "\n", 1, NULL);
     LONGS_EQUAL_TEXT(0, strLen, "NULL->str sz == 0");
 
     strLen = 1024;
-    huTroveToString(hu_nullTrove, NULL, & strLen, HU_OUTPUTFORMAT_PRESERVED, false, 4, NULL);
+    huTroveToString(hu_nullTrove, NULL, & strLen, HU_OUTPUTFORMAT_PRESERVED, false, 4, "\n", 1, NULL);
     LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
 
-    huTroveToString(l.trove, NULL, NULL, HU_OUTPUTFORMAT_PRESERVED, false, 4, NULL);
+    huTroveToString(l.trove, NULL, NULL, HU_OUTPUTFORMAT_PRESERVED, false, 4, "\n", 1, NULL);
 
     strLen = 1024;
-    huTroveToString(l.trove, NULL, & strLen, 3, false, 4, NULL);
-    LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
-
-    strLen = 1024;
-    huTroveToString(l.trove, NULL, & strLen, -1, false, 4, NULL);
+    huTroveToString(l.trove, NULL, & strLen, 3, false, 4, "\n", 1, NULL);
     LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
 
     strLen = 1024;
-    huTroveToString(l.trove, NULL, & strLen, HU_OUTPUTFORMAT_PRESERVED, false, -1, NULL);
+    huTroveToString(l.trove, NULL, & strLen, -1, false, 4, "\n", 1, NULL);
+    LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
+
+    strLen = 1024;
+    huTroveToString(l.trove, NULL, & strLen, HU_OUTPUTFORMAT_PRESERVED, false, -1, "\n", 1, NULL);
+    LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
+
+    strLen = 1024;
+    huTroveToString(l.trove, NULL, & strLen, HU_OUTPUTFORMAT_PRESERVED, false, 4, NULL, 1, NULL);
+    LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
+
+    strLen = 1024;
+    huTroveToString(l.trove, NULL, & strLen, HU_OUTPUTFORMAT_PRESERVED, false, 4, "\n", 0, NULL);
     LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
 }
 
@@ -3051,43 +3278,57 @@ TEST(huTroveToFile, pathological)
         { remove(validFile); }
 
     int sv;
-    sv = huTroveToFileZ(NULL, validFile, HU_OUTPUTFORMAT_PRESERVED, false, 4, NULL);
+    sv = huTroveToFileZ(NULL, validFile, HU_OUTPUTFORMAT_PRESERVED, false, 4, "\n", 1, NULL);
     LONGS_EQUAL_TEXT(0, sv, "NULL->file sz == 0");
     acc = access(validFile, F_OK);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
 
-    sv = huTroveToFileZ(hu_nullTrove, validFile, HU_OUTPUTFORMAT_PRESERVED, false, 4, NULL);
+    sv = huTroveToFileZ(hu_nullTrove, validFile, HU_OUTPUTFORMAT_PRESERVED, false, 4, "\n", 1, NULL);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
 
-    sv = huTroveToFileZ(hu_nullTrove, NULL, HU_OUTPUTFORMAT_PRESERVED, false, 4, NULL);
+    sv = huTroveToFileZ(hu_nullTrove, NULL, HU_OUTPUTFORMAT_PRESERVED, false, 4, "\n", 1, NULL);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
 
-    sv = huTroveToFileZ(hu_nullTrove, "", HU_OUTPUTFORMAT_PRESERVED, false, 4, NULL);
+    sv = huTroveToFileZ(hu_nullTrove, "", HU_OUTPUTFORMAT_PRESERVED, false, 4, "\n", 1, NULL);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
 
-    sv = huTroveToFileZ(hu_nullTrove, "..", HU_OUTPUTFORMAT_PRESERVED, false, 4, NULL);
+    sv = huTroveToFileZ(hu_nullTrove, "..", HU_OUTPUTFORMAT_PRESERVED, false, 4, "\n", 1, NULL);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
 
-    sv = huTroveToFileZ(hu_nullTrove, "/", HU_OUTPUTFORMAT_PRESERVED, false, 4, NULL);
+    sv = huTroveToFileZ(hu_nullTrove, "/", HU_OUTPUTFORMAT_PRESERVED, false, 4, "\n", 1, NULL);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
 
-    sv = huTroveToFileZ(l.trove, validFile, 3, false, 4, NULL);
-    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
-    acc = access(validFile, F_OK);
-    LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
-    if (acc != -1)
-        { remove(validFile); }
-
-    sv = huTroveToFileZ(l.trove, validFile, -1, false, 4, NULL);
+    sv = huTroveToFileZ(l.trove, validFile, 3, false, 4, "\n", 1, NULL);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
     acc = access(validFile, F_OK);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
 
-    sv = huTroveToFileZ(l.trove, validFile, HU_OUTPUTFORMAT_PRESERVED, false, -1, NULL);
+    sv = huTroveToFileZ(l.trove, validFile, -1, false, 4, "\n", 1, NULL);
+    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+    acc = access(validFile, F_OK);
+    LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
+    if (acc != -1)
+        { remove(validFile); }
+
+    sv = huTroveToFileZ(l.trove, validFile, HU_OUTPUTFORMAT_PRESERVED, false, -1, "\n", 1, NULL);
+    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+    acc = access(validFile, F_OK);
+    LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
+    if (acc != -1)
+        { remove(validFile); }
+
+    sv = huTroveToFileZ(l.trove, validFile, HU_OUTPUTFORMAT_PRESERVED, false, 4, NULL, 1, NULL);
+    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+    acc = access(validFile, F_OK);
+    LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
+    if (acc != -1)
+        { remove(validFile); }
+
+    sv = huTroveToFileZ(l.trove, validFile, HU_OUTPUTFORMAT_PRESERVED, false, 4, "\n", 0, NULL);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
     acc = access(validFile, F_OK);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");

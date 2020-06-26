@@ -1,5 +1,7 @@
 [[ -d obj ]] || mkdir obj
 [[ -d bin ]] || mkdir bin
+[[ -d test/bin ]] || mkdir test/bin
+[[ -d samples/bin ]] || mkdir samples/bin
 
 build_obj() {
     gcc -std=c99 -Wall -c -ggdb3 -O0 -DDEBUG -Iinc -o obj/$1-d.o src/$1.c
@@ -37,11 +39,12 @@ g++ -std=c++17 -Wall -shared -Wl,-soname,libhumon-r.so.0  -o bin/libhumon-r.so.0
 echo Done.
 
 echo Building tests...
-g++ -std=c++17 -Wall -ggdb3 -O0 -DDEBUG src/test/testMain.cpp src/test/apiTests.cpp src/test/utf8Tests.cpp src/test/dataTests.cpp src/test/cppTests.cpp -Iinc -Lbin -lhumon-d -lCppUTest -lCppUTestExt -o bin/test
+g++ -std=c++17 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o test/bin/test test/testMain.cpp test/apiTests.cpp test/utf8Tests.cpp test/dataTests.cpp test/cppTests.cpp test/commentTests.cpp -Lbin -lhumon-d -lCppUTest -lCppUTestExt
 
 echo Building samples...
-gcc -std=c99 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o src/samples/sample-usage-c-d src/samples/usage.c -Lbin -lhumon-d
-g++ -std=c++17 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o src/samples/sample-usage-cpp-d src/samples/usage.cpp -Lbin -lhumon-d
+gcc -std=c99 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o samples/bin/sample-usage-c-d samples/usage.c -Lbin -lhumon-d
+g++ -std=c++17 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o samples/bin/sample-usage-cpp-d samples/usage.cpp -Lbin -lhumon-d
+g++ -std=c++17 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o samples/bin/hux samples/hux.cpp -Lbin -lhumon-d
 
 
 echo Done.

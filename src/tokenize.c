@@ -340,36 +340,36 @@ void huTokenizeTrove(huTrove * trove)
     switch(* cur.character)
     {
     case '\0':
-      allocNewToken(trove, HU_TOKENKIND_EOF, cur.character, 0, line, col, line, col);
+      allocNewToken(trove, HU_TOKENKIND_EOF, cur.character, 0, line, col, line, col, '\0');
       scanning = false;
       break;
     case '{':
-      allocNewToken(trove, HU_TOKENKIND_STARTDICT, cur.character, 1, line, col, line, col + 1);
+      allocNewToken(trove, HU_TOKENKIND_STARTDICT, cur.character, 1, line, col, line, col + 1, '\0');
       col += 1;
       nextCharacter(& cur);
       break;
     case '}':
-      allocNewToken(trove, HU_TOKENKIND_ENDDICT, cur.character, 1, line, col, line, col + 1);
+      allocNewToken(trove, HU_TOKENKIND_ENDDICT, cur.character, 1, line, col, line, col + 1, '\0');
       col += 1;
       nextCharacter(& cur);
       break;
     case '[':
-      allocNewToken(trove, HU_TOKENKIND_STARTLIST, cur.character, 1, line, col, line, col + 1);
+      allocNewToken(trove, HU_TOKENKIND_STARTLIST, cur.character, 1, line, col, line, col + 1, '\0');
       col += 1;
       nextCharacter(& cur);
       break;
     case ']':
-      allocNewToken(trove, HU_TOKENKIND_ENDLIST, cur.character, 1, line, col, line, col + 1);
+      allocNewToken(trove, HU_TOKENKIND_ENDLIST, cur.character, 1, line, col, line, col + 1, '\0');
       col += 1;
       nextCharacter(& cur);
       break;
     case ':':
-      allocNewToken(trove, HU_TOKENKIND_KEYVALUESEP, cur.character, 1, line, col, line, col + 1);
+      allocNewToken(trove, HU_TOKENKIND_KEYVALUESEP, cur.character, 1, line, col, line, col + 1, '\0');
       col += 1;
       nextCharacter(& cur);
       break;
     case '@':
-      allocNewToken(trove, HU_TOKENKIND_ANNOTATE, cur.character, 1, line, col, line, col + 1);
+      allocNewToken(trove, HU_TOKENKIND_ANNOTATE, cur.character, 1, line, col, line, col + 1, '\0');
       col += 1;
       nextCharacter(& cur);
       break;
@@ -377,14 +377,14 @@ void huTokenizeTrove(huTrove * trove)
       if (*(cur.character + 1) == '/')
       {
         eatDoubleSlashComment(& cur, trove->inputTabSize, & len, & lineM, & colM);
-        allocNewToken(trove, HU_TOKENKIND_COMMENT, cur.character - len, len, line, col, lineM, colM);
+        allocNewToken(trove, HU_TOKENKIND_COMMENT, cur.character - len, len, line, col, lineM, colM, '\0');
         line = lineM;
         col = colM;
       }
       else if (*(cur.character + 1) == '*')
       {
         eatCStyleComment(& cur, trove->inputTabSize, & len, & lineM, & colM);
-        allocNewToken(trove, HU_TOKENKIND_COMMENT, cur.character - len, len, line, col, lineM, colM);
+        allocNewToken(trove, HU_TOKENKIND_COMMENT, cur.character - len, len, line, col, lineM, colM, '\0');
         line = lineM;
         col = colM;
       }
@@ -392,32 +392,32 @@ void huTokenizeTrove(huTrove * trove)
       {
         // else treat like a word char
         eatWord(& cur, & len, & lineM, & colM);
-        allocNewToken(trove, HU_TOKENKIND_WORD, cur.character - len, len, line, col, lineM, colM);
+        allocNewToken(trove, HU_TOKENKIND_WORD, cur.character - len, len, line, col, lineM, colM, '\0');
         line = lineM;
         col = colM;
       }
       break;
     case '"':
       eatDoubleQuotedWord(& cur, trove->inputTabSize, & len, & lineM, & colM);
-      allocNewToken(trove, HU_TOKENKIND_WORD, cur.character - len, len, line, col, lineM, colM);
+      allocNewToken(trove, HU_TOKENKIND_WORD, cur.character - len, len, line, col, lineM, colM, '"');
       line = lineM;
       col = colM;
       break;
     case '\'':
       eatSingleQuotedWord(& cur, trove->inputTabSize, & len, & lineM, & colM);
-      allocNewToken(trove, HU_TOKENKIND_WORD, cur.character - len, len, line, col, lineM, colM);
+      allocNewToken(trove, HU_TOKENKIND_WORD, cur.character - len, len, line, col, lineM, colM, '\'');
       line = lineM;
       col = colM;
       break;
     case '`':
       eatBackQuotedWord(& cur, trove->inputTabSize, & len, & lineM, & colM);
-      allocNewToken(trove, HU_TOKENKIND_WORD, cur.character - len, len, line, col, lineM, colM);
+      allocNewToken(trove, HU_TOKENKIND_WORD, cur.character - len, len, line, col, lineM, colM, '`');
       line = lineM;
       col = colM;
       break;
     default: // word char
       eatWord(& cur, & len, & lineM, & colM);
-      allocNewToken(trove, HU_TOKENKIND_WORD, cur.character - len, len, line, col, lineM, colM);
+      allocNewToken(trove, HU_TOKENKIND_WORD, cur.character - len, len, line, col, lineM, colM, '\0');
       line = lineM;
       col = colM;
       break;

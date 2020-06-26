@@ -14,7 +14,7 @@ extern "C"
     /// Initializes a vector to zero size. Does not allocate.
     void huInitVector(huVector * vector, int elementSize);
     /// Initializes a vector with a preallocated buffer. Can still grow.
-    void huInitVectorPreallocated(huVector * vector, int elementSize, void * buffer, int numElements);
+    void huInitVectorPreallocated(huVector * vector, int elementSize, void * buffer, int numElements, bool canStillGrow);
 
     /// Frees the memory owned by a huVector.
     void huDestroyVector(huVector const * vector);
@@ -24,7 +24,8 @@ extern "C"
     void * huGetVectorElement(huVector const * vector, int idx);
 
     void huResetVector(huVector * vector);
-    void * huGrowVector(huVector * vector, int numElements);
+    int huAppendToVector(huVector * vector, void const * data, int numElements);
+    void * huGrowVector(huVector * vector, int * numElements);
 
     typedef struct cursor_tag
     {
@@ -44,9 +45,8 @@ extern "C"
     void huInitNode(huNode * node, huTrove const * trove);
     void huDestroyNode(huNode const * node);
 
-    huToken * allocNewToken(huTrove * trove, int tokenKind, char const * str, int size, int line, int col, int endLine, int endCol);
-
-    huNode * allocNewNode(huTrove * trove, int nodeKind, huToken * firstToken);
+    huToken * allocNewToken(huTrove * trove, int tokenKind, char const * str, int size, int line, int col, int endLine, int endCol, char quoteChar);
+    huNode * allocNewNode(huTrove * trove, int nodeKind, huToken const * firstToken);
 
     void recordError(huTrove * trove, int errorCode, huToken const * pCur);
 
@@ -54,6 +54,16 @@ extern "C"
     void huParseTrove(huTrove * trove);
 
     // printing
+    typedef struct huPrintArgs_tag
+    {
+        int outputFormat;
+        bool includeComments;
+        bool indentWithTabs;
+        int tabSize;
+        huStringView newline;
+        huStringView const * colorTable;
+    } huPrintArgs;
+
     void appendString(huVector * str, char const * addend, int size);
     void appendWs(huVector * str, int numChars);
     void appendColor(huVector * str, huStringView const * colorTable, int colorCode);
@@ -66,12 +76,8 @@ extern "C"
     void printNodeAnnotations(huNode const * node, huVector * str, huStringView const * colorTable);
     void printKey(huToken const * keyToken, huVector * str, huStringView const * colorTable);
     void printValue(huToken const * valueToken, huVector * str, huStringView const * colorTable);
-    void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable);
-    void troveToPrettyString(huTrove const * trove, huVector * str, int outputFormat, bool excludeComments, int outputTabSize, huStringView const * colorTable);
-
-
-
-
+    void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int outputFormat, bool excludeComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable);
+    void troveToPrettyString(huTrove const * trove, huVector * str, int outputFormat, bool excludeComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable);
 
 #ifdef __cplusplus
 } // extern "C"

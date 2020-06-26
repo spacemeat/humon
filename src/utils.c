@@ -82,27 +82,33 @@ void huInitVector(huVector * vector, int elementSize)
     vector->elementSize = elementSize;
     vector->numElements = 0;
     vector->vectorCapacity = 0;
+    vector->canGrowCapacity = true;
 }
 
 
-void huInitVectorPreallocated(huVector * vector, int elementSize, void * buffer, int numElements)
+void huInitVectorPreallocated(huVector * vector, int elementSize, void * buffer, int numElements, bool canStillGrow)
 {
     vector->buffer = buffer;
     vector->elementSize = elementSize;
     vector->numElements = 0;
 
     int cap = numElements;
-    if (cap % 16 != 0)
-        { cap = ((numElements / 16) + 1) * 16; }
     vector->vectorCapacity = cap;
+    vector->canGrowCapacity = canStillGrow;
 }
 
 
 void huDestroyVector(huVector const * vector)
 {
+    huVector * ncVector = (huVector *) vector;
     // you bet your sweet bippy I'm casting away the const
-    if (vector->buffer != NULL)
-        { free((void *) vector->buffer); }
+    if (ncVector->buffer != NULL)
+    {
+        free(ncVector->buffer);
+        ncVector->buffer = NULL;
+        ncVector->numElements = 0;
+        ncVector->vectorCapacity = 0;
+    }
 }
 
 
@@ -125,16 +131,29 @@ void * huGetVectorElement(huVector const * vector, int idx)
 }
 
 
-void * huGrowVector(huVector * vector, int numElements)
+int min(int a, int b) { if (a < b) { return a; } else { return b; } }
+
+
+void * huGrowVector(huVector * vector, int * numElements)
 {
+    // get remaining capacity
+    int maxAppend = * numElements;
+    if (vector->canGrowCapacity == false)
+        { maxAppend = min(maxAppend, vector->vectorCapacity - vector->numElements); }
+
+    * numElements = 0;
+
     if (vector->numElements == 0)
     {
-        vector->numElements = numElements;
+        vector->numElements = maxAppend;
 
         // round up to a group of 16 elements
-        int cap = numElements;
-        if (cap % 16 != 0)
-            { cap = ((numElements / 16) + 1) * 16; }
+        int cap = maxAppend;
+        if (vector->canGrowCapacity)
+        {
+            if (cap % 16 != 0)
+                { cap = ((maxAppend / 16) + 1) * 16; }
+        }
 
         // capacity can be set even if numElements is 0.
         if (cap > vector->vectorCapacity)
@@ -149,11 +168,12 @@ void * huGrowVector(huVector * vector, int numElements)
                 { vector->buffer = malloc(cap * vector->elementSize); }
         }
 
+        * numElements = maxAppend;
         return vector->buffer;
     }
     else
     {
-        vector->numElements += numElements;
+        vector->numElements += maxAppend;
         int cap = vector->vectorCapacity;
         while (vector->numElements > cap)
             { cap *= 2; }
@@ -167,8 +187,19 @@ void * huGrowVector(huVector * vector, int numElements)
                 { return NULL; }
         }
 
-        return vector->buffer + (vector->numElements - numElements) * vector->elementSize;
+        * numElements = maxAppend;
+        return vector->buffer + (vector->numElements - maxAppend) * vector->elementSize;
     }
+}
+
+
+int huAppendToVector(huVector * vector, void const * data, int numElements)
+{
+    int maxAppend = numElements;
+    void * dest = huGrowVector(vector, & maxAppend);
+    memcpy(dest, data, maxAppend * vector->elementSize);
+
+    return maxAppend;
 }
 
 
@@ -179,7 +210,7 @@ huTrove const * hu_nullTrove = NULL; //& humon_nullTrove;
 huToken const humon_nullToken = 
 {
     .tokenKind = HU_TOKENKIND_NULL,
-    .value = {
+    .str = {
         .str = "",
         .size = 0
     },
@@ -199,17 +230,11 @@ huNode const humon_nullNode =
     .valueToken = & humon_nullToken,
     .lastValueToken = & humon_nullToken,
     .lastToken = & humon_nullToken,
-    .childIdx = 0,
+    .childOrdinal = 0,
     .parentNodeIdx = -1,
     .childNodeIdxs = (huVector) {
         .buffer = NULL,
         .elementSize = sizeof(int),
-        .numElements = 0,
-        .vectorCapacity = 0
-    },
-    .childDictKeys = (huVector) {
-        .buffer = NULL,
-        .elementSize = sizeof(huDictEntry),
         .numElements = 0,
         .vectorCapacity = 0
     },

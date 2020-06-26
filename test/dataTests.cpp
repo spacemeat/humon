@@ -155,8 +155,8 @@ TEST(singleValue, value)
   huNode const * node = huGetRootNode(trove);
   CHECK_TEXT(node != NULL, "node not null");
   CHECK_TEXT(node->valueToken != NULL, "value set");
-  LONGS_EQUAL_TEXT(strlen("snerb"), node->valueToken->value.size, "value strlen");
-  STRNCMP_EQUAL_TEXT("snerb", node->valueToken->value.str, node->valueToken->value.size, "value text");
+  LONGS_EQUAL_TEXT(strlen("snerb"), node->valueToken->str.size, "value strlen");
+  STRNCMP_EQUAL_TEXT("snerb", node->valueToken->str.str, node->valueToken->str.size, "value text");
 }
 
 TEST(singleValue, lastValue)
@@ -240,7 +240,7 @@ TEST(singleEmptyList, value)
   huNode const * node = huGetRootNode(trove);
   CHECK_TEXT(node != NULL, "node not null");
   CHECK_TEXT(node->valueToken != NULL, "first value set");
-  STRNCMP_EQUAL_TEXT("[", node->valueToken->value.str, 1, "valueToken");
+  STRNCMP_EQUAL_TEXT("[", node->valueToken->str.str, 1, "valueToken");
 }
 
 TEST(singleEmptyList, lastValue)
@@ -248,7 +248,7 @@ TEST(singleEmptyList, lastValue)
   huNode const * node = huGetRootNode(trove);
   CHECK_TEXT(node != NULL, "node not null");
   CHECK_TEXT(node->lastValueToken != NULL, "last value set");
-  STRNCMP_EQUAL_TEXT("]", node->lastValueToken->value.str, 1, "valueToken");
+  STRNCMP_EQUAL_TEXT("]", node->lastValueToken->str.str, 1, "valueToken");
 }
 
 
@@ -323,7 +323,7 @@ TEST(singleEmptyDict, value)
   huNode const * node = huGetRootNode(trove);
   CHECK_TEXT(node != NULL, "node not null");
   CHECK_TEXT(node->valueToken != NULL, "first value set");
-  STRNCMP_EQUAL_TEXT("{", node->valueToken->value.str, 1, "valueToken");
+  STRNCMP_EQUAL_TEXT("{", node->valueToken->str.str, 1, "valueToken");
 }
 
 TEST(singleEmptyDict, lastValue)
@@ -331,7 +331,7 @@ TEST(singleEmptyDict, lastValue)
   huNode const * node = huGetRootNode(trove);
   CHECK_TEXT(node != NULL, "node not null");
   CHECK_TEXT(node->lastValueToken != NULL, "last value set");
-  STRNCMP_EQUAL_TEXT("}", node->lastValueToken->value.str, 1, "valueToken");
+  STRNCMP_EQUAL_TEXT("}", node->lastValueToken->str.str, 1, "valueToken");
 }
 
 
@@ -406,7 +406,7 @@ TEST(listWithOneValue, value)
   huNode const * node = huGetRootNode(trove);
   CHECK_TEXT(node != NULL, "parent not null");
   CHECK_TEXT(node->valueToken != NULL, "first value set");
-  STRNCMP_EQUAL_TEXT("[", node->valueToken->value.str, 1, "valueToken");
+  STRNCMP_EQUAL_TEXT("[", node->valueToken->str.str, 1, "valueToken");
 }
 
 TEST(listWithOneValue, lastValue)
@@ -414,7 +414,7 @@ TEST(listWithOneValue, lastValue)
   huNode const * node = huGetRootNode(trove);
   CHECK_TEXT(node != NULL, "parent not null");
   CHECK_TEXT(node->lastValueToken != NULL, "last value set");
-  STRNCMP_EQUAL_TEXT("]", node->lastValueToken->value.str, 1, "valueToken");
+  STRNCMP_EQUAL_TEXT("]", node->lastValueToken->str.str, 1, "valueToken");
 }
 
 TEST(listWithOneValue, childNodeKind)
@@ -454,9 +454,9 @@ TEST(listWithOneValue, childValue)
   node = huGetChildByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
   CHECK_TEXT(node->valueToken != NULL, "value set");
-  CHECK_TEXT(node->valueToken->value.str != NULL, "value set");
-  LONGS_EQUAL_TEXT(3, node->valueToken->value.size, "value.size");
-  STRNCMP_EQUAL_TEXT("one", node->valueToken->value.str, 3, "valueToken");
+  CHECK_TEXT(node->valueToken->str.str != NULL, "value set");
+  LONGS_EQUAL_TEXT(3, node->valueToken->str.size, "value.size");
+  STRNCMP_EQUAL_TEXT("one", node->valueToken->str.str, 3, "valueToken");
 }
 
 
@@ -543,7 +543,7 @@ TEST(dictWithOneValue, value)
   huNode const * node = huGetRootNode(trove);
   CHECK_TEXT(node != NULL, "parent not null");
   CHECK_TEXT(node->valueToken != NULL, "first value set");
-  STRNCMP_EQUAL_TEXT("{", node->valueToken->value.str, 1, "valueToken");
+  STRNCMP_EQUAL_TEXT("{", node->valueToken->str.str, 1, "valueToken");
 }
 
 TEST(dictWithOneValue, lastValue)
@@ -551,7 +551,7 @@ TEST(dictWithOneValue, lastValue)
   huNode const * node = huGetRootNode(trove);
   CHECK_TEXT(node != NULL, "parent not null");
   CHECK_TEXT(node->lastValueToken != NULL, "last value set");
-  STRNCMP_EQUAL_TEXT("}", node->lastValueToken->value.str, 1, "valueToken");
+  STRNCMP_EQUAL_TEXT("}", node->lastValueToken->str.str, 1, "valueToken");
 }
 
 TEST(dictWithOneValue, childNodeKind)
@@ -592,10 +592,9 @@ TEST(dictWithOneValue, childKey)
   CHECK_TEXT(node != NULL, "child node not null");
   POINTERS_EQUAL_TEXT(node, nodeByKey, "foo by key");
   CHECK_TEXT(node->keyToken != NULL, "key set");
-  CHECK_TEXT(node->keyToken->value.str != NULL, "key set");
-  LONGS_EQUAL_TEXT(3, node->keyToken->value.size, "key.size");
-  STRNCMP_EQUAL_TEXT("one", node->keyToken->value.str, 3, "keyToken");
-  STRNCMP_EQUAL_TEXT("one", huGetKey(node)->value.str, 3, "getKey()");
+  CHECK_TEXT(node->keyToken->str.str != NULL, "key set");
+  LONGS_EQUAL_TEXT(3, node->keyToken->str.size, "key.size");
+  STRNCMP_EQUAL_TEXT("one", node->keyToken->str.str, 3, "keyToken");
 }
 
 TEST(dictWithOneValue, childValue)
@@ -605,9 +604,9 @@ TEST(dictWithOneValue, childValue)
   node = huGetChildByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
   CHECK_TEXT(node->valueToken != NULL, "value set");
-  CHECK_TEXT(node->valueToken->value.str != NULL, "value set");
-  LONGS_EQUAL_TEXT(3, node->valueToken->value.size, "value.size");
-  STRNCMP_EQUAL_TEXT("two", node->valueToken->value.str, 3, "valueToken");
+  CHECK_TEXT(node->valueToken->str.str != NULL, "value set");
+  LONGS_EQUAL_TEXT(3, node->valueToken->str.size, "value.size");
+  STRNCMP_EQUAL_TEXT("two", node->valueToken->str.str, 3, "valueToken");
 }
 
 TEST(dictWithOneValue, childLastValue)
@@ -729,9 +728,9 @@ TEST(listWithTwoValues, twoValue)
   node = huGetChildByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
   CHECK_TEXT(node->valueToken != NULL, "value set");
-  CHECK_TEXT(node->valueToken->value.str != NULL, "value set");
-  LONGS_EQUAL_TEXT(3, node->valueToken->value.size, "value.size");
-  STRNCMP_EQUAL_TEXT("two", node->valueToken->value.str, 3, "valueToken");
+  CHECK_TEXT(node->valueToken->str.str != NULL, "value set");
+  LONGS_EQUAL_TEXT(3, node->valueToken->str.size, "value.size");
+  STRNCMP_EQUAL_TEXT("two", node->valueToken->str.str, 3, "valueToken");
 }
 
 TEST(listWithTwoValues, threeNodeKind)
@@ -770,9 +769,9 @@ TEST(listWithTwoValues, threeValue)
   node = huGetChildByIndex(node, 1);
   CHECK_TEXT(node != NULL, "child node not null");
   CHECK_TEXT(node->valueToken != NULL, "value set");
-  CHECK_TEXT(node->valueToken->value.str != NULL, "value set");
-  LONGS_EQUAL_TEXT(5, node->valueToken->value.size, "value.size");
-  STRNCMP_EQUAL_TEXT("three", node->valueToken->value.str, 5, "valueToken");
+  CHECK_TEXT(node->valueToken->str.str != NULL, "value set");
+  LONGS_EQUAL_TEXT(5, node->valueToken->str.size, "value.size");
+  STRNCMP_EQUAL_TEXT("three", node->valueToken->str.str, 5, "valueToken");
 }
 
 TEST_GROUP(dictWithTwoValues)
@@ -888,9 +887,9 @@ TEST(dictWithTwoValues, twoKey)
   CHECK_TEXT(node != NULL, "child node not null");
   POINTERS_EQUAL_TEXT(node, nodeByKey, "foo by key");
   CHECK_TEXT(node->keyToken != NULL, "key set");
-  CHECK_TEXT(node->keyToken->value.str != NULL, "key set");
-  LONGS_EQUAL_TEXT(3, node->keyToken->value.size, "key.size");
-  STRNCMP_EQUAL_TEXT("two", node->keyToken->value.str, 3, "keyToken");
+  CHECK_TEXT(node->keyToken->str.str != NULL, "key set");
+  LONGS_EQUAL_TEXT(3, node->keyToken->str.size, "key.size");
+  STRNCMP_EQUAL_TEXT("two", node->keyToken->str.str, 3, "keyToken");
 }
 
 TEST(dictWithTwoValues, twoValue)
@@ -900,9 +899,9 @@ TEST(dictWithTwoValues, twoValue)
   node = huGetChildByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
   CHECK_TEXT(node->valueToken != NULL, "value set");
-  CHECK_TEXT(node->valueToken->value.str != NULL, "value set");
-  LONGS_EQUAL_TEXT(3, node->valueToken->value.size, "value.size");
-  STRNCMP_EQUAL_TEXT("red", node->valueToken->value.str, 3, "valueToken");
+  CHECK_TEXT(node->valueToken->str.str != NULL, "value set");
+  LONGS_EQUAL_TEXT(3, node->valueToken->str.size, "value.size");
+  STRNCMP_EQUAL_TEXT("red", node->valueToken->str.str, 3, "valueToken");
 }
 
 TEST(dictWithTwoValues, threeNodeKind)
@@ -943,9 +942,9 @@ TEST(dictWithTwoValues, threeKey)
   CHECK_TEXT(node != NULL, "child node not null");
   POINTERS_EQUAL_TEXT(node, nodeByKey, "foo by key");
   CHECK_TEXT(node->keyToken != NULL, "key set");
-  CHECK_TEXT(node->keyToken->value.str != NULL, "key set");
-  LONGS_EQUAL_TEXT(5, node->keyToken->value.size, "key.size");
-  STRNCMP_EQUAL_TEXT("three", node->keyToken->value.str, 5, "keyToken");
+  CHECK_TEXT(node->keyToken->str.str != NULL, "key set");
+  LONGS_EQUAL_TEXT(5, node->keyToken->str.size, "key.size");
+  STRNCMP_EQUAL_TEXT("three", node->keyToken->str.str, 5, "keyToken");
 }
 
 TEST(dictWithTwoValues, threeValue)
@@ -955,9 +954,9 @@ TEST(dictWithTwoValues, threeValue)
   node = huGetChildByIndex(node, 1);
   CHECK_TEXT(node != NULL, "child node not null");
   CHECK_TEXT(node->valueToken != NULL, "value set");
-  CHECK_TEXT(node->valueToken->value.str != NULL, "value set");
-  LONGS_EQUAL_TEXT(4, node->valueToken->value.size, "value.size");
-  STRNCMP_EQUAL_TEXT("blue", node->valueToken->value.str, 4, "valueToken");
+  CHECK_TEXT(node->valueToken->str.str != NULL, "value set");
+  LONGS_EQUAL_TEXT(4, node->valueToken->str.size, "value.size");
+  STRNCMP_EQUAL_TEXT("blue", node->valueToken->str.str, 4, "valueToken");
 }
 
 
@@ -1159,10 +1158,9 @@ TEST(listInDict, key)
   CHECK_TEXT(node != NULL, "child node not null");
   POINTERS_EQUAL_TEXT(node, nodeByKey, "foo by key");
   CHECK_TEXT(node->keyToken != NULL, "key set");
-  CHECK_TEXT(node->keyToken->value.str != NULL, "key set");
-  LONGS_EQUAL_TEXT(3, node->keyToken->value.size, "key.size");
-  STRNCMP_EQUAL_TEXT("foo", node->keyToken->value.str, 3, "keyToken");
-  STRNCMP_EQUAL_TEXT("foo", huGetKey(node)->value.str, 3, "getKey()");
+  CHECK_TEXT(node->keyToken->str.str != NULL, "key set");
+  LONGS_EQUAL_TEXT(3, node->keyToken->str.size, "key.size");
+  STRNCMP_EQUAL_TEXT("foo", node->keyToken->str.str, 3, "keyToken");
 }
 
 TEST(listInDict, childNodeKind)
@@ -1242,10 +1240,9 @@ TEST(dictInDict, key)
   node = huGetChildByIndex(node, 0);
   CHECK_TEXT(node != NULL, "child node not null");
   CHECK_TEXT(node->keyToken != NULL, "key set");
-  CHECK_TEXT(node->keyToken->value.str != NULL, "key string set");
-  LONGS_EQUAL_TEXT(3, node->keyToken->value.size, "key.size");
-  STRNCMP_EQUAL_TEXT("foo", node->keyToken->value.str, 3, "keyToken");
-  STRNCMP_EQUAL_TEXT("foo", huGetKey(node)->value.str, 3, "getKey()");
+  CHECK_TEXT(node->keyToken->str.str != NULL, "key string set");
+  LONGS_EQUAL_TEXT(3, node->keyToken->str.size, "key.size");
+  STRNCMP_EQUAL_TEXT("foo", node->keyToken->str.str, 3, "keyToken");
 }
 
 TEST(dictInDict, childNodeKind)
@@ -1301,13 +1298,13 @@ TEST(multipleNestedLists, values)
     for (int j = 0; j < 2; ++j)
     {
       huNode const * ch1 = huGetChildByIndex(ch0, j);
-      LONGS_EQUAL_TEXT(3, huGetNumChildren(ch1), c);
+      LONGS_EQUAL_TEXT(3, huGetNumChildren(ch1), "t2 ch");
       for (int k = 0; k < 3; ++k)
       {
         huNode const * ch2 = huGetChildByIndex(ch1, k);
         CHECK_TEXT(ch2->valueToken != NULL, "value set");
-        LONGS_EQUAL_TEXT(1, ch2->valueToken->value.size, "value.size");
-        STRNCMP_EQUAL_TEXT(c, ch2->valueToken->value.str, 1, c);
+        LONGS_EQUAL_TEXT(1, ch2->valueToken->str.size, "value.size");
+        STRNCMP_EQUAL_TEXT(c, ch2->valueToken->str.str, 1, "t3 ch");
         c[0] += 1;
       }
     }
@@ -1337,10 +1334,10 @@ TEST(oneAnnoOnly, values)
   LONGS_EQUAL_TEXT(0, huGetNumErrors(trove), "GetNumErrors()");
   LONGS_EQUAL_TEXT(1, huGetNumTroveAnnotations(trove), "getNumTAs()");
   huAnnotation const * anno = huGetTroveAnnotation(trove, 0);
-  LONGS_EQUAL_TEXT(1, anno->key->value.size, "key len");
-  STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "key val");
-  LONGS_EQUAL_TEXT(1, anno->value->value.size, "val len");
-  STRNCMP_EQUAL_TEXT("b", anno->value->value.str, 1, "val val");
+  LONGS_EQUAL_TEXT(1, anno->key->str.size, "key len");
+  STRNCMP_EQUAL_TEXT("a", anno->key->str.str, 1, "key val");
+  LONGS_EQUAL_TEXT(1, anno->value->str.size, "val len");
+  STRNCMP_EQUAL_TEXT("b", anno->value->str.str, 1, "val val");
 }
 
 
@@ -1367,10 +1364,10 @@ TEST(oneValueAnno, values)
   huNode const * node = huGetRootNode(trove);
   LONGS_EQUAL_TEXT(1, huGetNumAnnotations(node), "num anno");
   huAnnotation const * anno = huGetAnnotation(node, 0);
-  LONGS_EQUAL_TEXT(1, anno->key->value.size, "key len");
-  STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "key val");
-  LONGS_EQUAL_TEXT(1, anno->value->value.size, "val len");
-  STRNCMP_EQUAL_TEXT("b", anno->value->value.str, 1, "val val");
+  LONGS_EQUAL_TEXT(1, anno->key->str.size, "key len");
+  STRNCMP_EQUAL_TEXT("a", anno->key->str.str, 1, "key val");
+  LONGS_EQUAL_TEXT(1, anno->value->str.size, "val len");
+  STRNCMP_EQUAL_TEXT("b", anno->value->str.str, 1, "val val");
 }
 
 
@@ -1398,15 +1395,15 @@ TEST(oneValueTwoAnno, values)
   huNode const * node = huGetRootNode(trove);
   LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
   huAnnotation const * anno = huGetAnnotation(node, 0);
-  LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
-  STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
-  LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");
-  STRNCMP_EQUAL_TEXT("b", anno->value->value.str, 1, "b val val");
+  LONGS_EQUAL_TEXT(1, anno->key->str.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", anno->key->str.str, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, anno->value->str.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", anno->value->str.str, 1, "b val val");
   anno = huGetAnnotation(node, 1);
-  LONGS_EQUAL_TEXT(1, anno->key->value.size, "c key len");
-  STRNCMP_EQUAL_TEXT("c", anno->key->value.str, 1, "c key val");
-  LONGS_EQUAL_TEXT(1, anno->value->value.size, "d val len");
-  STRNCMP_EQUAL_TEXT("d", anno->value->value.str, 1, "d val val");
+  LONGS_EQUAL_TEXT(1, anno->key->str.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", anno->key->str.str, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, anno->value->str.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", anno->value->str.str, 1, "d val val");
 }
 
 
@@ -1434,15 +1431,15 @@ TEST(oneValueTwoAnnoGroup, values)
   huNode const * node = huGetRootNode(trove);
   LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
   huAnnotation const * anno = huGetAnnotation(node, 0);
-  LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
-  STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
-  LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");
-  STRNCMP_EQUAL_TEXT("b", anno->value->value.str, 1, "b val val");
+  LONGS_EQUAL_TEXT(1, anno->key->str.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", anno->key->str.str, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, anno->value->str.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", anno->value->str.str, 1, "b val val");
   anno = huGetAnnotation(node, 1);
-  LONGS_EQUAL_TEXT(1, anno->key->value.size, "c key len");
-  STRNCMP_EQUAL_TEXT("c", anno->key->value.str, 1, "c key val");
-  LONGS_EQUAL_TEXT(1, anno->value->value.size, "d val len");
-  STRNCMP_EQUAL_TEXT("d", anno->value->value.str, 1, "d val val");
+  LONGS_EQUAL_TEXT(1, anno->key->str.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", anno->key->str.str, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, anno->value->str.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", anno->value->str.str, 1, "d val val");
 }
 
 
@@ -1470,15 +1467,15 @@ TEST(oneEmptyListTwoAnnoGroup, values)
   huNode const * node = huGetRootNode(trove);
   LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
   huAnnotation const * anno = huGetAnnotation(node, 0);
-  LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
-  STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
-  LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");
-  STRNCMP_EQUAL_TEXT("b", anno->value->value.str, 1, "b val val");
+  LONGS_EQUAL_TEXT(1, anno->key->str.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", anno->key->str.str, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, anno->value->str.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", anno->value->str.str, 1, "b val val");
   anno = huGetAnnotation(node, 1);
-  LONGS_EQUAL_TEXT(1, anno->key->value.size, "c key len");
-  STRNCMP_EQUAL_TEXT("c", anno->key->value.str, 1, "c key val");
-  LONGS_EQUAL_TEXT(1, anno->value->value.size, "d val len");
-  STRNCMP_EQUAL_TEXT("d", anno->value->value.str, 1, "d val val");
+  LONGS_EQUAL_TEXT(1, anno->key->str.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", anno->key->str.str, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, anno->value->str.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", anno->value->str.str, 1, "d val val");
 }
 
 
@@ -1506,15 +1503,15 @@ TEST(oneEmptyListTwoAnnoLast, values)
   huNode const * node = huGetRootNode(trove);
   LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
   huAnnotation const * anno = huGetAnnotation(node, 0);
-  LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
-  STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
-  LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");
-  STRNCMP_EQUAL_TEXT("b", anno->value->value.str, 1, "b val val");
+  LONGS_EQUAL_TEXT(1, anno->key->str.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", anno->key->str.str, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, anno->value->str.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", anno->value->str.str, 1, "b val val");
   anno = huGetAnnotation(node, 1);
-  LONGS_EQUAL_TEXT(1, anno->key->value.size, "c key len");
-  STRNCMP_EQUAL_TEXT("c", anno->key->value.str, 1, "c key val");
-  LONGS_EQUAL_TEXT(1, anno->value->value.size, "d val len");
-  STRNCMP_EQUAL_TEXT("d", anno->value->value.str, 1, "d val val");
+  LONGS_EQUAL_TEXT(1, anno->key->str.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", anno->key->str.str, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, anno->value->str.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", anno->value->str.str, 1, "d val val");
 }
 
 
@@ -1542,15 +1539,15 @@ TEST(oneEmptyDictTwoAnnoGroup, values)
   huNode const * node = huGetRootNode(trove);
   LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
   huAnnotation const * anno = huGetAnnotation(node, 0);
-  LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
-  STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
-  LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");
-  STRNCMP_EQUAL_TEXT("b", anno->value->value.str, 1, "b val val");
+  LONGS_EQUAL_TEXT(1, anno->key->str.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", anno->key->str.str, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, anno->value->str.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", anno->value->str.str, 1, "b val val");
   anno = huGetAnnotation(node, 1);
-  LONGS_EQUAL_TEXT(1, anno->key->value.size, "c key len");
-  STRNCMP_EQUAL_TEXT("c", anno->key->value.str, 1, "c key val");
-  LONGS_EQUAL_TEXT(1, anno->value->value.size, "d val len");
-  STRNCMP_EQUAL_TEXT("d", anno->value->value.str, 1, "d val val");
+  LONGS_EQUAL_TEXT(1, anno->key->str.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", anno->key->str.str, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, anno->value->str.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", anno->value->str.str, 1, "d val val");
 }
 
 
@@ -1578,15 +1575,15 @@ TEST(oneEmptyDictTwoAnnoLast, values)
   huNode const * node = huGetRootNode(trove);
   LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
   huAnnotation const * anno = huGetAnnotation(node, 0);
-  LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
-  STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
-  LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");
-  STRNCMP_EQUAL_TEXT("b", anno->value->value.str, 1, "b val val");
+  LONGS_EQUAL_TEXT(1, anno->key->str.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", anno->key->str.str, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, anno->value->str.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", anno->value->str.str, 1, "b val val");
   anno = huGetAnnotation(node, 1);
-  LONGS_EQUAL_TEXT(1, anno->key->value.size, "c key len");
-  STRNCMP_EQUAL_TEXT("c", anno->key->value.str, 1, "c key val");
-  LONGS_EQUAL_TEXT(1, anno->value->value.size, "d val len");
-  STRNCMP_EQUAL_TEXT("d", anno->value->value.str, 1, "d val val");
+  LONGS_EQUAL_TEXT(1, anno->key->str.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", anno->key->str.str, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, anno->value->str.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", anno->value->str.str, 1, "d val val");
 }
 
 
@@ -1615,15 +1612,15 @@ TEST(oneValueListTwoAnnoGroup, values)
   node = huGetChildByIndex(node, 0);
   LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
   huAnnotation const * anno = huGetAnnotation(node, 0);
-  LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
-  STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
-  LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");
-  STRNCMP_EQUAL_TEXT("b", anno->value->value.str, 1, "b val val");
+  LONGS_EQUAL_TEXT(1, anno->key->str.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", anno->key->str.str, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, anno->value->str.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", anno->value->str.str, 1, "b val val");
   anno = huGetAnnotation(node, 1);
-  LONGS_EQUAL_TEXT(1, anno->key->value.size, "c key len");
-  STRNCMP_EQUAL_TEXT("c", anno->key->value.str, 1, "c key val");
-  LONGS_EQUAL_TEXT(1, anno->value->value.size, "d val len");
-  STRNCMP_EQUAL_TEXT("d", anno->value->value.str, 1, "d val val");
+  LONGS_EQUAL_TEXT(1, anno->key->str.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", anno->key->str.str, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, anno->value->str.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", anno->value->str.str, 1, "d val val");
 }
 
 
@@ -1652,23 +1649,23 @@ TEST(oneValueDictFourAnno, values)
   node = huGetChildByIndex(node, 0);
   LONGS_EQUAL_TEXT(4, huGetNumAnnotations(node), "num anno");
   huAnnotation const * anno = huGetAnnotation(node, 0);
-  LONGS_EQUAL_TEXT(1, anno->key->value.size, "a key len");
-  STRNCMP_EQUAL_TEXT("a", anno->key->value.str, 1, "a key val");
-  LONGS_EQUAL_TEXT(1, anno->value->value.size, "b val len");
-  STRNCMP_EQUAL_TEXT("b", anno->value->value.str, 1, "b val val");
+  LONGS_EQUAL_TEXT(1, anno->key->str.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", anno->key->str.str, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, anno->value->str.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", anno->value->str.str, 1, "b val val");
   anno = huGetAnnotation(node, 1);
-  LONGS_EQUAL_TEXT(1, anno->key->value.size, "c key len");
-  STRNCMP_EQUAL_TEXT("c", anno->key->value.str, 1, "c key val");
-  LONGS_EQUAL_TEXT(1, anno->value->value.size, "d val len");
-  STRNCMP_EQUAL_TEXT("d", anno->value->value.str, 1, "d val val");
+  LONGS_EQUAL_TEXT(1, anno->key->str.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", anno->key->str.str, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, anno->value->str.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", anno->value->str.str, 1, "d val val");
   anno = huGetAnnotation(node, 2);
-  LONGS_EQUAL_TEXT(1, anno->key->value.size, "e key len");
-  STRNCMP_EQUAL_TEXT("e", anno->key->value.str, 1, "e key val");
-  LONGS_EQUAL_TEXT(1, anno->value->value.size, "f val len");
-  STRNCMP_EQUAL_TEXT("f", anno->value->value.str, 1, "f val val");
+  LONGS_EQUAL_TEXT(1, anno->key->str.size, "e key len");
+  STRNCMP_EQUAL_TEXT("e", anno->key->str.str, 1, "e key val");
+  LONGS_EQUAL_TEXT(1, anno->value->str.size, "f val len");
+  STRNCMP_EQUAL_TEXT("f", anno->value->str.str, 1, "f val val");
   anno = huGetAnnotation(node, 3);
-  LONGS_EQUAL_TEXT(1, anno->key->value.size, "g key len");
-  STRNCMP_EQUAL_TEXT("g", anno->key->value.str, 1, "g key val");
-  LONGS_EQUAL_TEXT(1, anno->value->value.size, "h val len");
-  STRNCMP_EQUAL_TEXT("h", anno->value->value.str, 1, "h val val");
+  LONGS_EQUAL_TEXT(1, anno->key->str.size, "g key len");
+  STRNCMP_EQUAL_TEXT("g", anno->key->str.str, 1, "g key val");
+  LONGS_EQUAL_TEXT(1, anno->value->str.size, "h val len");
+  STRNCMP_EQUAL_TEXT("h", anno->value->str.str, 1, "h val val");
 }

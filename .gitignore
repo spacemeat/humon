@@ -38,3 +38,5 @@ mmap_address.bin
 
 # Project-specific
 bin/*
+test/bin/*
+samples/bin/*
