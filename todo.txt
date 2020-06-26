@@ -1,14 +1,16 @@
 DONE THIS CHECKIN:
-P1 improve error codes
-P1 fix sample directories
+P1 more UTF8 tests and fixes
+P1 some major tokenizing fixes
+P1 sync error printing
+P1 internal tokizing code cleanup
 
 TODO:
 P1 CMake, vcpkg
 P1 doxygen
 P1 test in release mode (without the null checks).
-P1 more printing tests
 P1 more UTF8 tests
-P1 improve error recovery in parsing
+P1 more printing tests
+P2 improve error recovery in parsing
 P2 more erroneous humon tests
 P2 UTF8 digits for addressing
 P2 consider sorting dict keys and doing BSP search.

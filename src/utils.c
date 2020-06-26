@@ -65,12 +65,13 @@ char const * huOutputErrorToString(int rhs)
     switch(rhs)
     {
     case HU_ERROR_NOERROR: return "no error";
-    case HU_ERROR_UNEXPECTEDEOF: return "unexpected EOF";
     case HU_ERROR_UNFINISHEDQUOTE: return "unfinished quote";
     case HU_ERROR_UNFINISHEDCSTYLECOMMENT: return "unfinished C-style comment";
+    case HU_ERROR_UNEXPECTEDEOF: return "unexpected EOF";
+    case HU_ERROR_TOOMANYROOTS: return "too many roots";
     case HU_ERROR_SYNTAXERROR: return "syntax error";
-    case HU_ERROR_STARTENDMISMATCH: return "start/end mismatch";
-    case HU_ERROR_NOTFOUND: return "not found";
+    case HU_ERROR_NOTFOUND: return "not found";    
+    case HU_ERROR_ILLEGAL: return "illegal operation";
     default: return "!!unknown!!";
     }
 }

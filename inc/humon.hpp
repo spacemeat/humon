@@ -70,14 +70,15 @@ namespace hu
     /// Specifies a tokenizing or parsing error code, or lookup error.
     enum class ErrorCode : int
     {
-        noError = capi::HU_ERROR_NOERROR,                      ///< No error.
-        unexpectedEof = capi::HU_ERROR_UNEXPECTEDEOF,          ///< The text ended early.
-        unfinishedQuote = capi::HU_ERROR_UNFINISHEDQUOTE,      ///< The quoted text was not endquoted.
+        noError = capi::HU_ERROR_NOERROR,                       ///< No error.
+        unfinishedQuote = capi::HU_ERROR_UNFINISHEDQUOTE,       ///< The quoted text was not endquoted.
         unfinishedCStyleComment = 
-            capi::HU_ERROR_UNFINISHEDCSTYLECOMMENT,            ///< The C-style comment was not closed.
-        syntaxError = capi::HU_ERROR_SYNTAXERROR,              ///< General syntax error.
-        startEndMismatch = capi::HU_ERROR_STARTENDMISMATCH,   ///< Braces ({,}) or brackets ([,]) are not properly nested.
-        notFound = capi::HU_ERROR_NOTFOUND                      ///< No node could be found at the address.
+            capi::HU_ERROR_UNFINISHEDCSTYLECOMMENT,             ///< The C-style comment was not closed.
+        unexpectedEof = capi::HU_ERROR_UNEXPECTEDEOF,           ///< The text ended early.
+        tooManyRoots = capi::HU_ERROR_TOOMANYROOTS,             ///< Too many root nodes.
+        syntaxError = capi::HU_ERROR_SYNTAXERROR,               ///< General syntax error.
+        notFound = capi::HU_ERROR_NOTFOUND,                     ///< No node could be found at the address.
+        illegal = capi::HU_ERROR_ILLEGAL                        ///< The operation was illegal.
     };
 
     /// Return a string representation of a hu::ErrorCode.

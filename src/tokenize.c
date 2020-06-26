@@ -251,11 +251,13 @@ void eatWord(huCursor * cursor, int * len, int * line, int * col)
 }
 
 
-void eatQuotedWord(huCursor * cursor, char quoteChar, int tabSize, int * len, int * line, int * col)
+void eatQuotedWord(huCursor * cursor, int tabSize, int * len, int * line, int * col)
 {
     // record the location for error reporting
     int tokenStartLine = * line;
     int tokenStartCol = * col;
+
+    char quoteChar = * cursor->character;
 
     // The first character is already confirmed quoteChar, so, next please.
     * col += 1;
@@ -290,14 +292,13 @@ void eatQuotedWord(huCursor * cursor, char quoteChar, int tabSize, int * len, in
                 nextCharacter(cursor);
                 eating = false;
             }
-            else if (cursor->character[0] != '\\' && 
+            else if (cursor->character[0] == '\\' && 
                 cursor->character[1] == quoteChar)
             {
                 nextCharacter(cursor);
                 * len += 1;
                 * col += 1;
                 nextCharacter(cursor);
-                eating = false;
             }
             else
             {
@@ -306,24 +307,6 @@ void eatQuotedWord(huCursor * cursor, char quoteChar, int tabSize, int * len, in
             }
         }
     }
-}
-
-
-void eatSingleQuotedWord(huCursor * cur, int tabSize, int * len, int * line, int * col)
-{
-  eatQuotedWord(cur, '\'', tabSize, len, line, col);
-}
-
-
-void eatDoubleQuotedWord(huCursor * cur, int tabSize, int * len, int * line, int * col)
-{
-  eatQuotedWord(cur, '"', tabSize, len, line, col);
-}
-
-
-void eatBackQuotedWord(huCursor * cur, int tabSize, int * len, int * line, int * col)
-{
-  eatQuotedWord(cur, '`', tabSize, len, line, col);
 }
 
 
@@ -407,21 +390,11 @@ void huTokenizeTrove(huTrove * trove)
         col = colM;
       }
       break;
-    case '"':
-      eatDoubleQuotedWord(& cur, trove->inputTabSize, & len, & lineM, & colM);
-      allocNewToken(trove, HU_TOKENKIND_WORD, cur.character - len, len, line, col, lineM, colM, '"');
-      line = lineM;
-      col = colM;
-      break;
     case '\'':
-      eatSingleQuotedWord(& cur, trove->inputTabSize, & len, & lineM, & colM);
-      allocNewToken(trove, HU_TOKENKIND_WORD, cur.character - len, len, line, col, lineM, colM, '\'');
-      line = lineM;
-      col = colM;
-      break;
+    case '"':
     case '`':
-      eatBackQuotedWord(& cur, trove->inputTabSize, & len, & lineM, & colM);
-      allocNewToken(trove, HU_TOKENKIND_WORD, cur.character - len, len, line, col, lineM, colM, '`');
+      eatQuotedWord(& cur, trove->inputTabSize, & len, & lineM, & colM);
+      allocNewToken(trove, HU_TOKENKIND_WORD, cur.character - len - 1, len, line, col, lineM, colM, '\'');
       line = lineM;
       col = colM;
       break;

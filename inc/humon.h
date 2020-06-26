@@ -61,14 +61,14 @@ extern "C"
     enum huErrorCode
     {
         HU_ERROR_NOERROR,                   ///< No error.
-        HU_ERROR_UNEXPECTEDEOF,             ///< The text ended early.
-
-        HU_ERROR_TOOMANYROOTS,              ///< There is more than one root node detected.
 
         HU_ERROR_UNFINISHEDQUOTE,           ///< The quoted text was not endquoted.
         HU_ERROR_UNFINISHEDCSTYLECOMMENT,   ///< The C-style comment was not closed.
+
+        HU_ERROR_UNEXPECTEDEOF,             ///< The text ended early.
+        HU_ERROR_TOOMANYROOTS,              ///< There is more than one root node detected.
         HU_ERROR_SYNTAXERROR,               ///< General syntax error.
-        HU_ERROR_STARTENDMISMATCH,          ///< Braces ({,}) or brackets ([,]) are not properly nested.
+
         HU_ERROR_NOTFOUND,                  ///< No node could be found at the address.
         HU_ERROR_ILLEGAL                    ///< The address or node was illegal.
     };
