@@ -57,7 +57,8 @@
     "thread": "cpp",
     "cinttypes": "cpp",
     "charconv": "cpp",
-    "bit": "cpp"
+    "bit": "cpp",
+    "iomanip": "cpp"
   },
   "C_Cpp.errorSquiggles": "Enabled"
 }

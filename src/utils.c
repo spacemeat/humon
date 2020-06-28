@@ -69,6 +69,7 @@ char const * huOutputErrorToString(int rhs)
     case HU_ERROR_UNFINISHEDCSTYLECOMMENT: return "unfinished C-style comment";
     case HU_ERROR_UNEXPECTEDEOF: return "unexpected EOF";
     case HU_ERROR_TOOMANYROOTS: return "too many roots";
+    case HU_ERROR_NONUNIQUEKEY: return "non-unique key";
     case HU_ERROR_SYNTAXERROR: return "syntax error";
     case HU_ERROR_NOTFOUND: return "not found";    
     case HU_ERROR_ILLEGAL: return "illegal operation";
@@ -133,6 +134,7 @@ void * huGetVectorElement(huVector const * vector, int idx)
 
 
 int min(int a, int b) { if (a < b) { return a; } else { return b; } }
+int max(int a, int b) { if (a >= b) { return a; } else { return b; } }
 
 
 void * huGrowVector(huVector * vector, int * numElements)
@@ -204,89 +206,6 @@ int huAppendToVector(huVector * vector, void const * data, int numElements)
 }
 
 
-huToken const * hu_nullToken = NULL; //& humon_nullToken;
-huNode const * hu_nullNode = NULL; //& humon_nullNode;
-huTrove const * hu_nullTrove = NULL; //& humon_nullTrove;
-
-huToken const humon_nullToken = 
-{
-    .tokenKind = HU_TOKENKIND_NULL,
-    .str = {
-        .str = "",
-        .size = 0
-    },
-    .line = 0,
-    .col = 0,
-    .endLine = 0,
-    .endCol = 0
-};
-
-huNode const humon_nullNode =
-{
-    .trove = & humon_nullTrove,
-    .nodeIdx = -1,
-    .kind = HU_NODEKIND_NULL,
-    .firstToken = & humon_nullToken,
-    .keyToken = & humon_nullToken,
-    .valueToken = & humon_nullToken,
-    .lastValueToken = & humon_nullToken,
-    .lastToken = & humon_nullToken,
-    .childOrdinal = 0,
-    .parentNodeIdx = -1,
-    .childNodeIdxs = (huVector) {
-        .buffer = NULL,
-        .elementSize = sizeof(int),
-        .numElements = 0,
-        .vectorCapacity = 0
-    },
-    .annotations = (huVector) {
-        .buffer = NULL,
-        .elementSize = sizeof(huAnnotation),
-        .numElements = 0,
-        .vectorCapacity = 0
-    },
-    .comments = (huVector) {
-        .buffer = NULL,
-        .elementSize = sizeof(huComment),
-        .numElements = 0,
-        .vectorCapacity = 0
-    }
-};
-
-huTrove const humon_nullTrove = 
-{
-    .dataStringSize = 0,
-    .dataString = "",
-    .tokens = (huVector) {
-        .buffer = (void *) & humon_nullToken,
-        .elementSize = 0,
-        .numElements = 0,
-        .vectorCapacity = 0
-    },
-    .nodes = (huVector) {
-        .buffer = (void *) & humon_nullNode,
-        .elementSize = 0,
-        .numElements = 0,
-        .vectorCapacity = 0
-    },
-    .errors = (huVector) {
-        .buffer = NULL,
-        .elementSize = 0,
-        .numElements = 0,
-        .vectorCapacity = 0
-    },
-    .inputTabSize = 4,
-    .annotations = (huVector) {
-        .buffer = NULL,
-        .elementSize = 0,
-        .numElements = 0,
-        .vectorCapacity = 0
-    },
-    .comments = (huVector) {
-        .buffer = NULL,
-        .elementSize = 0,
-        .numElements = 0,
-        .vectorCapacity = 0
-    }
-};
-
+huToken const * hu_nullToken = NULL;
+huNode const * hu_nullNode = NULL;
+huTrove const * hu_nullTrove = NULL;

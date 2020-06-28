@@ -9,9 +9,11 @@ extern "C"
 #endif
 
 // The following are options you can set before #include <humon.h>
+#ifdef DEBUG
 #define HUMON_CHECK_PARAMS
-// #define HUMON_CAVEPERSON_DEBUGGING
-// #define HUMON_ERRORS_TO_STDERR
+#endif
+//#define HUMON_CAVEPERSON_DEBUGGING
+#define HUMON_ERRORS_TO_STDERR
 
     static int const MIN_INPUT_TAB_SIZE = 1;
     static int const MAX_INPUT_TAB_SIZE = 1024;
@@ -67,6 +69,7 @@ extern "C"
 
         HU_ERROR_UNEXPECTEDEOF,             ///< The text ended early.
         HU_ERROR_TOOMANYROOTS,              ///< There is more than one root node detected.
+        HU_ERROR_NONUNIQUEKEY,              ///< A non-unique key was encountered in a dict or annotation.
         HU_ERROR_SYNTAXERROR,               ///< General syntax error.
 
         HU_ERROR_NOTFOUND,                  ///< No node could be found at the address.
@@ -273,6 +276,7 @@ extern "C"
         int inputTabSize;           ///< The tab length Humon uses to compute column values for tokens.
         huVector annotations;       ///< Manages a huAnnotation []. Contains the annotations associated to the trove.
         huVector comments;          ///< Manages a huComment[]. Contains the comments associated to the trove.
+        huToken const * lastAnnoToken;    ///< Token referencing the last token of any trove annotations.
     } huTrove;
 
     /// Creates a trove from a NULL-terminated string of Humon text.
@@ -360,21 +364,14 @@ extern "C"
     huNode const * huFindNodesByCommentContainingN(huTrove const * trove, char const * containedText, int containedTextLen, huNode const * startWith);
 
     /// Serializes a trove to text.
-    void huTroveToString(huTrove const * trove, char * dest, int * destLength, int outputFormat, bool excludeComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable);
+    void huTroveToString(huTrove const * trove, char * dest, int * destLength, int outputFormat, bool printComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable);
 
     /// Serializes a trove to file.
-    size_t huTroveToFileZ(huTrove const * trove, char const * path, int outputFormat, bool excludeComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable);
+    size_t huTroveToFileZ(huTrove const * trove, char const * path, int outputFormat, bool printComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable);
     /// Serializes a trove to file.
-    size_t huTroveToFileN(huTrove const * trove, char const * path, int pathLen, int outputFormat, bool excludeComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable);
+    size_t huTroveToFileN(huTrove const * trove, char const * path, int pathLen, int outputFormat, bool printComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable);
 
     void huFillAnsiColorTable(huStringView table[]);
-
-    /// Global null token object. Functions that return null tokens reference this.
-    extern huToken const humon_nullToken;
-    /// Global null node object. Functions that return null nodes reference this.
-    extern huNode const humon_nullNode;
-    /// Global null trove object. Functions that return null troves reference this.
-    extern huTrove const humon_nullTrove;
 
     extern huToken const * hu_nullToken;
     extern huNode const * hu_nullNode;

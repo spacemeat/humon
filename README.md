@@ -274,18 +274,222 @@ Like dict entries, annotation keys must be unique among annotations associated t
 
 Practically, annotations aren't a necessary part of Humon. All their data could be baked into objects themselves, and there was a time when Humon didn't have them. But they are useful for a number of things.
 
-## The C-family programming interfaces
-There are API specs for the C and C++ interfaces. The C API is pretty basic, but fully featured. The C++ API mainly wraps the C API, but also provides some nice features for more C++ish fun-time things.
-
-### The principles applied to the C-family APIs
-Maybe you'd call them behaviors, but they embody the Humon principles.
-
 **Humon supports UTF8.**
 UTF8 is quickly becoming the ubiquitous Unicode encoding, even in Asian locales. Humon supports UTF8 only, with or without BOM. Support for UTF16 and UTF32 may be considered in the future, but their relative worldwide use is pretty small. Humon respects all the whitespace characters that Unicode specifies, and supports all code points.
 
 A code point is either whitespace, language punctuation (which is only ever a single byte), or a word-token character. That's all the tokenizer understands.
 
 If this is all Groot to you, just rest assured that any modern text editor or web server or web browser reads and writes UTF8, and can handle any language text and emojis, and Humon speaks that encoding too.
+
+## The C-family programming interfaces
+There are API specs for the C and C++ interfaces. The C API is pretty basic, but fully featured. The C++ API mainly wraps the C API, but also provides some nice features for more C++ish fun-time things. Since you'll usually be using the C++ API, we'll discuss that first.
+
+Start with `#include <humon.hpp>`. The interface is contained in a namespace, `hu`. The C API is itself contained in a subnamespace, `hu::capi`, but you generally won't reference it yourself.
+
+To load a Humon trove, invoke one of `hu::Trove`'s static member functions:
+
+    auto trove = hu::Trove::fromString("{foo: [100, 200]}sv");
+    auto troveFromFile = hu::Trove::fromFile("data/foo.hu"sv);
+
+These each return a `hu::Trove` object. Once you have a trove, all the loading from source is finished, and it's fully ready to use. You'll use the trove to get access to nodes and their data.
+
+There are several ways to access a node. To get the root node, which is always at node index 0:
+
+    auto rootNode = trove.root();
+    // or
+    auto rootNode = trove.node("/");
+    // or
+    auto rootNode = trove.node(0);
+
+To get a node deeper in the tree:
+
+    auto node = rootNode / "foo" / 0;
+    // or
+    auto node = trove.root() / "foo" / 0;
+    // or
+    auto node = rootNode.node("foo/0");
+    // or
+    auto node = trove.node("/foo/0");
+
+To check first, use the % operator.
+
+    // has a child with key 'foo'
+    bool hasFoo = rootNode % "foo";
+    // has a child with index 1 (so at least two children)
+    auto hasFoo && hasFoosStuff = rootNode / "foo" % 1;
+
+A few things to note: It's more efficient to store a reference to a node, rather than look it up successive times. Above, we're essentially looking up "/foo" twice. Better to get the base object and store it:
+
+    bool hasFoo = rootNode % "foo";
+    auto fooNode = rootNode / "foo";
+    bool hasFoosStuff = rootNode / "foo" % 1;
+
+Humon APIs don't throw, but rather return nullish objects, which have implicit `operator bool()`s for checking nullity. So even better than above:
+
+    auto fooNode = rootNode / "foo";
+    bool hasFooStuff = fooNode && fooNode % 1;
+
+Or even,
+
+    bool hasFooStuff = rootNode / "foo" % 1;
+
+And, if you intend to acutally use the data (probably, right?), it's even better to just ask for it all the way without checking anything:
+
+    auto foosStuff = rootNode / "foo" / 1;
+    if (foosStuff) { ... }
+
+Above, `foosStuff` will be a nullish object if any part of the path doesn't actually exist in the Humon source. Of course, then it's harder to check which part of the path fell off of reality, so use with caution.
+
+Up to now, we've mostly been using `operator /` to get nodes. But there's a string-based addressing method as well. Every node has a unique address based on the progression of keys and indices used to get to it from the trove or another node. You can get a node's address easily enough:
+
+    string address = node.address();
+
+(Node addresses are computed, not stored in the trove; as a result, the return value is a `std::string` rather than a `std::string_view`.) The address of a node looks like:
+
+    /foo/20/baz/3
+
+The `/`s delimit the terms, and each term is either a key or integer index. Note that since dicts maintain their ordering like lists, you can use an integer to index into a dict just like a list, with no worries. Note also that full paths from the trove must start with `/`.
+
+There are some finnicky bits when considering that keys can be numbers (but still strings to Humon) or can contain `/` characters--in both cases, that portion is returned quoted:
+
+    [
+        {
+            res/"game assets"/meshes.hu: {
+                required: true
+                monitoredForChanges: true
+            }
+        } {
+            res/"game assets"/materials.hu: {
+                required: false
+                monitoredForChanges: true
+            }
+        }
+    ]
+
+    ...
+
+    auto requiredNode = trove / 0 / 0 / "required";
+    cout << "Address: " << requiredNode.address() << "\n";
+
+    ...
+
+    $ runSample
+    Address: /1/"res/\"game assets\"/materials.hu"/required
+
+`hu::Node::address()` always returns an address that is legal to use in `hu::Trove::node()` to find the node again. You could even store those addresses in other Humon data for complex referencing.
+
+A relative address can be used to get from one node to another:
+
+    requiredAddress = requiredAddress.node("../../ 1 / 0");
+
+Notice the path does not start with `/`. The relative address is taken from the node, not from the trove. You can also put arbitrary whitespace in the address.
+
+So you've got a node. Whooptie-doo. To get a value from it:
+
+    string_view val = node.value();
+    // or
+    int val = node / hu::val<int>{};
+
+`hu::Node::value()` actually returns a `hu::Token` reference, which has an implicit conversion to a `std::string_view`. Note, there are APIs that return a `std::string_view`, which might raise some of y'all's flags. But remember, Humon objects are immutable and don't ever move. The returned `string_view`s are good until you destroy the trove.
+
+A `hu::Token` has information about the token's representation in the token stream. You can get line / column data and the string value itself. Use token information if you want to report on the location of interesting data in a token stream.
+
+The `hu::val<T>` type is defined to extract typed data from the value string of a node.  It allows you to deserialize and return an arbitrary typed value. There are built-ins for the basic numeric types and `bool` (using English spelling of "true" to denote truth). This is how you'll get the vast majority of your data.
+
+You can also define your own specialization of `hu::val<T>` for your own type. Start with tye type you'd like to deserialize:
+
+    template<int NumRanks>
+    class Version
+    {
+    public:
+        Version(std::string_view str) { ... }
+        std::array<int, NumRanks> ranks;
+    };
+
+    using V3 = Version<3>;
+
+Now define the extractor:
+
+    template <>
+    struct hu::val<V3>
+    {
+        inline V3 extract(std::string_view valStr)
+        {
+            return V3(valStr);
+        }
+    };
+
+Now you can use it:
+
+    auto gccVersion = trove / "dependencies" / "gcc" / hu::val<V3>{};
+
+C++ will deduce tye type of `gccVersion` above from the parameter passed to `hu::val`.
+
+Examine a node's annotations in several ways:
+
+    definitions: { 
+        player: {
+            maxHp: {
+                type: int @{numBits: 32 numBytes: 4}
+            }
+            damage: {
+                type: int  @{numBits: 32 numBytes: 4}
+            }
+            //...
+        }
+    }
+
+    auto node = trove.node("/definitions/player/maxHp/type");
+
+    int numAnnos = node.numAnnotations();
+    for (int i = 0; i < numAnnos; ++i)
+    {
+        auto [k, v] = node.annotation(i);
+        if (k == "numBits"sv) { ... }
+        else if (k == "numBytes"sv) { ... }
+    }
+    // or (slower; hu::Node::annotations() allocates a std::vector):
+    for (auto [k, v] : node.annotations())
+    {
+        auto [k, v] = node.annotation(i);
+        if (k == "numBits"sv) { ... }
+        else if (k == "numBytes"sv) { ... }
+    }
+
+    bool hasNumBits = node.hasAnnotationWithKey("numBits"sv);
+    auto annoValue = node.annotationWithKey("numBits"sv);
+    bool is32Bit = node.hasAnnotationWithValue("32"sv);
+    auto annoKey = node.annotationByValue("32"sv);
+
+Troves can have annotations too, and feature similar APIs. There are also APIs for searching the trove for annotations by key, value, or both; these return collections of `hu::Node`s.
+
+    auto all32BitTypes = trove.findNodesByAnnotationKeyValue("numBits"sv, "32"sv);
+    for (auto & node : all32BitTypes) { ... }
+
+Similar APIs also exist for nodes and troves that search comment content and return associated nodes. See the API spec for these.
+
+You can generate a Humon token stream from a `hu::Trove`:
+
+    auto tokStr = trove.toPrettyString();
+
+This will generate a monocolor, well-formatted token stream held by a `std::string`. There are options to make it better suit your needs:
+
+    // Output the exact token stream used to build the trove. Fast.
+    tokStr = trove.toPreservedString();
+    // Output the trove with minimal whitespace for most efficient storage/transmission. 
+    // The parameter directs Humon to strip comments from the stream.
+    tokStr = trove.toMinimalString(true);
+    // Minimal whitespace, with old style HTML linebreaks.
+    tokStr = trove.toMinimalString(false, "<br />");
+    // You can specify minimal whitespace and still use a color table for the tokens--see below.
+    tokStr = trove.toMinimalString(false, "\n", colorTable);
+    // Pretty. Use an indentation of 4 spaces to format nested depths.
+    tokStr = trove.toString(false, 4, "\n", colorTable);
+
+For printing with colors, specify a color table. This consists of a `std::array<std::string_view, >`     
+
+### The principles applied to the C-family APIs
+Maybe you'd call them behaviors, but they embody the Humon principles.
 
 **CRLF-style newlines (often made in Windows or Symbian OS) are regarded as one newline object.**
 This is mostly for recording line numbers in token objects, for error reporting and other things that need token placement information. In general, it does what you expect.

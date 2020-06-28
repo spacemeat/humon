@@ -8,7 +8,8 @@ using namespace std::literals;
 struct htd_listOfLists
 {
     std::string_view ts = 
-R"( @{tx:ta, ta:ta, tb:tb}
+R"(// This is a trove comment.
+@{tx:ta, ta:ta, tb:tb}
 [               @name:root  @otherName:root
     // This is a aaaa right here.
     a           @a:a        @type:value     // aaaa
@@ -23,7 +24,6 @@ R"( @{tx:ta, ta:ta, tb:tb}
         ]       @c:cp       @type:list      // cp
     ]           @c:cpp      @type:list      // cpp
 ]
-// This is a trove comment.
 // This is also a trove comment.
 )"sv;
 
@@ -57,7 +57,8 @@ R"( @{tx:ta, ta:ta, tb:tb}
 struct htd_dictOfDicts
 {
     std::string_view ts = 
-R"( @{tx:ta, ta:ta, tb:tb}
+R"(// This is a trove comment.
+@{tx:ta, ta:ta, tb:tb}
 {                   @name:root  @otherName:root
     // This is a aaaa right here.
     ak:a            @a:a        @type:value     // aaaa
@@ -73,7 +74,6 @@ R"( @{tx:ta, ta:ta, tb:tb}
     }               @c:cpp      @type:dict      // cpp
 }
 // This is a trove comment.
-// This is also a trove comment.
 )"sv;
 
     huTrove const * trove = NULL;
@@ -107,7 +107,8 @@ R"( @{tx:ta, ta:ta, tb:tb}
 struct htd_erroneous
 {
     std::string_view ts = 
-R"( @{tx:ta, ta:ta, tb:tb}
+R"(// This is a trove comment.
+@{tx:ta, ta:ta, tb:tb}
 {                   @name:root  @otherName:root
     // This is a aaaa right here.
     ak:a            @a:a        @type:value     // aaaa
@@ -122,7 +123,6 @@ R"( @{tx:ta, ta:ta, tb:tb}
         }           @c:cp       @type:dict      // cp
     }               @c:cpp      @type:dict      // cpp
 }
-// This is a trove comment.
 // This is also a trove comment.
 )"sv;
 

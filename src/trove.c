@@ -34,6 +34,8 @@ huTrove const * makeTrove(huStringView const * data, int inputTabSize)
     huInitVector(& t->annotations, sizeof(huAnnotation));
     huInitVector(& t->comments, sizeof(huComment));
 
+    t->lastAnnoToken = NULL;
+
     huTokenizeTrove(t);
     huParseTrove(t);
  
@@ -711,7 +713,7 @@ void recordTokenizeError(huTrove * trove, int errorCode, int line, int col)
 {
 #ifdef HUMON_ERRORS_TO_STDERR
     fprintf (stderr, "%sError%s: line: %d    col: %d    %s\n", lightRed, off, 
-        pCur->line, pCur->col, huOutputErrorToString(errorCode));
+        line, col, huOutputErrorToString(errorCode));
 #endif
 
     int num = 1;
@@ -750,7 +752,7 @@ void recordError(huTrove * trove, int errorCode, huToken const * pCur)
 
 
 void huTroveToString(huTrove const * trove, char * dest, int * destLength, 
-    int outputFormat, bool excludeComments, int outputTabSize, 
+    int outputFormat, bool printComments, int outputTabSize, 
     char const * newline, int newlineSize, huStringView const * colorTable)
 {
     if (dest == NULL && destLength != NULL)
@@ -771,8 +773,7 @@ void huTroveToString(huTrove const * trove, char * dest, int * destLength,
         huInitVectorPreallocated(& str, sizeof(char), dest, * destLength, false);
     }
     
-    if (outputFormat == HU_OUTPUTFORMAT_PRESERVED &&
-        excludeComments == false && colorTable == NULL)
+    if (outputFormat == HU_OUTPUTFORMAT_PRESERVED)
     {
         // raw output is raw
         char * newData = malloc(trove->dataStringSize + 1);
@@ -781,7 +782,7 @@ void huTroveToString(huTrove const * trove, char * dest, int * destLength,
     else if (outputFormat == HU_OUTPUTFORMAT_PRETTY ||
              outputFormat == HU_OUTPUTFORMAT_MINIMAL)
     {
-        troveToPrettyString(trove, & str, outputFormat, excludeComments, outputTabSize, newline, newlineSize, colorTable);
+        troveToPrettyString(trove, & str, outputFormat, printComments, outputTabSize, newline, newlineSize, colorTable);
     }
 
     * destLength = str.numElements;
@@ -789,17 +790,17 @@ void huTroveToString(huTrove const * trove, char * dest, int * destLength,
 
 #pragma GCC diagnostic pop
 
-size_t huTroveToFileZ(huTrove const * trove, char const * path, int outputFormat, bool excludeComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable)
+size_t huTroveToFileZ(huTrove const * trove, char const * path, int outputFormat, bool printComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (path == NULL)
         { return 0; }
 #endif
 
-    return huTroveToFileN(trove, path, strlen(path), outputFormat, excludeComments, outputTabSize, newline, newlineSize, colorTable);
+    return huTroveToFileN(trove, path, strlen(path), outputFormat, printComments, outputTabSize, newline, newlineSize, colorTable);
 }
 
-size_t huTroveToFileN(huTrove const * trove, char const * path, int pathLen, int outputFormat, bool excludeComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable)
+size_t huTroveToFileN(huTrove const * trove, char const * path, int pathLen, int outputFormat, bool printComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == NULL || trove == hu_nullTrove || path == NULL || outputFormat < 0 || outputFormat >= 3 || outputTabSize < 0 || newline == NULL || newlineSize < 1)
@@ -807,13 +808,13 @@ size_t huTroveToFileN(huTrove const * trove, char const * path, int pathLen, int
 #endif
 
     int strLength = 0;
-    huTroveToString(trove, NULL, & strLength, outputFormat, excludeComments, outputTabSize, newline, newlineSize, colorTable);
+    huTroveToString(trove, NULL, & strLength, outputFormat, printComments, outputTabSize, newline, newlineSize, colorTable);
 
     char * str = malloc(strLength + 1);
     if (str == NULL)
         { return 0; }
 
-    huTroveToString(trove, str, & strLength, outputFormat, excludeComments, outputTabSize, newline, newlineSize, colorTable);
+    huTroveToString(trove, str, & strLength, outputFormat, printComments, outputTabSize, newline, newlineSize, colorTable);
 
     FILE * fp = fopen(path, "w");
     if (fp == NULL)

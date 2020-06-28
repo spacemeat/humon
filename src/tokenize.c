@@ -4,40 +4,40 @@
 
 int getcharLength(char const * cur)
 {
-  if ((*cur & 0x80) == 0)
-      { return 1; }
-  else if ((*cur & 0xf0) == 0xf0)
-  {
-    cur += 1;
-    if ((*cur & 0xc0) == 0x80)
+    if ((*cur & 0x80) == 0)
+        { return 1; }
+    else if ((*cur & 0xf0) == 0xf0)
     {
-      cur += 1;
-      if ((*cur & 0xc0) == 0x80)
-      {
         cur += 1;
         if ((*cur & 0xc0) == 0x80)
-            { return 4; }
-      }
+        {
+            cur += 1;
+            if ((*cur & 0xc0) == 0x80)
+            {
+                cur += 1;
+                if ((*cur & 0xc0) == 0x80)
+                    { return 4; }
+            }
+        }
     }
-  }
-  else if ((*cur & 0xe0) == 0xe0)
-  {
-    cur += 1;
-    if ((*cur & 0xc0) == 0x80)
+    else if ((*cur & 0xe0) == 0xe0)
     {
-      cur += 1;
-      if ((*cur & 0xc0) == 0x80)
-        { return 3; }
+        cur += 1;
+        if ((*cur & 0xc0) == 0x80)
+        {
+            cur += 1;
+            if ((*cur & 0xc0) == 0x80)
+                { return 3; }
+        }
     }
-  }
-  else if ((*cur & 0xc0) == 0xc0)
-  {
-    cur += 1;
-    if ((*cur & 0xc0) == 0x80)
-      { return 2; }
-  }
+    else if ((*cur & 0xc0) == 0xc0)
+    {
+        cur += 1;
+        if ((*cur & 0xc0) == 0x80)
+            { return 2; }
+    }
 
-  return 0;
+    return 0;
 }
 
 
@@ -216,22 +216,22 @@ void eatWord(huCursor * cursor, int * len, int * line, int * col)
         else if (cursor->character[0] == '\\')
         {
                 // skip the '\'
-                nextCharacter(cursor);
-                analyzeWhitespace(cursor);
-                // skip whatever is next, unless it's a newline.
-                if (! cursor->ws_line)
-                {
-                  * len += cursor->charLength;
-                  * col += 1;
-                }
-                nextCharacter(cursor);
+            nextCharacter(cursor);
+            analyzeWhitespace(cursor);
+            // skip whatever is next, unless it's a newline.
+            if (! cursor->ws_line)
+            {
+              * len += cursor->charLength;
+              * col += 1;
+            }
+            nextCharacter(cursor);
         }
         else if (cursor->character[0] == '/' &&
                  (cursor->character[1] == '/' || cursor->character[2] == '*'))
-            {
-                // A comment abutting an unquoted string should still delimit.
-                eating = false;
-            }
+        {
+            // A comment abutting an unquoted string should still delimit.
+            eating = false;
+        }
         else
         {
             switch(cursor->character[0])
@@ -312,98 +312,98 @@ void eatQuotedWord(huCursor * cursor, int tabSize, int * len, int * line, int * 
 
 void huTokenizeTrove(huTrove * trove)
 {
-  huResetVector(& trove->tokens);
+    huResetVector(& trove->tokens);
 
-  char const * beg = trove->dataString;
-  huCursor cur = 
-    { .trove = trove, .character = beg, 
-      .charLength = getcharLength(beg) };
-  int line = 1;
-  int col = 1;
-  bool scanning = true;
+    char const * beg = trove->dataString;
+    huCursor cur = 
+        { .trove = trove, .character = beg, 
+          .charLength = getcharLength(beg) };
+    int line = 1;
+    int col = 1;
+    bool scanning = true;
 
-  // lexi scan
-  while (scanning)
-  {
-    eatWs(& cur, trove->inputTabSize, & line, & col);
-    int len = 0;
-    int lineM = line;
-    int colM = col;
-    
-    switch(* cur.character)
+    // lexi scan
+    while (scanning)
     {
-    case '\0':
-      allocNewToken(trove, HU_TOKENKIND_EOF, cur.character, 0, line, col, line, col, '\0');
-      scanning = false;
-      break;
-    case '{':
-      allocNewToken(trove, HU_TOKENKIND_STARTDICT, cur.character, 1, line, col, line, col + 1, '\0');
-      col += 1;
-      nextCharacter(& cur);
-      break;
-    case '}':
-      allocNewToken(trove, HU_TOKENKIND_ENDDICT, cur.character, 1, line, col, line, col + 1, '\0');
-      col += 1;
-      nextCharacter(& cur);
-      break;
-    case '[':
-      allocNewToken(trove, HU_TOKENKIND_STARTLIST, cur.character, 1, line, col, line, col + 1, '\0');
-      col += 1;
-      nextCharacter(& cur);
-      break;
-    case ']':
-      allocNewToken(trove, HU_TOKENKIND_ENDLIST, cur.character, 1, line, col, line, col + 1, '\0');
-      col += 1;
-      nextCharacter(& cur);
-      break;
-    case ':':
-      allocNewToken(trove, HU_TOKENKIND_KEYVALUESEP, cur.character, 1, line, col, line, col + 1, '\0');
-      col += 1;
-      nextCharacter(& cur);
-      break;
-    case '@':
-      allocNewToken(trove, HU_TOKENKIND_ANNOTATE, cur.character, 1, line, col, line, col + 1, '\0');
-      col += 1;
-      nextCharacter(& cur);
-      break;
-    case '/':
-      if (*(cur.character + 1) == '/')
-      {
-        eatDoubleSlashComment(& cur, trove->inputTabSize, & len, & lineM, & colM);
-        allocNewToken(trove, HU_TOKENKIND_COMMENT, cur.character - len, len, line, col, lineM, colM, '\0');
-        line = lineM;
-        col = colM;
-      }
-      else if (*(cur.character + 1) == '*')
-      {
-        eatCStyleComment(& cur, trove->inputTabSize, & len, & lineM, & colM);
-        allocNewToken(trove, HU_TOKENKIND_COMMENT, cur.character - len, len, line, col, lineM, colM, '\0');
-        line = lineM;
-        col = colM;
-      }
-      else
-      {
-        // else treat like a word char
-        eatWord(& cur, & len, & lineM, & colM);
-        allocNewToken(trove, HU_TOKENKIND_WORD, cur.character - len, len, line, col, lineM, colM, '\0');
-        line = lineM;
-        col = colM;
-      }
-      break;
-    case '\'':
-    case '"':
-    case '`':
-      eatQuotedWord(& cur, trove->inputTabSize, & len, & lineM, & colM);
-      allocNewToken(trove, HU_TOKENKIND_WORD, cur.character - len - 1, len, line, col, lineM, colM, '\'');
-      line = lineM;
-      col = colM;
-      break;
-    default: // word char
-      eatWord(& cur, & len, & lineM, & colM);
-      allocNewToken(trove, HU_TOKENKIND_WORD, cur.character - len, len, line, col, lineM, colM, '\0');
-      line = lineM;
-      col = colM;
-      break;
+        eatWs(& cur, trove->inputTabSize, & line, & col);
+        int len = 0;
+        int lineM = line;
+        int colM = col;
+        
+        switch(* cur.character)
+        {
+        case '\0':
+            allocNewToken(trove, HU_TOKENKIND_EOF, cur.character, 0, line, col, line, col, '\0');
+            scanning = false;
+            break;
+        case '{':
+            allocNewToken(trove, HU_TOKENKIND_STARTDICT, cur.character, 1, line, col, line, col + 1, '\0');
+            col += 1;
+            nextCharacter(& cur);
+            break;
+        case '}':
+            allocNewToken(trove, HU_TOKENKIND_ENDDICT, cur.character, 1, line, col, line, col + 1, '\0');
+            col += 1;
+            nextCharacter(& cur);
+            break;
+        case '[':
+            allocNewToken(trove, HU_TOKENKIND_STARTLIST, cur.character, 1, line, col, line, col + 1, '\0');
+            col += 1;
+            nextCharacter(& cur);
+            break;
+        case ']':
+            allocNewToken(trove, HU_TOKENKIND_ENDLIST, cur.character, 1, line, col, line, col + 1, '\0');
+            col += 1;
+            nextCharacter(& cur);
+            break;
+        case ':':
+            allocNewToken(trove, HU_TOKENKIND_KEYVALUESEP, cur.character, 1, line, col, line, col + 1, '\0');
+            col += 1;
+            nextCharacter(& cur);
+            break;
+        case '@':
+            allocNewToken(trove, HU_TOKENKIND_ANNOTATE, cur.character, 1, line, col, line, col + 1, '\0');
+            col += 1;
+            nextCharacter(& cur);
+            break;
+        case '/':
+            if (*(cur.character + 1) == '/')
+            {
+                eatDoubleSlashComment(& cur, trove->inputTabSize, & len, & lineM, & colM);
+                allocNewToken(trove, HU_TOKENKIND_COMMENT, cur.character - len, len, line, col, lineM, colM, '\0');
+                line = lineM;
+                col = colM;
+            }
+            else if (*(cur.character + 1) == '*')
+            {
+                eatCStyleComment(& cur, trove->inputTabSize, & len, & lineM, & colM);
+                allocNewToken(trove, HU_TOKENKIND_COMMENT, cur.character - len, len, line, col, lineM, colM, '\0');
+                line = lineM;
+                col = colM;
+            }
+            else
+            {
+                // else treat like a word char
+                eatWord(& cur, & len, & lineM, & colM);
+                allocNewToken(trove, HU_TOKENKIND_WORD, cur.character - len, len, line, col, lineM, colM, '\0');
+                line = lineM;
+                col = colM;
+            }
+            break;
+        case '\'':
+        case '"':
+        case '`':
+            eatQuotedWord(& cur, trove->inputTabSize, & len, & lineM, & colM);
+            allocNewToken(trove, HU_TOKENKIND_WORD, cur.character - len - 1, len, line, col, lineM, colM, '\'');
+            line = lineM;
+            col = colM;
+            break;
+        default: // word char
+            eatWord(& cur, & len, & lineM, & colM);
+            allocNewToken(trove, HU_TOKENKIND_WORD, cur.character - len, len, line, col, lineM, colM, '\0');
+            line = lineM;
+            col = colM;
+            break;
+        }
     }
-  }
 }

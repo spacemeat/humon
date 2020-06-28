@@ -54,24 +54,53 @@ extern "C"
     void huTokenizeTrove(huTrove * trove);
     void huParseTrove(huTrove * trove);
 
-    // printing
-    typedef struct huPrintArgs_tag
-    {
-        int outputFormat;
-        bool includeComments;
-        bool indentWithTabs;
-        int tabSize;
-        huStringView newline;
-        huStringView const * colorTable;
-    } huPrintArgs;
+    int min(int a, int b);
+    int max(int a, int b);
 
+    // printing token streams and node addresses
+    typedef struct PrintTracker_tag
+    {
+        huTrove const * trove;
+        huVector * str;
+
+        int format;
+        bool printComments;
+        int tabSize;
+        char const * newline;
+        int newlineSize;
+        huStringView const * colorTable;
+
+        int currentDepth;
+        int currentLine;
+        int currentCol;
+        bool lastPrintWasNewline;
+        bool lastPrintWasIndent;
+    } PrintTracker;
+
+    void appendString(PrintTracker * printer, char const * addend, int size);
+    void appendWs(PrintTracker * printer, int numChars);
+    void appendIndent(PrintTracker * printer);
+    void appendNewline(PrintTracker * printer);
+    void appendColor(PrintTracker * printer, int colorCode);
+    void appendColoredString(PrintTracker * printer, char const * addend, int size, int colorCode);
+    void appendColoredToken(PrintTracker * printer, huToken const * tok, int colorCode);
+    void printForwardComment(PrintTracker * printer, huToken const * tok);
+    void printTrailingComment(PrintTracker * printer, huToken const * tok);
+    int printAllPrecedingComments(PrintTracker * printer, huNode const * node, huToken const * tok, int startingWith);
+    int printAllTrailingComments(PrintTracker * printer, huNode const * node, huToken const * tok, int startingWith);
+    void printAnnotations(PrintTracker * printer, huVector const * annotations);
+    void printNode(PrintTracker * printer, huNode const * node);
+    void troveToPrettyString(huTrove const * trove, huVector * str, int outputFormat, bool printComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable);
+
+
+    /*
     void appendString(huVector * str, char const * addend, int size);
     void appendWs(huVector * str, int numChars);
     void appendColor(huVector * str, huStringView const * colorTable, int colorCode);
     void endColor(huVector * str, huStringView const * colorTable);
     void appendColoredString(huVector * str, char const * addend, int size, huStringView const * colorTable, int colorCode);
-    void printComment(huToken const * comment, huVector * str, huStringView const * colorTable);
-    int printSameLineComments(huNode const * node, bool firstToken, int startingCommentIdx, huVector * str, huStringView const* colorTable);
+    void printComment(huToken const * comment, huVector * str, char const * newline, int newlineSize, huStringView const * colorTable);
+    int printSameLineComments(huNode const * node, bool firstToken, int startingCommentIdx, huVector * str, char const * newline, int newlineSize, huStringView const* colorTable);
     void printAnnotations(huAnnotation const * annos, int numAnno, bool troveOwned, huVector * str, huStringView const * colorTable);
     void printTroveAnnotations(huTrove const * trove, huVector * str, huStringView const * colorTable);
     void printNodeAnnotations(huNode const * node, huVector * str, huStringView const * colorTable);
@@ -79,6 +108,7 @@ extern "C"
     void printValue(huToken const * valueToken, huVector * str, huStringView const * colorTable);
     void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int outputFormat, bool excludeComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable);
     void troveToPrettyString(huTrove const * trove, huVector * str, int outputFormat, bool excludeComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable);
+    */
 
 #ifdef __cplusplus
 } // extern "C"

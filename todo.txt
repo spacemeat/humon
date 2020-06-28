@@ -1,15 +1,18 @@
 DONE THIS CHECKIN:
-P1 more UTF8 tests and fixes
-P1 some major tokenizing fixes
-P1 sync error printing
-P1 internal tokizing code cleanup
+P1 more UTF8 tests
+P1 test in release mode (without the null checks).
+P1 remove old humon_null* objects.
+P1 failure cases: duplicate keys in dict and anno
+P1 rewrite printer entirely. Better C++ printers.
+P1 ensure paths that fall wildly astray in node / key / key don't throw.
 
 TODO:
 P1 CMake, vcpkg
 P1 doxygen
-P1 test in release mode (without the null checks).
-P1 more UTF8 tests
-P1 more printing tests
+P1 more API desc in readme
+P1 ensure new code btis in readme compile
+P1 rename huComment struct members, maybe others
+P2 more printing tests
 P2 improve error recovery in parsing
 P2 more erroneous humon tests
 P2 UTF8 digits for addressing

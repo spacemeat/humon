@@ -654,16 +654,18 @@ int huGetNodeAddressLength(huNode const * node)
 }
 
 
-void getNodeAddressRec(huNode const * node, huVector * str)
+void getNodeAddressRec(huNode const * node, PrintTracker * printer)
 {
+    huVector * str = printer->str;
+
     if (node->parentNodeIdx != -1)
-        { getNodeAddressRec(huGetParentNode(node), str); }
+        { getNodeAddressRec(huGetParentNode(node), printer); }
     else
         { return; }
     
     huNode const * parentNode = huGetParentNode(node);
 
-    appendString(str, "/", 1);    
+    appendString(printer, "/", 1);    
     
     if (parentNode->kind == HU_NODEKIND_LIST)
     {
@@ -702,19 +704,19 @@ void getNodeAddressRec(huNode const * node, huVector * str)
             char * slashIdx = memchr(key->str, '/', key->size);
             if (slashIdx != NULL)
             {
-                appendString(str, "\"", 1);
+                appendString(printer, "\"", 1);
                 char const * blockBegin = key->str;
                 for (char const * sp = key->str; sp < key->str + key->size; ++sp)
                 {
                     if (* sp == '"')
                     {
-                        appendString(str, blockBegin, sp - blockBegin);
-                        appendString(str, "\\\"", 2);
+                        appendString(printer, blockBegin, sp - blockBegin);
+                        appendString(printer, "\\\"", 2);
                         blockBegin = sp + 1;
                     }
                 }
-                appendString(str, blockBegin, key->str + key->size - blockBegin);
-                appendString(str, "\"", 1);
+                appendString(printer, blockBegin, key->str + key->size - blockBegin);
+                appendString(printer, "\"", 1);
                 return;
             }
             else
@@ -725,15 +727,15 @@ void getNodeAddressRec(huNode const * node, huVector * str)
                     { hasNonDigits = key->str[i] < '0' || key->str[i] > '9'; }
                 if (hasNonDigits == false)
                 {
-                    appendString(str, "\"", 1);
-                    appendString(str, key->str, key->size);
-                    appendString(str, "\"", 1);
+                    appendString(printer, "\"", 1);
+                    appendString(printer, key->str, key->size);
+                    appendString(printer, "\"", 1);
                     return;
                 }
             }
         }
 
-        appendString(str, key->str, key->size);
+        appendString(printer, key->str, key->size);
     }
 }
 
@@ -766,6 +768,21 @@ void huGetNodeAddress(huNode const * node, char * dest, int * destLen)
         huInitVectorPreallocated(& str, sizeof(char), dest, * destLen, false);
     }
 
-    getNodeAddressRec(node, & str);
-    * destLen = str.numElements;
+    PrintTracker printer = {
+        .trove = NULL,
+        .str = & str,
+        .format = HU_OUTPUTFORMAT_MINIMAL,
+        .printComments = false,
+        .tabSize = 0,
+        .newline = "",
+        .newlineSize = 0,
+        .colorTable = NULL,
+        .currentDepth = 0,
+        .currentLine = 1,
+        .currentCol = 1,
+        .lastPrintWasNewline = false
+    };
+
+    getNodeAddressRec(node, & printer);
+    * destLen = printer.str->numElements;
 }

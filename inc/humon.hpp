@@ -6,6 +6,7 @@
 #include <sstream>
 #include <memory>
 #include <vector>
+#include <array>
 #include <charconv>
 
 /// The Humon namespace.
@@ -75,7 +76,8 @@ namespace hu
         unfinishedCStyleComment = 
             capi::HU_ERROR_UNFINISHEDCSTYLECOMMENT,             ///< The C-style comment was not closed.
         unexpectedEof = capi::HU_ERROR_UNEXPECTEDEOF,           ///< The text ended early.
-        tooManyRoots = capi::HU_ERROR_TOOMANYROOTS,             ///< Too many root nodes.
+        tooManyRoots = capi::HU_ERROR_TOOMANYROOTS,             ///< There is more than one root node detected.
+        nonuniqueKey = capi::HU_ERROR_NONUNIQUEKEY,             ///< A non-unique key was encountered in a dict or annotation.
         syntaxError = capi::HU_ERROR_SYNTAXERROR,               ///< General syntax error.
         notFound = capi::HU_ERROR_NOTFOUND,                     ///< No node could be found at the address.
         illegal = capi::HU_ERROR_ILLEGAL                        ///< The operation was illegal.
@@ -222,6 +224,8 @@ namespace hu
         return std::string_view(husv.str, husv.size);
     }
 
+    using ColorTable = std::array<std::string_view, capi::HU_COLORKIND_NUMCOLORKINDS>;
+
     /// Encodes a token read from Humon text.
     /** This class encodes file location and buffer location information about a
      * particular token in a Humon file. Every token is read and tracked with a 
@@ -324,7 +328,7 @@ namespace hu
         /// Returns a new collection of all this node's annotations.
         /** Creates a new vector of <Token, Token> tuples, each referencing the
          * key and value of an annotation. */
-        std::vector<std::tuple<Token, Token>> allAnnotations() const
+        [[nodiscard]] std::vector<std::tuple<Token, Token>> allAnnotations() const
         {
             std::vector<std::tuple<Token, Token>> vec;
             int numAnnos = numAnnotations();
@@ -359,7 +363,7 @@ namespace hu
         /// Returns a new collection of all this node's annotations with the specified value.
         /** Creates a new vector of Tokens, each referencing the key of an annotation that 
          * has the specified value. */
-        std::vector<Token> annotationKeysByValue(std::string_view key) const
+        [[nodiscard]] std::vector<Token> annotationKeysByValue(std::string_view key) const
         {
             std::vector<Token> vec;
             int numAnnos = numAnnotationsByValue(key);
@@ -377,7 +381,7 @@ namespace hu
         Token comment(int idx) const noexcept 
             { return capi::huGetComment(cnode, idx); }
         /// Returns a new collection of all comments associated to this node.
-        std::vector<Token> allComments() const
+        [[nodiscard]] std::vector<Token> allComments() const
         {
             std::vector<Token> vec;
             int numComms = numComments();
@@ -386,7 +390,7 @@ namespace hu
             return vec;
         }
         /// Returns a new collection of all comments associated to this node containing the specified substring.
-        std::vector<Token> commentsContaining(std::string_view containedString) const
+        [[nodiscard]] std::vector<Token> commentsContaining(std::string_view containedString) const
         {
             std::vector<Token> vec;
             capi::huToken const * comm = capi::huGetCommentsContainingN(cnode, containedString.data(), containedString.size(), NULL);
@@ -447,7 +451,7 @@ namespace hu
          *                0 / h::val<string_view> {};
          *      auto f = configTrove | "/config/display/aspectRatio" / h::val<float> {}; */
         template <class U>
-        inline U operator / (val<U> ve) const
+        [[nodiscard]] inline U operator / (val<U> ve) const
         {
             if (kind() != NodeKind::value)
                 { return U {}; }
@@ -496,7 +500,7 @@ namespace hu
          * ready to use. Otherwise the Trove will be in an erroneous state; it will not 
          * be a null trove, but rather will be loaded with no nodes, and errors marking 
          * tokens. */
-        static Trove fromString(std::string_view data,
+        [[nodiscard]] static Trove fromString(std::string_view data,
             int inputTabSize = 4) noexcept
         {
             return Trove(capi::huMakeTroveFromStringN(
@@ -509,7 +513,7 @@ namespace hu
          * ready to use. Otherwise the Trove will be in an erroneous state; it will not 
          * be a null trove, but rather will be loaded with no nodes, and errors marking 
          * tokens. */
-        static Trove fromFile(std::string_view path,
+        [[nodiscard]] static Trove fromFile(std::string_view path,
             int inputTabSize = 4) noexcept
         {
             return Trove(capi::huMakeTroveFromFileN(
@@ -529,7 +533,7 @@ namespace hu
          * display.
          * \outputTabSize: When pretty printing with `hu::Trove::toString()`, this value
          * sets the tab spacing for the output. */
-        static Trove fromIstream(std::istream & in, size_t maxNumBytes = 0,
+        [[nodiscard]] static Trove fromIstream(std::istream & in, size_t maxNumBytes = 0,
             int inputTabSize = 4) noexcept
         {
             if (maxNumBytes == 0)
@@ -620,7 +624,7 @@ namespace hu
             return { static_cast<ErrorCode>(cerr->errorCode), Token(cerr->errorToken) };
         }
         /// Returns a new collection of all errors encountered when tokenizing and parsing the Humon.
-        std::vector<std::tuple<ErrorCode, Token>> errors() const
+        [[nodiscard]] std::vector<std::tuple<ErrorCode, Token>> errors() const
         {
             std::vector<std::tuple<ErrorCode, Token>> vec;
             int numErr = numErrors();
@@ -639,7 +643,7 @@ namespace hu
             return { Token(canno->key), Token(canno->value) };
         }
         /// Returns a new collection of all annotations associated to this trove (not to any node).
-        std::vector<std::tuple<Token, Token>> annotations() const
+        [[nodiscard]] std::vector<std::tuple<Token, Token>> annotations() const
         {
             std::vector<std::tuple<Token, Token>> vec;
             int numAnnos = numAnnotations();
@@ -666,7 +670,7 @@ namespace hu
             { return capi::huGetTroveAnnotationByValueN(ctrove, value.data(), value.size(), idx); }
         /// Returns a new collection of all the keys of annotations associated to this trove (not 
         /// to any node) with the specified value.
-        std::vector<Token> annotationsByValue(std::string_view key) const
+        [[nodiscard]] std::vector<Token> annotationsByValue(std::string_view key) const
         {
             std::vector<Token> vec;
             int numAnnos = numAnnotationsByValue(key);
@@ -685,7 +689,7 @@ namespace hu
             return { Token(ccomm), nullptr };
         }
         /// Returns a new collection of all comments associated to this trove (not to any node).
-        std::vector<std::tuple<Token, Node>> allComments() const
+        [[nodiscard]] std::vector<std::tuple<Token, Node>> allComments() const
         {
             std::vector<std::tuple<Token, Node>> vec;
             int numComms = numComments();
@@ -694,6 +698,25 @@ namespace hu
                 { vec[i] = comment(i); }
             return vec;
         }
+
+        /// Serializes a trove with the exact input token stream.
+        [[nodiscard]] std::string toPreservedString() const noexcept
+        {
+            return toString(OutputFormat::preserved, true, 0, "", nullptr);
+        }
+
+        [[nodiscard]] std::string toMinimalString(bool printComments = true, std::string_view newline = "\n", 
+            std::string_view colorTable[] = nullptr) const noexcept
+        {
+            return toString(OutputFormat::minimal, printComments, 0, newline, colorTable);
+        }
+
+        [[nodiscard]] std::string toPrettyString(bool printComments = true, int outputTabSize = 4, 
+            std::string_view newline = "\n", std::string_view colorTable[] = nullptr) const noexcept 
+        {
+            return toString(OutputFormat::pretty, printComments, outputTabSize, newline, colorTable);
+        }
+
         /// Serializes a trove to a UTF8-formatted string.
         /** Creates a UTF8 string which encodes the trove, as seen in a Humon file. 
          * The contents of the file are whitespace-formatted and colorized depending on
@@ -701,14 +724,15 @@ namespace hu
          * \return A tuple containing a unique (self-managing) string pointer and the
          * string's length.
          */
-        std::string toString(OutputFormat outputFormat = OutputFormat::pretty, bool excludeComments = false, 
-            int outputTabSize = 4, std::string_view newline = "\n", std::vector<std::string_view> const & colorTable = {}) const noexcept 
+    private:
+        [[nodiscard]] std::string toString(OutputFormat outputFormat, bool printComments, 
+            int outputTabSize, std::string_view newline, std::string_view colorTable[]) const noexcept 
         {
             std::array<capi::huStringView, capi::HU_COLORKIND_NUMCOLORKINDS> colors;
             capi::huStringView * nativeColorTable = NULL;
-            if (colorTable.size() == capi::HU_COLORKIND_NUMCOLORKINDS)
+            if (colorTable)
             {
-                for (size_t i = 0; i < capi::HU_COLORKIND_NUMCOLORKINDS && i < colorTable.size(); ++i)
+                for (size_t i = 0; i < capi::HU_COLORKIND_NUMCOLORKINDS; ++i)
                 {
                     colors[i].str = colorTable[i].data();
                     colors[i].size = colorTable[i].size();
@@ -716,12 +740,13 @@ namespace hu
                 nativeColorTable = colors.data();
             }
             int strLength = 0;
-            capi::huTroveToString(ctrove, NULL, & strLength, static_cast<int>(outputFormat), excludeComments, outputTabSize, newline.data(), newline.size(), nativeColorTable);
+            capi::huTroveToString(ctrove, NULL, & strLength, static_cast<int>(outputFormat), printComments, outputTabSize, newline.data(), newline.size(), nativeColorTable);
             std::string s;
             s.resize(strLength);
-            capi::huTroveToString(ctrove, s.data(), & strLength, static_cast<int>(outputFormat), excludeComments, outputTabSize, newline.data(), newline.size(), nativeColorTable);
+            capi::huTroveToString(ctrove, s.data(), & strLength, static_cast<int>(outputFormat), printComments, outputTabSize, newline.data(), newline.size(), nativeColorTable);
             return s;
         }
+    public:
         friend bool operator == (Trove const & lhs, Trove const & rhs)
             { return lhs.ctrove == rhs.ctrove; }
         friend bool operator != (Trove const & lhs, Trove const & rhs)
@@ -748,7 +773,7 @@ namespace hu
             { return rootNode() / key; }
         /// Returns a new collection of all nodes that are associated an annotation with
         /// the specified key.
-        std::vector<Node> findNodesByAnnotationKey(std::string_view key) const
+        [[nodiscard]] std::vector<Node> findNodesByAnnotationKey(std::string_view key) const
         {
             std::vector<Node> vec;
             auto node = capi::huFindNodesByAnnotationKeyN(ctrove, key.data(), key.size(), NULL);
@@ -761,7 +786,7 @@ namespace hu
         }
         /// Returns a new collection of all nodes that are associated an annotation with
         /// the specified value.
-        std::vector<Node> findNodesByAnnotationValue(std::string_view value) const
+        [[nodiscard]] std::vector<Node> findNodesByAnnotationValue(std::string_view value) const
         {
             std::vector<Node> vec;
             auto node = capi::huFindNodesByAnnotationValueN(ctrove, value.data(), value.size(), NULL);
@@ -774,7 +799,7 @@ namespace hu
         }
         /// Returns a new collection of all nodes that are associated an annotation with
         /// the specified key and value.
-        std::vector<Node> findNodesByAnnotationKeyValue(std::string_view key, std::string_view value) const
+        [[nodiscard]] std::vector<Node> findNodesByAnnotationKeyValue(std::string_view key, std::string_view value) const
         {
             std::vector<Node> vec;
             auto node = capi::huFindNodesByAnnotationKeyValueNN(ctrove, key.data(), key.size(), value.data(), value.size(), NULL);
@@ -787,7 +812,7 @@ namespace hu
         }
         /// Returns a new collection of all nodes that are associated a comment containing
         /// the specified substring.
-        std::vector<Node> findNodesByCommentContaining(std::string_view containedText) const
+        [[nodiscard]] std::vector<Node> findNodesByCommentContaining(std::string_view containedText) const
         {
             std::vector<Node> vec;
             auto node = capi::huFindNodesByCommentContainingN(ctrove, containedText.data(), containedText.size(), NULL);
@@ -803,15 +828,12 @@ namespace hu
         capi::huTrove const * ctrove = nullptr;
     };
 
-    /// Fills a vector with string table values for ANSI color terminals.
-    static inline void getAnsiColorTable(std::vector<std::string_view> & table)
+    /// Fills an array with string table values for ANSI color terminals.
+    static inline void getAnsiColorTable(ColorTable & table)
     {
-        auto numColors = static_cast<size_t const>(ColorKind::numColorKinds);
-        if (table.size() < numColors)
-            { table.resize(numColors); }
-        capi::huStringView nativeTable[numColors];
+        capi::huStringView nativeTable[capi::HU_COLORKIND_NUMCOLORKINDS];
         capi::huFillAnsiColorTable(nativeTable);
-        for (size_t i = 0; i < numColors; ++i)
+        for (size_t i = 0; i < capi::HU_COLORKIND_NUMCOLORKINDS; ++i)
             { table[i] = {nativeTable[i].str, static_cast<size_t>(nativeTable[i].size)}; }
     }
 }

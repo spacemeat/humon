@@ -31,6 +31,8 @@ void printUsage()
 Returns 0 on successful operation.
 Returns 1 on bad command line arguments.
 Returns 2 on bad / erroneous input.
+
+If -pm is specified, the -m, -t, and -c arguments have no effect on the output.
 )";
 }
 
@@ -91,7 +93,7 @@ int main(int argc, char ** argv)
         else if (memcmp(arg, "-my", 3) == 0)
             { printComments = true; }
         else if (memcmp(arg, "-mn", 3) == 0)
-            { printComments = true; }
+            { printComments = false; }
         else if (memcmp(arg, "-m", 2) == 0)
         {
             cerr << "Invalid comment enablement argument for -m.\n";
@@ -138,6 +140,9 @@ int main(int argc, char ** argv)
         }
     }
 
+    if (inputFile.size() == 0)
+        { loadFromStdin = true; }
+
     // set up us the input
     Trove trove;
     if (loadFromStdin)
@@ -145,16 +150,28 @@ int main(int argc, char ** argv)
     else
     {
         auto in = ifstream (inputFile);
+        if (in.is_open() == false)
+            { cerr << "Could not open file " << inputFile << " for input.\n"; return 1; }
+
         trove = getInput(in);
     }
 
-    std::vector<std::string_view> colorTable;
+    hu::ColorTable colorTable;
+    std::string_view * colors = nullptr;
     if (usingColors == UsingColors::ansi)
     {
         getAnsiColorTable(colorTable);
+        colors = colorTable.data();
     }
 
-    auto output = trove.toString(format, ! printComments, tabSize, "\n", colorTable);
+    std::string output;
+    if (format == OutputFormat::preserved)
+        { output = trove.toPreservedString(); }
+    else if (format == OutputFormat::minimal)
+        { output = trove.toMinimalString(printComments, "\n", colors); }
+    else if (format == OutputFormat::pretty)
+        { output = trove.toPrettyString(printComments, tabSize, "\n", colors); }    
+
     if (outputFile == "")
     {
         cout << output;

@@ -4,317 +4,375 @@
 #include "ansiColors.h"
 
 
-void appendString(huVector * str, char const * addend, int size)
+void appendString(PrintTracker * printer, char const * addend, int size)
 {
-    huAppendToVector(str, addend, size);
+    huAppendToVector(printer->str, addend, size);
+    printer->lastPrintWasIndent = false;
+    printer->lastPrintWasNewline = false;
 }
 
 
-void appendWs(huVector * str, int numChars)
+void appendWs(PrintTracker * printer, int numChars)
 {
+    if (printer->format == HU_OUTPUTFORMAT_MINIMAL)
+        { numChars = max(numChars, 1); }
+
     char const spaces[] = "                "; // 16 spaces
     while (numChars > 16)
     {
-        appendString(str, spaces, 16);
+        appendString(printer, spaces, 16);
         numChars -= 16;
     }
-    appendString(str, spaces, numChars);
+    appendString(printer, spaces, numChars);
 }
 
 
-void appendColor(huVector * str, huStringView const * colorTable, int colorCode)
+void appendIndent(PrintTracker * printer)
 {
-    if (colorTable == NULL)
+    if (printer->format == HU_OUTPUTFORMAT_MINIMAL || printer->lastPrintWasIndent)
         { return; }
-    huStringView const * color = colorTable + colorCode;
-    appendString(str, color->str, color->size);
+    appendWs(printer, printer->tabSize * printer->currentDepth);
+    printer->lastPrintWasIndent = true;
 }
 
 
-void endColor(huVector * str, huStringView const * colorTable)
+void appendNewline(PrintTracker * printer)
 {
-    appendColor(str, colorTable, HU_COLORKIND_END);
+    if (printer->lastPrintWasNewline)
+        { return; }
+    appendString(printer, printer->newline, printer->newlineSize);
+    printer->lastPrintWasNewline = true;
 }
 
 
-void appendColoredString(huVector * str, char const * addend, int size, huStringView const * colorTable, int colorCode)
+void appendColor(PrintTracker * printer, int colorCode)
 {
-    appendColor(str, colorTable, colorCode);
-    appendString(str, addend, size);
-    appendColor(str, colorTable, HU_COLORKIND_END);
+    if (printer->colorTable == NULL)
+        { return; }
+    huStringView const * color = printer->colorTable + colorCode;
+    appendString(printer, color->str, color->size);
 }
 
 
-void appendColoredToken(huVector * str, huToken const * token, huStringView const * colorTable, int colorCode)
+void appendColoredString(PrintTracker * printer, char const * addend, int size, int colorCode)
 {
-    appendColor(str, colorTable, colorCode);
-    if (token->quoteChar != '\0')
-        { appendString(str, & token->quoteChar, 1); }
-    appendString(str, token->str.str, token->str.size);
-    if (token->quoteChar != '\0')
-        { appendString(str, & token->quoteChar, 1); }
-    appendColor(str, colorTable, HU_COLORKIND_END);
+    appendColor(printer, colorCode);
+    appendString(printer, addend, size);
+    appendColor(printer, HU_COLORKIND_END);
 }
 
 
-void printComment(huToken const * comment, huVector * str, huStringView const * colorTable)
+void appendColoredToken(PrintTracker * printer, huToken const * tok, int colorCode)
 {
-    huStringView const * comstr = & comment->str;
-    appendColoredString(str, comstr->str, comstr->size, 
-        colorTable, HU_COLORKIND_COMMENT);
+    appendColor(printer, colorCode);
+    if (tok->quoteChar != '\0')
+        { appendString(printer, & tok->quoteChar, 1); }
+    appendString(printer, tok->str.str, tok->str.size);
+    if (tok->quoteChar != '\0')
+        { appendString(printer, & tok->quoteChar, 1); }
+    appendColor(printer, HU_COLORKIND_END);
 }
 
 
-int printSameLineComments(huNode const * node, bool firstToken, int startingCommentIdx, huVector * str, huStringView const* colorTable)
+void printForwardComment(PrintTracker * printer, huToken const * tok)
 {
-    int iCom = startingCommentIdx;
-    for (; iCom < huGetNumComments(node); ++iCom)
+    if (printer->printComments == false)
+        { return; }
+    appendIndent(printer);
+    appendColoredToken(printer, tok, HU_COLORKIND_COMMENT);
+    appendNewline(printer);
+}
+
+
+void printTrailingComment(PrintTracker * printer, huToken const * tok)
+{
+    if (printer->printComments == false)
+        { return; }
+    appendColoredToken(printer, tok, HU_COLORKIND_COMMENT);
+    if (tok->str.str[1] == '/')
+        { appendNewline(printer); }
+}
+
+
+int printAllPrecedingComments(PrintTracker * printer, huNode const * node, huToken const * tok, int startingWith)
+{
+    int commentIdx = startingWith;
+    int numComments = huGetNumComments(node);
+
+    for (; commentIdx < numComments; ++commentIdx)
     {
-        huToken const * comment = huGetComment(node, iCom);
-        // If not firstToken, forego the position check. Handles enqueued comments before the end token.
-        if (firstToken == false ||
-                (comment->line == node->firstToken->line &&
-                 comment->col < node->lastValueToken->col))
+        huToken const * comm = huGetComment(node, commentIdx);
+        if (comm->line < tok->line ||
+            (comm->line == tok->line && comm->col < tok->col))
         {
-            appendWs(str, 1);
-            printComment(comment, str, colorTable);
+            if (printer->printComments)
+                { appendNewline(printer); }
+            printForwardComment(printer, comm);
         }
         else
-            { break; }
+            { break; } // commentIdx remains our comment cursor
     }
 
-    return iCom;
+    return commentIdx;
 }
 
 
-void printAnnotations(huAnnotation const * annos, int numAnno, bool troveOwned, huVector * str, huStringView const * colorTable)
+int printAllTrailingComments(PrintTracker * printer, huNode const * node, huToken const * tok, int startingWith)
 {
-    if (numAnno == 0)
-        { return; }
-    
-    if (troveOwned == false)
-        { appendString(str, " ", 1); }
+    int commentIdx = startingWith;
+    int numComments = huGetNumComments(node);
 
-    appendColoredString(str, "@", 1, 
-        colorTable, HU_COLORKIND_PUNCANNOTATE);
-
-    if (numAnno > 1)
+    for (; commentIdx < numComments; ++commentIdx)
     {
-        appendColoredString(str, "{", 1, 
-            colorTable, HU_COLORKIND_PUNCANNOTATEDICT);
-    }
-
-    for (int iAnno = 0; iAnno < numAnno; ++iAnno)
-    {
-        huAnnotation const * anno = annos + iAnno;
-        if (iAnno > 0)
-            { appendWs(str, 1); }
-
-        appendColoredToken(str, anno->key, colorTable, HU_COLORKIND_ANNOKEY);
-        appendColoredString(str, ": ", 2, colorTable, HU_COLORKIND_PUNCANNOTATEKEYVALUESEP);
-        appendColoredToken(str, anno->value, colorTable, HU_COLORKIND_ANNOVALUE);
-    }
-
-    if (numAnno > 1)
-    {
-        appendColoredString(str, "}", 1,
-            colorTable, HU_COLORKIND_PUNCANNOTATEDICT);
-    }
-}
-
-
-void printTroveAnnotations(huTrove const * trove, huVector * str, huStringView const * colorTable)
-{
-    if (huGetNumTroveAnnotations(trove) == 0)
-        { return; }
-
-    huAnnotation const * annos = huGetTroveAnnotation(trove, 0);
-    printAnnotations(annos, huGetNumTroveAnnotations(trove), true, str, colorTable);
-}
-
-
-void printNodeAnnotations(huNode const * node, huVector * str, huStringView const * colorTable)
-{
-    if (huGetNumAnnotations(node) == 0)
-        { return; }
-
-    huAnnotation const * annos = huGetAnnotation(node, 0);
-    printAnnotations(annos, huGetNumAnnotations(node), false, str, colorTable);
-}
-
-
-void printKey(huToken const * keyToken, huVector * str, huStringView const * colorTable)
-{
-    appendColoredToken(str, keyToken, colorTable, HU_COLORKIND_KEY);
-    appendColoredString(str, ": ", 2, colorTable, HU_COLORKIND_PUNCKEYVALUESEP);
-}
-
-
-void printValue(huToken const * valueToken, huVector * str, huStringView const * colorTable)
-{
-    appendColoredToken(str, valueToken, colorTable, HU_COLORKIND_VALUE);
-}
-
-
-void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int outputFormat, bool excludeComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable)
-{
-    bool lineIsDirty = false;
-
-    // print preceeding comments
-    huToken const * commentsBeforeToken = node->firstToken;
-    if (huHasKey(node))
-        { commentsBeforeToken = node->keyToken; }
-
-    int iCom = 0;
-    for (; iCom < huGetNumComments(node); ++iCom)
-    {
-        huToken const * comment = huGetComment(node, iCom);
-        if (comment->line < commentsBeforeToken->line)
+        huToken const * comm = huGetComment(node, commentIdx);
+        if (comm->line == tok->line)
         {
-            if (node->parentNodeIdx != -1)
-                { appendString(str, newline, newlineSize); }
-            if (outputFormat != HU_OUTPUTFORMAT_MINIMAL)
-                { appendWs(str, outputTabSize * depth); }
-            printComment(comment, str, colorTable);
-            lineIsDirty = true;
+            if (printer->printComments &&
+                printer->format == HU_OUTPUTFORMAT_PRETTY)
+                { appendWs(printer, 1); }
+
+            printTrailingComment(printer, comm);
         }
         else
-            { break; }
+            { break; } // commentIdx remains our comment cursor
+    }
+
+    return commentIdx;
+}
+
+
+void printAnnotations(PrintTracker * printer, huVector const * annotations)
+{
+    int numAnnos = huGetVectorSize(annotations);
+    if (numAnnos == 0)
+        { return; }
+
+    // if we're printing an annotation on a new line (because of a comment, say)
+    if (printer->lastPrintWasNewline)
+    {
+        if (printer->format == HU_OUTPUTFORMAT_PRETTY && printer->currentDepth > 0)
+        {
+            printer->currentDepth += 1;
+            appendIndent(printer);
+            printer->currentDepth -= 1;
+        }
+    }
+    else
+    {
+        if (printer->format == HU_OUTPUTFORMAT_PRETTY && printer->currentDepth > 0)
+            { appendWs(printer, 1); }
     }
     
-    // if node has a key, print key:
-    if (node->keyToken != NULL)
-    {
-        appendString(str, newline, newlineSize);
-        if (outputFormat != HU_OUTPUTFORMAT_MINIMAL)
-            { appendWs(str, outputTabSize * depth); }
+    appendColoredString(printer, "@", 1, HU_COLORKIND_PUNCANNOTATE);
+    if (printer->format == HU_OUTPUTFORMAT_PRETTY)
+        { appendWs(printer, 1); }
 
-        printKey(node->keyToken, str, colorTable);
-        lineIsDirty = true;
+    if (numAnnos > 1)
+    {
+        appendColoredString(printer, "{", 1, HU_COLORKIND_PUNCANNOTATEDICT);
+        if (printer->format == HU_OUTPUTFORMAT_PRETTY)
+            { appendWs(printer, 1); }
+    }
+    for (int annoIdx = 0; annoIdx < numAnnos; ++annoIdx)
+    {
+        if (annoIdx > 0)
+            { appendColoredString(printer, " ", 1, HU_COLORKIND_WHITESPACE); }
+        huAnnotation * anno = huGetVectorElement(annotations, annoIdx);
+        appendColoredToken(printer, anno->key, HU_COLORKIND_ANNOKEY);
+        appendColoredString(printer, ":", 1, HU_COLORKIND_PUNCANNOTATEKEYVALUESEP);
+        if (printer->format == HU_OUTPUTFORMAT_PRETTY)
+            { appendWs(printer, 1); }
+        appendColoredToken(printer, anno->value, HU_COLORKIND_ANNOVALUE);        
+    }
+    if (numAnnos > 1)
+    {
+        if (printer->format == HU_OUTPUTFORMAT_PRETTY)
+            { appendWs(printer, 1); }
+        appendColoredString(printer, "}", 1, HU_COLORKIND_PUNCANNOTATEDICT);
     }
 
-    // print [ or {
+    printer->lastPrintWasIndent = false;
+    printer->lastPrintWasNewline = false;
+}
+
+
+void printNode(PrintTracker * printer, huNode const * node)
+{    
+    int numComments = huGetNumComments(node);
+    int commentIdx = 0;
+
+    //  print preceding comments
+    commentIdx = printAllPrecedingComments(printer, node, node->valueToken, commentIdx);
+
+    //  if parent is a dict
+    //      print key
+
+    if (printer->format == HU_OUTPUTFORMAT_PRETTY)
+        { appendNewline(printer); }
+    appendIndent(printer);
+    huNode const * parentNode = huGetParentNode(node);
+
+    // print key if we have one
+    if (parentNode != hu_nullNode && parentNode->kind == HU_NODEKIND_DICT)
+    {
+        appendColoredToken(printer, node->keyToken, HU_COLORKIND_KEY);
+        appendColoredString(printer, ":", 1, HU_COLORKIND_PUNCKEYVALUESEP);
+        if (printer->format == HU_OUTPUTFORMAT_PRETTY)
+            { appendWs(printer, 1); }
+    }
+
+    //  if nodekind is list
+    //      print [
+    //      print any same-line comments
+    //      printNode()
+    //      print comments preceding ]
+    //      print ]
     if (node->kind == HU_NODEKIND_LIST)
     {
-        if (node->keyToken == NULL)
+        appendColoredString(printer, "[", 1, HU_COLORKIND_PUNCLIST);
+        
+        commentIdx = printAllTrailingComments(printer, node, node->valueToken, commentIdx);
+
+        // print children
+        printer->currentDepth += 1;
+        huNode const * chNode = NULL;
+        for (int chIdx = 0; chIdx < huGetNumChildren(node); ++chIdx)
         {
-            /*
-            if (node->childOrdinal == -1)
-            {
-                if (lineIsDirty)
-                    { appendString(str, newline, newlineSize); }
-                else
-                {
-                    if (node->nodeIdx != 0)
-                        { appendWs(str, 1); }
-                }
-            }
-            else */
-            {
-                if (lineIsDirty)
-                    { appendString(str, newline, newlineSize); }
-                else
-                    { appendWs(str, 1); }
-            }
+            if (chIdx > 0 &&
+                printer->format == HU_OUTPUTFORMAT_MINIMAL &&
+                printer->lastPrintWasNewline == false &&
+                chNode->kind == HU_NODEKIND_VALUE)
+                { appendWs(printer, 1); }
+            chNode = huGetChildByIndex(node, chIdx);
+            printNode(printer, chNode);
         }
-        appendColoredString(str, "[", 1, 
-            colorTable, HU_COLORKIND_PUNCLIST);
+
+        commentIdx = printAllPrecedingComments(printer, node, node->lastValueToken, commentIdx);
+        
+        printer->currentDepth -= 1;
+        if (printer->format == HU_OUTPUTFORMAT_PRETTY)
+            { appendNewline(printer); }
+        appendIndent(printer);
+        appendColoredString(printer, "]", 1, HU_COLORKIND_PUNCLIST);
     }
+
+    //  else if nodekind is dict
+    //      print {
+    //      print any same-line comments
+    //      printNode()
+    //      print comments preceding }
+    //      print }
     else if (node->kind == HU_NODEKIND_DICT)
     {
-        if (node->keyToken == NULL)
+        appendColoredString(printer, "{", 1, HU_COLORKIND_PUNCDICT);
+        commentIdx = printAllTrailingComments(printer, node, node->valueToken, commentIdx);
+
+        // print children
+        printer->currentDepth += 1;
+        huNode const * chNode = NULL;
+        for (int chIdx = 0; chIdx < huGetNumChildren(node); ++chIdx)
         {
-            /*
-            if (node->childOrdinal == -1)
-            {
-                if (lineIsDirty)
-                    { appendString(str, newline, newlineSize); }
-                else
-                {
-                    if (node->nodeIdx != 0)
-                        { appendWs(str, 1); }
-                }
-            }
-            else */
-            {
-                if (lineIsDirty)
-                    { appendString(str, newline, newlineSize); }
-                else
-                    { appendWs(str, 1); }
-            }
+            if (chIdx > 0 &&
+                printer->format == HU_OUTPUTFORMAT_MINIMAL &&
+                printer->lastPrintWasNewline == false &&
+                chNode->kind == HU_NODEKIND_VALUE)
+                { appendWs(printer, 1); }
+            chNode = huGetChildByIndex(node, chIdx);
+            printNode(printer, chNode);
         }
-        appendColoredString(str, "{", 1, 
-            colorTable, HU_COLORKIND_PUNCDICT);
+
+        commentIdx = printAllPrecedingComments(printer, node, node->lastValueToken, commentIdx);
+        printer->currentDepth -= 1;
+        if (printer->format == HU_OUTPUTFORMAT_PRETTY)
+            { appendNewline(printer); }
+        appendIndent(printer);
+        appendColoredString(printer, "}", 1, HU_COLORKIND_PUNCDICT);
     }
 
-    if (node->kind == HU_NODEKIND_LIST ||
-        node->kind == HU_NODEKIND_DICT)
-    {
-        // print annotations on one line
-        printNodeAnnotations(node, str, colorTable);
-
-        // print any same-line comments
-        iCom = printSameLineComments(node, true, iCom, str, colorTable);
-
-        // recursive calls
-        int numCh = huGetNumChildren(node);
-        for (int i = 0; i < numCh; ++i)
-        {
-            huNode const * chNode = huGetChildByIndex(node, i);
-            troveToPrettyStringRec(chNode, str, depth + 1, outputFormat, excludeComments, outputTabSize, newline, newlineSize, colorTable);
-        }
-
-        // print ]
-        if (node->kind == HU_NODEKIND_LIST)
-        {
-            appendString(str, newline, newlineSize);
-            appendWs(str, outputTabSize * depth);
-            appendColoredString(str, "]", 1, 
-                colorTable, HU_COLORKIND_PUNCLIST);
-        }
-        else
-        {
-            appendString(str, newline, newlineSize);
-            appendWs(str, outputTabSize * depth);
-            appendColoredString(str, "}", 1, 
-                colorTable, HU_COLORKIND_PUNCLIST);
-        }
-    }
+    //  else if nodekind is value
+    //      if parent is a dict
+    //          print key
+    //      print value
     else if (node->kind == HU_NODEKIND_VALUE)
     {
-        if (node->keyToken == NULL && 
-            (node->parentNodeIdx != -1 ||
-             node->firstToken != node->valueToken))
+        appendColoredToken(printer, node->valueToken, HU_COLORKIND_VALUE);
+    }
+        
+    //  print any same-line comments
+    //  print comments preceding any annos
+    //  print annos
+
+    commentIdx = printAllTrailingComments(printer, node, node->lastValueToken, commentIdx);
+
+    for (; commentIdx < numComments; ++commentIdx)
+    {
+        huToken const * comm = huGetComment(node, commentIdx);
         {
-            appendString(str, newline, newlineSize);
-            appendWs(str, outputTabSize * depth);
+            printForwardComment(printer, comm);
         }
-        printValue(node->valueToken, str, colorTable);
-        printNodeAnnotations(node, str, colorTable);
     }
 
-    // print post-object comments on same line
-    printSameLineComments(node, false, iCom, str, colorTable);
+    // print annotations
+    printAnnotations(printer, & node->annotations);
 }
 
 
-void troveToPrettyString(huTrove const * trove, huVector * str, int outputFormat, bool excludeComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable)
+void troveToPrettyString(huTrove const * trove, huVector * str, int outputFormat, bool printComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable)
 {
-    printTroveAnnotations(trove, str, colorTable);
+    PrintTracker printer = {
+        .trove = trove,
+        .str = str,
+        .format = outputFormat,
+        .printComments = printComments,
+        .tabSize = outputTabSize,
+        .newline = newline,
+        .newlineSize = newlineSize,
+        .colorTable = colorTable,
+        .currentDepth = 0,
+        .currentLine = 1,
+        .currentCol = 1,
+        .lastPrintWasNewline = false    // or should it say, 'needs indent'?
+    };
 
-    huNode const * nodes = (huNode const *) trove->nodes.buffer;
-
-    if (nodes != NULL)
+    // Print trove comments that precede the root node token; These are comments that appear before 
+    // or amidst trove annotations, before the root. These will all be the first trove comments, so 
+    // just start scumming from 0.
+    int troveCommentIdx = 0;
+    int numTroveComments = huGetNumTroveComments(trove);
+    int numTroveAnnotations = huGetNumTroveAnnotations(trove);
+    if (numTroveAnnotations > 0)
     {
-        troveToPrettyStringRec(& nodes[0], str, 0, outputFormat, excludeComments, outputTabSize, newline, newlineSize, colorTable);
-        appendString(str, newline, newlineSize);
+        for (; troveCommentIdx < numTroveComments; ++troveCommentIdx)
+        {
+            huToken const * comm = huGetTroveComment(trove, troveCommentIdx);
+            if (comm->line <= trove->lastAnnoToken->line)
+            {
+                // print comment
+                printForwardComment(& printer, comm);
+            }
+            else
+                { break; } // troveCommentIdx remains our trove comment cursor
+        }
     }
 
-    for (int iCom = 0; iCom < huGetNumTroveComments(trove); ++iCom)
+    // Print trove annotations
+    printAnnotations(& printer, & trove->annotations);
+
+    // print root node
+    if (trove->nodes.numElements > 0)
     {
-        huToken const * comment = huGetTroveComment(trove, iCom);
-        printComment(comment, str, colorTable);
-        appendString(str, newline, newlineSize);
+        printNode(& printer, huGetRootNode(trove));
+    }
+
+    // Print trove comments that we missed above.
+    for (; troveCommentIdx < numTroveComments; ++troveCommentIdx)
+    {
+        huToken const * comm = huGetTroveComment(trove, troveCommentIdx);
+        if (comm->line <= trove->lastAnnoToken->line)
+        {
+            // print comment
+            printForwardComment(& printer, comm);
+        }
     }
 }
 

@@ -218,5 +218,27 @@ Some 4-byte code points:
   𡇙 𢃇 𢞵 𢫕 𢭃 𢯊 𢱑 𢱕 𢳂 𢴈 𢵌 𢵧 𢺳 𣲷 𤓓 𤶸
   𤷪 𥄫 𦉘 𦟌 𦧲 𦧺 𧨾 𨅝 𨈇 𨋢 𨳊 𨳍 𨳒 𩶘
 "
+    /*
+        someOtherText: foo
+        Я: two
+        ⾀: three
+        𠜎: four
+        two: Я
+        three: ⾀
+        four: 𠜎
+    */
     someOtherText: foo
+    Я: two
+    ⾀: three
+    𠜎: four
+    two: Я
+    three: ⾀
+    four: 𠜎
+} @ {
+    Я: two
+    ⾀: three
+    𠜎: four
+    two: Я
+    three: ⾀
+    four: 𠜎
 }

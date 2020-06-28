@@ -9,7 +9,8 @@ using namespace std::literals;
 struct htd_cppGeneralMix
 {
     std::string_view ts = 
-R"( @{tx:ta, ta:ta, tb:tb}
+R"(// This is a trove comment.
+@{tx:ta, ta:ta, tb:tb}
 {                   @name:root  @otherName:root
     // This is a aaaa right here.
     ak:a            @a:a        @type:value     // aaaa
@@ -24,7 +25,6 @@ R"( @{tx:ta, ta:ta, tb:tb}
         ]           @c:cp       @type:list      // cp
     }               @c:cpp      @type:dict      // cpp
 }
-// This is a trove comment.
 // This is also a trove comment.
 )"sv;
 
@@ -108,6 +108,79 @@ struct htd_comments
         k0 = root / "k0";
         k1 = root / "k1";
         k10 = k1 / 0;
+    }
+
+    void teardown()
+    {
+    }
+};
+
+struct htd_errors
+{
+    std::string_view ts0 = 
+R"({
+    int:213
+    float:25.25
+    float:25.25     // duplictae key
+    string:foo
+    bool:true
+}
+)"sv;
+
+    std::string_view ts1 = 
+R"({
+    int:213
+    float:25.25
+    double:25.25
+    string:foo
+    bool:true       @ { dup: foo, dup: bar }
+}
+)"sv;
+
+    std::string_view ts2 = 
+R"({
+    int:213
+    float:25.25
+    double:25.25
+    string:foo
+    bool:true       @ dup: foo @ dup: bar
+}
+)"sv;
+
+    std::string_view ts3 = 
+R"(@ {dup: foo dup: bar}
+{
+    int:213
+    float:25.25
+    double:25.25
+    string:foo
+    bool:true
+}
+)"sv;
+
+    std::string_view ts4 = 
+R"({@ dup: foo @ dup: bar
+    int:213
+    float:25.25
+    double:25.25
+    string:foo
+    bool:true
+}
+)"sv;
+
+    hu::Trove trove0;
+    hu::Trove trove1;
+    hu::Trove trove2;
+    hu::Trove trove3;
+    hu::Trove trove4;
+
+    void setup()
+    {
+        trove0 = hu::Trove::fromString(ts0);
+        trove1 = hu::Trove::fromString(ts1);
+        trove2 = hu::Trove::fromString(ts2);
+        trove3 = hu::Trove::fromString(ts3);
+        trove4 = hu::Trove::fromString(ts4);
     }
 
     void teardown()

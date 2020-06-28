@@ -39,13 +39,15 @@ g++ -std=c++17 -Wall -shared -Wl,-soname,libhumon-r.so.0  -o bin/libhumon-r.so.0
 echo Done.
 
 echo Building tests...
-g++ -std=c++17 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o test/bin/test test/testMain.cpp test/apiTests.cpp test/utf8Tests.cpp test/dataTests.cpp test/cppTests.cpp test/commentTests.cpp -Lbin -lhumon-d -lCppUTest -lCppUTestExt
+echo d
+g++ -std=c++17 -Wall -o test/bin/test-d -ggdb3 -O0 -DDEBUG -Iinc test/testMain.cpp test/apiTests.cpp test/utf8Tests.cpp test/dataTests.cpp test/cppTests.cpp test/commentTests.cpp test/errorTests.cpp -Lbin -lhumon-d -lCppUTest -lCppUTestExt
+echo r
+g++ -std=c++17 -Wall -o test/bin/test-r -O3 -Iinc test/testMain.cpp test/apiTests.cpp test/utf8Tests.cpp test/dataTests.cpp test/cppTests.cpp test/commentTests.cpp test/errorTests.cpp -Lbin -lhumon -lCppUTest -lCppUTestExt
 
 echo Building samples...
 gcc -std=c99 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o samples/bin/sample-usage-c-d samples/usage-c/usage.c -Lbin -lhumon-d
 g++ -std=c++17 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o samples/bin/sample-usage-cpp-d samples/usage-cpp/usage.cpp -Lbin -lhumon-d
 g++ -std=c++17 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o samples/bin/hux samples/hux/hux.cpp -Lbin -lhumon-d
-
 
 echo Done.
 

@@ -120,5 +120,6 @@ TEST(cppSugar, sugar)
     LONGS_EQUAL_TEXT(1337, t.trove / 2 / hu::val<TypeContainer>{}, "custom hu::value good");
     LONGS_EQUAL_TEXT(0xbadf00d, t.trove / 0 / hu::val<TypeContainer>{}, "custom hu::value no good");
 
-
+    auto spuriousNode = t.trove / "big" / "fat" / 0 / "sloppy" / "wet" / 1;
+    CHECK_TEXT(spuriousNode.isNull(), "wildly wrong path");
 }
