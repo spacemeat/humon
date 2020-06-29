@@ -121,5 +121,89 @@ TEST(cppSugar, sugar)
     LONGS_EQUAL_TEXT(0xbadf00d, t.trove / 0 / hu::val<TypeContainer>{}, "custom hu::value no good");
 
     auto spuriousNode = t.trove / "big" / "fat" / 0 / "sloppy" / "wet" / 1;
-    CHECK_TEXT(spuriousNode.isNull(), "wildly wrong path");
+    CHECK_TEXT(spuriousNode.isNull(), "wildly wrong path");    
+}
+
+TEST(cppSugar, annos)
+{
+    LONGS_EQUAL(3, m.trove.numAnnotations());
+    LONGS_EQUAL(true, m.trove.hasAnnotation("tx"));
+    LONGS_EQUAL(true, m.trove.hasAnnotation("ta"));
+    LONGS_EQUAL(true, m.trove.hasAnnotation("tb"));
+    LONGS_EQUAL(false, m.trove.hasAnnotation("foo"));
+    LONGS_EQUAL(2, m.trove.numAnnotationsWithValue("ta"));
+    LONGS_EQUAL(1, m.trove.numAnnotationsWithValue("tb"));
+
+    auto tas = m.trove.annotationsWithValue("ta");
+    LONGS_EQUAL(2, tas.size());
+    LONGS_EQUAL(2, tas[0].str().size());
+    MEMCMP_EQUAL("tx", tas[0].str().data(), 2);
+    LONGS_EQUAL(2, tas[1].str().size());
+    MEMCMP_EQUAL("ta", tas[1].str().data(), 2);
+    
+    tas = m.trove.annotationsWithValue("tb");
+    LONGS_EQUAL(1, tas.size());
+    LONGS_EQUAL(2, tas[0].str().size());
+    MEMCMP_EQUAL("tb", tas[0].str().data(), 2);
+
+    auto nodes = m.trove.findNodesWithAnnotationKey("a");
+    LONGS_EQUAL(1, nodes.size());
+    CHECK_EQUAL(m.a, nodes[0]);
+
+    nodes = m.trove.findNodesWithAnnotationKey("b");
+    LONGS_EQUAL(2, nodes.size());
+    CHECK_EQUAL(m.bp, nodes[0]);
+    CHECK_EQUAL(m.b, nodes[1]);
+
+    nodes = m.trove.findNodesWithAnnotationKey("c");
+    LONGS_EQUAL(3, nodes.size());
+    CHECK_EQUAL(m.cpp, nodes[0]);
+    CHECK_EQUAL(m.cp, nodes[1]);
+    CHECK_EQUAL(m.c, nodes[2]);
+
+    nodes = m.trove.findNodesWithAnnotationValue("a");
+    LONGS_EQUAL(1, nodes.size());
+    CHECK_EQUAL(m.a, nodes[0]);
+
+    nodes = m.trove.findNodesWithAnnotationValue("b");
+    LONGS_EQUAL(1, nodes.size());
+    CHECK_EQUAL(m.b, nodes[0]);
+
+    nodes = m.trove.findNodesWithAnnotationValue("c");
+    LONGS_EQUAL(1, nodes.size());
+    CHECK_EQUAL(m.c, nodes[0]);
+
+    nodes = m.trove.findNodesWithAnnotationValue("value");
+    LONGS_EQUAL(3, nodes.size());
+    CHECK_EQUAL(m.a, nodes[0]);
+    CHECK_EQUAL(m.b, nodes[1]);
+    CHECK_EQUAL(m.c, nodes[2]);
+
+    nodes = m.trove.findNodesWithAnnotationKeyValue("a", "a");
+    LONGS_EQUAL(1, nodes.size());
+    CHECK_EQUAL(m.a, nodes[0]);
+
+    nodes = m.trove.findNodesWithAnnotationKeyValue("type", "value");
+    LONGS_EQUAL(3, nodes.size());
+    CHECK_EQUAL(m.a, nodes[0]);
+    CHECK_EQUAL(m.b, nodes[1]);
+    CHECK_EQUAL(m.c, nodes[2]);
+}
+
+TEST(cppSugar, comments)
+{
+    auto tcs = m.trove.allComments();
+    LONGS_EQUAL(2, tcs.size());
+    auto str = "// This is a trove comment."sv;
+    LONGS_EQUAL(str.size(), std::get<0>(tcs[0]).str().size());
+    MEMCMP_EQUAL(str.data(), std::get<0>(tcs[0]).str().data(), str.size());
+    str = "// This is also a trove comment."sv;
+    LONGS_EQUAL(str.size(), std::get<0>(tcs[1]).str().size());
+    MEMCMP_EQUAL(str.data(), std::get<0>(tcs[1]).str().data(), str.size());
+
+    auto nodes = m.trove.findNodesByCommentContaining("This is a ");
+    LONGS_EQUAL(3, nodes.size());
+    CHECK_EQUAL(m.a, nodes[0]);
+    CHECK_EQUAL(m.bp, nodes[1]);
+    CHECK_EQUAL(m.cpp, nodes[2]);
 }

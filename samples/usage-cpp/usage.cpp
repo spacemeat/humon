@@ -44,10 +44,10 @@ int main()
     if (auto trove = hu::Trove::fromFile("samples/sampleFiles/hudo.hu");
         trove)
     {
-        if (trove.annotationWithKey("app") != "hudo"sv)
+        if (trove.annotation("app") != "hudo"sv)
             { throw runtime_error("File is not a hudo file."); }
 
-        auto versionString = trove.annotationWithKey("hudo-version");
+        auto versionString = trove.annotation("hudo-version");
         auto version = Version<3> { versionString };
         if (version < Version<3> { 0, 1, 0 }) { /*...*/ }
         else if (version < Version<3> { 0, 2, 0 }) { /*...*/ }

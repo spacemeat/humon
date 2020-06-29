@@ -52,7 +52,7 @@ char const * huOutputFormatToString(int rhs)
 {
     switch(rhs)
     {
-    case HU_OUTPUTFORMAT_PRESERVED: return "preserved";
+    case HU_OUTPUTFORMAT_XEROGRAPHIC: return "xerographic";
     case HU_OUTPUTFORMAT_MINIMAL: return "minimal";
     case HU_OUTPUTFORMAT_PRETTY: return "pretty";
     default: return "!!unknown!!";

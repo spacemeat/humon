@@ -84,10 +84,10 @@ Using the APIs is straightforward. To get the image's (x, y) extents above, we m
             huNode const * extentsNode = huGetNodeByFullAddressZ(trove, "/assets/brick-diffuse/importData/extents");
             huNode const * valueNode = huGetChildByIndex(extentsNode, 0);
             huStringView const * sExt = valueNode ? & valueNode->valueToken->value : NULL;
-            int extX = sExt ? strntol(sExt->str, sExt->size, NULL, 10) : 0;
+            int extX = sExt ? strntol(sExt->ptr, sExt->size, NULL, 10) : 0;
             valueNode = huGetChildByIndex(extentsNode, 1);
             sExt = valueNode ? & valueNode->valueToken->value : NULL;
-            int extY = sExt ? strntol(sExt->str, sExt->size, NULL, 10) : 0;
+            int extY = sExt ? strntol(sExt->ptr, sExt->size, NULL, 10) : 0;
             ...
 
 or in C++:
@@ -463,7 +463,7 @@ Examine a node's annotations in several ways:
 
 Troves can have annotations too, and feature similar APIs. There are also APIs for searching the trove for annotations by key, value, or both; these return collections of `hu::Node`s.
 
-    auto all32BitTypes = trove.findNodesByAnnotationKeyValue("numBits"sv, "32"sv);
+    auto all32BitTypes = trove.findNodesWithAnnotationKeyValue("numBits"sv, "32"sv);
     for (auto & node : all32BitTypes) { ... }
 
 Similar APIs also exist for nodes and troves that search comment content and return associated nodes. See the API spec for these.

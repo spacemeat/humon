@@ -40,3 +40,5 @@ mmap_address.bin
 bin/*
 test/bin/*
 samples/bin/*
+test/testFiles/*-minimal.hu
+test/testFiles/*-pretty.hu

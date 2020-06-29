@@ -97,7 +97,7 @@ huNode const * huGetChildByKeyN(huNode const * node, char const * key, int keyLe
     {
         huNode const * childNode = huGetChildByIndex(node, i);
         if (keyLen == childNode->keyToken->str.size &&
-            strncmp(childNode->keyToken->str.str, key, keyLen) == 0)
+            strncmp(childNode->keyToken->str.ptr, key, keyLen) == 0)
             { return childNode; }
     }
 
@@ -163,6 +163,27 @@ bool huHasValue(huNode const * node)
 }
 
 
+huStringView huGetNestedValue(huNode const * node)
+{
+    huStringView str;
+
+#ifdef HUMON_CHECK_PARAMS
+    if (node == NULL || node == hu_nullNode)
+    {
+        str.ptr = NULL;
+        str.size = 0;
+        return str;
+    }
+#endif
+
+    str.ptr = node->firstToken->str.ptr;
+    str.size = node->lastToken->str.ptr + node->lastToken->str.size - 
+        node->firstToken->str.ptr;
+    
+    return str;
+}
+
+
 int huGetNumAnnotations(huNode const * node)
 {
 #ifdef HUMON_CHECK_PARAMS
@@ -210,7 +231,7 @@ bool huHasAnnotationWithKeyN(huNode const * node, char const * key, int keyLen)
     { 
         huAnnotation const * anno = (huAnnotation *) node->annotations.buffer + i;
         if (keyLen == anno->key->str.size &&
-            strncmp(anno->key->str.str, key, keyLen) == 0)
+            strncmp(anno->key->str.ptr, key, keyLen) == 0)
             { return true; }
     }
 
@@ -218,18 +239,18 @@ bool huHasAnnotationWithKeyN(huNode const * node, char const * key, int keyLen)
 }
 
 
-huToken const * huGetAnnotationByKeyZ(huNode const * node, char const * key)
+huToken const * huGetAnnotationWithKeyZ(huNode const * node, char const * key)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (key == NULL)
         { return hu_nullToken; }
 #endif
 
-    return huGetAnnotationByKeyN(node, key, strlen(key));
+    return huGetAnnotationWithKeyN(node, key, strlen(key));
 }
 
 
-huToken const * huGetAnnotationByKeyN(huNode const * node, char const * key, int keyLen)
+huToken const * huGetAnnotationWithKeyN(huNode const * node, char const * key, int keyLen)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (node == NULL || node == hu_nullNode || key == NULL || keyLen < 0)
@@ -240,7 +261,7 @@ huToken const * huGetAnnotationByKeyN(huNode const * node, char const * key, int
     { 
         huAnnotation const * anno = (huAnnotation const *) node->annotations.buffer + i;
         if (keyLen == anno->key->str.size &&
-            strncmp(anno->key->str.str, key, keyLen) == 0)
+            strncmp(anno->key->str.ptr, key, keyLen) == 0)
             { return anno->value; }
     }
 
@@ -248,18 +269,18 @@ huToken const * huGetAnnotationByKeyN(huNode const * node, char const * key, int
 }
 
 
-int huGetNumAnnotationsByValueZ(huNode const * node, char const * value)
+int huGetNumAnnotationsWithValueZ(huNode const * node, char const * value)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (value == NULL)
         { return 0; }
 #endif
 
-    return huGetNumAnnotationsByValueN(node, value, strlen(value));
+    return huGetNumAnnotationsWithValueN(node, value, strlen(value));
 }
 
 
-int huGetNumAnnotationsByValueN(huNode const * node, char const * value, int valueLen)
+int huGetNumAnnotationsWithValueN(huNode const * node, char const * value, int valueLen)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (node == NULL || node == hu_nullNode || value == NULL || valueLen < 0)
@@ -271,7 +292,7 @@ int huGetNumAnnotationsByValueN(huNode const * node, char const * value, int val
     { 
         huAnnotation const * anno = (huAnnotation const *) node->annotations.buffer + i;
         if (valueLen == anno->value->str.size &&
-            strncmp(anno->value->str.str, value, valueLen) == 0)
+            strncmp(anno->value->str.ptr, value, valueLen) == 0)
             { matches += 1; }
     }
 
@@ -279,18 +300,18 @@ int huGetNumAnnotationsByValueN(huNode const * node, char const * value, int val
 }
 
 
-huToken const * huGetAnnotationByValueZ(huNode const * node, char const * value, int annotationIdx)
+huToken const * huGetAnnotationWithValueZ(huNode const * node, char const * value, int annotationIdx)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (value == NULL)
         { return hu_nullToken; }
 #endif
 
-    return huGetAnnotationByValueN(node, value, strlen(value), annotationIdx);
+    return huGetAnnotationWithValueN(node, value, strlen(value), annotationIdx);
 }
 
 
-huToken const * huGetAnnotationByValueN(huNode const * node, char const * value, int valueLen, int annotationIdx)
+huToken const * huGetAnnotationWithValueN(huNode const * node, char const * value, int valueLen, int annotationIdx)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (node == NULL || node == hu_nullNode || value == NULL || valueLen < 0 || annotationIdx < 0)
@@ -302,7 +323,7 @@ huToken const * huGetAnnotationByValueN(huNode const * node, char const * value,
     { 
         huAnnotation const * anno = (huAnnotation *) node->annotations.buffer + i;
         if (valueLen == anno->value->str.size &&
-            strncmp(anno->value->str.str, value, valueLen) == 0)
+            strncmp(anno->value->str.ptr, value, valueLen) == 0)
         {
             if (matches == annotationIdx)
                 { return anno->key; }
@@ -334,7 +355,7 @@ huToken const * huGetComment(huNode const * node, int commentIdx)
 #endif
 
     if (commentIdx < node->comments.numElements)
-        { return ((huComment const *) node->comments.buffer + commentIdx)->commentToken; }
+        { return ((huComment const *) node->comments.buffer + commentIdx)->token; }
     else
         { return hu_nullToken; }
 }
@@ -364,7 +385,7 @@ huToken const * huGetCommentsContainingN(huNode const * node, char const * conta
     for (int i = 0; i < na; ++i)
     {
         huToken const * comm = huGetComment(node, i);
-        if (foundLast && stringInString(comm->str.str, comm->str.size, 
+        if (foundLast && stringInString(comm->str.ptr, comm->str.size, 
                 containedText, containedTextLen))
             { return comm; }
 
@@ -701,12 +722,12 @@ void getNodeAddressRec(huNode const * node, PrintTracker * printer)
 
         if (! isQuoted)
         {
-            char * slashIdx = memchr(key->str, '/', key->size);
+            char * slashIdx = memchr(key->ptr, '/', key->size);
             if (slashIdx != NULL)
             {
                 appendString(printer, "\"", 1);
-                char const * blockBegin = key->str;
-                for (char const * sp = key->str; sp < key->str + key->size; ++sp)
+                char const * blockBegin = key->ptr;
+                for (char const * sp = key->ptr; sp < key->ptr + key->size; ++sp)
                 {
                     if (* sp == '"')
                     {
@@ -715,7 +736,7 @@ void getNodeAddressRec(huNode const * node, PrintTracker * printer)
                         blockBegin = sp + 1;
                     }
                 }
-                appendString(printer, blockBegin, key->str + key->size - blockBegin);
+                appendString(printer, blockBegin, key->ptr + key->size - blockBegin);
                 appendString(printer, "\"", 1);
                 return;
             }
@@ -724,18 +745,18 @@ void getNodeAddressRec(huNode const * node, PrintTracker * printer)
                 // if all digits are numbers, enquote the key so it can't be an index
                 bool hasNonDigits = false;
                 for (int i = 0; i < key->size && hasNonDigits == false; ++i)
-                    { hasNonDigits = key->str[i] < '0' || key->str[i] > '9'; }
+                    { hasNonDigits = key->ptr[i] < '0' || key->ptr[i] > '9'; }
                 if (hasNonDigits == false)
                 {
                     appendString(printer, "\"", 1);
-                    appendString(printer, key->str, key->size);
+                    appendString(printer, key->ptr, key->size);
                     appendString(printer, "\"", 1);
                     return;
                 }
             }
         }
 
-        appendString(printer, key->str, key->size);
+        appendString(printer, key->ptr, key->size);
     }
 }
 

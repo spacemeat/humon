@@ -12,7 +12,7 @@ void printUsage()
     cout << R"(Usage:
  hux <args>
   -pp print pretty  [default]
-  -pr print preserved
+  -px print xerographic
   -pm print minimal
 
   -my do print comments  [default]
@@ -32,7 +32,8 @@ Returns 0 on successful operation.
 Returns 1 on bad command line arguments.
 Returns 2 on bad / erroneous input.
 
-If -pm is specified, the -m, -t, and -c arguments have no effect on the output.
+If -px is specified, the output is a byte-for-byte clone of the original token
+stream. As such, the -m, -t, and -c arguments have no effect on the output.
 )";
 }
 
@@ -58,6 +59,30 @@ Trove getInput(istream & input)
 }
 
 
+enum class ExpectedArgument
+{
+    cmdSwitch,
+    outputFile,
+    tabSize
+};
+
+
+bool argMatches(char const * arg, char const * spec)
+{
+    int argLen = strlen(arg);
+    int specLen = strlen(spec);
+    return argLen == specLen && memcmp(arg, spec, specLen) == 0;
+}
+
+
+bool argStartsWith(char const * arg, char const * spec)
+{
+    int argLen = strlen(arg);
+    int specLen = strlen(spec);
+    return argLen >= specLen && memcmp(arg, spec, specLen) == 0;
+}
+
+
 int main(int argc, char ** argv)
 {
     bool loadFromStdin = false;
@@ -69,74 +94,96 @@ int main(int argc, char ** argv)
     int tabSize = 4;
     UsingColors usingColors = UsingColors::none;
 
+    ExpectedArgument expectedArg = ExpectedArgument::cmdSwitch;
+   
     for (int i = 1; i < argc; ++i)
     {
         char * arg = argv[i];
-        if (memcmp(arg, "-h", 2) == 0 ||
-            memcmp(arg, "-?", 2) == 0)
-            { 
-                printUsage();
-                return 0;
-            }
-        else if (memcmp(arg, "-pp", 3) == 0)
-            { format = OutputFormat::pretty; }
-        else if (memcmp(arg, "-pr", 3) == 0)
-            { format = OutputFormat::preserved; }
-        else if (memcmp(arg, "-pm", 3) == 0)
-            { format = OutputFormat::minimal; }
-        else if (memcmp(arg, "-p", 2) == 0)
-        {
-            cerr << "Invalid format argument for -p.\n";
-            return 1;
-        }
+        int argLen = strlen(arg);
 
-        else if (memcmp(arg, "-my", 3) == 0)
-            { printComments = true; }
-        else if (memcmp(arg, "-mn", 3) == 0)
-            { printComments = false; }
-        else if (memcmp(arg, "-m", 2) == 0)
+        switch (expectedArg)
         {
-            cerr << "Invalid comment enablement argument for -m.\n";
-            return 1;
-        }
-        
-        else if (memcmp(arg, "-t", 2) == 0)
-        {
-            eatWs(arg);
-            if(auto [p, ec] = std::from_chars(arg + 2, arg + 2 + strlen(arg + 2), tabSize, 10);
+        case ExpectedArgument::cmdSwitch:
+            if (argMatches(arg, "-h") ||
+                argMatches(arg, "-?"))
+                { 
+                    printUsage();
+                    return 0;
+                }
+            else if (argMatches(arg, "-pp"))
+                { format = OutputFormat::pretty; }
+            else if (argMatches(arg, "-px"))
+                { format = OutputFormat::xerographic; }
+            else if (argMatches(arg, "-pm"))
+                { format = OutputFormat::minimal; }
+            else if (argStartsWith(arg, "-p"))
+            {
+                cerr << "Invalid format argument for -p.\n";
+                return 1;
+            }
+
+            else if (argMatches(arg, "-my"))
+                { printComments = true; }
+            else if (argMatches(arg, "-mn"))
+                { printComments = false; }
+            else if (argStartsWith(arg, "-m"))
+            {
+                cerr << "Invalid comment enablement argument for -m.\n";
+                return 1;
+            }
+
+
+            else if (argMatches(arg, "-t"))
+                { expectedArg = ExpectedArgument::tabSize; }
+            else if (argStartsWith(arg, "-t"))
+            {
+                if(auto [p, ec] = std::from_chars(arg + 2, arg + argLen, tabSize, 10);
+                    ec != std::errc())
+                {
+                    cerr << "Invalid tab size argument for -t.\n";
+                    return 1;
+                }
+            }
+
+            else if (argMatches(arg, "-cn"))
+                { usingColors = UsingColors::none; }
+            else if (argMatches(arg, "-ca"))
+                { usingColors = UsingColors::ansi; }
+            else if (argStartsWith(arg, "-c"))
+            {
+                cerr << "Invalid color argument for -c.\n";
+                return 1;
+            }
+            
+            else if (argMatches(arg, "-o"))
+                { expectedArg = ExpectedArgument::outputFile; }
+            else if (argStartsWith(arg, "-o"))
+                { outputFile = arg + 2; }
+
+            else if (argMatches(arg, "--"))
+                { loadFromStdin = true; }
+
+            else if (argStartsWith(arg, "-"))
+                { cerr << "Invalid switch " << arg << ".\n"; return 1; }
+            else
+            {
+                loadFromStdin = false;
+                inputFile = arg;
+            }
+            break;
+        case ExpectedArgument::outputFile:
+            outputFile = arg;
+            expectedArg = ExpectedArgument::cmdSwitch;
+            break;
+        case ExpectedArgument::tabSize:
+            if(auto [p, ec] = std::from_chars(arg, arg + strlen(arg), tabSize, 10);
                 ec != std::errc())
             {
                 cerr << "Invalid tab size argument for -t.\n";
                 return 1;
             }
-        }
-
-        else if (memcmp(arg, "-cn", 3) == 0)
-            { usingColors = UsingColors::none; }
-        else if (memcmp(arg, "-ca", 3) == 0)
-            { usingColors = UsingColors::ansi; }
-        else if (memcmp(arg, "-c", 2) == 0)
-        {
-            cerr << "Invalid color argument for -c.\n";
-            return 1;
-        }
-        
-        else if (memcmp(arg, "-o", 2) == 0)
-        {
-            eatWs(arg);
-            outputFile = arg;
-        }
-
-        else if (memcmp(arg, "--", 2) == 0)
-            { loadFromStdin = true; }
-
-        else if (memcmp(arg, "-", 1) == 0)
-            { cerr << "Invalid switch " << arg << ".\n"; return 1; }
-
-        else
-        {
-            loadFromStdin = false;
-            inputFile = arg;
+            expectedArg = ExpectedArgument::cmdSwitch;
+            break;
         }
     }
 
@@ -165,12 +212,18 @@ int main(int argc, char ** argv)
     }
 
     std::string output;
-    if (format == OutputFormat::preserved)
-        { output = trove.toPreservedString(); }
-    else if (format == OutputFormat::minimal)
-        { output = trove.toMinimalString(printComments, "\n", colors); }
-    else if (format == OutputFormat::pretty)
-        { output = trove.toPrettyString(printComments, tabSize, "\n", colors); }    
+    switch(format)
+    {
+    case OutputFormat::xerographic:
+        output = trove.toPreservedString();
+        break;
+    case OutputFormat::minimal:
+        output = trove.toMinimalString(printComments, "\n", colors);
+        break;
+    case OutputFormat::pretty:
+        output = trove.toPrettyString(printComments, tabSize, "\n", colors);
+        break;
+    }
 
     if (outputFile == "")
     {

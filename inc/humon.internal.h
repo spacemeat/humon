@@ -45,7 +45,7 @@ extern "C"
     void huInitNode(huNode * node, huTrove const * trove);
     void huDestroyNode(huNode const * node);
 
-    huToken * allocNewToken(huTrove * trove, int tokenKind, char const * str, int size, int line, int col, int endLine, int endCol, char quoteChar);
+    huToken * allocNewToken(huTrove * trove, int kind, char const * str, int size, int line, int col, int endLine, int endCol, char quoteChar);
     huNode * allocNewNode(huTrove * trove, int nodeKind, huToken const * firstToken);
 
     void recordTokenizeError(huTrove * trove, int errorCode, int line, int col);
@@ -75,6 +75,8 @@ extern "C"
         int currentCol;
         bool lastPrintWasNewline;
         bool lastPrintWasIndent;
+        bool lastPrintWasUnquotedWord;
+        bool lastPrintWasWhitespace;
     } PrintTracker;
 
     void appendString(PrintTracker * printer, char const * addend, int size);
@@ -88,7 +90,7 @@ extern "C"
     void printTrailingComment(PrintTracker * printer, huToken const * tok);
     int printAllPrecedingComments(PrintTracker * printer, huNode const * node, huToken const * tok, int startingWith);
     int printAllTrailingComments(PrintTracker * printer, huNode const * node, huToken const * tok, int startingWith);
-    void printAnnotations(PrintTracker * printer, huVector const * annotations);
+    void printAnnotations(PrintTracker * printer, huVector const * annotations, bool isTroveAnnotations);
     void printNode(PrintTracker * printer, huNode const * node);
     void troveToPrettyString(huTrove const * trove, huVector * str, int outputFormat, bool printComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable);
 

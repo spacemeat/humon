@@ -19,10 +19,10 @@ int main()
         huNode const * extentsNode = huGetNodeByFullAddressZ(trove, "/assets/brick-diffuse/importData/extents");
         huNode const * valueNode = huGetChildByIndex(extentsNode, 0);
         huStringView const * sExt = valueNode ? & valueNode->valueToken->str : NULL;
-        int extX = sExt ? strntol(sExt->str, sExt->size, NULL, 10) : 0;
+        int extX = sExt ? strntol(sExt->ptr, sExt->size, NULL, 10) : 0;
         valueNode = huGetChildByIndex(extentsNode, 1);
         sExt = valueNode ? & valueNode->valueToken->str : NULL;
-        int extY = sExt ? strntol(sExt->str, sExt->size, NULL, 10) : 0;
+        int extY = sExt ? strntol(sExt->ptr, sExt->size, NULL, 10) : 0;
 
         printf("Extents: (%d, %d)\n", extX, extY);
     }
