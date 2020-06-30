@@ -166,19 +166,24 @@ bool huHasValue(huNode const * node)
 huStringView huGetNestedValue(huNode const * node)
 {
     huStringView str;
+    str.ptr = NULL;
+    str.size = 0;
 
 #ifdef HUMON_CHECK_PARAMS
     if (node == NULL || node == hu_nullNode)
-    {
-        str.ptr = NULL;
-        str.size = 0;
-        return str;
-    }
+        { return str; }
 #endif
 
-    str.ptr = node->firstToken->str.ptr;
-    str.size = node->lastToken->str.ptr + node->lastToken->str.size - 
-        node->firstToken->str.ptr;
+    char const * start = node->firstToken->str.ptr;
+    if (node->firstToken->quoteChar != '\0')
+        { start -= 1; }
+
+    char const * end = node->lastToken->str.ptr + node->lastToken->str.size; 
+    if (node->lastToken->quoteChar != '\0')
+        { end += 1; }
+    
+    str.ptr = start;
+    str.size = end - start;
     
     return str;
 }
@@ -799,8 +804,6 @@ void huGetNodeAddress(huNode const * node, char * dest, int * destLen)
         .newlineSize = 0,
         .colorTable = NULL,
         .currentDepth = 0,
-        .currentLine = 1,
-        .currentCol = 1,
         .lastPrintWasNewline = false
     };
 

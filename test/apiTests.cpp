@@ -392,17 +392,20 @@ TEST_GROUP(huGetNestedValue)
 {
     htd_listOfLists l;
     htd_dictOfDicts d;
+    htd_withSomeStrings s;
 
     void setup()
     {
         l.setup();
         d.setup();
+        s.setup();
     }
 
     void teardown()
     {
         d.teardown();
         l.teardown();
+        s.teardown();
     }
 };
 
@@ -462,6 +465,28 @@ TEST(huGetNestedValue, dicts)
     STRNCMP_EQUAL_TEXT(strBp.data(), sBp.ptr, strBp.size(), "bp str");
     LONGS_EQUAL_TEXT(strCpp.size(), sCpp.size, "cpp sz");
     STRNCMP_EQUAL_TEXT(strCpp.data(), sCpp.ptr, strCpp.size(), "cpp str");
+}
+
+TEST(huGetNestedValue, stringy)
+{
+    auto strA = R"("aaa": bbb)"sv;
+    auto strB = R"(ccc: "ddd")"sv;
+    auto strC = R"("eee": "fff")"sv;
+    auto strD = R"(ggg: hhh)"sv;
+
+    auto sA = huGetNestedValue(s.aaa);
+    auto sB = huGetNestedValue(s.ccc);
+    auto sC = huGetNestedValue(s.eee);
+    auto sD = huGetNestedValue(s.ggg);
+
+    LONGS_EQUAL_TEXT(strA.size(), sA.size, "aaa sz");
+    STRNCMP_EQUAL_TEXT(strA.data(), sA.ptr, strA.size(), "aaa str");
+    LONGS_EQUAL_TEXT(strB.size(), sB.size, "ccc sz");
+    STRNCMP_EQUAL_TEXT(strB.data(), sB.ptr, strB.size(), "ccc str");
+    LONGS_EQUAL_TEXT(strC.size(), sC.size, "eee sz");
+    STRNCMP_EQUAL_TEXT(strC.data(), sC.ptr, strC.size(), "eee str");
+    LONGS_EQUAL_TEXT(strD.size(), sD.size, "ggg sz");
+    STRNCMP_EQUAL_TEXT(strD.data(), sD.ptr, strD.size(), "ggg str");
 }
 
 TEST(huGetNestedValue, pathological)
@@ -3326,10 +3351,10 @@ TEST(huTroveToString, correctness)
     auto file = getFile("test/testFiles/comments.hu");
     char * toStr = NULL;
     int toStrLen = 0;
-    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_XEROGRAPHIC, true, 4, "\n", 1, NULL);
+    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, true, "\n", 1);
     LONGS_EQUAL_TEXT(file.size(), toStrLen, "comments.hu px len");
     toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_XEROGRAPHIC, true, 4, "\n", 1, NULL);
+    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, true, "\n", 1);
     MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "comments.hu px str");
     delete [] toStr;
     huDestroyTrove(tc);
@@ -3338,10 +3363,10 @@ TEST(huTroveToString, correctness)
     file = getFile("test/testFiles/comments-minimal.hu");
     toStr = NULL;
     toStrLen = 0;
-    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_MINIMAL, true, 4, "\n", 1, NULL);
+    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_MINIMAL, 4, NULL, true, "\n", 1);
     LONGS_EQUAL_TEXT(file.size(), toStrLen, "comments.hu pm len");
     toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_MINIMAL, true, 4, "\n", 1, NULL);
+    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_MINIMAL, 4, NULL, true, "\n", 1);
     MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "comments.hu pm str");
     delete [] toStr;
     huDestroyTrove(tc);
@@ -3350,10 +3375,10 @@ TEST(huTroveToString, correctness)
     file = getFile("test/testFiles/comments-pretty.hu");
     toStr = NULL;
     toStrLen = 0;
-    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_PRETTY, true, 4, "\n", 1, NULL);
+    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_PRETTY, 4, NULL, true, "\n", 1);
     LONGS_EQUAL_TEXT(file.size(), toStrLen, "comments.hu pp len");
     toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_PRETTY, true, 4, "\n", 1, NULL);
+    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_PRETTY, 4, NULL, true, "\n", 1);
     MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "comments.hu pp str");
     delete [] toStr;
     huDestroyTrove(tc);
@@ -3362,10 +3387,10 @@ TEST(huTroveToString, correctness)
     file = getFile("test/testFiles/quothTheHumon.hu");
     toStr = NULL;
     toStrLen = 0;
-    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_XEROGRAPHIC, true, 4, "\n", 1, NULL);
+    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, true, "\n", 1);
     LONGS_EQUAL_TEXT(file.size(), toStrLen, "quothTheHumon.hu px len");
     toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_XEROGRAPHIC, true, 4, "\n", 1, NULL);
+    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, true, "\n", 1);
     MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "quothTheHumon.hu px str");
     delete [] toStr;
     huDestroyTrove(tc);
@@ -3374,10 +3399,10 @@ TEST(huTroveToString, correctness)
     file = getFile("test/testFiles/quothTheHumon-minimal.hu");
     toStr = NULL;
     toStrLen = 0;
-    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_MINIMAL, true, 4, "\n", 1, NULL);
+    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_MINIMAL, 4, NULL, true, "\n", 1);
     LONGS_EQUAL_TEXT(file.size(), toStrLen, "quothTheHumon.hu pm len");
     toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_MINIMAL, true, 4, "\n", 1, NULL);
+    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_MINIMAL, 4, NULL, true, "\n", 1);
     MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "quothTheHumon.hu pm str");
     delete [] toStr;
     huDestroyTrove(tc);
@@ -3386,10 +3411,10 @@ TEST(huTroveToString, correctness)
     file = getFile("test/testFiles/quothTheHumon-pretty.hu");
     toStr = NULL;
     toStrLen = 0;
-    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_PRETTY, true, 4, "\n", 1, NULL);
+    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_PRETTY, 4, NULL, true, "\n", 1);
     LONGS_EQUAL_TEXT(file.size(), toStrLen, "quothTheHumon.hu pp len");
     toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_PRETTY, true, 4, "\n", 1, NULL);
+    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_PRETTY, 4, NULL, true, "\n", 1);
     MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "quothTheHumon.hu pp str");
     delete [] toStr;
     huDestroyTrove(tc);
@@ -3398,10 +3423,10 @@ TEST(huTroveToString, correctness)
     file = getFile("test/testFiles/utf8.hu");
     toStr = NULL;
     toStrLen = 0;
-    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_XEROGRAPHIC, true, 4, "\n", 1, NULL);
+    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, true, "\n", 1);
     LONGS_EQUAL_TEXT(file.size(), toStrLen, "utf8.hu px len");
     toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_XEROGRAPHIC, true, 4, "\n", 1, NULL);
+    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, true, "\n", 1);
     MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "utf8.hu px str");
     delete [] toStr;
     huDestroyTrove(tc);
@@ -3410,10 +3435,10 @@ TEST(huTroveToString, correctness)
     file = getFile("test/testFiles/utf8-minimal.hu");
     toStr = NULL;
     toStrLen = 0;
-    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_MINIMAL, true, 4, "\n", 1, NULL);
+    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_MINIMAL, 4, NULL, true, "\n", 1);
     LONGS_EQUAL_TEXT(file.size(), toStrLen, "utf8.hu pm len");
     toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_MINIMAL, true, 4, "\n", 1, NULL);
+    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_MINIMAL, 4, NULL, true, "\n", 1);
     MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "utf8.hu pm str");
     delete [] toStr;
     huDestroyTrove(tc);
@@ -3422,10 +3447,10 @@ TEST(huTroveToString, correctness)
     file = getFile("test/testFiles/utf8-pretty.hu");
     toStr = NULL;
     toStrLen = 0;
-    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_PRETTY, true, 4, "\n", 1, NULL);
+    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_PRETTY, 4, NULL, true, "\n", 1);
     LONGS_EQUAL_TEXT(file.size(), toStrLen, "utf8.hu pp len");
     toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_PRETTY, true, 4, "\n", 1, NULL);
+    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_PRETTY, 4, NULL, true, "\n", 1);
     MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "utf8.hu pp str");
     delete [] toStr;
     huDestroyTrove(tc);
@@ -3435,33 +3460,33 @@ TEST(huTroveToString, correctness)
 TEST(huTroveToString, pathological)
 {
     int strLen = 1024;
-    huTroveToString(NULL, NULL, & strLen, HU_OUTPUTFORMAT_XEROGRAPHIC, false, 4, "\n", 1, NULL);
+    huTroveToString(NULL, NULL, & strLen, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, "\n", 1);
     LONGS_EQUAL_TEXT(0, strLen, "NULL->str sz == 0");
 
     strLen = 1024;
-    huTroveToString(hu_nullTrove, NULL, & strLen, HU_OUTPUTFORMAT_XEROGRAPHIC, false, 4, "\n", 1, NULL);
+    huTroveToString(hu_nullTrove, NULL, & strLen, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, "\n", 1);
     LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
 
-    huTroveToString(l.trove, NULL, NULL, HU_OUTPUTFORMAT_XEROGRAPHIC, false, 4, "\n", 1, NULL);
+    huTroveToString(l.trove, NULL, NULL, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, "\n", 1);
 
     strLen = 1024;
-    huTroveToString(l.trove, NULL, & strLen, 3, false, 4, "\n", 1, NULL);
-    LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
-
-    strLen = 1024;
-    huTroveToString(l.trove, NULL, & strLen, -1, false, 4, "\n", 1, NULL);
+    huTroveToString(l.trove, NULL, & strLen, 3, 4, NULL, false, "\n", 1);
     LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
 
     strLen = 1024;
-    huTroveToString(l.trove, NULL, & strLen, HU_OUTPUTFORMAT_XEROGRAPHIC, false, -1, "\n", 1, NULL);
+    huTroveToString(l.trove, NULL, & strLen, -1, 4, NULL, false, "\n", 1);
     LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
 
     strLen = 1024;
-    huTroveToString(l.trove, NULL, & strLen, HU_OUTPUTFORMAT_XEROGRAPHIC, false, 4, NULL, 1, NULL);
+    huTroveToString(l.trove, NULL, & strLen, HU_OUTPUTFORMAT_XEROGRAPHIC, -1, NULL, false, "\n", 1);
     LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
 
     strLen = 1024;
-    huTroveToString(l.trove, NULL, & strLen, HU_OUTPUTFORMAT_XEROGRAPHIC, false, 4, "\n", 0, NULL);
+    huTroveToString(l.trove, NULL, & strLen, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, NULL, 1);
+    LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
+
+    strLen = 1024;
+    huTroveToString(l.trove, NULL, & strLen, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, "\n", 0);
     LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
 }
 
@@ -3495,57 +3520,57 @@ TEST(huTroveToFile, pathological)
         { remove(validFile); }
 
     int sv;
-    sv = huTroveToFileZ(NULL, validFile, HU_OUTPUTFORMAT_XEROGRAPHIC, false, 4, "\n", 1, NULL);
+    sv = huTroveToFileZ(NULL, validFile, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, "\n", 1);
     LONGS_EQUAL_TEXT(0, sv, "NULL->file sz == 0");
     acc = access(validFile, F_OK);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
 
-    sv = huTroveToFileZ(hu_nullTrove, validFile, HU_OUTPUTFORMAT_XEROGRAPHIC, false, 4, "\n", 1, NULL);
+    sv = huTroveToFileZ(hu_nullTrove, validFile, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, "\n", 1);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
 
-    sv = huTroveToFileZ(hu_nullTrove, NULL, HU_OUTPUTFORMAT_XEROGRAPHIC, false, 4, "\n", 1, NULL);
+    sv = huTroveToFileZ(hu_nullTrove, NULL, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, "\n", 1);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
 
-    sv = huTroveToFileZ(hu_nullTrove, "", HU_OUTPUTFORMAT_XEROGRAPHIC, false, 4, "\n", 1, NULL);
+    sv = huTroveToFileZ(hu_nullTrove, "", HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, "\n", 1);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
 
-    sv = huTroveToFileZ(hu_nullTrove, "..", HU_OUTPUTFORMAT_XEROGRAPHIC, false, 4, "\n", 1, NULL);
+    sv = huTroveToFileZ(hu_nullTrove, "..", HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, "\n", 1);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
 
-    sv = huTroveToFileZ(hu_nullTrove, "/", HU_OUTPUTFORMAT_XEROGRAPHIC, false, 4, "\n", 1, NULL);
+    sv = huTroveToFileZ(hu_nullTrove, "/", HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, "\n", 1);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
 
-    sv = huTroveToFileZ(l.trove, validFile, 3, false, 4, "\n", 1, NULL);
-    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
-    acc = access(validFile, F_OK);
-    LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
-    if (acc != -1)
-        { remove(validFile); }
-
-    sv = huTroveToFileZ(l.trove, validFile, -1, false, 4, "\n", 1, NULL);
+    sv = huTroveToFileZ(l.trove, validFile, 3, 4, NULL, false, "\n", 1);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
     acc = access(validFile, F_OK);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
 
-    sv = huTroveToFileZ(l.trove, validFile, HU_OUTPUTFORMAT_XEROGRAPHIC, false, -1, "\n", 1, NULL);
+    sv = huTroveToFileZ(l.trove, validFile, -1, 4, NULL, false, "\n", 1);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
     acc = access(validFile, F_OK);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
 
-    sv = huTroveToFileZ(l.trove, validFile, HU_OUTPUTFORMAT_XEROGRAPHIC, false, 4, NULL, 1, NULL);
+    sv = huTroveToFileZ(l.trove, validFile, HU_OUTPUTFORMAT_XEROGRAPHIC, -1, NULL, false, "\n", 1);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
     acc = access(validFile, F_OK);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
 
-    sv = huTroveToFileZ(l.trove, validFile, HU_OUTPUTFORMAT_XEROGRAPHIC, false, 4, "\n", 0, NULL);
+    sv = huTroveToFileZ(l.trove, validFile, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, NULL, 1);
+    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+    acc = access(validFile, F_OK);
+    LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
+    if (acc != -1)
+        { remove(validFile); }
+
+    sv = huTroveToFileZ(l.trove, validFile, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, "\n", 0);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
     acc = access(validFile, F_OK);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");

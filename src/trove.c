@@ -752,8 +752,8 @@ void recordError(huTrove * trove, int errorCode, huToken const * pCur)
 
 
 void huTroveToString(huTrove const * trove, char * dest, int * destLength, 
-    int outputFormat, bool printComments, int outputTabSize, 
-    char const * newline, int newlineSize, huStringView const * colorTable)
+    int outputFormat, int outputTabSize, huStringView const * colorTable, 
+    bool printComments, char const * newline, int newlineSize)
 {
     if (dest == NULL && destLength != NULL)
         { * destLength = 0; }
@@ -788,7 +788,8 @@ void huTroveToString(huTrove const * trove, char * dest, int * destLength,
             huInitVectorPreallocated(& str, sizeof(char), dest, * destLength, false);
         }
 
-        troveToPrettyString(trove, & str, outputFormat, printComments, outputTabSize, newline, newlineSize, colorTable);
+        troveToPrettyString(trove, & str, outputFormat, outputTabSize, 
+            colorTable, printComments, newline, newlineSize);
         if (dest == NULL)
             { * destLength = str.numElements; }
     }
@@ -796,17 +797,22 @@ void huTroveToString(huTrove const * trove, char * dest, int * destLength,
 
 #pragma GCC diagnostic pop
 
-size_t huTroveToFileZ(huTrove const * trove, char const * path, int outputFormat, bool printComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable)
+size_t huTroveToFileZ(huTrove const * trove, char const * path, int outputFormat, 
+    int outputTabSize, huStringView const * colorTable, bool printComments, 
+    char const * newline, int newlineSize)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (path == NULL)
         { return 0; }
 #endif
 
-    return huTroveToFileN(trove, path, strlen(path), outputFormat, printComments, outputTabSize, newline, newlineSize, colorTable);
+    return huTroveToFileN(trove, path, strlen(path), outputFormat, outputTabSize, 
+        colorTable, printComments, newline, newlineSize);
 }
 
-size_t huTroveToFileN(huTrove const * trove, char const * path, int pathLen, int outputFormat, bool printComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable)
+size_t huTroveToFileN(huTrove const * trove, char const * path, int pathLen, 
+    int outputFormat, int outputTabSize, huStringView const * colorTable, 
+    bool printComments, char const * newline, int newlineSize)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == NULL || trove == hu_nullTrove || path == NULL || outputFormat < 0 || outputFormat >= 3 || outputTabSize < 0 || newline == NULL || newlineSize < 1)
@@ -814,13 +820,15 @@ size_t huTroveToFileN(huTrove const * trove, char const * path, int pathLen, int
 #endif
 
     int strLength = 0;
-    huTroveToString(trove, NULL, & strLength, outputFormat, printComments, outputTabSize, newline, newlineSize, colorTable);
+    huTroveToString(trove, NULL, & strLength, outputFormat, outputTabSize, 
+        colorTable, printComments, newline, newlineSize);
 
     char * str = malloc(strLength + 1);
     if (str == NULL)
         { return 0; }
 
-    huTroveToString(trove, str, & strLength, outputFormat, printComments, outputTabSize, newline, newlineSize, colorTable);
+    huTroveToString(trove, str, & strLength, outputFormat, outputTabSize, 
+        colorTable, printComments, newline, newlineSize);
 
     FILE * fp = fopen(path, "w");
     if (fp == NULL)

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstring>
 #include <charconv>
+#include <optional>
 
 using namespace std;
 using namespace hu;
@@ -34,6 +35,11 @@ Returns 2 on bad / erroneous input.
 
 If -px is specified, the output is a byte-for-byte clone of the original token
 stream. As such, the -m, -t, and -c arguments have no effect on the output.
+
+If -pm is specified, the output is minimized. As such, the -t argument has no 
+effect on the output.
+
+If -pp is specified, the output is pretty. Marvel at its beauty.
 )";
 }
 
@@ -203,13 +209,9 @@ int main(int argc, char ** argv)
         trove = getInput(in);
     }
 
-    hu::ColorTable colorTable;
-    std::string_view * colors = nullptr;
+    std::optional<ColorTable> colorTable;
     if (usingColors == UsingColors::ansi)
-    {
-        getAnsiColorTable(colorTable);
-        colors = colorTable.data();
-    }
+        { colorTable.emplace(std::move(getAnsiColorTable())); }
 
     std::string output;
     switch(format)
@@ -218,10 +220,10 @@ int main(int argc, char ** argv)
         output = trove.toPreservedString();
         break;
     case OutputFormat::minimal:
-        output = trove.toMinimalString(printComments, "\n", colors);
+        output = trove.toMinimalString(colorTable, printComments, "\n");
         break;
     case OutputFormat::pretty:
-        output = trove.toPrettyString(printComments, tabSize, "\n", colors);
+        output = trove.toPrettyString(tabSize, colorTable, printComments, "\n");
         break;
     }
 

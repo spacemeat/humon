@@ -1,19 +1,14 @@
 DONE THIS CHECKIN:
-P1 add quoted string tests
-P1 fixed preserved printing
-P1 end pretty print with \n
-P1 end with ANSI off
-P1 rename some old things
-P1 add printing tests now that it's behaving correctly
-P1 add /**/ tests
-P1 a few more C++ tests
-P1 numerous bug fixes
+Fixed nested value with strings bug
+ensure utf8 bom is read
+Improved printing signatures.
+P1 make hu::val<T>::extract static? Lets you call it on a string_view
+P1 ensure new code btis in readme compile and run
+P1 review API desc in readme
 
 TODO:
 P1 CMake, vcpkg
 P1 doxygen
-P1 review API desc in readme
-P1 ensure new code btis in readme compile and run
 P2 improve error recovery in parsing
 P2 more erroneous humon tests
 P2 UTF8 digits for addressing

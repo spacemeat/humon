@@ -80,24 +80,24 @@ extern "C"
     char const * huOutputErrorToString(int rhs);
 
     /// Specifies a style ID for colorized printing.
-    enum huColorKind
+    enum huColorCode
     {
-        HU_COLORKIND_NONE = 0,                  ///< No color
-        HU_COLORKIND_TOKENEND,                 ///< End-of-token color code.
-        HU_COLORKIND_PUNCLIST,                  ///< List punctuation style. ([,]) 
-        HU_COLORKIND_PUNCDICT,                  ///< Dict punctuation style. ({,})
-        HU_COLORKIND_PUNCKEYVALUESEP,           ///< Key-value separator style. (:)
-        HU_COLORKIND_PUNCANNOTATE,              ///< Annotation mark style. (@)
-        HU_COLORKIND_PUNCANNOTATEDICT,          ///< Annotation dict punctuation style. ({,})
-        HU_COLORKIND_PUNCANNOTATEKEYVALUESEP,   ///< Annotation key-value separator style. (:)
-        HU_COLORKIND_KEY,                       ///< Key style.
-        HU_COLORKIND_VALUE,                     ///< Value style.
-        HU_COLORKIND_COMMENT,                   ///< Comment style.
-        HU_COLORKIND_ANNOKEY,                   ///< Annotation key style.
-        HU_COLORKIND_ANNOVALUE,                 ///< Annotation value style.
-        HU_COLORKIND_WHITESPACE,                ///< Whitespace style (including commas).
+        HU_COLORCODE_NONE = 0,                  ///< No color
+        HU_COLORCODE_TOKENEND,                 ///< End-of-token color code.
+        HU_COLORCODE_PUNCLIST,                  ///< List punctuation style. ([,]) 
+        HU_COLORCODE_PUNCDICT,                  ///< Dict punctuation style. ({,})
+        HU_COLORCODE_PUNCKEYVALUESEP,           ///< Key-value separator style. (:)
+        HU_COLORCODE_PUNCANNOTATE,              ///< Annotation mark style. (@)
+        HU_COLORCODE_PUNCANNOTATEDICT,          ///< Annotation dict punctuation style. ({,})
+        HU_COLORCODE_PUNCANNOTATEKEYVALUESEP,   ///< Annotation key-value separator style. (:)
+        HU_COLORCODE_KEY,                       ///< Key style.
+        HU_COLORCODE_VALUE,                     ///< Value style.
+        HU_COLORCODE_COMMENT,                   ///< Comment style.
+        HU_COLORCODE_ANNOKEY,                   ///< Annotation key style.
+        HU_COLORCODE_ANNOVALUE,                 ///< Annotation value style.
+        HU_COLORCODE_WHITESPACE,                ///< Whitespace style (including commas).
 
-        HU_COLORKIND_NUMCOLORKINDS              ///< One past the last style code.
+        HU_COLORCODE_NUMCOLORKINDS              ///< One past the last style code.
     };
 
     /// Describes and owns an array of memory elements.
@@ -367,12 +367,12 @@ extern "C"
     huNode const * huFindNodesByCommentContainingN(huTrove const * trove, char const * containedText, int containedTextLen, huNode const * startWith);
 
     /// Serializes a trove to text.
-    void huTroveToString(huTrove const * trove, char * dest, int * destLength, int outputFormat, bool printComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable);
+    void huTroveToString(huTrove const * trove, char * dest, int * destLength, int outputFormat, int outputTabSize, huStringView const * colorTable, bool printComments, char const * newline, int newlineSize);
 
     /// Serializes a trove to file.
-    size_t huTroveToFileZ(huTrove const * trove, char const * path, int outputFormat, bool printComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable);
+    size_t huTroveToFileZ(huTrove const * trove, char const * path, int outputFormat, int outputTabSize, huStringView const * colorTable, bool printComments, char const * newline, int newlineSize);
     /// Serializes a trove to file.
-    size_t huTroveToFileN(huTrove const * trove, char const * path, int pathLen, int outputFormat, bool printComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable);
+    size_t huTroveToFileN(huTrove const * trove, char const * path, int pathLen, int outputFormat, int outputTabSize, huStringView const * colorTable, bool printComments, char const * newline, int newlineSize);
 
     void huFillAnsiColorTable(huStringView table[]);
 

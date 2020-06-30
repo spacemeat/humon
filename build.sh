@@ -40,7 +40,7 @@ echo Done.
 
 echo Building samples...
 gcc -std=c99 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o samples/bin/sample-usage-c-d samples/usage-c/usage.c -Lbin -lhumon-d
-g++ -std=c++17 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o samples/bin/sample-usage-cpp-d samples/usage-cpp/usage.cpp -Lbin -lhumon-d
+g++ -std=c++17 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o samples/bin/sample-usage-cpp-d samples/usage-cpp/usage.cpp -Lbin -lhumon-d -Wno-unused-value -Wno-unused-variable -Wno-unused-but-set-variable
 g++ -std=c++17 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o samples/bin/hux samples/hux/hux.cpp -Lbin -lhumon-d
 
 samples/bin/hux test/testFiles/comments.hu -cn -pm -my -o test/testFiles/comments-minimal.hu

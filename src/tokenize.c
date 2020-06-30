@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include "humon.internal.h"
 
 
@@ -321,6 +322,13 @@ void huTokenizeTrove(huTrove * trove)
     int line = 1;
     int col = 1;
     bool scanning = true;
+
+    char bom[3] = { 0xef, 0xbb, 0xbf };
+    if (memcmp(cur.character, bom, 3) == 0)
+    {
+        cur.character += 3;
+        cur.charLength = getcharLength(cur.character);
+    }
 
     // lexi scan
     while (scanning)

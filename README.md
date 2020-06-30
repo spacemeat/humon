@@ -78,28 +78,29 @@ Using the APIs is straightforward. To get the image's (x, y) extents above, we m
 
     #include <Humon.h>
     ...
-        huTrove const * trove = huMakeTroveFromFileZ("src/samples/materials.hu", 4);
-        if (trove != hu_nullTrove && huGetNumErrors(trove) == 0)
+        huTrove const * trove = huMakeTroveFromFileZ("samples/sampleFiles/materials.hu", 4);
+        if (trove != NULL && huGetNumErrors(trove) == 0)
         {
             huNode const * extentsNode = huGetNodeByFullAddressZ(trove, "/assets/brick-diffuse/importData/extents");
             huNode const * valueNode = huGetChildByIndex(extentsNode, 0);
-            huStringView const * sExt = valueNode ? & valueNode->valueToken->value : NULL;
+            huStringView const * sExt = valueNode ? & valueNode->valueToken->str : NULL;
             int extX = sExt ? strntol(sExt->ptr, sExt->size, NULL, 10) : 0;
             valueNode = huGetChildByIndex(extentsNode, 1);
-            sExt = valueNode ? & valueNode->valueToken->value : NULL;
+            sExt = valueNode ? & valueNode->valueToken->str : NULL;
             int extY = sExt ? strntol(sExt->ptr, sExt->size, NULL, 10) : 0;
+
             ...
 
 or in C++:
 
     #include <Humon.hpp>
     ...
-        if (auto trove = hu::Trove::fromFile("src/samples/materials.hu");
+        if (auto trove = hu::Trove::fromFile("samples/sampleFiles/materials.hu"sv);
             trove)
         {
-            auto extentsNode = trove.getNode("/assets/brick-diffuse/importData/extents"sv);
-            tuple xyExtents = { extentsNode / 0 / hu::value<int>{}, 
-                                extentsNode / 1 / hu::value<int>{} };
+            auto extentsNode = trove.nodeByAddress("/assets/brick-diffuse/importData/extents"sv);
+            tuple xyExtents = { extentsNode / 0 / hu::val<int>{}, 
+                                extentsNode / 1 / hu::val<int>{} };
             ...
 
 ### Installation
@@ -116,10 +117,10 @@ Computing machines are the other primary customer. Software written against the 
 The APIs are the conjunction of human and machine. The machine has been taught how to use them. We can learn the same. API design must be convenient and unsurprising, consistent and unambiguous.
 
 ### Principles in the language
-No more quotes. Commas are optional. You can use any quote character `` ' " ` ``. Values are just text data. Quoted values can contain newlines. Annotations and conmments can provide "human hooks" into the data without the need to muck with the structure design, and without polluting the data structure expected by an extant application. Humon files are *intended* to be authored and modified in text editing tools, by humans, while also simple enough for a machine to generate as well.
+No more quotes. Commas are optional. You can use any quote character `` ' " ` ``. Values are just text data. Quoted values can contain newlines. Annotations and conmments can provide "human hooks" into the data without the need to muck with the structure design, and without polluting the data structure expected by an extant application. Humon files are *intended* to be authored and modified in text editing tools, by humans, and also be simple enough for a machine to generate as well.
 
 ### Principles in the APIs
-Most of the interesting use cases for Humon involve a machine *reading* data authored by either machines or humans. The performance of this implementation reflects this; loaded Humon troves are *immutable*. Searching, scanning, or scumming through the data is quick, and references never go bad for the life of the trove.
+Most of the interesting use cases for Humon involve a machine *reading* data authored by either machines or humans. The performance characteristics of this implementation reflects this; loaded Humon troves are *immutable*. Searching and scanning through Humon data is quick, and references to internal data do not go bad for the life of the trove.
 
 The base API is a C interface. Everything a human or machine needs to traverse the data heirarchically or by search is there and easy to use. Mainly it exists for other language bindings, but this makes Humon available to pure C code as well.
 
@@ -128,7 +129,7 @@ There is a C++ layer which wraps the C API, giving syntactic sugar and a more ac
 Language bindings forthcoming include Python, Node, Rust, and .NET.
 
 ## The language
-I happen to love me some JSON. To my mind, it has the best syntax for describing structured data. It's incredibly expressive, incredibly simple, and open to just about any practical use. There are so many structures, descriptions, configurations, and data models that can be faithfully described by a JSON object, with very little plumbing. The array- and dictionary-style collections are generally sufficient to describe a huge swath of problems. (Some structures, like graphs, are harder to model in a heirarchy. Using labels helps bridge some gaps, but graphs are a problem in any serial text format.)
+I happen to love me some JSON. To my mind, it has the best syntax for describing structured data. It's incredibly expressive, incredibly simple, and open to just about any practical use. There are so many structures, descriptions, configurations, and data models that can be faithfully described by a JSON object, with very little plumbing. The array- and dictionary-style collections are generally sufficient to describe a huge swath of problems. (Some structures, like graphs, are harder to model in a heirarchy. Using labels helps bridge some gaps, but graphs are difficult to visualize in any serial text format.)
 
 As we all know, JSON has some creaky bits. Some of them are merely annoying, like nitpicky punctuation--during a creative editing session, worrying about maintaining commas in just the right places while developing the structure is Flowus Interruptus. But some of JSON's shortcomings inhibit some practical use cases, like the lack of commenting or metadata. Editing apps and other environments oftentimes include their own custom JSON parser, just to accept comments in configuration files, say.
 
@@ -143,19 +144,19 @@ So, this project proposes a replacement, or suggests a philosophy for such anywa
 
 `trove`: A tokenized and parsed, in-memory representation of Humon data which stems from a single root node, and against which APIs are programmed.
 
-`token`: A word or sequence of words in a Humon token stream, which are meaningful to Humon and you at a graunular level. `{` is a token, as is a value like `"foo"`, as is a whole comment like `/* I am just an utterance. */`. Every token is owned either by a single node, or (in special cases) by the trove itself. A token array is maintained by the trove, and provides content and position information (row, column) for each token, if that sort of thing is interesting to you.
+`token`: A word or sequence of words in a Humon token stream, which are meaningful to Humon and you at a graunular level. `{` is a token, as is a value like `"foo"`, as is a whole comment like `/* I am just an utterance. */`. (Comments are considered single tokens for parsing purposes.) Every token is owned either by a single node, or (in special cases) by the trove itself. A token array is maintained by the trove, and provides content and position information (row, column) for each token, if that sort of thing is interesting to you.
 
-`token stream`: The text of a Humon file or in-memory text string. I use this language to refer to Humon text content that is tokenized and parsed into a trove.
+`token stream`: The text of a Humon file or in-memory text string. I use this language to refer to Humon text content like in a file, rather than tokenized or parsed Humon data in a trove.
 
-`node`: A unit of structure in a Humon heirarchy. There are three kinds of nodes: lists, dictionaries (dicts), and values. Lists and dicts can store any kinds of nodes as children. Nodes are the abstraction of the structure. The trove maintains an array of nodes parsed from the token array.
+`node`: A unit of structure in a Humon data heirarchy. There are three kinds of nodes: lists, dictionaries (dicts), and values. Lists and dicts can store any kinds of nodes as children. Nodes are the abstraction of the structure. The trove maintains an array of nodes parsed from the token array.
 
 `list`: A node that contains a sequential collection of zero or more nodes as children.  In the language, the list is the bounding `[ ]` around the child nodes. In the API, a list's children can be accessed by index.
 
 `dict`: A node that contains a sequential collection of zero or more nodes as children, where each node is associated with a key. In the language, the dict is the bounding `{ }` around the child nodes, each of which must be preceded by a key and `:`. In the API, a dict's children can be accessed by index or by key.
 
-`key`: An associated key for a dict's child. A key must be a string of nonzero length. Within a dict, keys must be unique. There is no maximum length defined, and keys can be quoted. (Quoted values can be multline strings, but that's a strange way to spec a key.) Any UTF8 code point that is not whitespace or punctuation counts as a key character.
+`key`: An associated key for a dict's child. A key must be a string of nonzero length. Within a dict, keys must be unique. There is no maximum length defined, and keys can be quoted. (Quoted values can be multline strings, but that's a strange way to spec a key.) Any Unicode code point that is not whitespace or punctuation counts as a key character.
 
-`value`: A node that contains a single string value. Values can be quoted; quoted values can be multline strings. As with keys, any UTF8 code point that is not whitespace or punctuation counts as a value character.
+`value`: A node that contains a single string value. Values can be quoted; quoted values can be multline strings. As with keys, any Unicode code point that is not whitespace or punctuation counts as a value character.
 
 `comment`: A string of words that are not exposed as values in nodes. They're mainly for humans to make notes, but there are APIs to search for comments and get their associated nodes, in case that's useful.
 
@@ -168,7 +169,7 @@ Punctuation in Humon consists entirely of:
 
     [ ] { } : " ' ` @
 
-There are three kinds of "nodes" in a Humon token stream: lists, dictionaries (dicts), and values. These correspond to the same object kinds in JSON, conceptually: A list stores a plurality of other nodes in ordered sequence. A dictionary stores a plurality of nodes in ordered sequence, and associated with string keys. A value stores a single string value. This structure allows for an arbitrary object heirarchy.
+As stated, there are three kinds of nodes in a Humon token stream: lists, dicts, and values. These correspond to the same object kinds in JSON, conceptually: A list stores a plurality of other nodes in ordered sequence. A dictionary stores a plurality of nodes in ordered sequence, and associated with string keys. A value stores a single string. This structure allows for an arbitrary data heirarchy.
 
 #### It works like you expect a smart thing to work
 For the most part it looks like JSON, and nothing about it is surprising. However, there is one relatively smart aspect of the Humon spec, to do with how comments are associated to related nodes. We'll discuss the finer points of comments later but broadly, comments can be searched for, and their associated nodes referenced by APIs. Humon has smarts about associating comments as they appear in a token stream, relative to other tokens, in the same way your brain probably does.
@@ -191,7 +192,7 @@ Okay, let's state some explicit rules, then.
 A blank token stream, or one with only comments and annotations (but no structures or values) contains no root node. Otherwise it must contain one top-level node, probably with many children.
 
 **The root node is what it is, which is what you say it is.**
-There is no assumption made about the kind of the root node. If the first non-comment token in your token stream is a `{`, then the root is a dict; a `[` starts a list. If it's a value, then it's the only one allowed, since value nodes don't have children. (Not a terribly useful Humon trove, but legal. Eh.)
+There is no assumption made about the kind of the root node. If the first non-comment token in your token stream is a `{`, then the root is a dict; a `[` starts a list. If it's a value, then it's the only one allowed, since value nodes don't have children and a trove can only have one root. (Not a terribly useful Humon trove, but legal. Eh.)
 
 **Lists are enclosed in [square brackets].**
 Any kind of node can occupy any entry in any list. Lists don't have to contain nodes of a single kind; mix and match as you see fit.
@@ -199,13 +200,10 @@ Any kind of node can occupy any entry in any list. Lists don't have to contain n
 **Dicts are enclosed in {curly braces}.**
 Each dict entry must be a key:node pair. The node can be of any kind. Each key in a dict must be a string, and unique within the dict. There is no delimiting syntax between key:object pairs; just whitespace (maybe including commas).
 
-**Keys must be strings.**
-They can be numbers of course, but that's just a string to Humon. As written, a key as a token must be a sequence of value characters, quoted or unquoted, with the same rules as value node strings.
-
 **Values are strings.**
-A value is a contiguous non-punctuation, non-whitespace string of characters, or a quoted string of characters.
+A value is a contiguous non-punctuation, non-whitespace string of Unicode characters, or a quoted string of Unicode characters.
 
-For non-quoted values, the first whitespace or punctuation character encountered ends the string, and begins a new token. This obviously includes newlines.
+For non-quoted values, the first whitespace or punctuation character encountered ends the string, and begins a new token. This obviously includes newlines. Quotes that are encountered within the string are included with it, and are not matched against any other quotes later in the string.
 
 You can use any quote character (`'`, `"`, `` ` ``) to begin a string. It doesn't matter which you use, as they all work the same way. A quoted string value starts after the quote, and ends just before the next corresponding, *unescaped* quote. The string can contain backslash-escaped quotes, like in most programming languages, and treats other kinds of quotes as characters:
 
@@ -215,6 +213,21 @@ Quoted string values can span multiple lines of text. Newlines are included in t
 
     "Fiery the angels rose, and as they rose deep thunder roll'd.
     Around their shores: indignant burning with the fires of Orc."
+
+**Keys must be strings.**
+A value is a contiguous non-punctuation, non-whitespace string of Unicode characters, or a quoted string of Unicode characters.
+
+They can be numbers of course, but that's just a string to Humon. The same rules as value node strings apply to keys. Examples below specify valid keys:
+
+    {
+        this: okay
+        this one: nope
+        "this one here": "this is fine"
+        "this
+one": yeppers
+        1: "fine, but remember: numbers are just strings to Humon and they won't be sorted"
+        Δημοσθένους: "Unicode is fully recognized."
+    }
 
 **Whitespace is ignored.**
 The tokenizer ignores whitespace that isn't contained in a quoted string. Whitespace characters are not captured by tokens.
@@ -265,30 +278,32 @@ Any single node can have any number of annotations. The trove can have them too,
 
     [
         nostromo @ movie-ref: alien
-        sulaco @{movie-ref: aliens, movie-director: cameron}
+        sulaco @ { movie-ref: aliens, movie-director: cameron }
     ]
 
 Annotation values must be value strings only; an annotation can't be a collection. That way lies some madness.
 
 Like dict entries, annotation keys must be unique among annotations associated to a particular node. Different nodes in a trove can have annotations with identical keys though.
 
-Practically, annotations aren't a necessary part of Humon. All their data could be baked into objects themselves, and there was a time when Humon didn't have them. But they are useful for a number of things.
+Practically, annotations aren't a necessary part of Humon. All their data could be baked into objects themselves, and there was a time when Humon didn't have them. But I find them useful.
 
 **Humon supports UTF8.**
 UTF8 is quickly becoming the ubiquitous Unicode encoding, even in Asian locales. Humon supports UTF8 only, with or without BOM. Support for UTF16 and UTF32 may be considered in the future, but their relative worldwide use is pretty small. Humon respects all the whitespace characters that Unicode specifies, and supports all code points.
 
-A code point is either whitespace, language punctuation (which is only ever a single byte), or a word-token character. That's all the tokenizer understands.
+To Humon, any code point is either whitespace, language punctuation (which is only ever a single byte), or a word-token character. That's all the tokenizer understands.
 
 If this is all Groot to you, just rest assured that any modern text editor or web server or web browser reads and writes UTF8, and can handle any language text and emojis, and Humon speaks that encoding too.
 
 ## The C-family programming interfaces
 There are API specs for the C and C++ interfaces. The C API is pretty basic, but fully featured. The C++ API mainly wraps the C API, but also provides some nice features for more C++ish fun-time things. Since you'll usually be using the C++ API, we'll discuss that first.
 
-Start with `#include <humon.hpp>`. The interface is contained in a namespace, `hu`. The C API is itself contained in a subnamespace, `hu::capi`, but you generally won't reference it yourself.
+Start with `#include <humon.hpp>`. The interface is contained in a namespace, `hu`. The C API is itself contained in a nested namespace, `hu::capi`, but you generally won't reference it yourself.
+
+(Note: To use the C API, `#include <humon.h>` instead. Obviously there is no namespace there, because it's a pure C99 header.)
 
 To load a Humon trove, invoke one of `hu::Trove`'s static member functions:
 
-    auto trove = hu::Trove::fromString("{foo: [100, 200]}sv");
+    auto trove = hu::Trove::fromString("{foo: [100, 200]}"sv);
     auto troveFromFile = hu::Trove::fromFile("data/foo.hu"sv);
 
 These each return a `hu::Trove` object. Once you have a trove, all the loading from source is finished, and it's fully ready to use. You'll use the trove to get access to nodes and their data.
@@ -297,60 +312,72 @@ There are several ways to access a node. To get the root node, which is always a
 
     auto rootNode = trove.root();
     // or
-    auto rootNode = trove.node("/");
+    rootNode = trove.nodeByAddress("/");
     // or
-    auto rootNode = trove.node(0);
+    rootNode = trove.node(0);
 
 To get a node deeper in the tree:
 
     auto node = rootNode / "foo" / 0;
     // or
-    auto node = trove.root() / "foo" / 0;
+    node = trove.root() / "foo" / 0;
     // or
-    auto node = rootNode.node("foo/0");
+    node = rootNode.relative("foo/0");
     // or
-    auto node = trove.node("/foo/0");
+    node = trove.nodeByAddress("/foo/0");
 
-To check first, use the % operator.
+To check first, use the % operator. This returns a bool which indicates whether the given key or index is valid. Note that for indices, this produces true if the given index is strictly smaller than the number of children, and is includsive of index 0.
 
     // has a child with key 'foo'
     bool hasFoo = rootNode % "foo";
     // has a child with index 1 (so at least two children)
-    auto hasFoo && hasFoosStuff = rootNode / "foo" % 1;
+    bool hasFoosStuff = hasFoo && rootNode / "foo" % 1;
 
-A few things to note: It's more efficient to store a reference to a node, rather than look it up successive times. Above, we're essentially looking up "/foo" twice. Better to get the base object and store it:
+A few things to note: It's more efficient to store a reference to a node than to look it up successive times. Above, we're essentially looking up "/foo" twice. Better to get the base object and store it:
 
-    bool hasFoo = rootNode % "foo";
     auto fooNode = rootNode / "foo";
-    bool hasFoosStuff = rootNode / "foo" % 1;
+    hasFoosStuff = rootNode / "foo" % 1;
 
 Humon APIs don't throw, but rather return nullish objects, which have implicit `operator bool()`s for checking nullity. So even better than above:
 
-    auto fooNode = rootNode / "foo";
-    bool hasFooStuff = fooNode && fooNode % 1;
+    fooNode = rootNode / "foo";
+    hasFoosStuff = fooNode ? fooNode % 1 : hu::Node(nullptr);
 
 Or even,
 
-    bool hasFooStuff = rootNode / "foo" % 1;
+    hasFoosStuff = rootNode / "foo" % 1;
 
-And, if you intend to acutally use the data (probably, right?), it's even better to just ask for it all the way without checking anything:
+And, if you intend to acutally use the data (probably, right?), it may be even better to just ask for it all the way without checking anything:
 
-    auto foosStuff = rootNode / "foo" / 1;
-    if (foosStuff) { ... }
+        auto foosStuff = rootNode / "foo" / 1;
+        if (foosStuff) { ... }
 
-Above, `foosStuff` will be a nullish object if any part of the path doesn't actually exist in the Humon source. Of course, then it's harder to check which part of the path fell off of reality, so use with caution.
+Above, `foosStuff` will be a nullish object if any part of the path doesn't actually exist in the Humon source, even an upstream node like "foo". It's all in one succinct line of code, though this is harder to debug; if the path is invalid, it may be hard to check which part of the path fell off of reality. So use with caution.
 
 Up to now, we've mostly been using `operator /` to get nodes. But there's a string-based addressing method as well. Every node has a unique address based on the progression of keys and indices used to get to it from the trove or another node. You can get a node's address easily enough:
 
     string address = node.address();
 
-(Node addresses are computed, not stored in the trove; as a result, the return value is a `std::string` rather than a `std::string_view`.) The address of a node looks like:
+(Node addresses are computed, not stored in the trove; as a result, the return value is a `std::string` rather than a `std::string_view` peering into the token stream.) The address of a node looks like:
 
     /foo/20/baz/3
 
-The `/`s delimit the terms, and each term is either a key or integer index. Note that since dicts maintain their ordering like lists, you can use an integer to index into a dict just like a list, with no worries. Note also that full paths from the trove must start with `/`.
+The `/`s delimit the terms, and each term is either a key or integer index.
 
-There are some finnicky bits when considering that keys can be numbers (but still strings to Humon) or can contain `/` characters--in both cases, that portion is returned quoted:
+When crafting your own address string into Humon data, note that since dicts maintain their ordering like lists, you can use an integer to index into a dict just like you do a list. (`huNode::address()` prefers keys over indices when generating addresses.) Note also that full paths from the trove must start with `/`. You can also put arbitrary whitespace in the address.
+
+You can look up a node by its address:
+
+    node = trove.nodeByAddress(address);
+
+You get a node object back, which is valid if the address is valid.
+
+There are some finnicky bits about node addresses when considering that keys can be numbers.
+They're still just string keys to Humon. But, `hu::Trove:: node(address)` (and `hu::Node::relative(address)`) interpret numeric terms in the address as indices. If you intend them to be read as strings, enquote that term in the address:
+
+    /foo/"20"/baz/'path/with/slashes'
+
+`hu::Node::address()` returns appropriately `"`-enquoted terms if it needs to, and will escape already-present `"` if it has to enquote such a term.
 
     [
         {
@@ -376,27 +403,39 @@ There are some finnicky bits when considering that keys can be numbers (but stil
     $ runSample
     Address: /1/"res/\"game assets\"/materials.hu"/required
 
-`hu::Node::address()` always returns an address that is legal to use in `hu::Trove::node()` to find the node again. You could even store those addresses in other Humon data for complex referencing.
+`hu::Node::address()` always returns an address that is legal to use in `hu::Trove::node()` to find the node again. You could even store those addresses (perhaps in other Humon data) for cross-referencing.
 
 A relative address can be used to get from one node to another:
 
-    requiredAddress = requiredAddress.node("../../ 1 / 0");
+    auto requiredAddress = requiredNode.relative("../.. / 1 / 0");
 
-Notice the path does not start with `/`. The relative address is taken from the node, not from the trove. You can also put arbitrary whitespace in the address.
+Notice the relative path does not start with `/`. The relative address is taken from the node, not from the trove.
 
-So you've got a node. Whooptie-doo. To get a value from it:
+There are explicit member functions for getting nodes by child index or key:
 
-    string_view val = node.value();
+    node = node.child(3);
+    node = node.child("goat");
+
+    auto childNode = node.firstChild();
+    while (childNode)
+    {
+        ...
+        childNode = childNode.nextSibling();
+    }
+
+So you've got a value node. Whooptie-doo. To get a value from it:
+
+    string_view valStr = node.value();
     // or
-    int val = node / hu::val<int>{};
+    int valInt = node / hu::val<int>{};
 
-`hu::Node::value()` actually returns a `hu::Token` reference, which has an implicit conversion to a `std::string_view`. Note, there are APIs that return a `std::string_view`, which might raise some of y'all's flags. But remember, Humon objects are immutable and don't ever move. The returned `string_view`s are good until you destroy the trove.
+Note: there are numerous Humon APIs that return a `std::string_view`, which might raise some of y'all's flags--`std::string_view`s do not own their own data. But remember, Humon objects are immutable and don't ever move in memory; the C++ objects just wrap pointers. Once the trove is loaded, none of its references go bad until the trove is destroyed. The returned `std::string_view`s point to memory that is static and good until the trove is gone, so in the case of Humon APIs, returning a `std::string_view` is copasetic. Just keep the trove around.
 
-A `hu::Token` has information about the token's representation in the token stream. You can get line / column data and the string value itself. Use token information if you want to report on the location of interesting data in a token stream.
+Here, `hu::Node::value()` actually returns a `hu::Token` reference, which has an implicit conversion to a `std::string_view`. A `hu::Token` has information about the token's representation in the token stream. You can get line / column data and the string value itself. Use token information if you want to report on the location of interesting data in a token stream.
 
-The `hu::val<T>` type is defined to extract typed data from the value string of a node.  It allows you to deserialize and return an arbitrary typed value. There are built-ins for the basic numeric types and `bool` (using English spelling of "true" to denote truth). This is how you'll get the vast majority of your data.
+In the second example above, the `hu::val<T>` type is defined to extract typed data from the value string of a node.  It allows you to deserialize and return an arbitrary typed value. There are built-ins for the basic numeric types and `bool` (using English spelling of "true" to denote truth). This is how you'll get the vast majority of your data.
 
-You can also define your own specialization of `hu::val<T>` for your own type. Start with tye type you'd like to deserialize:
+You can also define your own specialization of `hu::val<T>` for your own type. Start with the type you'd like to deserialize:
 
     template<int NumRanks>
     class Version
@@ -408,12 +447,12 @@ You can also define your own specialization of `hu::val<T>` for your own type. S
 
     using V3 = Version<3>;
 
-Now define the extractor:
+And define the specialized extractor:
 
     template <>
     struct hu::val<V3>
     {
-        inline V3 extract(std::string_view valStr)
+        static inline V3 extract(std::string_view valStr)
         {
             return V3(valStr);
         }
@@ -421,11 +460,22 @@ Now define the extractor:
 
 Now you can use it:
 
-    auto gccVersion = trove / "dependencies" / "gcc" / hu::val<V3>{};
+    {
+        dependencies: {
+            gcc: 9.2.1
+        }
+    }
+    
+    ...
 
-C++ will deduce tye type of `gccVersion` above from the parameter passed to `hu::val`.
+    auto toolVersion = trove / "dependencies" / "gcc" / hu::val<V3>{};
 
-Examine a node's annotations in several ways:
+C++ will deduce tye type of `toolVersion` above from the `V3` parameter passed to `hu::val<>`. The `hu::val<T>` template type is a convenience which allows you to code the lookup and conversion in line, without grouping parentheses. You can also use the extactor member itself to convert strings by themselves:
+
+    auto const literalVersion = "9.2.1";
+    auto version = hu::val<V3>::extract(literalVersion);
+
+Annotations are described in detail below. They're essentially per-node metadata. Examine a node's annotations in several ways:
 
     definitions: { 
         player: {
@@ -439,32 +489,36 @@ Examine a node's annotations in several ways:
         }
     }
 
-    auto node = trove.node("/definitions/player/maxHp/type");
+    auto node = trove.nodeByAddress("/definitions/player/maxHp/type");
 
     int numAnnos = node.numAnnotations();
     for (int i = 0; i < numAnnos; ++i)
     {
         auto [k, v] = node.annotation(i);
-        if (k == "numBits"sv) { ... }
-        else if (k == "numBytes"sv) { ... }
+        if (k == "numBits"sv) { }
+        else if (k == "numBytes"sv) { }
     }
-    // or (slower; hu::Node::annotations() allocates a std::vector):
-    for (auto [k, v] : node.annotations())
+    // or (slower; hu::Node::allAnnotations() allocates a std::vector):
+    for (auto [k, v] : node.allAnnotations())
     {
-        auto [k, v] = node.annotation(i);
-        if (k == "numBits"sv) { ... }
-        else if (k == "numBytes"sv) { ... }
+        if (k == "numBits"sv) { }
+        else if (k == "numBytes"sv) { }
     }
 
-    bool hasNumBits = node.hasAnnotationWithKey("numBits"sv);
-    auto annoValue = node.annotationWithKey("numBits"sv);
-    bool is32Bit = node.hasAnnotationWithValue("32"sv);
-    auto annoKey = node.annotationByValue("32"sv);
+    bool hasNumBits = node.hasAnnotation("numBits"sv);  // look up annotation by key
+    auto annoValue = node.annotation("numBits"sv);      // get annotation by key
 
-Troves can have annotations too, and feature similar APIs. There are also APIs for searching the trove for annotations by key, value, or both; these return collections of `hu::Node`s.
+    // many annos might have the same value; scum through them all
+    int num32Bit = node.numAnnotationsWithValue("32"sv) > 0;
+    for (int i = 0; i < num32Bit; ++i)
+    {
+        auto annoKey = node.annotationWithValue("32"sv, i);
+        ...
+
+Trove objects can have annotations too, separate from any node annotations, and feature similar APIs. There are also APIs for searching all a trove's nodes for annotations by key, value, or both; these return collections of `hu::Node`s.
 
     auto all32BitTypes = trove.findNodesWithAnnotationKeyValue("numBits"sv, "32"sv);
-    for (auto & node : all32BitTypes) { ... }
+    for (auto & node : all32BitTypes) { }
 
 Similar APIs also exist for nodes and troves that search comment content and return associated nodes. See the API spec for these.
 
@@ -472,21 +526,30 @@ You can generate a Humon token stream from a `hu::Trove`:
 
     auto tokStr = trove.toPrettyString();
 
-This will generate a monocolor, well-formatted token stream held by a `std::string`. There are options to make it better suit your needs:
+This will generate a monocolor, well-formatted token stream, returned by a `std::string`. There are options to make it suit your needs:
 
     // Output the exact token stream used to build the trove. Fast.
     tokStr = trove.toPreservedString();
-    // Output the trove with minimal whitespace for most efficient storage/transmission. 
-    // The parameter directs Humon to strip comments from the stream.
-    tokStr = trove.toMinimalString(true);
-    // Minimal whitespace, with old style HTML linebreaks.
-    tokStr = trove.toMinimalString(false, "<br />");
-    // You can specify minimal whitespace and still use a color table for the tokens--see below.
-    tokStr = trove.toMinimalString(false, "\n", colorTable);
-    // Pretty. Use an indentation of 4 spaces to format nested depths.
-    tokStr = trove.toString(false, 4, "\n", colorTable);
 
-For printing with colors, specify a color table. This consists of a `std::array<std::string_view, >`     
+    // Output the trove with minimal whitespace for most efficient storage/transmission. 
+    // The first parameter is a null color table.
+    // The second parameter directs Humon to strip comments from the stream, making it even more compact.
+    tokStr = trove.toMinimalString({}, false);
+
+    // Minimal whitespace, with old style HTML linebreaks (default is "\n").
+    tokStr = trove.toMinimalString({}, true, "<br />");
+
+For printing with colors, specify a color table of type `hu::ColorTable`, which is just a typedef for `std::array<std::string_view, hu::ColorCode::numColorCodes>`. You can set these values manually; each string corresponds index-wise to color codes in `hu::ColorCode`, and is inserted just before the appropriate token in the printed token stream. There are two special values: `hu::ColorCode::tokenEnd` which is placed *after* each colored token, and `hu::ColorCode::none` which is placed after the *last* token in the token stream.
+
+Humon provides a function to make a `hu::ColorTable` with ANSI terminal color codes.
+
+    hu::ColorTable colorTable = hu::getAnsiColorTable();
+
+    // You can specify minimal whitespace and still use a color table for the tokens--see below.
+    tokStr = trove.toMinimalString(colorTable, false);
+
+    // Pretty. Use an indentation of 4 spaces to format nested depths. Also doing CRLF newlines.
+    tokStr = trove.toPrettyString(4, colorTable, false, "\r\n");
 
 ### The principles applied to the C-family APIs
 Maybe you'd call them behaviors, but they embody the Humon principles.

@@ -229,3 +229,38 @@ R"({
         huDestroyTrove(trove);
     }
 };
+
+
+struct htd_withSomeStrings
+{
+    std::string_view ts = 
+R"({
+    "aaa": bbb
+    ccc: "ddd"
+    "eee": "fff"
+    ggg: hhh
+}
+)"sv;
+
+    huTrove const * trove = NULL;
+    huNode const * root;
+    huNode const * aaa;
+    huNode const * ccc;
+    huNode const * eee;
+    huNode const * ggg;
+
+    void setup()
+    {
+        trove = huMakeTroveFromStringN(ts.data(), ts.size(), 4);
+        root = huGetRootNode(trove);
+        aaa = huGetChildByIndex(root, 0);
+        ccc = huGetChildByIndex(root, 1);
+        eee = huGetChildByIndex(root, 2);
+        ggg = huGetChildByIndex(root, 3);
+    }
+
+    void teardown()
+    {
+        huDestroyTrove(trove);
+    }
+};

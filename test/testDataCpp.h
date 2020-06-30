@@ -40,7 +40,7 @@ R"(// This is a trove comment.
     void setup()
     {
         trove = hu::Trove::fromString(ts);
-        root = trove.rootNode();
+        root = trove.root();
         a = root.child(0);
         bp = root.child(1);
         cpp = root.child(2);
@@ -78,7 +78,7 @@ R"({
     void setup()
     {
         trove = hu::Trove::fromString(ts);
-        root = trove.rootNode();
+        root = trove.root();
         nint = root.child(0);
         nfloat = root.child(1);
         ndouble = root.child(2);
@@ -104,7 +104,7 @@ struct htd_comments
     void setup()
     {
         trove = hu::Trove::fromFile(file);
-        root = trove.rootNode();
+        root = trove.root();
         k0 = root / "k0";
         k1 = root / "k1";
         k10 = k1 / 0;

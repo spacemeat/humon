@@ -72,7 +72,7 @@ void appendColoredString(PrintTracker * printer, char const * addend, int size, 
 {
     appendColor(printer, colorCode);
     appendString(printer, addend, size);
-    appendColor(printer, HU_COLORKIND_TOKENEND);
+    appendColor(printer, HU_COLORCODE_TOKENEND);
     printer->lastPrintWasUnquotedWord = false;
 }
 
@@ -88,7 +88,7 @@ void appendColoredToken(PrintTracker * printer, huToken const * tok, int colorCo
     appendString(printer, tok->str.ptr, tok->str.size);
     if (tok->quoteChar != '\0')
         { appendString(printer, & tok->quoteChar, 1); }
-    appendColor(printer, HU_COLORKIND_TOKENEND);
+    appendColor(printer, HU_COLORCODE_TOKENEND);
     printer->lastPrintWasUnquotedWord = tok->quoteChar == '\0';
 }
 
@@ -98,7 +98,7 @@ void printForwardComment(PrintTracker * printer, huToken const * tok)
     if (printer->printComments == false)
         { return; }
     appendIndent(printer);
-    appendColoredToken(printer, tok, HU_COLORKIND_COMMENT);
+    appendColoredToken(printer, tok, HU_COLORCODE_COMMENT);
     printer->lastPrintWasUnquotedWord = false;
     if (tok->str.ptr[1] == '/' || printer->format == HU_OUTPUTFORMAT_PRETTY)
         { appendNewline(printer); }
@@ -109,7 +109,7 @@ void printTrailingComment(PrintTracker * printer, huToken const * tok)
 {
     if (printer->printComments == false)
         { return; }
-    appendColoredToken(printer, tok, HU_COLORKIND_COMMENT);
+    appendColoredToken(printer, tok, HU_COLORCODE_COMMENT);
     printer->lastPrintWasUnquotedWord = false;
     if (tok->str.ptr[1] == '/')
         { appendNewline(printer); }
@@ -186,13 +186,13 @@ void printAnnotations(PrintTracker * printer, huVector const * annotations, bool
             { appendWs(printer, 1); }
     }
     
-    appendColoredString(printer, "@", 1, HU_COLORKIND_PUNCANNOTATE);
+    appendColoredString(printer, "@", 1, HU_COLORCODE_PUNCANNOTATE);
     if (printer->format == HU_OUTPUTFORMAT_PRETTY)
         { appendWs(printer, 1); }
 
     if (numAnnos > 1)
     {
-        appendColoredString(printer, "{", 1, HU_COLORKIND_PUNCANNOTATEDICT);
+        appendColoredString(printer, "{", 1, HU_COLORCODE_PUNCANNOTATEDICT);
         if (printer->format == HU_OUTPUTFORMAT_PRETTY)
             { appendWs(printer, 1); }
     }
@@ -201,17 +201,17 @@ void printAnnotations(PrintTracker * printer, huVector const * annotations, bool
         if (annoIdx > 0 && printer->format == HU_OUTPUTFORMAT_PRETTY)
             { ensureWs(printer); }
         huAnnotation * anno = huGetVectorElement(annotations, annoIdx);
-        appendColoredToken(printer, anno->key, HU_COLORKIND_ANNOKEY);
-        appendColoredString(printer, ":", 1, HU_COLORKIND_PUNCANNOTATEKEYVALUESEP);
+        appendColoredToken(printer, anno->key, HU_COLORCODE_ANNOKEY);
+        appendColoredString(printer, ":", 1, HU_COLORCODE_PUNCANNOTATEKEYVALUESEP);
         if (printer->format == HU_OUTPUTFORMAT_PRETTY)
             { appendWs(printer, 1); }
-        appendColoredToken(printer, anno->value, HU_COLORKIND_ANNOVALUE);        
+        appendColoredToken(printer, anno->value, HU_COLORCODE_ANNOVALUE);        
     }
     if (numAnnos > 1)
     {
         if (printer->format == HU_OUTPUTFORMAT_PRETTY)
             { appendWs(printer, 1); }
-        appendColoredString(printer, "}", 1, HU_COLORKIND_PUNCANNOTATEDICT);
+        appendColoredString(printer, "}", 1, HU_COLORCODE_PUNCANNOTATEDICT);
     }
 
     printer->lastPrintWasIndent = false;
@@ -237,8 +237,8 @@ void printNode(PrintTracker * printer, huNode const * node)
     // print key if we have one
     if (parentNode != hu_nullNode && parentNode->kind == HU_NODEKIND_DICT)
     {
-        appendColoredToken(printer, node->keyToken, HU_COLORKIND_KEY);
-        appendColoredString(printer, ":", 1, HU_COLORKIND_PUNCKEYVALUESEP);
+        appendColoredToken(printer, node->keyToken, HU_COLORCODE_KEY);
+        appendColoredString(printer, ":", 1, HU_COLORCODE_PUNCKEYVALUESEP);
         if (printer->format == HU_OUTPUTFORMAT_PRETTY)
             { appendWs(printer, 1); }
     }
@@ -251,7 +251,7 @@ void printNode(PrintTracker * printer, huNode const * node)
     //      print ]
     if (node->kind == HU_NODEKIND_LIST)
     {
-        appendColoredString(printer, "[", 1, HU_COLORKIND_PUNCLIST);
+        appendColoredString(printer, "[", 1, HU_COLORCODE_PUNCLIST);
         commentIdx = printAllTrailingComments(printer, node, node->valueToken, commentIdx);
 
         // print children
@@ -269,7 +269,7 @@ void printNode(PrintTracker * printer, huNode const * node)
         if (printer->format == HU_OUTPUTFORMAT_PRETTY)
             { appendNewline(printer); }
         appendIndent(printer);
-        appendColoredString(printer, "]", 1, HU_COLORKIND_PUNCLIST);
+        appendColoredString(printer, "]", 1, HU_COLORCODE_PUNCLIST);
     }
 
     //  else if nodekind is dict
@@ -280,7 +280,7 @@ void printNode(PrintTracker * printer, huNode const * node)
     //      print }
     else if (node->kind == HU_NODEKIND_DICT)
     {
-        appendColoredString(printer, "{", 1, HU_COLORKIND_PUNCDICT);
+        appendColoredString(printer, "{", 1, HU_COLORCODE_PUNCDICT);
         commentIdx = printAllTrailingComments(printer, node, node->valueToken, commentIdx);
 
         // print children
@@ -296,7 +296,7 @@ void printNode(PrintTracker * printer, huNode const * node)
         if (printer->format == HU_OUTPUTFORMAT_PRETTY)
             { appendNewline(printer); }
         appendIndent(printer);
-        appendColoredString(printer, "}", 1, HU_COLORKIND_PUNCDICT);
+        appendColoredString(printer, "}", 1, HU_COLORCODE_PUNCDICT);
     }
 
     //  else if nodekind is value
@@ -305,7 +305,7 @@ void printNode(PrintTracker * printer, huNode const * node)
     //      print value
     else if (node->kind == HU_NODEKIND_VALUE)
     {
-        appendColoredToken(printer, node->valueToken, HU_COLORKIND_VALUE);
+        appendColoredToken(printer, node->valueToken, HU_COLORCODE_VALUE);
     }
         
     //  print any same-line comments
@@ -328,7 +328,9 @@ void printNode(PrintTracker * printer, huNode const * node)
 }
 
 
-void troveToPrettyString(huTrove const * trove, huVector * str, int outputFormat, bool printComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable)
+void troveToPrettyString(huTrove const * trove, huVector * str, 
+    int outputFormat, int outputTabSize, huStringView const * colorTable, 
+    bool printComments, char const * newline, int newlineSize)
 {
     PrintTracker printer = {
         .trove = trove,
@@ -340,8 +342,6 @@ void troveToPrettyString(huTrove const * trove, huVector * str, int outputFormat
         .newlineSize = newlineSize,
         .colorTable = colorTable,
         .currentDepth = 0,
-        .currentLine = 1,
-        .currentCol = 1,
         .lastPrintWasNewline = false    // or should it say, 'needs indent'?
     };
 
@@ -389,7 +389,7 @@ void troveToPrettyString(huTrove const * trove, huVector * str, int outputFormat
     if (printer.format == HU_OUTPUTFORMAT_PRETTY)
         { appendNewline(& printer); }
     
-    appendColor(& printer, HU_COLORKIND_NONE);
+    appendColor(& printer, HU_COLORCODE_NONE);
 }
 
 
@@ -401,19 +401,19 @@ void setTableEntry(huStringView table[], int colorKind, char const * str)
 
 void huFillAnsiColorTable(huStringView table[])
 {
-    setTableEntry(table, HU_COLORKIND_NONE, darkGray);
-    setTableEntry(table, HU_COLORKIND_TOKENEND, "");
-    setTableEntry(table, HU_COLORKIND_PUNCLIST, white);
-    setTableEntry(table, HU_COLORKIND_PUNCDICT, white);
-    setTableEntry(table, HU_COLORKIND_PUNCKEYVALUESEP, white);
-    setTableEntry(table, HU_COLORKIND_PUNCANNOTATE, darkBlue);
-    setTableEntry(table, HU_COLORKIND_PUNCANNOTATEDICT, darkBlue);
-    setTableEntry(table, HU_COLORKIND_PUNCANNOTATEKEYVALUESEP, darkBlue);
-    setTableEntry(table, HU_COLORKIND_KEY, darkCyan);
-    setTableEntry(table, HU_COLORKIND_VALUE, lightCyan);
-    setTableEntry(table, HU_COLORKIND_COMMENT, darkGreen);
-    setTableEntry(table, HU_COLORKIND_ANNOKEY, darkMagenta);
-    setTableEntry(table, HU_COLORKIND_ANNOVALUE, lightMagenta);
-    setTableEntry(table, HU_COLORKIND_WHITESPACE, darkGray);
+    setTableEntry(table, HU_COLORCODE_NONE, darkGray);
+    setTableEntry(table, HU_COLORCODE_TOKENEND, "");
+    setTableEntry(table, HU_COLORCODE_PUNCLIST, white);
+    setTableEntry(table, HU_COLORCODE_PUNCDICT, white);
+    setTableEntry(table, HU_COLORCODE_PUNCKEYVALUESEP, white);
+    setTableEntry(table, HU_COLORCODE_PUNCANNOTATE, darkBlue);
+    setTableEntry(table, HU_COLORCODE_PUNCANNOTATEDICT, darkBlue);
+    setTableEntry(table, HU_COLORCODE_PUNCANNOTATEKEYVALUESEP, darkBlue);
+    setTableEntry(table, HU_COLORCODE_KEY, darkCyan);
+    setTableEntry(table, HU_COLORCODE_VALUE, lightCyan);
+    setTableEntry(table, HU_COLORCODE_COMMENT, darkGreen);
+    setTableEntry(table, HU_COLORCODE_ANNOKEY, darkMagenta);
+    setTableEntry(table, HU_COLORCODE_ANNOVALUE, lightMagenta);
+    setTableEntry(table, HU_COLORCODE_WHITESPACE, darkGray);
 }
 

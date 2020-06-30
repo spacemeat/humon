@@ -71,8 +71,6 @@ extern "C"
         huStringView const * colorTable;
 
         int currentDepth;
-        int currentLine;
-        int currentCol;
         bool lastPrintWasNewline;
         bool lastPrintWasIndent;
         bool lastPrintWasUnquotedWord;
@@ -92,7 +90,9 @@ extern "C"
     int printAllTrailingComments(PrintTracker * printer, huNode const * node, huToken const * tok, int startingWith);
     void printAnnotations(PrintTracker * printer, huVector const * annotations, bool isTroveAnnotations);
     void printNode(PrintTracker * printer, huNode const * node);
-    void troveToPrettyString(huTrove const * trove, huVector * str, int outputFormat, bool printComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable);
+    void troveToPrettyString(huTrove const * trove, huVector * str, 
+        int outputFormat, int outputTabSize, huStringView const * colorTable, 
+        bool printComments, char const * newline, int newlineSize);
 
 
     /*

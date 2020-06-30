@@ -23,7 +23,7 @@ TEST_GROUP(utf8)
 
 TEST(utf8, lengthOfIt)
 {
-    auto root = trove.rootNode();
+    auto root = trove.root();
     LONGS_EQUAL_TEXT((int) hu::NodeKind::dict, (int) root.kind(), "root kind");
     LONGS_EQUAL_TEXT(10, root.numChildren(), "root numChildren");
     auto child = root.child("otherKey");
@@ -37,7 +37,7 @@ TEST(utf8, lengthOfIt)
 
 TEST(utf8, keys)
 {
-    auto root = trove.rootNode();
+    auto root = trove.root();
     auto ch = root / "Я";
     STRNCMP_EQUAL("two", ch.value().str().data(), strlen("two"));
     ch = root / "⾀";

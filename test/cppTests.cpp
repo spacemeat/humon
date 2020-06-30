@@ -43,7 +43,7 @@ TEST_GROUP(makers)
 TEST(makers, fromString)
 {
     hu::Trove trove = hu::Trove::fromString(humon, 2);
-    auto root = trove.rootNode();
+    auto root = trove.root();
     CHECK_TEXT(root.kind() == hu::NodeKind::list, "load0");
     CHECK_TEXT(root.numChildren() == 1, "load1");
     auto child = root.child(0);
@@ -84,7 +84,7 @@ public:
 template <>
 struct hu::val<TypeContainer>
 {
-    inline TypeContainer extract(std::string_view valStr)
+    static inline TypeContainer extract(std::string_view valStr)
     {
         if (valStr == "25.25")
             { return {1337}; }
@@ -119,6 +119,9 @@ TEST(cppSugar, sugar)
 
     LONGS_EQUAL_TEXT(1337, t.trove / 2 / hu::val<TypeContainer>{}, "custom hu::value good");
     LONGS_EQUAL_TEXT(0xbadf00d, t.trove / 0 / hu::val<TypeContainer>{}, "custom hu::value no good");
+
+    LONGS_EQUAL_TEXT(1337, hu::val<TypeContainer>::extract("25.25"), "static extract - good");
+    LONGS_EQUAL_TEXT(0xbadf00d, hu::val<TypeContainer>::extract("yeehaw"), "static extract - fail");
 
     auto spuriousNode = t.trove / "big" / "fat" / 0 / "sloppy" / "wet" / 1;
     CHECK_TEXT(spuriousNode.isNull(), "wildly wrong path");    
