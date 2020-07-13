@@ -1,4 +1,3 @@
-#include <stdlib.h>
 #include <string.h>
 #include "humon.internal.h"
 
@@ -13,6 +12,21 @@ bool stringInString(char const * haystack, int haystackLen, char const * needle,
     }
 
     return false;
+}
+
+
+char const * huEncodingToString(int rhs)
+{
+    switch(rhs)
+    {
+    case HU_ENCODING_UTF8: return "UTF8";
+    case HU_ENCODING_UTF16_BE: return "UTF16-BE";
+    case HU_ENCODING_UTF16_LE: return "UTF16-LE";
+    case HU_ENCODING_UTF32_BE: return "UTF32-BE";
+    case HU_ENCODING_UTF32_LE: return "UTF32-LE";
+    case HU_ENCODING_UNKNOWN: return "unknown";
+    default: return "!!unknown!!";
+    }
 }
 
 
@@ -52,7 +66,7 @@ char const * huOutputFormatToString(int rhs)
 {
     switch(rhs)
     {
-    case HU_OUTPUTFORMAT_XEROGRAPHIC: return "xerographic";
+    case HU_OUTPUTFORMAT_XERO: return "xero";
     case HU_OUTPUTFORMAT_MINIMAL: return "minimal";
     case HU_OUTPUTFORMAT_PRETTY: return "pretty";
     default: return "!!unknown!!";
@@ -65,6 +79,7 @@ char const * huOutputErrorToString(int rhs)
     switch(rhs)
     {
     case HU_ERROR_NOERROR: return "no error";
+    case HU_ERROR_BADENCODING: return "bad encoding";
     case HU_ERROR_UNFINISHEDQUOTE: return "unfinished quote";
     case HU_ERROR_UNFINISHEDCSTYLECOMMENT: return "unfinished C-style comment";
     case HU_ERROR_UNEXPECTEDEOF: return "unexpected EOF";
@@ -78,131 +93,48 @@ char const * huOutputErrorToString(int rhs)
 }
 
 
-void huInitVector(huVector * vector, int elementSize)
-{
-    vector->buffer = NULL;
-    vector->elementSize = elementSize;
-    vector->numElements = 0;
-    vector->vectorCapacity = 0;
-    vector->canGrowCapacity = true;
-}
-
-
-void huInitVectorPreallocated(huVector * vector, int elementSize, void * buffer, int numElements, bool canStillGrow)
-{
-    vector->buffer = buffer;
-    vector->elementSize = elementSize;
-    vector->numElements = 0;
-
-    int cap = numElements;
-    vector->vectorCapacity = cap;
-    vector->canGrowCapacity = canStillGrow;
-}
-
-
-void huDestroyVector(huVector const * vector)
-{
-    huVector * ncVector = (huVector *) vector;
-    // you bet your sweet bippy I'm casting away the const
-    if (ncVector->buffer != NULL)
-    {
-        free(ncVector->buffer);
-        ncVector->buffer = NULL;
-        ncVector->numElements = 0;
-        ncVector->vectorCapacity = 0;
-    }
-}
-
-
-void huResetVector(huVector * vector)
-{
-    huDestroyVector(vector);
-    huInitVector(vector, vector->elementSize);
-}
-
-
-int huGetVectorSize(huVector const * vector)
-{
-    return vector->numElements;
-}
-
-
-void * huGetVectorElement(huVector const * vector, int idx)
-{
-    return vector->buffer + vector->elementSize * idx;
-}
-
-
 int min(int a, int b) { if (a < b) { return a; } else { return b; } }
 int max(int a, int b) { if (a >= b) { return a; } else { return b; } }
 
 
-void * huGrowVector(huVector * vector, int * numElements)
+bool isMachineBigEndian()
 {
-    // get remaining capacity
-    int maxAppend = * numElements;
-    if (vector->canGrowCapacity == false)
-        { maxAppend = min(maxAppend, vector->vectorCapacity - vector->numElements); }
-
-    * numElements = 0;
-
-    if (vector->numElements == 0)
-    {
-        vector->numElements = maxAppend;
-
-        // round up to a group of 16 elements
-        int cap = maxAppend;
-        if (vector->canGrowCapacity)
-        {
-            if (cap % 16 != 0)
-                { cap = ((maxAppend / 16) + 1) * 16; }
-        }
-
-        // capacity can be set even if numElements is 0.
-        if (cap > vector->vectorCapacity)
-        {
-            if (vector->buffer)
-                { free(vector->buffer); vector->buffer = NULL; }
-
-            vector->vectorCapacity = cap;
-
-            // If elementSize is 0, we're just counting, no malloc
-            if (vector->elementSize > 0)
-                { vector->buffer = malloc(cap * vector->elementSize); }
-        }
-
-        * numElements = maxAppend;
-        return vector->buffer;
-    }
-    else
-    {
-        vector->numElements += maxAppend;
-        int cap = vector->vectorCapacity;
-        while (vector->numElements > cap)
-            { cap *= 2; }
-
-        if (cap > vector->vectorCapacity)
-        {
-            vector->vectorCapacity = cap;
-            if (vector->elementSize > 0)
-                { vector->buffer = realloc(vector->buffer, cap * vector->elementSize); }
-            if (vector->buffer == NULL)
-                { return NULL; }
-        }
-
-        * numElements = maxAppend;
-        return vector->buffer + (vector->numElements - maxAppend) * vector->elementSize;
-    }
+    uint16_t i = 0xff;
+    return ((uint8_t*)(& i))[1] == 0xff;
 }
 
 
-int huAppendToVector(huVector * vector, void const * data, int numElements)
+void huInitLoadParams(huLoadParams * params, int encoding, int tabSize, bool strictUnicode)
 {
-    int maxAppend = numElements;
-    void * dest = huGrowVector(vector, & maxAppend);
-    memcpy(dest, data, maxAppend * vector->elementSize);
+    params->encoding = encoding;
+    params->tabSize = tabSize;
+    params->allowIllegalCodePoints = ! strictUnicode;
+    params->allowOutOfRangeCodePoints = ! strictUnicode;
+    params->allowOverlongEncodings = ! strictUnicode;
+    params->allowUtf16UnmatchedSurrogates = ! strictUnicode;
+}
 
-    return maxAppend;
+
+void huInitStoreParamsZ(huStoreParams * params, int outputFormat, int tabSize, 
+    bool usingColors, huStringView const * colorTable,  bool printComments, 
+    char const * newline, bool printBom)
+{
+    huInitStoreParamsN(params, outputFormat, tabSize, usingColors, colorTable, 
+        printComments, newline, strlen(newline), printBom);
+}
+
+
+void huInitStoreParamsN(huStoreParams * params, int outputFormat, int tabSize, 
+    bool usingColors, huStringView const * colorTable,  bool printComments, 
+    char const * newline, int newlineSize, bool printBom)
+{
+    params->outputFormat = outputFormat;
+    params->tabSize = tabSize;
+    params->usingColors = usingColors;
+    params->colorTable = colorTable;
+    params->printComments = printComments;
+    params->newline = (huStringView) { newline, newlineSize };
+    params->printBom = printBom;
 }
 
 

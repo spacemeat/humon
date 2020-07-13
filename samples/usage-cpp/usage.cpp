@@ -84,6 +84,9 @@ int main()
         node = rootNode.relative("foo/0");
         // or
         node = trove.nodeByAddress("/foo/0");
+        // or
+        node = rootNode.child("foo").child(0);
+
 
         // has a child with key 'foo'
         bool hasFoo = rootNode % "foo";

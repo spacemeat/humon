@@ -1,13 +1,10 @@
 #include <sstream>
+#include <iostream>
 #include <string.h>
 #include <string_view>
 #include <unistd.h>
 #include "humon.hpp"
-#include "ansiColors.h"
 #include <CppUTest/TestHarness.h>
-
-#include <iostream>
-
 #include "testDataCpp.h"
 
 TEST_GROUP(comments)

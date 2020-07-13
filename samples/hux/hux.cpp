@@ -12,9 +12,9 @@ void printUsage()
 {
     cout << R"(Usage:
  hux <args>
-  -pp print pretty  [default]
-  -px print xerographic
+  -px print xero
   -pm print minimal
+  -pp print pretty  [default]
 
   -my do print comments  [default]
   -mn do not print comments
@@ -23,6 +23,9 @@ void printUsage()
 
   -cn do not use colors  [default]
   -ca use ansi colors
+
+  -by do print utf8 BOM
+  -bn do not print utf8 BOM [default]
  
   -o <outputFile> output file
 
@@ -99,6 +102,7 @@ int main(int argc, char ** argv)
     bool printComments = true;
     int tabSize = 4;
     UsingColors usingColors = UsingColors::none;
+    bool printBom = false;
 
     ExpectedArgument expectedArg = ExpectedArgument::cmdSwitch;
    
@@ -119,7 +123,7 @@ int main(int argc, char ** argv)
             else if (argMatches(arg, "-pp"))
                 { format = OutputFormat::pretty; }
             else if (argMatches(arg, "-px"))
-                { format = OutputFormat::xerographic; }
+                { format = OutputFormat::xero; }
             else if (argMatches(arg, "-pm"))
                 { format = OutputFormat::minimal; }
             else if (argStartsWith(arg, "-p"))
@@ -137,7 +141,6 @@ int main(int argc, char ** argv)
                 cerr << "Invalid comment enablement argument for -m.\n";
                 return 1;
             }
-
 
             else if (argMatches(arg, "-t"))
                 { expectedArg = ExpectedArgument::tabSize; }
@@ -160,6 +163,11 @@ int main(int argc, char ** argv)
                 cerr << "Invalid color argument for -c.\n";
                 return 1;
             }
+
+            else if (argMatches(arg, "-by"))
+                { printBom = true; }
+            else if (argMatches(arg, "-bn"))
+                { printBom = false; }
             
             else if (argMatches(arg, "-o"))
                 { expectedArg = ExpectedArgument::outputFile; }
@@ -216,14 +224,14 @@ int main(int argc, char ** argv)
     std::string output;
     switch(format)
     {
-    case OutputFormat::xerographic:
-        output = trove.toPreservedString();
+    case OutputFormat::xero:
+        output = trove.toPreservedString(printBom);
         break;
     case OutputFormat::minimal:
-        output = trove.toMinimalString(colorTable, printComments, "\n");
+        output = trove.toMinimalString(colorTable, printComments, "\n", printBom);
         break;
     case OutputFormat::pretty:
-        output = trove.toPrettyString(tabSize, colorTable, printComments, "\n");
+        output = trove.toPrettyString(tabSize, colorTable, printComments, "\n", printBom);
         break;
     }
 

@@ -19,6 +19,23 @@ namespace hu
 #include "humon.h"
     }
 
+    /// Specifies a UTFn text encoding.
+    enum class Encoding : int
+    {
+        utf8 = capi::HU_ENCODING_UTF8,
+        utf16be = capi::HU_ENCODING_UTF16_BE,
+        utf16le = capi::HU_ENCODING_UTF16_LE,
+        utf32be = capi::HU_ENCODING_UTF32_BE,
+        utf32le = capi::HU_ENCODING_UTF32_LE,
+        unknown = capi::HU_ENCODING_UNKNOWN
+    };
+
+    /// Return a string representation of a hu::Encoding.
+    static inline char const * to_string(Encoding rhs)
+    {
+        return capi::huEncodingToString((int) rhs);
+    }
+
     /// Specifies the kind of data represented by a particular hu::Token.
     enum class TokenKind : int
     {
@@ -58,7 +75,7 @@ namespace hu
     /// Specifies the style of whitespacing in Humon text.
     enum class OutputFormat : int
     {
-        xerographic = capi::HU_OUTPUTFORMAT_XEROGRAPHIC,    ///< Byte-for-byte copy of the original.
+        xero = capi::HU_OUTPUTFORMAT_XERO,                  ///< Byte-for-byte copy of the original.
         minimal = capi::HU_OUTPUTFORMAT_MINIMAL,            ///< Reduces as much whitespace as possible.
         pretty = capi::HU_OUTPUTFORMAT_PRETTY               ///< Formats the text in a standard, human-friendly way.
     };
@@ -73,6 +90,7 @@ namespace hu
     enum class ErrorCode : int
     {
         noError = capi::HU_ERROR_NOERROR,                       ///< No error.
+        badEncoding = capi::HU_ERROR_BADENCODING,               ///< The Unicode encoding is malformed.
         unfinishedQuote = capi::HU_ERROR_UNFINISHEDQUOTE,       ///< The quoted text was not endquoted.
         unfinishedCStyleComment = 
             capi::HU_ERROR_UNFINISHEDCSTYLECOMMENT,             ///< The C-style comment was not closed.
@@ -226,6 +244,87 @@ namespace hu
     }
 
     using ColorTable = std::array<std::string_view, capi::HU_COLORCODE_NUMCOLORKINDS>;
+
+    class LoadParams
+    {
+    public:
+        LoadParams(Encoding encoding = Encoding::unknown, int tabSize = 4, bool strictUnicode = true)
+        {
+            capi::huInitLoadParams(& cparams, static_cast<int>(encoding), tabSize, strictUnicode);
+        }
+
+        void setEncoding(Encoding encoding) { cparams.encoding = static_cast<int>(encoding); }
+        void setTabSize(int tabSize) { cparams.tabSize = tabSize; }
+        void setAllowIllegalCodePoints(bool shallWe) { cparams.allowIllegalCodePoints = shallWe; }
+        void setAllowOutOfRangeCodePoints(bool shallWe) { cparams.allowIllegalCodePoints = shallWe; }
+        void setAllowOverlongEncodings(bool shallWe) { cparams.allowIllegalCodePoints = shallWe; }
+        void setAllowUtf16UnmatchedSurrogates(bool shallWe) { cparams.allowIllegalCodePoints = shallWe; }
+
+        int encoding() { return cparams.encoding; }
+        int tabSize() { return cparams.tabSize; }
+        bool allowIllegalCodePoints() { return cparams.allowIllegalCodePoints; }
+        bool allowOutOfRangeCodePoints() { return cparams.allowIllegalCodePoints; }
+        bool allowOverlongEncodings() { return cparams.allowIllegalCodePoints; }
+        bool allowUtf16UnmatchedSurrogates() { return cparams.allowIllegalCodePoints; }
+
+        capi::huLoadParams cparams;
+    };
+
+
+    class StoreParams
+    {
+    public:
+        StoreParams(OutputFormat outputFormat, int tabSize = 4, 
+            std::optional<ColorTable> const & colors = {}, bool printComments = true, 
+            std::string_view newline = "\n", bool printBom = false)
+        {
+            capi::huInitStoreParamsN(& cparams, static_cast<int>(outputFormat), tabSize, 
+                false, capiColorTable, printComments, newline.data(), newline.size(), printBom);
+            setColorTable(colors);
+        }
+
+        void setFormat(OutputFormat outputFormat) { cparams.outputFormat = static_cast<int>(outputFormat); }
+        void setTabSize(int tabSize) { cparams.tabSize = tabSize; }
+        void setColorTable(std::optional<ColorTable> const & colors)
+        {
+            if (colors)
+            {
+                std::string_view const * sv = (* colors).data();
+                for (size_t i = 0; i < capi::HU_COLORCODE_NUMCOLORKINDS; ++i)
+                {
+                    capiColorTable[i].ptr = sv[i].data();
+                    capiColorTable[i].size = sv[i].size();
+                }
+                cparams.usingColors = true;
+            }
+            else
+                { cparams.usingColors = false; }
+        }
+        void setPrintComments(bool shallWe) { cparams.printComments = shallWe; }
+        void setNewline(std::string_view newline) { cparams.newline.ptr = newline.data(); cparams.newline.size = newline.size(); }
+
+        OutputFormat outputFormat() { return static_cast<OutputFormat>(cparams.outputFormat); }
+        int tabSize() { return cparams.tabSize; }
+        std::optional<ColorTable> colorTable()
+        {
+            if (cparams.usingColors == false)
+                { return std::nullopt; }
+            
+            ColorTable newColorTable;
+            std::string_view * sv = newColorTable.data();
+            for (int i = 0; i < capi::HU_COLORCODE_NUMCOLORKINDS; ++i)
+            {
+                sv[i] = { capiColorTable[i].ptr,
+                          (size_t) capiColorTable[i].size };
+            }
+            return newColorTable;
+        }
+        bool printComments() { return cparams.printComments; }
+        std::string newline() { return { cparams.newline.ptr, (size_t) cparams.newline.size }; }
+
+        capi::huStoreParams cparams;
+        capi::huStringView capiColorTable[capi::HU_COLORCODE_NUMCOLORKINDS];
+    };
 
     /// Encodes a token read from Humon text.
     /** This class encodes file location and buffer location information about a
@@ -406,10 +505,10 @@ namespace hu
             return vec;
         }
         /// Return whether two Node objects refer to the same node.
-        friend bool operator == (Node const & lhs, Node const & rhs)
+        friend bool operator == (Node const & lhs, Node const & rhs) noexcept
             { return lhs.cnode == rhs.cnode; }
         /// Return whether two Node objects refer to the different nodes.
-        friend bool operator != (Node const & lhs, Node const & rhs)
+        friend bool operator != (Node const & lhs, Node const & rhs) noexcept
             { return lhs.cnode != rhs.cnode; }
         // TODO: operator <=> when available.
         /// Returns whether the specified index is a valid child index of this list or dict node.
@@ -434,10 +533,10 @@ namespace hu
         template <class IntType, 
             typename std::enable_if<
                 std::is_integral<IntType>::value, IntType>::type * = nullptr>
-        Node operator / (IntType idx) const
+        Node operator / (IntType idx) const noexcept
             { return isValid() ? child(static_cast<int>(idx)) : Node(capi::hu_nullNode); }
         /// Returns the child of this node by key.
-        Node operator / (std::string_view key) const
+        Node operator / (std::string_view key) const noexcept
             { return isValid() ? child(key) : Node(capi::hu_nullNode); }
         /// Returns the converted value of this value node.
         /** Converts the string value of this value node into a `U`. The conversion is 
@@ -504,10 +603,23 @@ namespace hu
          * be a null trove, but rather will be loaded with no nodes, and errors marking 
          * tokens. */
         [[nodiscard]] static Trove fromString(std::string_view data,
-            int inputTabSize = 4) noexcept
+            LoadParams loadParams = { Encoding::utf8 }) noexcept
         {
             return Trove(capi::huMakeTroveFromStringN(
-                data.data(), data.size(), inputTabSize));
+                data.data(), data.size(), & loadParams.cparams));
+        }
+
+        /// Creates a Trove from a UTFn-encoded string.
+        /** This function makes a new Trove object from the given string. If the string
+         * is in a legal Humon format, the Trove will come back without errors, and fully
+         * ready to use. Otherwise the Trove will be in an erroneous state; it will not 
+         * be a null trove, but rather will be loaded with no nodes, and errors marking 
+         * tokens. */
+        [[nodiscard]] static Trove fromString(char const * data, int dataLen, 
+            LoadParams loadParams = { Encoding::utf8 }) noexcept
+        {
+            return Trove(capi::huMakeTroveFromStringN(
+                data, dataLen, & loadParams.cparams));
         }
 
         /// Creates a Trove from a UTF8 file.
@@ -517,10 +629,10 @@ namespace hu
          * be a null trove, but rather will be loaded with no nodes, and errors marking 
          * tokens. */
         [[nodiscard]] static Trove fromFile(std::string_view path,
-            int inputTabSize = 4) noexcept
+            LoadParams loadParams = { Encoding::unknown }) noexcept
         {
             return Trove(capi::huMakeTroveFromFileN(
-                path.data(), path.size(), inputTabSize));
+                path.data(), path.size(), & loadParams.cparams));
         }
                 
         /// Creates a Trove from a UTF8 stream.
@@ -536,22 +648,22 @@ namespace hu
          * display.
          * \outputTabSize: When pretty printing with `hu::Trove::toString()`, this value
          * sets the tab spacing for the output. */
-        [[nodiscard]] static Trove fromIstream(std::istream & in, size_t maxNumBytes = 0,
-            int inputTabSize = 4) noexcept
+        [[nodiscard]] static Trove fromIstream(std::istream & in, 
+            LoadParams loadParams = { Encoding::unknown }, size_t maxNumBytes = 0) noexcept
         {
             if (maxNumBytes == 0)
             {
                 std::stringstream buffer;
                 buffer << in.rdbuf();
-                return fromString(buffer.str(), inputTabSize);
+                return fromString(buffer.str(), loadParams);
             }
             else
             {
                 std::string buffer;
                 buffer.reserve(maxNumBytes + 1);
                 in.read(buffer.data(), maxNumBytes);
-                buffer[maxNumBytes] = '\0';
-                return fromString(buffer.data(), inputTabSize);
+                buffer[maxNumBytes] = '\0'; // TODO: Necessary?
+                return fromString(buffer.data(), loadParams);
             }
         }
     
@@ -707,21 +819,26 @@ namespace hu
         }
 
         /// Serializes a trove with the exact input token stream.
-        [[nodiscard]] std::string toPreservedString() const noexcept
+        [[nodiscard]] std::string toPreservedString(bool printBom = false) const noexcept
         {
-            return toString(OutputFormat::xerographic, true, 0, "", {});
+            StoreParams sp = { OutputFormat::xero, 0, std::nullopt, true, "", printBom };
+            return toString(sp);
         }
 
-        [[nodiscard]] std::string toMinimalString(std::optional<ColorTable> const & colorTable = {}, bool printComments = true, 
-            std::string_view newline = "\n") const noexcept
+        /// Serializes a trove with the minimum token stream necessary to accurately convey the data.
+        [[nodiscard]] std::string toMinimalString(std::optional<ColorTable> const & colors = {}, 
+            bool printComments = true, std::string_view newline = "\n", bool printBom = false) const noexcept
         {
-            return toString(OutputFormat::minimal, printComments, 0, newline, colorTable);
+            StoreParams sp = { OutputFormat::minimal, 0, colors, printComments, newline, printBom };
+            return toString(sp);
         }
 
-        [[nodiscard]] std::string toPrettyString(int outputTabSize = 4, std::optional<ColorTable> const & colorTable = {}, bool printComments = true, 
-            std::string_view newline = "\n") const noexcept 
+        [[nodiscard]] std::string toPrettyString(int tabSize = 4, 
+            std::optional<ColorTable> const & colors = {}, bool printComments = true, 
+            std::string_view newline = "\n", bool printBom = false) const noexcept 
         {
-            return toString(OutputFormat::pretty, printComments, outputTabSize, newline, colorTable);
+            StoreParams sp = { OutputFormat::pretty, tabSize, colors, printComments, newline, printBom };
+            return toString(sp);
         }
 
         /// Serializes a trove to a UTF8-formatted string.
@@ -731,37 +848,19 @@ namespace hu
          * \return A tuple containing a unique (self-managing) string pointer and the
          * string's length.
          */
-    private:
-        [[nodiscard]] std::string toString(OutputFormat outputFormat, bool printComments, 
-            int outputTabSize, std::string_view newline, std::optional<ColorTable> const colorTable) const noexcept 
+        [[nodiscard]] std::string toString(StoreParams & storeParams) const noexcept 
         {
-            std::array<capi::huStringView, capi::HU_COLORCODE_NUMCOLORKINDS> colors;
-            capi::huStringView * nativeColorTable = NULL;
-            if (colorTable)
-            {
-                std::string_view const * sv = (* colorTable).data();
-                for (size_t i = 0; i < capi::HU_COLORCODE_NUMCOLORKINDS; ++i)
-                {
-                    colors[i].ptr = sv[i].data();
-                    colors[i].size = sv[i].size();
-                }
-                nativeColorTable = colors.data();
-            }
             int strLength = 0;
-            char const * newline_c = newline.data();
-            int newlineSize = newline.size();
-            capi::huTroveToString(ctrove, NULL, & strLength, static_cast<int>(outputFormat), 
-                outputTabSize, nativeColorTable, printComments, newline_c, newlineSize);
+            capi::huTroveToString(ctrove, NULL, & strLength, & storeParams.cparams);
             std::string s;
             s.resize(strLength);
-            capi::huTroveToString(ctrove, s.data(), & strLength, static_cast<int>(outputFormat), 
-                outputTabSize, nativeColorTable, printComments, newline_c, newlineSize);
+            capi::huTroveToString(ctrove, s.data(), & strLength, & storeParams.cparams);
             return s;
         }
-    public:
-        friend bool operator == (Trove const & lhs, Trove const & rhs)
+
+        friend bool operator == (Trove const & lhs, Trove const & rhs) noexcept
             { return lhs.ctrove == rhs.ctrove; }
-        friend bool operator != (Trove const & lhs, Trove const & rhs)
+        friend bool operator != (Trove const & lhs, Trove const & rhs) noexcept
             { return lhs.ctrove != rhs.ctrove; }
         // TODO: <=> when it's available.
         /// Returns whether `idx` is a valid child index of the root node. (Whether root has

@@ -2,9 +2,7 @@
 #include <string_view>
 #include <unistd.h>
 #include "humon.h"
-#include "ansiColors.h"
 #include <CppUTest/TestHarness.h>
-
 #include "testData.h"
 
 // ------------------------------ NODE API TESTS
@@ -820,6 +818,8 @@ TEST_GROUP(huGetAnnotationWithKey)
 
 TEST(huGetAnnotationWithKey, lists)
 {
+    CHECK(huGetAnnotationWithKeyZ(l.root, "name") != NULL);
+
     auto anno = huGetAnnotationWithKeyZ(l.root, "name")->str;
     LONGS_EQUAL_TEXT(strlen("root"), anno.size, "root.anno name size = sz root");
     STRNCMP_EQUAL_TEXT("root", anno.ptr, anno.size, "root.anno name == root");
@@ -879,6 +879,8 @@ TEST(huGetAnnotationWithKey, lists)
 
 TEST(huGetAnnotationWithKey, dicts)
 {
+    CHECK(huGetAnnotationWithKeyZ(d.root, "name") != NULL);
+
     auto anno = huGetAnnotationWithKeyZ(d.root, "name")->str;
     LONGS_EQUAL_TEXT(strlen("root"), anno.size, "root.anno name size = sz root");
     STRNCMP_EQUAL_TEXT("root", anno.ptr, anno.size, "root.anno name == root");
@@ -1030,6 +1032,8 @@ TEST_GROUP(huGetAnnotationWithValue)
 
 TEST(huGetAnnotationWithValue, lists)
 {
+    CHECK(huGetAnnotationWithValueZ(l.root, "root", 0) != NULL);
+
     auto anno = huGetAnnotationWithValueZ(l.root, "root", 0)->str;
     LONGS_EQUAL_TEXT(strlen("name"), anno.size, "root.anno v0 name size = sz root");
     STRNCMP_EQUAL_TEXT("name", anno.ptr, anno.size, "root.anno v0 name == root");
@@ -1089,6 +1093,8 @@ TEST(huGetAnnotationWithValue, lists)
 
 TEST(huGetAnnotationWithValue, dicts)
 {
+    CHECK(huGetAnnotationWithValueZ(d.root, "root", 0) != NULL);
+
     auto anno = huGetAnnotationWithValueZ(d.root, "root", 0)->str;
     LONGS_EQUAL_TEXT(strlen("name"), anno.size, "root.anno v0 name size = sz root");
     STRNCMP_EQUAL_TEXT("name", anno.ptr, anno.size, "root.anno v0 name == root");
@@ -1226,10 +1232,12 @@ TEST_GROUP(huGetComment)
 
 TEST(huGetComment, lists)
 {
+    CHECK(huGetComment(d.a, 0) != NULL);
     auto comm = huGetComment(l.a, 0)->str;
     auto exp = "// This is a aaaa right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "a.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.ptr, comm.size, "a.comm 0 == exp");
+    CHECK(huGetComment(l.a, 0) != NULL);
     comm = huGetComment(l.a, 1)->str;
     exp = "// aaaa";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "a.comm 1 size = sz exp");
@@ -1271,10 +1279,12 @@ TEST(huGetComment, lists)
 
 TEST(huGetComment, dicts)
 {
+    CHECK(huGetComment(d.a, 0) != NULL);
     auto comm = huGetComment(d.a, 0)->str;
     auto exp = "// This is a aaaa right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "a.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.ptr, comm.size, "a.comm 0 == exp");
+    CHECK(huGetComment(d.a, 1) != NULL);
     comm = huGetComment(d.a, 1)->str;
     exp = "// aaaa";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "a.comm 1 size = sz exp");
@@ -1346,10 +1356,12 @@ TEST_GROUP(huGetCommentsContaining)
 TEST(huGetCommentsContaining, lists)
 {
     huToken const * comm = huGetCommentsContainingZ(l.a, "aaa", NULL);
+    CHECK(comm != hu_nullToken);
     auto exp = "// This is a aaaa right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "a.gcc aaa 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "a.gcc aaa 0 == exp");
     comm = huGetCommentsContainingZ(l.a, "aaa", comm);
+    CHECK(comm != hu_nullToken);
     exp = "// aaaa";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "a.gcc aaa 1 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "a.gcc aaa 1 == exp");
@@ -1357,6 +1369,7 @@ TEST(huGetCommentsContaining, lists)
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc aaa 2 = null");
     
     comm = huGetCommentsContainingZ(l.a, "right here", NULL);
+    CHECK(comm != hu_nullToken);
     exp = "// This is a aaaa right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "a.gcc aaa 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "a.gcc aaa 0 == exp");
@@ -1364,10 +1377,12 @@ TEST(huGetCommentsContaining, lists)
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc right here 1 = null");
 
     comm = huGetCommentsContainingZ(l.bp, "bp", NULL);
+    CHECK(comm != hu_nullToken);
     exp = "// This is a bp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "bp.gcc bp 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "bp.gcc bp 0 == exp");
     comm = huGetCommentsContainingZ(l.bp, "bp", comm);
+    CHECK(comm != hu_nullToken);
     exp = "// bp";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "bp.gcc bp 1 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "bp.gcc bp 1 == exp");
@@ -1375,6 +1390,7 @@ TEST(huGetCommentsContaining, lists)
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc bp 2 = null");
 
     comm = huGetCommentsContainingZ(l.bp, "right here", NULL);
+    CHECK(comm != hu_nullToken);
     exp = "// This is a bp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "bp.gcc bp 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "bp.gcc bp 0 == exp");
@@ -1382,6 +1398,7 @@ TEST(huGetCommentsContaining, lists)
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc bp 1 = null");
 
     comm = huGetCommentsContainingZ(l.b, "bbb", NULL);
+    CHECK(comm != hu_nullToken);
     exp = "// bbbb";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "b.gcc bbb 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "b.gcc bbb 0 == exp");
@@ -1389,10 +1406,12 @@ TEST(huGetCommentsContaining, lists)
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc b 1 = null");
 
     comm = huGetCommentsContainingZ(l.cpp, "cpp", NULL);
+    CHECK(comm != hu_nullToken);
     exp = "// This is a cpp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cpp.gcc cpp 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "cpp.gcc cpp 0 == exp");
     comm = huGetCommentsContainingZ(l.cpp, "cpp", comm);
+    CHECK(comm != hu_nullToken);
     exp = "// cpp";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cpp.gcc cpp 1 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "cpp.gcc cpp 1 == exp");
@@ -1400,6 +1419,7 @@ TEST(huGetCommentsContaining, lists)
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc cpp 2 = null");
 
     comm = huGetCommentsContainingZ(l.cpp, "right here", NULL);
+    CHECK(comm != hu_nullToken);
     exp = "// This is a cpp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cpp.gcc cpp 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "cpp.gcc cpp 0 == exp");
@@ -1407,6 +1427,7 @@ TEST(huGetCommentsContaining, lists)
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "cpp.gcc right here 1 = null");
 
     comm = huGetCommentsContainingZ(l.cp, "cp", NULL);
+    CHECK(comm != hu_nullToken);
     exp = "// cp";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cp.gcc cp 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "cp.gcc cp 0 == exp");
@@ -1414,6 +1435,7 @@ TEST(huGetCommentsContaining, lists)
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "cp.gcc cp 1 = null");
 
     comm = huGetCommentsContainingZ(l.c, "ccc", NULL);
+    CHECK(comm != hu_nullToken);
     exp = "// cccc";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "c.gcc ccc 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "cp.gcc ccc 0 == exp");
@@ -1424,10 +1446,12 @@ TEST(huGetCommentsContaining, lists)
 TEST(huGetCommentsContaining, dicts)
 {
     huToken const * comm = huGetCommentsContainingZ(d.a, "aaa", NULL);
+    CHECK(comm != hu_nullToken);
     auto exp = "// This is a aaaa right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "a.gcc aaa 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "a.gcc aaa 0 == exp");
     comm = huGetCommentsContainingZ(d.a, "aaa", comm);
+    CHECK(comm != hu_nullToken);
     exp = "// aaaa";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "a.gcc aaa 1 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "a.gcc aaa 1 == exp");
@@ -1435,6 +1459,7 @@ TEST(huGetCommentsContaining, dicts)
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc aaa 2 = null");
     
     comm = huGetCommentsContainingZ(d.a, "right here", NULL);
+    CHECK(comm != hu_nullToken);
     exp = "// This is a aaaa right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "a.gcc aaa 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "a.gcc aaa 0 == exp");
@@ -1442,6 +1467,7 @@ TEST(huGetCommentsContaining, dicts)
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc right here 1 = null");
 
     comm = huGetCommentsContainingZ(d.bp, "bp", NULL);
+    CHECK(comm != hu_nullToken);
     exp = "// This is a bp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "bp.gcc bp 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "bp.gcc bp 0 == exp");
@@ -1453,6 +1479,7 @@ TEST(huGetCommentsContaining, dicts)
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc bp 2 = null");
 
     comm = huGetCommentsContainingZ(d.bp, "right here", NULL);
+    CHECK(comm != hu_nullToken);
     exp = "// This is a bp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "bp.gcc bp 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "bp.gcc bp 0 == exp");
@@ -1460,6 +1487,7 @@ TEST(huGetCommentsContaining, dicts)
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc bp 1 = null");
 
     comm = huGetCommentsContainingZ(d.b, "bbb", NULL);
+    CHECK(comm != hu_nullToken);
     exp = "// bbbb";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "b.gcc bbb 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "b.gcc bbb 0 == exp");
@@ -1467,10 +1495,12 @@ TEST(huGetCommentsContaining, dicts)
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc b 1 = null");
 
     comm = huGetCommentsContainingZ(d.cpp, "cpp", NULL);
+    CHECK(comm != hu_nullToken);
     exp = "// This is a cpp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cpp.gcc cpp 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "cpp.gcc cpp 0 == exp");
     comm = huGetCommentsContainingZ(d.cpp, "cpp", comm);
+    CHECK(comm != hu_nullToken);
     exp = "// cpp";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cpp.gcc cpp 1 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "cpp.gcc cpp 1 == exp");
@@ -1478,6 +1508,7 @@ TEST(huGetCommentsContaining, dicts)
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "a.gcc cpp 2 = null");
 
     comm = huGetCommentsContainingZ(d.cpp, "right here", NULL);
+    CHECK(comm != hu_nullToken);
     exp = "// This is a cpp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cpp.gcc cpp 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "cpp.gcc cpp 0 == exp");
@@ -1485,6 +1516,7 @@ TEST(huGetCommentsContaining, dicts)
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "cpp.gcc right here 1 = null");
 
     comm = huGetCommentsContainingZ(d.cp, "cp", NULL);
+    CHECK(comm != hu_nullToken);
     exp = "// cp";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cp.gcc cp 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "cp.gcc cp 0 == exp");
@@ -1492,6 +1524,7 @@ TEST(huGetCommentsContaining, dicts)
     POINTERS_EQUAL_TEXT(hu_nullToken, comm, "cp.gcc cp 1 = null");
 
     comm = huGetCommentsContainingZ(d.c, "ccc", NULL);
+    CHECK(comm != hu_nullToken);
     exp = "// cccc";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "c.gcc ccc 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "cp.gcc ccc 0 == exp");
@@ -2054,14 +2087,27 @@ TEST_GROUP(huMakeTroveFromString)
 TEST(huMakeTroveFromString, pathological)
 {
     huTrove const * trove;
-    trove = huMakeTroveFromStringZ(NULL, 4);
+    huLoadParams params;
+    huInitLoadParams(& params, HU_ENCODING_UTF8, 4, true);
+
+    trove = huMakeTroveFromStringZ(NULL, & params);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromString NULL == NULL");
 
-    trove = huMakeTroveFromStringZ("", 4);
+    trove = huMakeTroveFromStringZ("", & params);
     CHECK_TEXT(hu_nullTrove != trove, "fromString '' != NULL");
     huDestroyTrove(trove);
 
-    trove = huMakeTroveFromStringZ("[]", -1);
+    params.encoding = -1;
+    trove = huMakeTroveFromStringZ("[]", & params);
+    POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "encoding=-1 == NULL");
+
+    params.encoding = HU_ENCODING_UNKNOWN + 1;
+    trove = huMakeTroveFromStringZ("[]", & params);
+    POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "encoding=unk+1 == NULL");
+
+    params.encoding = HU_ENCODING_UTF8;
+    params.tabSize = -1;
+    trove = huMakeTroveFromStringZ("[]", & params);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "tabs=-1 == NULL");
 }
 
@@ -2088,19 +2134,32 @@ TEST_GROUP(huMakeTroveFromFile)
 TEST(huMakeTroveFromFile, pathological)
 {
     huTrove const * trove;
-    trove = huMakeTroveFromFileZ(NULL, 4);
+    huLoadParams params;
+    huInitLoadParams(& params, HU_ENCODING_UTF8, 4, true);
+    
+    trove = huMakeTroveFromFileZ(NULL, & params);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile NULL == NULL");
 
-    trove = huMakeTroveFromFileZ("", 4);
+    trove = huMakeTroveFromFileZ("", & params);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile '' == NULL");
 
-    trove = huMakeTroveFromFileZ("..", 4);
+    trove = huMakeTroveFromFileZ("..", & params);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile .. == NULL");
 
-    trove = huMakeTroveFromFileZ("/", 4);
+    trove = huMakeTroveFromFileZ("/", & params);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile / == NULL");
 
-    trove = huMakeTroveFromFileZ("src/test/testFiles/utf8.hu", -1);
+    params.encoding = -1;
+    trove = huMakeTroveFromFileZ("src/test/testFiles/utf8.hu", & params);
+    POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile encoding=-1 == NULL");
+
+    params.encoding = HU_ENCODING_UNKNOWN + 1;
+    trove = huMakeTroveFromFileZ("src/test/testFiles/utf8.hu", & params);
+    POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile encoding=unk+1 == NULL");
+
+    params.encoding = HU_ENCODING_UTF8;
+    params.tabSize = -1;
+    trove = huMakeTroveFromFileZ("src/test/testFiles/utf8.hu", & params);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile tabSize=-1 == NULL");
 }
 
@@ -2183,7 +2242,9 @@ TEST_GROUP(huGetToken)
 
 TEST(huGetToken, normal)
 {
+    CHECK(huGetToken(l.trove, 90) != hu_nullToken);
     LONGS_EQUAL_TEXT(HU_TOKENKIND_EOF, huGetToken(l.trove, 90)->kind, "l tok last == eof");
+    CHECK(huGetToken(d.trove, 102) != hu_nullToken);
     LONGS_EQUAL_TEXT(HU_TOKENKIND_EOF, huGetToken(d.trove, 102)->kind, "l tok last == eof");
 }
 
@@ -2245,8 +2306,10 @@ TEST_GROUP(huGetRootNode)
 
 TEST(huGetRootNode, normal)
 {
+    CHECK(huGetRootNode(l.trove) != hu_nullNode);
     LONGS_EQUAL_TEXT(HU_NODEKIND_LIST, huGetRootNode(l.trove)->kind, "l grn == list");
     LONGS_EQUAL_TEXT(-1, huGetRootNode(l.trove)->parentNodeIdx, "l grn == root");
+    CHECK(huGetRootNode(d.trove) != hu_nullNode);
     LONGS_EQUAL_TEXT(HU_NODEKIND_DICT, huGetRootNode(d.trove)->kind, "d grn == dict");
     LONGS_EQUAL_TEXT(-1, huGetRootNode(d.trove)->parentNodeIdx, "d grn == root");
 }
@@ -2278,13 +2341,17 @@ TEST_GROUP(huGetNode)
 
 TEST(huGetNode, normal)
 {
+    CHECK(huGetNode(l.trove, 0) != hu_nullNode);
     LONGS_EQUAL_TEXT(HU_NODEKIND_LIST, huGetNode(l.trove, 0)->kind, "l gn 0 == list");
     LONGS_EQUAL_TEXT(-1, huGetNode(l.trove, 0)->parentNodeIdx, "l gn 0 == root");
+    CHECK(huGetNode(d.trove, 0) != hu_nullNode);
     LONGS_EQUAL_TEXT(HU_NODEKIND_DICT, huGetNode(d.trove, 0)->kind, "d gn 0 == dict");
     LONGS_EQUAL_TEXT(-1, huGetNode(d.trove, 0)->parentNodeIdx, "d gn 0 == root");
 
+    CHECK(huGetNode(l.trove, 1) != hu_nullNode);
     LONGS_EQUAL_TEXT(HU_NODEKIND_VALUE, huGetNode(l.trove, 1)->kind, "l gn 1 == list");
     LONGS_EQUAL_TEXT(0, huGetNode(l.trove, 1)->parentNodeIdx, "l gn 1 == child of root");
+    CHECK(huGetNode(d.trove, 1) != hu_nullNode);
     LONGS_EQUAL_TEXT(HU_NODEKIND_VALUE, huGetNode(d.trove, 1)->kind, "d gn 1 == dict");
     LONGS_EQUAL_TEXT(0, huGetNode(d.trove, 1)->parentNodeIdx, "d gn 1 == child of root");
 }
@@ -2357,6 +2424,7 @@ TEST(huGetError, normal)
     POINTERS_EQUAL_TEXT(NULL, huGetError(l.trove, 0), "l ge 0 == 0");
     POINTERS_EQUAL_TEXT(NULL, huGetError(d.trove, 0), "d ge 0 == 0");
 
+    CHECK(huGetNumErrors(e.trove) > 0);
     LONGS_EQUAL_TEXT(HU_ERROR_SYNTAXERROR, huGetError(e.trove, 0)->errorCode, "e ge 0 == syntax error");
     LONGS_EQUAL_TEXT(12, huGetError(e.trove, 0)->token->line, "e ge 0 line == 11");
     LONGS_EQUAL_TEXT(12, huGetError(e.trove, 0)->token->col, "e ge 0 col == 12");
@@ -2727,11 +2795,13 @@ TEST(huGetTroveComment, normal)
 {
     auto comm = huGetTroveComment(l.trove, 0);
     auto exp = "// This is a trove comment."sv;
+    CHECK_FALSE(comm == NULL);
     LONGS_EQUAL_TEXT(exp.size(), comm->str.size, "l comm 0 sz == exp sz");
     STRNCMP_EQUAL_TEXT(exp.data(), comm->str.ptr, exp.size(), "l comm 0 == exp");
 
     comm = huGetTroveComment(l.trove, 1);
     exp = "// This is also a trove comment."sv;
+    CHECK_FALSE(comm == NULL);
     LONGS_EQUAL_TEXT(exp.size(), comm->str.size, "l comm 1 sz == exp sz");
     STRNCMP_EQUAL_TEXT(exp.data(), comm->str.ptr, exp.size(), "l comm 1 == exp");
 
@@ -3347,110 +3417,120 @@ TEST_GROUP(huTroveToString)
 
 TEST(huTroveToString, correctness)
 {
-    huTrove const * tc = huMakeTroveFromFileZ("test/testFiles/comments.hu", 4);
+    huTrove const * tc = huMakeTroveFromFileZ("test/testFiles/comments.hu", NULL);
     auto file = getFile("test/testFiles/comments.hu");
     char * toStr = NULL;
     int toStrLen = 0;
-    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, true, "\n", 1);
+    huStoreParams params;
+    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, 4, false, NULL, true, "\n", false);
+    huTroveToString(tc, NULL, & toStrLen, & params);
     LONGS_EQUAL_TEXT(file.size(), toStrLen, "comments.hu px len");
     toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, true, "\n", 1);
+    huTroveToString(tc, toStr, & toStrLen, & params);
     MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "comments.hu px str");
     delete [] toStr;
     huDestroyTrove(tc);
 
-    tc = huMakeTroveFromFileZ("test/testFiles/comments.hu", 4);
+    tc = huMakeTroveFromFileZ("test/testFiles/comments.hu", NULL);
     file = getFile("test/testFiles/comments-minimal.hu");
     toStr = NULL;
     toStrLen = 0;
-    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_MINIMAL, 4, NULL, true, "\n", 1);
+    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_MINIMAL, 4, false, NULL, true, "\n", false);
+    huTroveToString(tc, NULL, & toStrLen, & params);
     LONGS_EQUAL_TEXT(file.size(), toStrLen, "comments.hu pm len");
     toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_MINIMAL, 4, NULL, true, "\n", 1);
+    huTroveToString(tc, toStr, & toStrLen, & params);
     MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "comments.hu pm str");
     delete [] toStr;
     huDestroyTrove(tc);
 
-    tc = huMakeTroveFromFileZ("test/testFiles/comments.hu", 4);
+    tc = huMakeTroveFromFileZ("test/testFiles/comments.hu", NULL);
     file = getFile("test/testFiles/comments-pretty.hu");
     toStr = NULL;
     toStrLen = 0;
-    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_PRETTY, 4, NULL, true, "\n", 1);
+    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_PRETTY, 4, false, NULL, true, "\n", false);
+    huTroveToString(tc, NULL, & toStrLen, & params);
     LONGS_EQUAL_TEXT(file.size(), toStrLen, "comments.hu pp len");
     toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_PRETTY, 4, NULL, true, "\n", 1);
+    huTroveToString(tc, toStr, & toStrLen, & params);
     MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "comments.hu pp str");
     delete [] toStr;
     huDestroyTrove(tc);
 
-    tc = huMakeTroveFromFileZ("test/testFiles/quothTheHumon.hu", 4);
+    tc = huMakeTroveFromFileZ("test/testFiles/quothTheHumon.hu", NULL);
     file = getFile("test/testFiles/quothTheHumon.hu");
     toStr = NULL;
     toStrLen = 0;
-    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, true, "\n", 1);
+    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, 4, false, NULL, true, "\n", false);
+    huTroveToString(tc, NULL, & toStrLen, & params);
     LONGS_EQUAL_TEXT(file.size(), toStrLen, "quothTheHumon.hu px len");
     toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, true, "\n", 1);
+    huTroveToString(tc, toStr, & toStrLen, & params);
     MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "quothTheHumon.hu px str");
     delete [] toStr;
     huDestroyTrove(tc);
 
-    tc = huMakeTroveFromFileZ("test/testFiles/quothTheHumon.hu", 4);
+    tc = huMakeTroveFromFileZ("test/testFiles/quothTheHumon.hu", NULL);
     file = getFile("test/testFiles/quothTheHumon-minimal.hu");
     toStr = NULL;
     toStrLen = 0;
-    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_MINIMAL, 4, NULL, true, "\n", 1);
+    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_MINIMAL, 4, false, NULL, true, "\n", false);
+    huTroveToString(tc, NULL, & toStrLen, & params);
     LONGS_EQUAL_TEXT(file.size(), toStrLen, "quothTheHumon.hu pm len");
     toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_MINIMAL, 4, NULL, true, "\n", 1);
+    huTroveToString(tc, toStr, & toStrLen, & params);
     MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "quothTheHumon.hu pm str");
     delete [] toStr;
     huDestroyTrove(tc);
 
-    tc = huMakeTroveFromFileZ("test/testFiles/quothTheHumon.hu", 4);
+    tc = huMakeTroveFromFileZ("test/testFiles/quothTheHumon.hu", NULL);
     file = getFile("test/testFiles/quothTheHumon-pretty.hu");
     toStr = NULL;
     toStrLen = 0;
-    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_PRETTY, 4, NULL, true, "\n", 1);
+    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_PRETTY, 4, false, NULL, true, "\n", false);
+    huTroveToString(tc, NULL, & toStrLen, & params);
     LONGS_EQUAL_TEXT(file.size(), toStrLen, "quothTheHumon.hu pp len");
     toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_PRETTY, 4, NULL, true, "\n", 1);
+    huTroveToString(tc, toStr, & toStrLen, & params);
     MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "quothTheHumon.hu pp str");
     delete [] toStr;
     huDestroyTrove(tc);
 
-    tc = huMakeTroveFromFileZ("test/testFiles/utf8.hu", 4);
+    tc = huMakeTroveFromFileZ("test/testFiles/utf8.hu", NULL);
     file = getFile("test/testFiles/utf8.hu");
     toStr = NULL;
     toStrLen = 0;
-    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, true, "\n", 1);
+    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, 4, false, NULL, true, "\n", false);
+    huTroveToString(tc, NULL, & toStrLen, & params);
     LONGS_EQUAL_TEXT(file.size(), toStrLen, "utf8.hu px len");
     toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, true, "\n", 1);
+    huTroveToString(tc, toStr, & toStrLen, & params);
     MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "utf8.hu px str");
     delete [] toStr;
     huDestroyTrove(tc);
 
-    tc = huMakeTroveFromFileZ("test/testFiles/utf8.hu", 4);
+    tc = huMakeTroveFromFileZ("test/testFiles/utf8.hu", NULL);
     file = getFile("test/testFiles/utf8-minimal.hu");
     toStr = NULL;
     toStrLen = 0;
-    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_MINIMAL, 4, NULL, true, "\n", 1);
+    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_MINIMAL, 4, false, NULL, true, "\n", false);
+    huTroveToString(tc, NULL, & toStrLen, & params);
     LONGS_EQUAL_TEXT(file.size(), toStrLen, "utf8.hu pm len");
     toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_MINIMAL, 4, NULL, true, "\n", 1);
+    huTroveToString(tc, toStr, & toStrLen, & params);
     MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "utf8.hu pm str");
     delete [] toStr;
     huDestroyTrove(tc);
 
-    tc = huMakeTroveFromFileZ("test/testFiles/utf8.hu", 4);
+    tc = huMakeTroveFromFileZ("test/testFiles/utf8.hu", NULL);
     file = getFile("test/testFiles/utf8-pretty.hu");
     toStr = NULL;
     toStrLen = 0;
-    huTroveToString(tc, NULL, & toStrLen, HU_OUTPUTFORMAT_PRETTY, 4, NULL, true, "\n", 1);
+    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_PRETTY, 4, false, NULL, true, "\n", false);
+    huTroveToString(tc, NULL, & toStrLen, & params);
     LONGS_EQUAL_TEXT(file.size(), toStrLen, "utf8.hu pp len");
     toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, HU_OUTPUTFORMAT_PRETTY, 4, NULL, true, "\n", 1);
+    huTroveToString(tc, toStr, & toStrLen, & params);
     MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "utf8.hu pp str");
     delete [] toStr;
     huDestroyTrove(tc);
@@ -3460,33 +3540,46 @@ TEST(huTroveToString, correctness)
 TEST(huTroveToString, pathological)
 {
     int strLen = 1024;
-    huTroveToString(NULL, NULL, & strLen, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, "\n", 1);
+    huStoreParams params;
+    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, 4, false, NULL, true, "\n", false);
+
+    huTroveToString(NULL, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(0, strLen, "NULL->str sz == 0");
 
     strLen = 1024;
-    huTroveToString(hu_nullTrove, NULL, & strLen, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, "\n", 1);
+    huTroveToString(hu_nullTrove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
 
-    huTroveToString(l.trove, NULL, NULL, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, "\n", 1);
+    huTroveToString(l.trove, NULL, NULL, & params);
 
     strLen = 1024;
-    huTroveToString(l.trove, NULL, & strLen, 3, 4, NULL, false, "\n", 1);
-    LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
-
-    strLen = 1024;
-    huTroveToString(l.trove, NULL, & strLen, -1, 4, NULL, false, "\n", 1);
+    huInitStoreParamsZ(& params, 3, 4, false, NULL, true, "\n", false);
+    huTroveToString(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
 
     strLen = 1024;
-    huTroveToString(l.trove, NULL, & strLen, HU_OUTPUTFORMAT_XEROGRAPHIC, -1, NULL, false, "\n", 1);
+    huInitStoreParamsZ(& params, -1, 4, false, NULL, true, "\n", false);
+    huTroveToString(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
 
     strLen = 1024;
-    huTroveToString(l.trove, NULL, & strLen, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, NULL, 1);
+    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, -1, false, NULL, true, "\n", false);
+    huTroveToString(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
 
     strLen = 1024;
-    huTroveToString(l.trove, NULL, & strLen, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, "\n", 0);
+    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, -1, false, NULL, true, NULL, 1, false);
+    huTroveToString(l.trove, NULL, & strLen, & params);
+    LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
+
+    strLen = 1024;
+    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, -1, false, NULL, true, "\n", 0, false);
+    huTroveToString(l.trove, NULL, & strLen, & params);
+    LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
+
+    strLen = 1024;
+    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, -1, false, NULL, true, "\n", -1, false);
+    huTroveToString(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
 }
 
@@ -3520,57 +3613,81 @@ TEST(huTroveToFile, pathological)
         { remove(validFile); }
 
     int sv;
-    sv = huTroveToFileZ(NULL, validFile, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, "\n", 1);
+    huStoreParams params;
+    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, 4, false, NULL, false, "\n", false);
+
+    sv = huTroveToFileZ(NULL, validFile, & params);
     LONGS_EQUAL_TEXT(0, sv, "NULL->file sz == 0");
     acc = access(validFile, F_OK);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
 
-    sv = huTroveToFileZ(hu_nullTrove, validFile, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, "\n", 1);
+    sv = huTroveToFileZ(hu_nullTrove, validFile, & params);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
 
-    sv = huTroveToFileZ(hu_nullTrove, NULL, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, "\n", 1);
+    sv = huTroveToFileZ(hu_nullTrove, NULL, & params);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
 
-    sv = huTroveToFileZ(hu_nullTrove, "", HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, "\n", 1);
+    sv = huTroveToFileZ(hu_nullTrove, "", & params);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
 
-    sv = huTroveToFileZ(hu_nullTrove, "..", HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, "\n", 1);
+    sv = huTroveToFileZ(hu_nullTrove, "..", & params);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
 
-    sv = huTroveToFileZ(hu_nullTrove, "/", HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, "\n", 1);
+    sv = huTroveToFileZ(hu_nullTrove, "/", & params);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
 
-    sv = huTroveToFileZ(l.trove, validFile, 3, 4, NULL, false, "\n", 1);
-    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
-    acc = access(validFile, F_OK);
-    LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
-    if (acc != -1)
-        { remove(validFile); }
-
-    sv = huTroveToFileZ(l.trove, validFile, -1, 4, NULL, false, "\n", 1);
+    huInitStoreParamsZ(& params, 3, 4, false, NULL, false, "\n", false);
+    sv = huTroveToFileZ(l.trove, validFile, & params);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
     acc = access(validFile, F_OK);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
 
-    sv = huTroveToFileZ(l.trove, validFile, HU_OUTPUTFORMAT_XEROGRAPHIC, -1, NULL, false, "\n", 1);
+    huInitStoreParamsZ(& params, -1, 4, false, NULL, false, "\n", false);
+    sv = huTroveToFileZ(l.trove, validFile, & params);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
     acc = access(validFile, F_OK);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
 
-    sv = huTroveToFileZ(l.trove, validFile, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, NULL, 1);
+    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, -1, false, NULL, false, "\n", false);
+    sv = huTroveToFileZ(l.trove, validFile, & params);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
     acc = access(validFile, F_OK);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
 
-    sv = huTroveToFileZ(l.trove, validFile, HU_OUTPUTFORMAT_XEROGRAPHIC, 4, NULL, false, "\n", 0);
+    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, 4, false, NULL, false, NULL, 1, false);
+    sv = huTroveToFileZ(l.trove, validFile, & params);
+    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+    acc = access(validFile, F_OK);
+    LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
+    if (acc != -1)
+        { remove(validFile); }
+
+    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, 4, true, NULL, false, "\n", 1, false);
+    sv = huTroveToFileZ(l.trove, validFile, & params);
+    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+    acc = access(validFile, F_OK);
+    LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
+    if (acc != -1)
+        { remove(validFile); }
+
+    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, 4, false, NULL, false, "\n", 0, false);
+    sv = huTroveToFileZ(l.trove, validFile, & params);
+    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+    acc = access(validFile, F_OK);
+    LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
+    if (acc != -1)
+        { remove(validFile); }
+
+    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, 4, false, NULL, false, "\n", -1, false);
+    sv = huTroveToFileZ(l.trove, validFile, & params);
     LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
     acc = access(validFile, F_OK);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");

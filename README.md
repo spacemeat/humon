@@ -288,7 +288,7 @@ Like dict entries, annotation keys must be unique among annotations associated t
 Practically, annotations aren't a necessary part of Humon. All their data could be baked into objects themselves, and there was a time when Humon didn't have them. But I find them useful.
 
 **Humon supports UTF8.**
-UTF8 is quickly becoming the ubiquitous Unicode encoding, even in Asian locales. Humon supports UTF8 only, with or without BOM. Support for UTF16 and UTF32 may be considered in the future, but their relative worldwide use is pretty small. Humon respects all the whitespace characters that Unicode specifies, and supports all code points.
+UTF8 is quickly becoming the ubiquitous Unicode encoding, even in Asian locales. Humon supports UTF8 only, with or without BOM. Support for UTF16 and UTF32 is planned. Humon respects all the whitespace characters that Unicode specifies, and supports all code points.
 
 To Humon, any code point is either whitespace, language punctuation (which is only ever a single byte), or a word-token character. That's all the tokenizer understands.
 
@@ -316,6 +316,8 @@ There are several ways to access a node. To get the root node, which is always a
     // or
     rootNode = trove.node(0);
 
+These each return a `hu::Node` object. 
+
 To get a node deeper in the tree:
 
     auto node = rootNode / "foo" / 0;
@@ -325,15 +327,19 @@ To get a node deeper in the tree:
     node = rootNode.relative("foo/0");
     // or
     node = trove.nodeByAddress("/foo/0");
+    // or
+    node = rootNode.child("foo").child(0);
 
-To check first, use the % operator. This returns a bool which indicates whether the given key or index is valid. Note that for indices, this produces true if the given index is strictly smaller than the number of children, and is includsive of index 0.
+> Internally, a `hu::Trove` object just manages a pointer to a `capi::huTrove *`. Moves and copies are shallow, and all the member functions call C API functions on the stored pointer. `hu::Node` objects also just manage pointers. Since underlying Humon objects are immutable and immovable, the C++ objects can be lightweight and breezy.
+
+To check whether a node has a particular child node, use the % operator on the node with the desired key or index. This returns a bool which indicates whether the given key or index is valid. Note that for indices, this produces true if the given index is strictly smaller than the number of children, and is includsive of index 0.
 
     // has a child with key 'foo'
     bool hasFoo = rootNode % "foo";
     // has a child with index 1 (so at least two children)
     bool hasFoosStuff = hasFoo && rootNode / "foo" % 1;
 
-A few things to note: It's more efficient to store a reference to a node than to look it up successive times. Above, we're essentially looking up "/foo" twice. Better to get the base object and store it:
+It's more efficient to store a reference to a node than to look it up successive times. Above, we're essentially looking up "/foo" twice. Better to get the base object and store it:
 
     auto fooNode = rootNode / "foo";
     hasFoosStuff = rootNode / "foo" % 1;

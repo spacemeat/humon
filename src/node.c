@@ -16,9 +16,9 @@ void huInitNode(huNode * node, huTrove const * trove)
     node->lastToken = hu_nullToken;
     node->childOrdinal = 0;
     node->parentNodeIdx = -1;
-    huInitVector(& node->childNodeIdxs, sizeof(int));
-    huInitVector(& node->annotations, sizeof(huAnnotation));
-    huInitVector(& node->comments, sizeof(huComment));
+    huInitGrowableVector(& node->childNodeIdxs, sizeof(int));
+    huInitGrowableVector(& node->annotations, sizeof(huAnnotation));
+    huInitGrowableVector(& node->comments, sizeof(huComment));
 }
 
 
@@ -402,33 +402,33 @@ huToken const * huGetCommentsContainingN(huNode const * node, char const * conta
 }
 
 
-void eatAddressWord(huCursor * cursor, int * len, int * col)
+void eatAddressWord(huScanner * scanner, int * len, int * col)
 {
     // The first character is already confirmed a word char, so, next please.
-    * len += cursor->charLength;
+    * len += scanner->curCursor->charLength;
     * col += 1;
-    nextCharacter(cursor);
+    nextCharacter(scanner);
 
     bool eating = true;
     while (eating)
     {
-        analyzeWhitespace(cursor);
-        if (cursor->character[0] == '\0')
+        analyzeWhitespace(scanner);
+        if (scanner->curCursor->isEof)
             { eating = false; }
-        else if (cursor->ws_line || cursor->ws_col)
+        else if (scanner->curCursor->isNewline || scanner->curCursor->isSpace)
             { eating = false; }
         else
         {
-            switch(cursor->character[0])
+            switch(scanner->curCursor->codePoint)
             {
             case '{': case '}': case '[': case ']':
             case ':': case '@': case '#': case '/': // adding '/' here because address
                 eating = false;
                 break;
             default:
-                * len += cursor->charLength;
+                * len += scanner->curCursor->charLength;
                 * col += 1;
-                nextCharacter(cursor);
+                nextCharacter(scanner);
                 break;
             }
         }
@@ -436,47 +436,47 @@ void eatAddressWord(huCursor * cursor, int * len, int * col)
 }
 
 
-void eatQuotedAddressWord(huCursor * cursor, char quoteChar, int * len, int * col)
+void eatQuotedAddressWord(huScanner * scanner, char quoteChar, int * len, int * col)
 {
     // The first character is already confirmed quoteChar, so, next please.
     * col += 1;
-    nextCharacter(cursor);
+    nextCharacter(scanner);
 
     bool eating = true;
     while (eating)
     {
-        analyzeWhitespace(cursor);
-        if (cursor->character[0] == '\0')
+        analyzeWhitespace(scanner);
+        if (scanner->curCursor->isEof)
             { eating = false; }
-        else if (cursor->ws_line)
+        else if (scanner->curCursor->isNewline)
         {
-            * len += cursor->charLength;
+            * len += scanner->curCursor->charLength;
             * col = 1;
-            nextCharacter(cursor);
+            nextCharacter(scanner);
         }
         else
         {
-            if (cursor->character[0] == quoteChar)
+            if (scanner->curCursor->codePoint == quoteChar)
             {
                 * col += 1;
-                nextCharacter(cursor);
+                nextCharacter(scanner);
                 eating = false;
             }
-            else if (cursor->character[0] == '\\' && 
-                cursor->character[1] == quoteChar)  // TODO: ensure not running off the end
+            else if (scanner->curCursor->codePoint == '\\' && 
+                     scanner->nextCursor->codePoint == quoteChar)  // TODO: ensure not running off the end
             {
                 * col += 1;
                 * len += 1;
-                nextCharacter(cursor);
+                nextCharacter(scanner);
                 * col += 1;
                 * len += 1;
-                nextCharacter(cursor);
+                nextCharacter(scanner);
             }
             else
             {
                 * col += 1;
-                * len += cursor->charLength;
-                nextCharacter(cursor);
+                * len += scanner->curCursor->charLength;
+                nextCharacter(scanner);
             }
         }
     }
@@ -515,40 +515,38 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
     if (address[0] == '/')
         { return hu_nullNode; }
 
-    huCursor cur = 
-        { .trove = NULL, 
-          .character = address, 
-          .charLength = getcharLength(address) };
+    huScanner scanner;
+    huInitScanner(& scanner, NULL, address, addressLen);
     int line = 0;  // unused
     int col = 0;
 
-    eatWs(& cur, 1, & line, & col);
+    eatWs(& scanner, 1, & line, & col);
     int len = 0;
     char const * wordStart = address + col;
     bool quoted = false;
     bool doubleQuoted = false;
-    switch(* cur.character)
+    switch(scanner.curCursor->codePoint)
     {
     case '\0':
         return node;
     case '"':
-        eatQuotedAddressWord(& cur, '"', & len, & col);
-        wordStart += 1;
+        eatQuotedAddressWord(& scanner, '"', & len, & col);
+        wordStart += scanner.curCursor->charLength;
         quoted = true;
         doubleQuoted = true;
         break;
     case '\'':
-        eatQuotedAddressWord(& cur, '\'', & len, & col);
-        wordStart += 1;
+        eatQuotedAddressWord(& scanner, '\'', & len, & col);
+        wordStart += scanner.curCursor->charLength;
         quoted = true;
         break;
     case '`':
-        eatQuotedAddressWord(& cur, '`', & len, & col);
-        wordStart += 1;
+        eatQuotedAddressWord(& scanner, '`', & len, & col);
+        wordStart += scanner.curCursor->charLength;
         quoted = true;
         break;
     default:
-        eatAddressWord(& cur, & len, & col);
+        eatAddressWord(& scanner, & len, & col);
         break;
     }
 
@@ -557,8 +555,9 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
     
     huNode const * nextNode = hu_nullNode;
     // if '..', go up a level if we can
-    if (quoted == false && len == 2 && wordStart[0] == '.' && wordStart[1] == '.')
-        { nextNode = huGetParentNode(node); }
+    if (quoted == false && len == 2 && 
+        wordStart[0] == '.' && wordStart[1] == '.')
+            { nextNode = huGetParentNode(node); }
     else
     {
         // if numeric, and not quoted, use as an index
@@ -607,7 +606,7 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
     if (nextNode == hu_nullNode)
         { return hu_nullNode; }
     
-    eatWs(& cur, 1, & line, & col);
+    eatWs(& scanner, 1, & line, & col);
 
     if (address[col] == '\0')
         { return nextNode; }
@@ -787,22 +786,17 @@ void huGetNodeAddress(huNode const * node, char * dest, int * destLen)
     huVector str;
     if (dest == NULL)
     {
-        huInitVector(& str, 0); // counting only
+        huInitVectorForCounting(& str); // counting only
     }
     else
     {
-        huInitVectorPreallocated(& str, sizeof(char), dest, * destLen, false);
+        huInitVectorPreallocated(& str, dest, sizeof(char), * destLen);
     }
 
     PrintTracker printer = {
         .trove = NULL,
         .str = & str,
-        .format = HU_OUTPUTFORMAT_MINIMAL,
-        .printComments = false,
-        .tabSize = 0,
-        .newline = "",
-        .newlineSize = 0,
-        .colorTable = NULL,
+        .storeParams = NULL,
         .currentDepth = 0,
         .lastPrintWasNewline = false
     };

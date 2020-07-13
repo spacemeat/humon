@@ -15,8 +15,27 @@ extern "C"
 //#define HUMON_CAVEPERSON_DEBUGGING
 //#define HUMON_ERRORS_TO_STDERR
 
+#ifndef HUMON_FILE_BLOCK_SIZE
+/// Sets the stack-allocated block size for reading from file.
+#define HUMON_FILE_BLOCK_SIZE       (1 << 16)
+#endif
+
     static int const MIN_INPUT_TAB_SIZE = 1;
     static int const MAX_INPUT_TAB_SIZE = 1024;
+
+    /// Specifies the supported Unicode encodings.
+    enum huEncoding
+    {
+        HU_ENCODING_UTF8,
+        HU_ENCODING_UTF16_BE,
+        HU_ENCODING_UTF16_LE,
+        HU_ENCODING_UTF32_BE,
+        HU_ENCODING_UTF32_LE,
+        HU_ENCODING_UNKNOWN
+    };
+
+    /// Returns a string representation of a huTokenKind.
+    char const * huEncodingToString(int rhs);
 
     /// Specifies the kind of data represented by a particular huToken.
     enum huTokenKind
@@ -51,7 +70,7 @@ extern "C"
     /// Specifies the style of whitespacing in Humon text.
     enum huOutputFormat
     {
-        HU_OUTPUTFORMAT_XEROGRAPHIC,///< Byte-for-byte copy of the original.
+        HU_OUTPUTFORMAT_XERO,///< Byte-for-byte copy of the original.
         HU_OUTPUTFORMAT_MINIMAL,    ///< Reduces as much whitespace as possible.
         HU_OUTPUTFORMAT_PRETTY      ///< Formats the text in a standard, human-friendly way.
     };
@@ -63,6 +82,8 @@ extern "C"
     enum huErrorCode
     {
         HU_ERROR_NOERROR,                   ///< No error.
+
+        HU_ERROR_BADENCODING,               ///< The Unicode encoding is malformed.
 
         HU_ERROR_UNFINISHEDQUOTE,           ///< The quoted text was not endquoted.
         HU_ERROR_UNFINISHEDCSTYLECOMMENT,   ///< The C-style comment was not closed.
@@ -100,6 +121,13 @@ extern "C"
         HU_COLORCODE_NUMCOLORKINDS              ///< One past the last style code.
     };
 
+    enum huVectorKind
+    {
+        HU_VECTORKIND_COUNTING,
+        HU_VECTORKIND_PREALLOCATED,
+        HU_VECTORKIND_GROWABLE
+    };
+
     /// Describes and owns an array of memory elements.
     /** Wraps a buffer and operates it as an array, tracking
      * the size and capacity of the array, and the size of its
@@ -114,11 +142,11 @@ extern "C"
      * memory in `buffer`; it remains set to NULL.*/
     typedef struct huVector_tag
     {
-        void * buffer;          ///< The owned buffer for the array.
+        int kind;               ///< The kind of vector this is. Determines growth and capacity behavior.
+        char * buffer;          ///< The owned buffer for the array.
         int elementSize;        ///< The size of one element of the array. If set to 0, the vector does not manage memory.
         int numElements;        ///< The number of elements currently managed by the array.
         int vectorCapacity;     ///< The maximum capacity of the array.
-        bool canGrowCapacity;   ///< Whether the vector can grow. Preallocaed buffers might be static.
     } huVector;
 
     /// Stores a pointer to a string, and its size. Does not own the string.
@@ -174,8 +202,39 @@ extern "C"
         int col;                        ///< Location info for tokenizer errors.
     } huError;
 
+    /// 
+    /** */
+    typedef struct huLoadParams_tag
+    {
+        int encoding;
+        int tabSize;
+        bool allowIllegalCodePoints;
+        bool allowOutOfRangeCodePoints;
+        bool allowOverlongEncodings;
+        bool allowUtf16UnmatchedSurrogates;
+    } huLoadParams;
+
+    void huInitLoadParams(huLoadParams * params, int encoding, int tabSize, bool strictUnicode);
+
+    /// 
+    /** */
+    typedef struct huStoreParams_tag
+    {
+        int outputFormat;
+        int tabSize;
+        bool usingColors;
+        huStringView const * colorTable;
+        bool printComments;
+        huStringView newline;
+        bool printBom;
+    } huStoreParams;
 
     typedef struct huTrove_tag huTrove;
+
+    void huInitStoreParamsZ(huStoreParams * params, int outputFormat, int tabSize, 
+        bool usingColors, huStringView const * colorTable,  bool printComments, char const * newline, bool printBom);
+    void huInitStoreParamsN(huStoreParams * params, int outputFormat, int tabSize, 
+        bool usingColors, huStringView const * colorTable,  bool printComments, char const * newline, int newlineSize, bool printBom);
 
     /// Encodes a Humon data node.
     /** Humon nodes make up a heirarchical structure, stemming from a single root node.
@@ -271,6 +330,7 @@ extern "C"
      * string, and can output Humon to file or string as well. */
     typedef struct huTrove_tag
     {
+        int encoding;               ///< The input Unicode encoding for laods.
         char const * dataString;    ///< The buffer containing the Humon text as loaded. Owned by the trove. Humon takes care to NULL-terminate this string.
         int dataStringSize;         ///< The size of the buffer.
         huVector tokens;            ///< Manages a huToken []. This is the array of tokens lexed from the Humon text.
@@ -283,13 +343,13 @@ extern "C"
     } huTrove;
 
     /// Creates a trove from a NULL-terminated string of Humon text.
-    huTrove const * huMakeTroveFromStringZ(char const * data, int inputTabSize);
+    huTrove const * huMakeTroveFromStringZ(char const * data, huLoadParams * loadParams);
     /// Creates a trove from a string view of Humon text.
-    huTrove const * huMakeTroveFromStringN(char const * data, int dataLen, int inputTabSize);
+    huTrove const * huMakeTroveFromStringN(char const * data, int dataLen, huLoadParams * loadParams);
     /// Creates a trove from a file.
-    huTrove const * huMakeTroveFromFileZ(char const * path, int inputTabSize);
+    huTrove const * huMakeTroveFromFileZ(char const * path, huLoadParams * loadParams);
     /// Creates a trove from a file.
-    huTrove const * huMakeTroveFromFileN(char const * path, int pathLen, int inputTabSize);
+    huTrove const * huMakeTroveFromFileN(char const * path, int pathLen, huLoadParams * loadParams);
 
     /// Reclaims all memory owned by a trove.
     void huDestroyTrove(huTrove const * trove);
@@ -367,12 +427,12 @@ extern "C"
     huNode const * huFindNodesByCommentContainingN(huTrove const * trove, char const * containedText, int containedTextLen, huNode const * startWith);
 
     /// Serializes a trove to text.
-    void huTroveToString(huTrove const * trove, char * dest, int * destLength, int outputFormat, int outputTabSize, huStringView const * colorTable, bool printComments, char const * newline, int newlineSize);
+    void huTroveToString(huTrove const * trove, char * dest, int * destLength, huStoreParams * storeParams);
 
     /// Serializes a trove to file.
-    size_t huTroveToFileZ(huTrove const * trove, char const * path, int outputFormat, int outputTabSize, huStringView const * colorTable, bool printComments, char const * newline, int newlineSize);
+    size_t huTroveToFileZ(huTrove const * trove, char const * path, huStoreParams * storeParams);
     /// Serializes a trove to file.
-    size_t huTroveToFileN(huTrove const * trove, char const * path, int pathLen, int outputFormat, int outputTabSize, huStringView const * colorTable, bool printComments, char const * newline, int newlineSize);
+    size_t huTroveToFileN(huTrove const * trove, char const * path, int pathLen, huStoreParams * storeParams);
 
     void huFillAnsiColorTable(huStringView table[]);
 

@@ -1,7 +1,6 @@
 #include <CppUTest/TestHarness.h>
 #include <string.h>
 #include "humon.h"
-#include "ansiColors.h"
 #include <string_view>
 
 using namespace std::literals;
@@ -14,7 +13,7 @@ TEST_GROUP(emptyString)
   void setup()
   {
     auto humon = R"()"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()
@@ -57,7 +56,7 @@ TEST_GROUP(commentsOnly)
     auto humon = R"(//1
 /*2*//*3.
 0*///4)"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()
@@ -101,7 +100,7 @@ TEST_GROUP(singleValue)
     auto humon = R"(// 1
 snerb // 2
 // 3)"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()
@@ -178,7 +177,7 @@ TEST_GROUP(singleEmptyList)
     auto humon = R"(// 1
 [] // 2
 // 3)"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()
@@ -261,7 +260,7 @@ TEST_GROUP(singleEmptyDict)
     auto humon = R"(// 1
 {} // 2
 // 3)"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()
@@ -344,7 +343,7 @@ TEST_GROUP(listWithOneValue)
     auto humon = R"(// 1
 [ /*2*/ one /*3*/] // 4
 // 5)"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()
@@ -481,7 +480,7 @@ TEST_GROUP(dictWithOneValue)
     auto humon = R"(// 1
 { /*2*/ one /*3*/ : /*4*/ two /*5*/ } // 6
 // 7)"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()
@@ -635,7 +634,7 @@ TEST_GROUP(listWithTwoValues)
   // 1.3
   ] // 1.4
 // t)"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()
@@ -792,7 +791,7 @@ TEST_GROUP(dictWithTwoValues)
   // 1.3
   } // 1.4
 // t)"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()
@@ -967,7 +966,7 @@ TEST_GROUP(listInList)
   void setup()
   {
     auto humon = R"([[]])"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()
@@ -1037,7 +1036,7 @@ TEST_GROUP(dictInList)
   void setup()
   {
     auto humon = R"([{}])"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()
@@ -1106,7 +1105,7 @@ TEST_GROUP(listInDict)
   void setup()
   {
     auto humon = R"({foo:[]})"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()
@@ -1190,7 +1189,7 @@ TEST_GROUP(dictInDict)
   void setup()
   {
     auto humon = R"({foo:{}})"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()
@@ -1275,7 +1274,7 @@ TEST_GROUP(multipleNestedLists)
   [[a b c] [d e f]]
   [[g h i] [j k l]]
 ])"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()
@@ -1319,7 +1318,7 @@ TEST_GROUP(oneAnnoOnly)
   {
     auto humon = 
 R"(@a:b)"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()
@@ -1349,7 +1348,7 @@ TEST_GROUP(oneValueAnno)
   {
     auto humon = 
 R"(foo   @ a : b)"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()
@@ -1380,7 +1379,7 @@ TEST_GROUP(oneValueTwoAnno)
     auto humon = 
 R"(foo   @ a : b
 @ c : d)"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()
@@ -1416,7 +1415,7 @@ TEST_GROUP(oneValueTwoAnnoGroup)
     auto humon = 
 R"(foo   @ {a : b
 c : d} )"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()
@@ -1452,7 +1451,7 @@ TEST_GROUP(oneEmptyListTwoAnnoGroup)
     auto humon = 
 R"([   @ {a : b
 c : d} ])"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()
@@ -1488,7 +1487,7 @@ TEST_GROUP(oneEmptyListTwoAnnoLast)
     auto humon = 
 R"([   @ a : b
 ]@c : d )"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()
@@ -1524,7 +1523,7 @@ TEST_GROUP(oneEmptyDictTwoAnnoGroup)
     auto humon = 
 R"({   @ {a : b
 c : d} })"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()
@@ -1560,7 +1559,7 @@ TEST_GROUP(oneEmptyDictTwoAnnoLast)
     auto humon = 
 R"({   @ a : b}@
 c : d)"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()
@@ -1596,7 +1595,7 @@ TEST_GROUP(oneValueListTwoAnnoGroup)
     auto humon = 
 R"([  foo @ {a : b
 c : d} ])"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()
@@ -1633,7 +1632,7 @@ TEST_GROUP(oneValueDictFourAnno)
     auto humon = 
 R"({  foo @ a : b :
   @ c : d @e:f bar @g:h })"sv;
-    trove = huMakeTroveFromStringN(humon.data(), humon.size(), 2);
+    trove = huMakeTroveFromStringN(humon.data(), humon.size(), NULL);
   }
 
   void teardown()

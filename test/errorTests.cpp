@@ -2,12 +2,9 @@
 #include <string.h>
 #include <string_view>
 #include <unistd.h>
-#include "humon.hpp"
-#include "ansiColors.h"
-#include <CppUTest/TestHarness.h>
-
 #include <iostream>
-
+#include "humon.hpp"
+#include <CppUTest/TestHarness.h>
 #include "testDataCpp.h"
 
 using namespace std::literals;

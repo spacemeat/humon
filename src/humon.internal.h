@@ -11,10 +11,12 @@ extern "C"
 
     bool stringInString(char const * haystack, int haystackLen, char const * needle, int needleLen);
 
-    /// Initializes a vector to zero size. Does not allocate.
-    void huInitVector(huVector * vector, int elementSize);
-    /// Initializes a vector with a preallocated buffer. Can still grow.
-    void huInitVectorPreallocated(huVector * vector, int elementSize, void * buffer, int numElements, bool canStillGrow);
+    /// Initializes a vector to zero size. Vector can count characters but not store them. Does not allocate.
+    void huInitVectorForCounting(huVector * vector);
+    /// Initializes a vector with a preallocated buffer. Does not allocate, and cannot grow.
+    void huInitVectorPreallocated(huVector * vector, void * buffer, int elementSize, int numElements);
+    /// Initializes a vector to zero size. Does not allocate yet.
+    void huInitGrowableVector(huVector * vector, int elementSize);
 
     /// Frees the memory owned by a huVector.
     void huDestroyVector(huVector const * vector);
@@ -27,20 +29,36 @@ extern "C"
     int huAppendToVector(huVector * vector, void const * data, int numElements);
     void * huGrowVector(huVector * vector, int * numElements);
 
-    typedef struct cursor_tag
+    typedef struct huCursor_tag
     {
-            huTrove * trove;
-            char const * character;
-            uint8_t charLength;
-            uint8_t ws_col;            // boolean - set if space-like whitespace
-            uint8_t ws_line;           // boolean - set if newline-like whitespace
+        char const * character;     // pointer into memory
+        uint8_t charLength;         // length of the character
+        uint32_t codePoint;         // Unicode code point
+        bool isEof;                 // set if end of string
+        bool isSpace;               // set if space-like whitespace
+        bool isTab;                 // set if tab-like whitespace
+        bool isNewline;             // set if newline-like whitespace
     } huCursor;
 
+    typedef struct huScanner_tag
+    {
+        huTrove * trove;
+        char const * inputStr;
+        int inputStrLen;
+        huCursor * curCursor;
+        huCursor * nextCursor;
+        huCursor cursors[2];
+    } huScanner;
 
+    bool isMachineBigEndian();
+
+    void huInitScanner(huScanner * scanner, huTrove * trove, char const * str, int strLen);
     int getcharLength(char const * cur);
-    void nextCharacter(huCursor * cursor);
-    void analyzeWhitespace(huCursor * cursor);
-    void eatWs(huCursor * cursor, int tabSize, int * line, int * col);
+    void nextCharacter(huScanner * cursor);
+    void analyzeCharacter(huScanner * cursor);
+    void analyzeWhitespace(huScanner * cursor);
+    void eatWs(huScanner * cursor, int tabSize, int * line, int * col);
+    bool parseInt(huScanner * scanner, int encoding, int * integer);
 
     void huInitNode(huNode * node, huTrove const * trove);
     void huDestroyNode(huNode const * node);
@@ -50,6 +68,11 @@ extern "C"
 
     void recordTokenizeError(huTrove * trove, int errorCode, int line, int col);
     void recordError(huTrove * trove, int errorCode, huToken const * pCur);
+
+    int swagEncodingFromString(huStringView const * data, size_t * numBomChars, huLoadParams * loadParams);
+    int swagEncodingFromFile(FILE * fp, int fileSize, size_t * numBomChars, huLoadParams * loadParams);
+    int transcodeToUtf8FromString(char * dest, size_t * numBytesEncoded, huStringView const * src, huLoadParams * loadParams);
+    int transcodeToUtf8FromFile(char * dest, size_t * numBytesEncoded, FILE * fp, int srcLen, huLoadParams * loadParams);
 
     void huTokenizeTrove(huTrove * trove);
     void huParseTrove(huTrove * trove);
@@ -63,12 +86,7 @@ extern "C"
         huTrove const * trove;
         huVector * str;
 
-        int format;
-        bool printComments;
-        int tabSize;
-        char const * newline;
-        int newlineSize;
-        huStringView const * colorTable;
+        huStoreParams * storeParams;
 
         int currentDepth;
         bool lastPrintWasNewline;
@@ -90,27 +108,7 @@ extern "C"
     int printAllTrailingComments(PrintTracker * printer, huNode const * node, huToken const * tok, int startingWith);
     void printAnnotations(PrintTracker * printer, huVector const * annotations, bool isTroveAnnotations);
     void printNode(PrintTracker * printer, huNode const * node);
-    void troveToPrettyString(huTrove const * trove, huVector * str, 
-        int outputFormat, int outputTabSize, huStringView const * colorTable, 
-        bool printComments, char const * newline, int newlineSize);
-
-
-    /*
-    void appendString(huVector * str, char const * addend, int size);
-    void appendWs(huVector * str, int numChars);
-    void appendColor(huVector * str, huStringView const * colorTable, int colorCode);
-    void endColor(huVector * str, huStringView const * colorTable);
-    void appendColoredString(huVector * str, char const * addend, int size, huStringView const * colorTable, int colorCode);
-    void printComment(huToken const * comment, huVector * str, char const * newline, int newlineSize, huStringView const * colorTable);
-    int printSameLineComments(huNode const * node, bool firstToken, int startingCommentIdx, huVector * str, char const * newline, int newlineSize, huStringView const* colorTable);
-    void printAnnotations(huAnnotation const * annos, int numAnno, bool troveOwned, huVector * str, huStringView const * colorTable);
-    void printTroveAnnotations(huTrove const * trove, huVector * str, huStringView const * colorTable);
-    void printNodeAnnotations(huNode const * node, huVector * str, huStringView const * colorTable);
-    void printKey(huToken const * keyToken, huVector * str, huStringView const * colorTable);
-    void printValue(huToken const * valueToken, huVector * str, huStringView const * colorTable);
-    void troveToPrettyStringRec(huNode const * node, huVector * str, int depth, int outputFormat, bool excludeComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable);
-    void troveToPrettyString(huTrove const * trove, huVector * str, int outputFormat, bool excludeComments, int outputTabSize, char const * newline, int newlineSize, huStringView const * colorTable);
-    */
+    void troveToPrettyString(huTrove const * trove, huVector * str, huStoreParams * storeParams);
 
 #ifdef __cplusplus
 } // extern "C"

@@ -3,143 +3,220 @@
 #include "humon.internal.h"
 
 
-huTrove const * makeTrove(huStringView const * data, int inputTabSize)
+void initTrove(huTrove * trove, huLoadParams * loadParams)
 {
-    huTrove * t = malloc(sizeof(huTrove));
-    if (t == NULL)
-        { return hu_nullTrove; }
+    trove->dataString = NULL;
+    trove->dataStringSize = 0;
+    trove->encoding = loadParams->encoding;
 
-    t->dataStringSize = data->size;
-    // Pad by 4 nulls. This lets us look ahead three bytes for a 4-byte char match.
-    char * newDataString = malloc(data->size + 4);
-    if (newDataString == NULL)
-    {
-        free(t);
-        return hu_nullTrove;
-    }
-    memcpy(newDataString, data->ptr, data->size);
-    newDataString[data->size] = '\0';
-    newDataString[data->size + 1] = '\0';
-    newDataString[data->size + 2] = '\0';
-    newDataString[data->size + 3] = '\0';
+    huInitGrowableVector(& trove->tokens, sizeof(huToken));
+    huInitGrowableVector(& trove->nodes, sizeof(huNode));
+    huInitGrowableVector(& trove->errors, sizeof(huError));
 
-    t->dataString = newDataString;
+    trove->inputTabSize = loadParams->tabSize;
 
-    huInitVector(& t->tokens, sizeof(huToken));
-    huInitVector(& t->nodes, sizeof(huNode));
-    huInitVector(& t->errors, sizeof(huError));
+    huInitGrowableVector(& trove->annotations, sizeof(huAnnotation));
+    huInitGrowableVector(& trove->comments, sizeof(huComment));
 
-    t->inputTabSize = inputTabSize;
-
-    huInitVector(& t->annotations, sizeof(huAnnotation));
-    huInitVector(& t->comments, sizeof(huComment));
-
-    t->lastAnnoToken = NULL;
-
-    huTokenizeTrove(t);
-    huParseTrove(t);
- 
-    return t;
+    trove->lastAnnoToken = NULL;
 }
 
 
-huTrove const * huMakeTroveFromStringZ(char const * data, int inputTabSize)
+huTrove const * huMakeTroveFromStringZ(char const * data, huLoadParams * loadParams)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (data == NULL)
         { return hu_nullTrove; }
 #endif
 
-    return huMakeTroveFromStringN(data, strlen(data), inputTabSize);
+    return huMakeTroveFromStringN(data, strlen(data), loadParams);
 }
 
 
-huTrove const * huMakeTroveFromStringN(char const * data, int dataLen, int inputTabSize)
+huTrove const * huMakeTroveFromStringN(char const * data, int dataLen, huLoadParams * loadParams)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (data == NULL || dataLen < 0 ||
-        inputTabSize < MIN_INPUT_TAB_SIZE || inputTabSize > MAX_INPUT_TAB_SIZE)
+    if (data == NULL || dataLen < 0)
+        { return hu_nullTrove; }
+    if (loadParams &&
+        (loadParams->encoding < 0 || loadParams->encoding > HU_ENCODING_UNKNOWN ||
+         loadParams->tabSize < MIN_INPUT_TAB_SIZE || loadParams->tabSize > MAX_INPUT_TAB_SIZE))
         { return hu_nullTrove; }
 #endif
 
-    // pad by 4 nulls -- see above
-    char * newData = malloc(dataLen + 4);
-    if (newData == NULL)
-        { return hu_nullTrove; }
-
-    memcpy(newData, data, dataLen);
-    newData[dataLen] = '\0';
-    newData[dataLen + 1] = '\0';
-    newData[dataLen + 2] = '\0';
-    newData[dataLen + 3] = '\0';
-
-    huStringView dataView = { newData, dataLen };
-    huTrove const * newTrove = makeTrove(& dataView, inputTabSize);
-    if (newTrove == NULL)
+    huLoadParams localLoadParams;
+    if (loadParams == NULL)
     {
-        free(newData);
-        return hu_nullTrove;
+        huInitLoadParams(& localLoadParams, HU_ENCODING_UTF8, 4, true);
+        loadParams = & localLoadParams;
+    }
+
+    huStringView inputDataView = { data, dataLen };
+
+    if (loadParams->encoding == HU_ENCODING_UNKNOWN)
+    {
+        size_t numEncBytes = 0;    // not useful here
+        loadParams->encoding = swagEncodingFromString(& inputDataView, & numEncBytes, loadParams);
+        if (loadParams->encoding == HU_ENCODING_UNKNOWN)
+            { return hu_nullTrove; }
     }
     
-    return newTrove;
+    huTrove * trove = malloc(sizeof(huTrove));
+    if (trove == NULL)
+        { return hu_nullTrove; }
+    initTrove(trove, loadParams);
+
+    // TODO: Padding with 4 nulls for now; let's see if we actually need to.
+    // We're guaranteed that UTF8 strings will be no longer than the transcoded UTF* 
+    // equivalent, as long as we reject unpaired surrogates. MS filenames
+    // can contain unpaired surrogates, and Humon will accept them if strictUnicode
+    // is clear. At that point, a UTF8 string can be longer than its UTF16, so we
+    // have to double the size.
+    int sizeFactor = loadParams->allowUtf16UnmatchedSurrogates == false && 
+                       (loadParams->encoding == HU_ENCODING_UTF16_BE ||
+                        loadParams->encoding == HU_ENCODING_UTF16_LE) ? 2 : 1;
+    char * newData = malloc(dataLen * sizeFactor + 4);
+    if (newData == NULL)
+    {
+        free(trove);
+        return hu_nullTrove;
+    }
+
+    size_t transcodedLen = 0;
+    int error = transcodeToUtf8FromString(newData, & transcodedLen, & inputDataView, loadParams);
+    if (error != HU_ERROR_NOERROR)
+    {
+        free(newData);
+        recordError(trove, error, NULL);
+        return trove;
+    }
+
+    // transcodedLen is guaranteed to be <= dataLen.
+    newData[transcodedLen] = '\0';
+    newData[transcodedLen + 1] = '\0';
+    newData[transcodedLen + 2] = '\0';
+    newData[transcodedLen + 3] = '\0';
+
+    trove->dataString = newData;
+    trove->dataStringSize = transcodedLen;
+
+    huTokenizeTrove(trove);
+    huParseTrove(trove);
+ 
+    return trove;
 }
 
 
-huTrove const * huMakeTroveFromFileZ(char const * path, int inputTabSize)
+huTrove const * huMakeTroveFromFileZ(char const * path, huLoadParams * loadParams)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (path == NULL)
         { return hu_nullTrove; }
 #endif
 
-    return huMakeTroveFromFileN(path, strlen(path), inputTabSize);
+    return huMakeTroveFromFileN(path, strlen(path), loadParams);
 }
 
 
-huTrove const * huMakeTroveFromFileN(char const * path, int pathLen, int inputTabSize)
+huTrove const * huMakeTroveFromFileN(char const * path, int pathLen, huLoadParams * loadParams)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (path == NULL || inputTabSize < MIN_INPUT_TAB_SIZE || inputTabSize > MAX_INPUT_TAB_SIZE)
+    if (path == NULL || pathLen < 1)
+        { return hu_nullTrove; }
+    if (loadParams &&
+        (loadParams->encoding < 0 || loadParams->encoding > HU_ENCODING_UNKNOWN ||
+         loadParams->tabSize < MIN_INPUT_TAB_SIZE || loadParams->tabSize > MAX_INPUT_TAB_SIZE))
         { return hu_nullTrove; }
 #endif
+
+    huLoadParams localLoadParams;
+    if (loadParams == NULL)
+    {
+        huInitLoadParams(& localLoadParams, HU_ENCODING_UNKNOWN, 4, true);
+        loadParams = & localLoadParams;
+    }
 
     FILE * fp = fopen(path, "r");
     if (fp == NULL)
         { return hu_nullTrove; }
 
     if (fseek(fp, 0, SEEK_END) != 0)
-        { return hu_nullTrove; }
+    {
+        fclose(fp);
+        return hu_nullTrove;
+    }
 
-    int newDataSize = ftell(fp);
-    if (newDataSize == -1L)
-        { return hu_nullTrove; }
+    int dataLen = ftell(fp);
+    if (dataLen == -1L)
+    {
+        fclose(fp);
+        return hu_nullTrove;
+    }
 
-    fseek(fp, 0, SEEK_SET);
+    rewind(fp);
+
+    if (loadParams->encoding == HU_ENCODING_UNKNOWN)
+    {
+        size_t numEncBytes = 0;    // not useful here
+        loadParams->encoding = swagEncodingFromFile(fp, dataLen, & numEncBytes, loadParams);
+        if (loadParams->encoding == HU_ENCODING_UNKNOWN)
+        {
+            fclose(fp);
+            return hu_nullTrove;
+        }
     
-    char * newData = malloc(newDataSize + 4);
+        rewind(fp);
+    }
+    
+    huTrove * trove = malloc(sizeof(huTrove));
+    if (trove == NULL)
+    {
+        fclose(fp);
+        return hu_nullTrove;
+    }
+    initTrove(trove, loadParams);
+
+    // TODO: Padding with 4 nulls for now; let's see if we actually need to.
+    // We're guaranteed that UTF8 strings will be no longer than the transcoded UTF* 
+    // equivalent, as long as we reject unpaired surrogates. MS filenames
+    // can contain unpaired surrogates, and Humon will accept them if strictUnicode
+    // is clear. At that point, a UTF8 string can be longer than its UTF16, so we
+    // have to double the size.
+    int sizeFactor = loadParams->allowUtf16UnmatchedSurrogates == false &&
+                       (loadParams->encoding == HU_ENCODING_UTF16_BE ||
+                        loadParams->encoding == HU_ENCODING_UTF16_LE) ? 2 : 1;
+    char * newData = malloc(dataLen * sizeFactor + 4);
     if (newData == NULL)
-        { return hu_nullTrove; }
-
-    int freadRet = fread(newData, 1, newDataSize, fp);
-    if (freadRet != newDataSize)
     {
-        free(newData);
+        fclose(fp);
         return hu_nullTrove;
     }
-    newData[newDataSize] = '\0';
-    newData[newDataSize + 1] = '\0';
-    newData[newDataSize + 2] = '\0';
-    newData[newDataSize + 3] = '\0';
 
-    huStringView dataView = { newData, newDataSize };
-    huTrove const * newTrove = makeTrove(& dataView, inputTabSize);
-    if (newTrove == NULL)
+    size_t transcodedLen = 0;
+    int error = transcodeToUtf8FromFile(newData, & transcodedLen, fp, dataLen, loadParams);
+
+    fclose(fp);
+
+    if (error != HU_ERROR_NOERROR)
     {
         free(newData);
-        return hu_nullTrove;
+        recordError(trove, error, NULL);
+        return trove;
     }
-    
-    return newTrove;
+
+    // transcodedLen is guaranteed to be <= dataLen.
+    newData[transcodedLen] = '\0';
+    newData[transcodedLen + 1] = '\0';
+    newData[transcodedLen + 2] = '\0';
+    newData[transcodedLen + 3] = '\0';
+
+    trove->dataString = newData;
+    trove->dataStringSize = transcodedLen;
+
+    huTokenizeTrove(trove);
+    huParseTrove(trove);
+ 
+    return trove;
 }
 
 
@@ -213,8 +290,11 @@ huToken * allocNewToken(huTrove * trove, int kind,
     newToken->endLine = endLine;
     newToken->endCol = endCol;
 
-    //printf ("%stoken: line: %d  col: %d  len: %d  %s%s\n",
-    //    darkYellow, line, col, size, huTokenKindToString(kind), off);
+#ifdef HUMON_CAVEPERSON_DEBUGGING
+    printf ("%stoken: line: %d  col: %d  len: %d  %s        '%.*s'%s\n",
+        darkYellow, line, col, size, huTokenKindToString(kind), 
+        newToken->str.size, newToken->str.ptr, off);
+#endif
     
     return newToken;
 }
@@ -238,7 +318,7 @@ huNode const * huGetRootNode(huTrove const * trove)
         { return hu_nullNode; }
 #endif
 
-    return trove->nodes.buffer;
+    return (huNode *) trove->nodes.buffer;
 }
 
 
@@ -486,17 +566,15 @@ huNode const * huGetNodeByFullAddressN(huTrove const * trove, char const * addre
     if (addressLen <= 0)
         { return hu_nullNode; }
 
-    huCursor cur = 
-        { .trove = NULL, 
-          .character = address, 
-          .charLength = getcharLength(address) };
+    huScanner scanner;
+    huInitScanner(& scanner, NULL, address, addressLen);
     int line = 0;  // unused
     int col = 0;
 
-    eatWs(& cur, 1, & line, & col);
-    char const * wordStart = address + col;
+    eatWs(& scanner, 1, & line, & col);
+    char const * wordStart = scanner.curCursor->character;
 
-    if (* wordStart != '/')
+    if (scanner.curCursor->codePoint != '/')
         { return hu_nullNode; }
 
     huNode const * root = huGetRootNode(trove);
@@ -751,45 +829,54 @@ void recordError(huTrove * trove, int errorCode, huToken const * pCur)
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
 
 
-void huTroveToString(huTrove const * trove, char * dest, int * destLength, 
-    int outputFormat, int outputTabSize, huStringView const * colorTable, 
-    bool printComments, char const * newline, int newlineSize)
+void huTroveToString(huTrove const * trove, char * dest, int * destLength, huStoreParams * storeParams)
 {
     if (dest == NULL && destLength != NULL)
         { * destLength = 0; }
 
 #ifdef HUMON_CHECK_PARAMS
-
-    if (trove == NULL || trove == hu_nullTrove || destLength == NULL || outputFormat < 0 || outputFormat >= 3 || outputTabSize < 0 || newline == NULL)
+    if (trove == NULL || trove == hu_nullTrove || destLength == NULL)
+        { return; }
+    if (storeParams &&
+        (storeParams->outputFormat < 0 || storeParams->outputFormat >= 3 || 
+         storeParams->tabSize < 0 || 
+         (storeParams->usingColors && storeParams->colorTable == NULL) ||
+         storeParams->newline.ptr == NULL || storeParams->newline.size < 0))
         { return; }
 #endif
 
+    huStoreParams localStoreParams;
+    if (storeParams == NULL)
+    {
+        huInitStoreParamsN(& localStoreParams, HU_OUTPUTFORMAT_PRETTY, 4, false, NULL, true, "\n", 1, false );
+        storeParams = & localStoreParams;
+    }
+
     // newline must be > 0; some things need a newline like // comments
-    if (newlineSize < 1)
+    if (storeParams->newline.size < 1)
         { return; }
 
-    if (outputFormat == HU_OUTPUTFORMAT_XEROGRAPHIC)
+    if (storeParams->outputFormat == HU_OUTPUTFORMAT_XERO)
     {
         if (dest == NULL)
             { * destLength = trove->dataStringSize; }
         else
             { memcpy(dest, trove->dataString, * destLength); }
     }
-    else if (outputFormat == HU_OUTPUTFORMAT_PRETTY ||
-             outputFormat == HU_OUTPUTFORMAT_MINIMAL)
+    else if (storeParams->outputFormat == HU_OUTPUTFORMAT_PRETTY ||
+             storeParams->outputFormat == HU_OUTPUTFORMAT_MINIMAL)
     {
         huVector str;
         if (dest == NULL)
         {
-            huInitVector(& str, 0); // counting only
+            huInitVectorForCounting(& str); // counting only
         }
         else
         {
-            huInitVectorPreallocated(& str, sizeof(char), dest, * destLength, false);
+            huInitVectorPreallocated(& str, dest, sizeof(char), * destLength);
         }
 
-        troveToPrettyString(trove, & str, outputFormat, outputTabSize, 
-            colorTable, printComments, newline, newlineSize);
+        troveToPrettyString(trove, & str, storeParams);
         if (dest == NULL)
             { * destLength = str.numElements; }
     }
@@ -797,38 +884,37 @@ void huTroveToString(huTrove const * trove, char * dest, int * destLength,
 
 #pragma GCC diagnostic pop
 
-size_t huTroveToFileZ(huTrove const * trove, char const * path, int outputFormat, 
-    int outputTabSize, huStringView const * colorTable, bool printComments, 
-    char const * newline, int newlineSize)
+size_t huTroveToFileZ(huTrove const * trove, char const * path, huStoreParams * storeParams)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (path == NULL)
         { return 0; }
 #endif
 
-    return huTroveToFileN(trove, path, strlen(path), outputFormat, outputTabSize, 
-        colorTable, printComments, newline, newlineSize);
+    return huTroveToFileN(trove, path, strlen(path), storeParams);
 }
 
-size_t huTroveToFileN(huTrove const * trove, char const * path, int pathLen, 
-    int outputFormat, int outputTabSize, huStringView const * colorTable, 
-    bool printComments, char const * newline, int newlineSize)
+size_t huTroveToFileN(huTrove const * trove, char const * path, int pathLen, huStoreParams * storeParams)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (trove == NULL || trove == hu_nullTrove || path == NULL || outputFormat < 0 || outputFormat >= 3 || outputTabSize < 0 || newline == NULL || newlineSize < 1)
+    if (trove == NULL || trove == hu_nullTrove || path == NULL)
+        { return 0; }
+    if (storeParams &&
+        (storeParams->outputFormat < 0 || storeParams->outputFormat >= 3 || 
+         storeParams->tabSize < 0 || 
+         (storeParams->usingColors && storeParams->colorTable == NULL) ||
+         storeParams->newline.ptr == NULL || storeParams->newline.size < 0))
         { return 0; }
 #endif
 
     int strLength = 0;
-    huTroveToString(trove, NULL, & strLength, outputFormat, outputTabSize, 
-        colorTable, printComments, newline, newlineSize);
+    huTroveToString(trove, NULL, & strLength, storeParams);
 
     char * str = malloc(strLength + 1);
     if (str == NULL)
         { return 0; }
 
-    huTroveToString(trove, str, & strLength, outputFormat, outputTabSize, 
-        colorTable, printComments, newline, newlineSize);
+    huTroveToString(trove, str, & strLength, storeParams);
 
     FILE * fp = fopen(path, "w");
     if (fp == NULL)

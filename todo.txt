@@ -1,14 +1,15 @@
 DONE THIS CHECKIN:
-Fixed nested value with strings bug
-ensure utf8 bom is read
-Improved printing signatures.
-P1 make hu::val<T>::extract static? Lets you call it on a string_view
-P1 ensure new code btis in readme compile and run
-P1 review API desc in readme
 
 TODO:
 P1 CMake, vcpkg
 P1 doxygen
+P1 test string \ cases: \ at end, \ at beginning, \ before " in unquoted string, \ before space, \ before newline, \ before {, etc
+P1 Talk about Humon versioning - major minor revision
+P1 there needs to be a way to report errors on bad load / bad encoding
+P1 string sizes should be size_t?
+P1 detect the BOMs, dummy
+P1 codeUnits should be uint8_t instead of char?
+P1-2 linting
 P2 improve error recovery in parsing
 P2 more erroneous humon tests
 P2 UTF8 digits for addressing

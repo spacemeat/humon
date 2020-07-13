@@ -1,13 +1,10 @@
 #include <sstream>
 #include <string.h>
 #include <string_view>
+#include <iostream>
 #include <unistd.h>
 #include "humon.hpp"
-#include "ansiColors.h"
 #include <CppUTest/TestHarness.h>
-
-#include <iostream>
-
 #include "testDataCpp.h"
 
 using namespace std::literals;
@@ -42,7 +39,7 @@ TEST_GROUP(makers)
 
 TEST(makers, fromString)
 {
-    hu::Trove trove = hu::Trove::fromString(humon, 2);
+    hu::Trove trove = hu::Trove::fromString(humon, {hu::Encoding::utf8, 2});
     auto root = trove.root();
     CHECK_TEXT(root.kind() == hu::NodeKind::list, "load0");
     CHECK_TEXT(root.numChildren() == 1, "load1");

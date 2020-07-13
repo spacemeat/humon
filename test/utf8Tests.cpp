@@ -1,7 +1,6 @@
-#include <string.h>
-#include "humon.hpp"
-#include "ansiColors.h"
 #include <string_view>
+#include <cstring>
+#include "humon.hpp"
 #include <CppUTest/TestHarness.h>
 
 using namespace std;

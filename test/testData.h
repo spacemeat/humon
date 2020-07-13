@@ -38,7 +38,7 @@ R"(// This is a trove comment.
 
     void setup()
     {
-        trove = huMakeTroveFromStringN(ts.data(), ts.size(), 4);
+        trove = huMakeTroveFromStringN(ts.data(), ts.size(), NULL);
         root = huGetRootNode(trove);
         a = huGetChildByIndex(root, 0);
         bp = huGetChildByIndex(root, 1);
@@ -87,7 +87,7 @@ R"(// This is a trove comment.
 
     void setup()
     {
-        trove = huMakeTroveFromStringN(ts.data(), ts.size(), 4);
+        trove = huMakeTroveFromStringN(ts.data(), ts.size(), NULL);
         root = huGetRootNode(trove);
         a = huGetChildByIndex(root, 0);
         bp = huGetChildByIndex(root, 1);
@@ -137,7 +137,7 @@ R"(// This is a trove comment.
 
     void setup()
     {
-        trove = huMakeTroveFromStringN(ts.data(), ts.size(), 4);
+        trove = huMakeTroveFromStringN(ts.data(), ts.size(), NULL);
         root = huGetRootNode(trove);
         a = huGetChildByIndex(root, 0);
         bp = huGetChildByIndex(root, 1);
@@ -202,7 +202,7 @@ R"({
 
     void setup()
     {
-        trove = huMakeTroveFromStringN(ts.data(), ts.size(), 4);
+        trove = huMakeTroveFromStringN(ts.data(), ts.size(), NULL);
         root = huGetRootNode(trove);
         a = huGetChildByIndex(root, 0);
         b = huGetChildByIndex(root, 1);
@@ -251,7 +251,7 @@ R"({
 
     void setup()
     {
-        trove = huMakeTroveFromStringN(ts.data(), ts.size(), 4);
+        trove = huMakeTroveFromStringN(ts.data(), ts.size(), NULL);
         root = huGetRootNode(trove);
         aaa = huGetChildByIndex(root, 0);
         ccc = huGetChildByIndex(root, 1);
