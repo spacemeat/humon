@@ -98,7 +98,7 @@ int main()
         hasFoosStuff = rootNode / "foo" % 1;
 
         fooNode = rootNode / "foo";
-        hasFoosStuff = fooNode ? fooNode % 1 : hu::Node(nullptr);
+        hasFoosStuff = fooNode ? fooNode % 1 : false;
 
         hasFoosStuff = rootNode / "foo" % 1;
 
@@ -112,6 +112,17 @@ int main()
 
         auto requiredAddress = requiredNode.relative("../.. / 1 / 0");
 
+        node = node.child(3);
+        node = node.child("goat");
+
+        auto childNode = node.firstChild();
+        while (childNode)
+        {
+            childNode = childNode.nextSibling();
+        }
+
+        node = node.parent();
+
         string_view valStr = node.value();
         // or
         int valInt = node / hu::val<int>{};
@@ -119,7 +130,7 @@ int main()
         auto gccVersion = trove / "dependencies" / "gcc" / hu::val<V3>{};
 
         auto const literalVersion = "9.2.1";
-        auto version = hu::val<V3>::extract(literalVersion);
+        auto toolVersion = hu::val<V3>::extract(literalVersion);
 
         node = trove.nodeByAddress("/definitions/player/maxHp/type");
 
@@ -137,18 +148,22 @@ int main()
             else if (k == "numBytes"sv) { }
         }
 
-        bool hasNumBits = node.hasAnnotation("numBits"sv);
-        auto annoValue = node.annotation("numBits"sv);
-        bool is32Bit = node.numAnnotationsWithValue("32"sv) > 0;
-        auto annoKey = node.annotationWithValue("32"sv, 0);
+        bool hasNumBits = node.hasAnnotation("numBits"sv);  // verify annotation by key
+        auto annoValue = node.annotation("numBits"sv);      // get annotation by key
+        // many annos might have the same value; scum through them all
+        int num32Bit = node.numAnnotationsWithValue("32"sv);
+        for (int i = 0; i < num32Bit; ++i)
+        {
+            auto annoKey = node.annotationWithValue("32"sv, i);
+        }
 
-        auto all32BitTypes = trove.findNodesWithAnnotationKeyValue("numBits"sv, "32"sv);
-        for (auto & node : all32BitTypes) { node; }
+        auto all32BitTypeNodes = trove.findNodesWithAnnotationKeyValue("numBits"sv, "32"sv);
+        for (auto & node : all32BitTypeNodes) { node; }
 
         auto tokStr = trove.toPrettyString();
 
         // Output the exact token stream used to build the trove. Fast.
-        tokStr = trove.toPreservedString();
+        tokStr = trove.toXeroString();
         // Output the trove with minimal whitespace for most efficient storage/transmission. 
         // The parameter directs Humon to strip comments from the stream.
 
@@ -161,9 +176,13 @@ int main()
 
         // You can specify minimal whitespace and still use a color table for the tokens--see below.
         tokStr = trove.toMinimalString(colorTable, false, "\n");
+        if (auto s = get_if<string>(& tokStr))
+            { cout << * s; }
 
         // Pretty. Use an indentation of 4 spaces to format nested depths.
         tokStr = trove.toPrettyString(4, colorTable, false, "\n");
+        if (auto s = get_if<string>(& tokStr))
+            { cout << * s; }
     }
 
     return 0;

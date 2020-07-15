@@ -59,14 +59,14 @@
     */
 
 
-char const utf8_bom[] = { 0xef, 0xbb, 0xbf };
+char const utf8_bom[]    = { 0xef, 0xbb, 0xbf };
 char const utf16be_bom[] = { 0xfe, 0xff };
 char const utf16le_bom[] = { 0xff, 0xfe };
 char const utf32be_bom[] = { 0x00, 0x00, 0xfe, 0xff };
 char const utf32le_bom[] = { 0xff, 0xfe, 0x00, 0x00 };
 
-char const * const bomDefs[] = { utf8_bom, utf16be_bom, utf16le_bom, utf32be_bom, utf32le_bom };
-
+char const * const bomDefs[] = { utf8_bom, utf16be_bom, utf16le_bom, utf32be_bom, utf32le_bom, NULL };
+int const bomSizes[] = { sizeof(utf8_bom), sizeof(utf16be_bom), sizeof(utf16le_bom), sizeof(utf32be_bom), sizeof(utf32le_bom), 0 };
 
 typedef struct ReadState_tag
 {
@@ -75,6 +75,7 @@ typedef struct ReadState_tag
     uint32_t partialCodePoint;
     int bytesRemaining;
     int numCodePoints;
+    int numNuls;
     int numAsciiRangeCodePoints;
     int errorCode;
     char const * errorOffset;
@@ -105,6 +106,7 @@ void initReaders(ReadState readers[], huLoadParams * loadParams)
         .bytesRemaining = 0,
         .maybe = true,
         .numCodePoints = 0,
+        .numNuls = 0,
         .numAsciiRangeCodePoints = 0,
         .errorCode = 0,
         .errorOffset = 0,
@@ -118,6 +120,7 @@ void initReaders(ReadState readers[], huLoadParams * loadParams)
         .bytesRemaining = 0,
         .maybe = true,
         .numCodePoints = 0,
+        .numNuls = 0,
         .numAsciiRangeCodePoints = 0,
         .errorCode = 0,
         .errorOffset = 0,
@@ -131,6 +134,7 @@ void initReaders(ReadState readers[], huLoadParams * loadParams)
         .bytesRemaining = 0,
         .maybe = true,
         .numCodePoints = 0,
+        .numNuls = 0,
         .numAsciiRangeCodePoints = 0,
         .errorCode = 0,
         .errorOffset = 0,
@@ -144,6 +148,7 @@ void initReaders(ReadState readers[], huLoadParams * loadParams)
         .bytesRemaining = 0,
         .maybe = true,
         .numCodePoints = 0,
+        .numNuls = 0,
         .numAsciiRangeCodePoints = 0,
         .errorCode = 0,
         .errorOffset = 0,
@@ -157,6 +162,7 @@ void initReaders(ReadState readers[], huLoadParams * loadParams)
         .bytesRemaining = 0,
         .maybe = true,
         .numCodePoints = 0,
+        .numNuls = 0,
         .numAsciiRangeCodePoints = 0,
         .errorCode = 0,
         .errorOffset = 0,
@@ -205,7 +211,9 @@ void scanUtf8(uint8_t codeUnit, ReadState * rs)
     if (rs->bytesRemaining == 0)
     {
         rs->numCodePoints += 1;
-        if (rs->partialCodePoint < 128)
+        if (rs->partialCodePoint == 0)
+            { rs->numNuls += 1; }
+        else if (rs->partialCodePoint < 128)
             { rs->numAsciiRangeCodePoints += 1; }
         else if (rs->loadParams->allowOutOfRangeCodePoints == false &&
                  (rs->partialCodePoint > 0x10ffff ||
@@ -264,7 +272,9 @@ void scanUtf16(uint16_t codeUnit, ReadState * rs)
         rs->bytesRemaining == 0)
     {
         rs->numCodePoints += 1;
-        if (rs->partialCodePoint < 128)
+        if (rs->partialCodePoint == 0)
+            { rs->numNuls += 1; }
+        else if (rs->partialCodePoint < 128)
             { rs->numAsciiRangeCodePoints += 1; }
     }
 }
@@ -280,7 +290,9 @@ void scanUtf32(uint32_t codeUnit, ReadState * rs)
     {
         rs->partialCodePoint = codeUnit;
         rs->numCodePoints += 1;
-        if (codeUnit < 128)
+        if (rs->partialCodePoint == 0)
+            { rs->numNuls += 1; }
+        else if (codeUnit < 128)
             { rs->numAsciiRangeCodePoints += 1; }
     }
     else
@@ -298,6 +310,8 @@ void swagEncodingFromBlock(char const * block, int blockSize, ReadState * reader
 
     char const * end = block + blockSize;
 
+    bool machineIsBigEndian = readers[HU_ENCODING_UTF8].machineIsBigEndian;
+
     // scan through a 64-byte block for UTF8
     ReadState * rs = readers + HU_ENCODING_UTF8;
     while (rs->maybe && u8Cur < end)
@@ -312,7 +326,18 @@ void swagEncodingFromBlock(char const * block, int blockSize, ReadState * reader
     rs = readers + HU_ENCODING_UTF16_BE;
     while (rs->maybe && u16beCur < end)
     {
-        uint16_t codeUnit = * u16beCur;
+        uint16_t codeUnit = 0;
+        if (machineIsBigEndian)
+        {
+            codeUnit = (uint8_t) u16beCur[0] |
+                       (uint8_t) u16beCur[1] << 8;
+        }
+        else
+        {
+            codeUnit = (uint8_t) u16beCur[1] |
+                       (uint8_t) u16beCur[0] << 8;
+        }
+
         scanUtf16(codeUnit, rs);
         u16beCur += 2;
         * numValidEncodings -= 1 * (rs->maybe == false);
@@ -322,8 +347,17 @@ void swagEncodingFromBlock(char const * block, int blockSize, ReadState * reader
     rs = readers + HU_ENCODING_UTF16_LE;
     while (rs->maybe && u16leCur < end)
     {
-        uint16_t codeUnit = (* u16leCur & 0xff00) >> 8 |
-                            (* u16leCur & 0x00ff) << 8;
+        uint16_t codeUnit = 0;
+        if (machineIsBigEndian)
+        {
+            codeUnit = (uint8_t) u16leCur[1] |
+                       (uint8_t) u16leCur[0] << 8;
+        }
+        else
+        {
+            codeUnit = (uint8_t) u16leCur[0] |
+                       (uint8_t) u16leCur[1] << 8;
+        }
         scanUtf16(codeUnit, rs);
         u16leCur += 2;
         * numValidEncodings -= 1 * (rs->maybe == false);
@@ -333,7 +367,21 @@ void swagEncodingFromBlock(char const * block, int blockSize, ReadState * reader
     rs = readers + HU_ENCODING_UTF32_BE;
     while (rs->maybe && u32beCur < end)
     {
-        uint32_t codeUnit = * u32beCur;
+        uint32_t codeUnit = 0;
+        if (machineIsBigEndian)
+        {
+            codeUnit = (uint8_t) u32beCur[0] |
+                       (uint8_t) u32beCur[1] << 8 |
+                       (uint8_t) u32beCur[2] << 16 |
+                       (uint8_t) u32beCur[3] << 24;
+        }
+        else
+        {
+            codeUnit = (uint8_t) u32beCur[3] |
+                       (uint8_t) u32beCur[2] << 8 |
+                       (uint8_t) u32beCur[1] << 16 |
+                       (uint8_t) u32beCur[0] << 24;
+        }
         scanUtf32(codeUnit, rs);
         u32beCur += 4;
         * numValidEncodings -= 1 * (rs->maybe == false);
@@ -343,10 +391,21 @@ void swagEncodingFromBlock(char const * block, int blockSize, ReadState * reader
     rs = readers + HU_ENCODING_UTF32_LE;
     while (rs->maybe && u32leCur < end)
     {
-        uint32_t codeUnit = (* u32leCur & 0xff000000) >> 24 |
-                            (* u32leCur & 0x00ff0000) << 8 |
-                            (* u32leCur & 0x0000ff00) << 8 |
-                            (* u32leCur & 0x000000ff) << 24;
+        uint32_t codeUnit = 0;
+        if (machineIsBigEndian)
+        {
+            codeUnit = (uint8_t) u32leCur[3] |
+                       (uint8_t) u32leCur[2] << 8 |
+                       (uint8_t) u32leCur[1] << 16 |
+                       (uint8_t) u32leCur[0] << 24;
+        }
+        else
+        {
+            codeUnit = (uint8_t) u32leCur[0] |
+                       (uint8_t) u32leCur[1] << 8 |
+                       (uint8_t) u32leCur[2] << 16 |
+                       (uint8_t) u32leCur[3] << 24;
+        }
         scanUtf32(codeUnit, rs);
         u32leCur += 4;
         * numValidEncodings -= 1 * (rs->maybe == false);
@@ -360,9 +419,26 @@ ReadState * chooseFromAmbiguousEncodings(ReadState readers[], int numValidEncodi
     // encoding, that encoding is bunk. (UTF32 never has more than one code unit.)
     if (numValidEncodings > 1)
     {
-        if (readers[HU_ENCODING_UTF8].maybe &&     readers[HU_ENCODING_UTF8].bytesRemaining)     { readers[HU_ENCODING_UTF8].maybe = false; numValidEncodings -= 1; }
-        if (readers[HU_ENCODING_UTF16_BE].maybe && readers[HU_ENCODING_UTF16_BE].bytesRemaining) { readers[HU_ENCODING_UTF16_BE].maybe = false; numValidEncodings -= 1; }
-        if (readers[HU_ENCODING_UTF16_LE].maybe && readers[HU_ENCODING_UTF16_LE].bytesRemaining) { readers[HU_ENCODING_UTF16_LE].maybe = false; numValidEncodings -= 1; }
+        if (readers[HU_ENCODING_UTF8].maybe && 
+            readers[HU_ENCODING_UTF8].bytesRemaining)
+        {
+            readers[HU_ENCODING_UTF8].maybe = false; 
+            numValidEncodings -= 1;
+        }
+        if (readers[HU_ENCODING_UTF16_BE].maybe &&
+            readers[HU_ENCODING_UTF16_BE].bytesRemaining &&
+            readers[HU_ENCODING_UTF16_BE].loadParams->allowUtf16UnmatchedSurrogates == false) 
+        {
+            readers[HU_ENCODING_UTF16_BE].maybe = false;
+            numValidEncodings -= 1;
+        }
+        if (readers[HU_ENCODING_UTF16_LE].maybe &&
+            readers[HU_ENCODING_UTF16_LE].bytesRemaining &&
+            readers[HU_ENCODING_UTF16_BE].loadParams->allowUtf16UnmatchedSurrogates == false)
+        {
+            readers[HU_ENCODING_UTF16_LE].maybe = false;
+            numValidEncodings -= 1;
+        }
     }
 
     ReadState * selectedEncoding = NULL;
@@ -387,11 +463,16 @@ ReadState * chooseFromAmbiguousEncodings(ReadState readers[], int numValidEncodi
                     { selectedEncoding = readers + i; }
                 else
                 {
-                    if (readers[i].numAsciiRangeCodePoints > selectedEncoding->numAsciiRangeCodePoints)
+                    if (readers[i].numNuls < selectedEncoding->numNuls)
                         { selectedEncoding = readers + i; }
-                    else if (readers[i].numAsciiRangeCodePoints == selectedEncoding->numAsciiRangeCodePoints &&
-                        readers[i].numCodePoints > selectedEncoding->numCodePoints)
-                        { selectedEncoding = readers + i; }                        
+                    else if (readers[i].numNuls == selectedEncoding->numNuls)
+                    {
+                        if (readers[i].numAsciiRangeCodePoints > selectedEncoding->numAsciiRangeCodePoints)
+                            { selectedEncoding = readers + i; }
+                        else if (readers[i].numAsciiRangeCodePoints == selectedEncoding->numAsciiRangeCodePoints &&
+                                 readers[i].numCodePoints > selectedEncoding->numCodePoints)
+                            { selectedEncoding = readers + i; }
+                    }
                 }
             }
         }
@@ -401,33 +482,26 @@ ReadState * chooseFromAmbiguousEncodings(ReadState readers[], int numValidEncodi
 }
 
 
-int getEncodingFromBom(huStringView const * data, size_t * numBomChars)
+int getEncodingFromBom(huStringView const * data, size_t * numBomChars, bool isMachineBigEndian)
 {
+    int encoding = HU_ENCODING_UNKNOWN;
+
     // look for 32bit first, then 16bit
-    if (memcmp(utf32le_bom, data->ptr, min(data->size, sizeof(utf32le_bom))) == 0)
+    if (memcmp(utf32le_bom, data->ptr, min(data->size, bomSizes[HU_ENCODING_UTF32_LE])) == 0)
+        { encoding = HU_ENCODING_UTF32_LE; }
+    else if (memcmp(utf32be_bom, data->ptr, min(data->size, bomSizes[HU_ENCODING_UTF32_BE])) == 0)
+        { encoding = HU_ENCODING_UTF32_BE; }
+    else if (memcmp(utf16le_bom, data->ptr, min(data->size, bomSizes[HU_ENCODING_UTF16_LE])) == 0)
+        { encoding = HU_ENCODING_UTF16_LE; }
+    else if (memcmp(utf16be_bom, data->ptr, min(data->size, bomSizes[HU_ENCODING_UTF16_BE])) == 0)
+        { encoding = HU_ENCODING_UTF16_BE; }
+    else if (memcmp(utf8_bom, data->ptr, min(data->size, bomSizes[HU_ENCODING_UTF8])) == 0)
+        { encoding = HU_ENCODING_UTF8; }
+
+    if (encoding != HU_ENCODING_UNKNOWN)
     {
-        * numBomChars = sizeof(utf32le_bom);
-        return HU_ENCODING_UTF32_LE;
-    }
-    if (memcmp(utf32be_bom, data->ptr, min(data->size, sizeof(utf32be_bom))) == 0)
-    {
-        * numBomChars = sizeof(utf32be_bom);
-        return HU_ENCODING_UTF32_BE;
-    }
-    if (memcmp(utf16le_bom, data->ptr, min(data->size, sizeof(utf16le_bom))) == 0)
-    {
-        * numBomChars = sizeof(utf16le_bom);
-        return HU_ENCODING_UTF16_LE;
-    }
-    if (memcmp(utf16be_bom, data->ptr, min(data->size, sizeof(utf16be_bom))) == 0)
-    {
-        * numBomChars = sizeof(utf16be_bom);
-        return HU_ENCODING_UTF16_BE;
-    }
-    if (memcmp(utf8_bom, data->ptr, min(data->size, sizeof(utf8_bom))) == 0)
-    {
-        * numBomChars = sizeof(utf8_bom);
-        return HU_ENCODING_UTF8;
+        * numBomChars = bomSizes[encoding];
+        return encoding;
     }
 
     * numBomChars = 0;
@@ -437,9 +511,11 @@ int getEncodingFromBom(huStringView const * data, size_t * numBomChars)
 
 int swagEncodingFromString(huStringView const * data, size_t * numBomChars, huLoadParams * loadParams)
 {
-    int bomEncoding = getEncodingFromBom(data, numBomChars);
+    int bomEncoding = getEncodingFromBom(data, numBomChars, isMachineBigEndian());
     if (bomEncoding != HU_ENCODING_UNKNOWN)
-        { return bomEncoding; }
+        { printf("Encoding detected from BOM: %d\n", bomEncoding); return bomEncoding; }
+    else
+        { printf("Encoding not detected from BOM\n"); }
 
     int const BLOCKSIZE = 64;
 
@@ -467,6 +543,12 @@ int swagEncodingFromString(huStringView const * data, size_t * numBomChars, huLo
     }
 
     selectedEncoding = chooseFromAmbiguousEncodings(readers, numValidEncodings);
+
+    if (selectedEncoding != NULL)
+        { printf("Encoding determined from bit pattern: %d\n", (int)(selectedEncoding - readers)); }
+    else
+        { printf("Encoding not determined from bit pattern\n"); }
+
     if (selectedEncoding != NULL)
         { return selectedEncoding - readers; }
     else
@@ -480,14 +562,16 @@ int swagEncodingFromFile(FILE * fp, int fileSize, size_t * numBomChars, huLoadPa
 {
     int const BLOCKSIZE = 64;
 
-    char block[BLOCKSIZE];
-    int blockSize = fileSize % BLOCKSIZE;
-    int bytesRead = 0;
     int numValidEncodings = HU_ENCODING_UNKNOWN;
     ReadState * selectedEncoding = NULL;
     ReadState readers[HU_ENCODING_UNKNOWN];
 
     initReaders(readers, loadParams);
+
+    char buf[BLOCKSIZE];
+    char * block = buf;
+    int blockSize = fileSize % BLOCKSIZE;
+    int bytesRead = 0;
 
     blockSize = fread(block, 1, BLOCKSIZE, fp);
     if (blockSize == 0)
@@ -495,7 +579,7 @@ int swagEncodingFromFile(FILE * fp, int fileSize, size_t * numBomChars, huLoadPa
     bytesRead += blockSize;
 
     huStringView sv = { .ptr = block, .size = blockSize };
-    int bomEncoding = getEncodingFromBom(& sv, numBomChars);
+    int bomEncoding = getEncodingFromBom(& sv, numBomChars, isMachineBigEndian());
     if (bomEncoding != HU_ENCODING_UNKNOWN)
         { return bomEncoding; }
 
@@ -504,15 +588,13 @@ int swagEncodingFromFile(FILE * fp, int fileSize, size_t * numBomChars, huLoadPa
     {
         swagEncodingFromBlock(block, blockSize, readers, & numValidEncodings);
 
-        if (bytesRead < fileSize || numValidEncodings == 1)
-            { break; }
-
         blockSize = fread(block, 1, BLOCKSIZE, fp);
         if (blockSize == 0)
             { return HU_ENCODING_UNKNOWN; } // ERROR! WTF
+        block = buf;
         bytesRead += blockSize;
     }
-    while (true);
+    while (bytesRead < fileSize && numValidEncodings > 1);
 
     selectedEncoding = chooseFromAmbiguousEncodings(readers, numValidEncodings);
     if (selectedEncoding != NULL)
@@ -598,18 +680,28 @@ size_t transcodeToUtf8FromBlock_utf8(char * dest, char const * block, int blockS
 
 size_t transcodeToUtf8FromBlock_utf16be(char * dest, char const * block, int blockSize, ReadState * reader)
 {
-    uint16_t const * uCur = (uint16_t const *) block;
+    char const * uCur = block;
     int encodedLen = 0;
 
-    while (uCur < (uint16_t const *) (block + blockSize))
+    while (uCur < block + blockSize)
     {
-        uint16_t codeUnit = * uCur;
+        uint16_t codeUnit = 0;
+        if (reader->machineIsBigEndian)
+        {
+            codeUnit = (uint8_t) uCur[0] |
+                       (uint8_t) uCur[1] << 8;
+        }
+        else
+        {
+            codeUnit = (uint8_t) uCur[1] |
+                       (uint8_t) uCur[0] << 8;
+        }
         scanUtf16(codeUnit, reader);
-        uCur += 1;
+        uCur += 2;
 
         if (reader->maybe == false)
         {
-            reader->errorOffset = (char const *) uCur;
+            reader->errorOffset = uCur;
             return 0;
         }
         
@@ -626,19 +718,29 @@ size_t transcodeToUtf8FromBlock_utf16be(char * dest, char const * block, int blo
 
 size_t transcodeToUtf8FromBlock_utf16le(char * dest, char const * block, int blockSize, ReadState * reader)
 {
-    uint16_t const * uCur = (uint16_t const *) block;
+    char const * uCur = block;
     int encodedLen = 0;
 
-    while (uCur < (uint16_t const *) (block + blockSize))
+    while (uCur < block + blockSize)
     {
-        uint16_t codeUnit = * uCur;
+        uint16_t codeUnit = 0;
+        if (reader->machineIsBigEndian)
+        {
+            codeUnit = (uint8_t) uCur[1] |
+                       (uint8_t) uCur[0] << 8;
+        }
+        else
+        {
+            codeUnit = (uint8_t) uCur[0] |
+                       (uint8_t) uCur[1] << 8;
+        }
         scanUtf16(codeUnit, reader);
         codeUnit = ((codeUnit & 0x00ff) << 8) | ((codeUnit & 0xff00) >> 8);
-        uCur += 1;
+        uCur += 2;
 
         if (reader->maybe == false)
         {
-            reader->errorOffset = (char const *) uCur;
+            reader->errorOffset = uCur;
             return 0;
         }
         
@@ -655,18 +757,32 @@ size_t transcodeToUtf8FromBlock_utf16le(char * dest, char const * block, int blo
 
 size_t transcodeToUtf8FromBlock_utf32be(char * dest, char const * block, int blockSize, ReadState * reader)
 {
-    uint32_t const * uCur = (uint32_t const *) block;
+    char const * uCur = block;
     int encodedLen = 0;
 
-    while (uCur < (uint32_t const *) (block + blockSize))
+    while (uCur < block + blockSize)
     {
-        uint32_t codeUnit = * uCur;
+        uint32_t codeUnit = 0;
+        if (reader->machineIsBigEndian)
+        {
+            codeUnit = (uint8_t) uCur[0] |
+                       (uint8_t) uCur[1] << 8 |
+                       (uint8_t) uCur[2] << 16 |
+                       (uint8_t) uCur[3] << 24;
+        }
+        else
+        {
+            codeUnit = (uint8_t) uCur[3] |
+                       (uint8_t) uCur[2] << 8 |
+                       (uint8_t) uCur[1] << 16 |
+                       (uint8_t) uCur[0] << 24;
+        }
         scanUtf32(codeUnit, reader);
-        uCur += 1;
+        uCur += 4;
 
         if (reader->maybe == false)
         {
-            reader->errorOffset = (char const *) uCur;
+            reader->errorOffset = uCur;
             return 0;
         }
         
@@ -683,22 +799,32 @@ size_t transcodeToUtf8FromBlock_utf32be(char * dest, char const * block, int blo
 
 size_t transcodeToUtf8FromBlock_utf32le(char * dest, char const * block, int blockSize, ReadState * reader)
 {
-    uint32_t const * uCur = (uint32_t const *) block;
+    char const * uCur = block;
     int encodedLen = 0;
 
-    while (uCur < (uint32_t const *) (block + blockSize))
+    while (uCur < block + blockSize)
     {
-        uint32_t codeUnit = * uCur;
+        uint32_t codeUnit = 0;
+        if (reader->machineIsBigEndian)
+        {
+            codeUnit = (uint8_t) uCur[3] |
+                       (uint8_t) uCur[2] << 8 |
+                       (uint8_t) uCur[1] << 16 |
+                       (uint8_t) uCur[0] << 24;
+        }
+        else
+        {
+            codeUnit = (uint8_t) uCur[0] |
+                       (uint8_t) uCur[1] << 8 |
+                       (uint8_t) uCur[2] << 16 |
+                       (uint8_t) uCur[3] << 24;
+        }
         scanUtf32(codeUnit, reader);
-        codeUnit = ((codeUnit & 0xff000000) >> 24) |
-                   ((codeUnit & 0x00ff0000) >> 8) |
-                   ((codeUnit & 0x0000ff00) << 8) |
-                   ((codeUnit & 0x000000ff) << 24);
-        uCur += 1;
+        uCur += 4;
 
         if (reader->maybe == false)
         {
-            reader->errorOffset = (char const *) uCur;
+            reader->errorOffset = uCur;
             return 0;
         }
         
@@ -720,21 +846,13 @@ size_t transcodeToUtf8FromBlock(char * dest, char const * block, int blockSize, 
     case HU_ENCODING_UTF8:
         return transcodeToUtf8FromBlock_utf8(dest, block, blockSize, reader);
     case HU_ENCODING_UTF16_BE:
-        return reader->machineIsBigEndian
-            ? transcodeToUtf8FromBlock_utf16be(dest, block, blockSize, reader)
-            : transcodeToUtf8FromBlock_utf16le(dest, block, blockSize, reader);
+        return transcodeToUtf8FromBlock_utf16be(dest, block, blockSize, reader);
     case HU_ENCODING_UTF16_LE:
-        return reader->machineIsBigEndian
-            ? transcodeToUtf8FromBlock_utf16le(dest, block, blockSize, reader)
-            : transcodeToUtf8FromBlock_utf16be(dest, block, blockSize, reader);
+        return transcodeToUtf8FromBlock_utf16le(dest, block, blockSize, reader);
     case HU_ENCODING_UTF32_BE:
-        return reader->machineIsBigEndian
-            ? transcodeToUtf8FromBlock_utf32be(dest, block, blockSize, reader)
-            : transcodeToUtf8FromBlock_utf32le(dest, block, blockSize, reader);
+        return transcodeToUtf8FromBlock_utf32be(dest, block, blockSize, reader);
     case HU_ENCODING_UTF32_LE:
-        return reader->machineIsBigEndian
-            ? transcodeToUtf8FromBlock_utf32le(dest, block, blockSize, reader)
-            : transcodeToUtf8FromBlock_utf32be(dest, block, blockSize, reader);
+        return transcodeToUtf8FromBlock_utf32le(dest, block, blockSize, reader);
     default:
         return 0;
     }
@@ -775,6 +893,7 @@ int transcodeToUtf8FromString(char * dest, size_t * numBytesEncoded, huStringVie
         reader.maybe = true;
         reader.partialCodePoint = 0;
         reader.bytesRemaining = 0;
+        reader.numNuls = 0;
         reader.numAsciiRangeCodePoints = 0;
         reader.numCodePoints = 0;
         reader.errorCode = 0;
@@ -789,11 +908,12 @@ int transcodeToUtf8FromString(char * dest, size_t * numBytesEncoded, huStringVie
 
         // skip the BOM if there is one
         char const * bom = bomDefs[loadParams->encoding];
-        int bomLen = strlen((char const *) bom);
-        if (memcmp(src, bom, bomLen) == 0)
+        int bomLen = bomSizes[loadParams->encoding];
+        if (bomLen > 0 && memcmp(src->ptr, bom, bomLen) == 0)
         {
             block += bomLen;
             blockSize -= bomLen;
+            bytesRead = bomLen;
         }
 
         // scan through the input string in BLOCKSIZE-byte blocks
@@ -809,7 +929,7 @@ int transcodeToUtf8FromString(char * dest, size_t * numBytesEncoded, huStringVie
             encodedLen += enc;
             
             bytesRead += blockSize;
-            block += BLOCKSIZE;
+            block += bytesRead;
             blockSize = min(BLOCKSIZE, src->size - bytesRead);
         }
 
@@ -842,6 +962,7 @@ int transcodeToUtf8FromFile(char * dest, size_t * numBytesEncoded, FILE * fp, in
         reader.maybe = true;
         reader.partialCodePoint = 0;
         reader.bytesRemaining = 0;
+        reader.numNuls = 0;
         reader.numAsciiRangeCodePoints = 0;
         reader.numCodePoints = 0;
         reader.errorCode = 0;
@@ -852,18 +973,28 @@ int transcodeToUtf8FromFile(char * dest, size_t * numBytesEncoded, FILE * fp, in
 
         // As stack allocations go, this might be large. Set
         // HUMON_FILE_BLOCK_SIZE to change it.
-        char block[BLOCKSIZE];
+        char buf[BLOCKSIZE];
+        char * block = buf;
         int blockSize = srcLen % BLOCKSIZE;
         int bytesRead = 0;
 
-        // scan through the input file in BLOCKSIZE-byte blocks
-        while (bytesRead < srcLen)
-        {
-            blockSize = fread(block, 1, BLOCKSIZE, fp);
-            if (blockSize == 0)
-                { return HU_ENCODING_UNKNOWN; } // ERROR! WTF
+        blockSize = fread(block, 1, BLOCKSIZE, fp);
+        if (blockSize == 0)
+            { return HU_ENCODING_UNKNOWN; } // ERROR! WTF
+        bytesRead += blockSize;
 
-            bytesRead += blockSize;
+        // skip the BOM if there is one
+        char const * bom = bomDefs[loadParams->encoding];
+        int bomLen = bomSizes[loadParams->encoding];
+        if (bomLen > 0 && memcmp(block, bom, bomLen) == 0)
+        {
+            block += bomLen;
+            blockSize -= bomLen;
+            bytesRead = bomLen;
+        }
+
+        do
+        {
             size_t enc = transcodeToUtf8FromBlock(dest, block, blockSize, & reader);
             if (reader.errorCode != 0)
             {
@@ -872,9 +1003,11 @@ int transcodeToUtf8FromFile(char * dest, size_t * numBytesEncoded, FILE * fp, in
             }
 
             encodedLen += enc;
+            bytesRead += blockSize;
             blockSize = min(BLOCKSIZE, srcLen - bytesRead);
-        }
-
+            block = buf;
+        } while (bytesRead < srcLen);
+        
         * numBytesEncoded = encodedLen;
         return HU_ERROR_NOERROR;
     }

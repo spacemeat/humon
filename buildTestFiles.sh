@@ -1,6 +1,7 @@
 echo "Building test files"
 
 function makePerms {
+    echo "Scanning $1"
     samples/bin/hux $1 -px -my -cn -by -o $1.px.my.cn.by.hu
     samples/bin/hux $1 -px -my -cn -bn -o $1.px.my.cn.bn.hu
     samples/bin/hux $1 -px -my -ca -by -o $1.px.my.ca.by.hu
@@ -25,6 +26,7 @@ function makePerms {
     samples/bin/hux $1 -pp -mn -cn -bn -o $1.pp.mn.cn.bn.hu
     samples/bin/hux $1 -pp -mn -ca -by -o $1.pp.mn.ca.by.hu
     samples/bin/hux $1 -pp -mn -ca -bn -o $1.pp.mn.ca.bn.hu
+    echo ""
 }
 
 makePerms test/testFiles/comments.hu

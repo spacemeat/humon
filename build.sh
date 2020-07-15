@@ -51,9 +51,9 @@ g++ -std=c++17 -Wall -ggdb3 -O0 -DDEBUG -Iinc -o samples/bin/hux samples/hux/hux
 
 echo Building tests...
 echo d
-g++ -std=c++17 -Wall -o test/bin/test-d -ggdb3 -O0 -DDEBUG -Iinc test/testMain.cpp test/vectorTests.cpp test/apiTests.cpp test/utf8Tests.cpp test/dataTests.cpp test/cppTests.cpp test/commentTests.cpp test/errorTests.cpp -Lbin -lhumon-d -lCppUTest -lCppUTestExt
+g++ -std=c++17 -Wall -o test/bin/test-d -ggdb3 -O0 -DDEBUG -Iinc test/testMain.cpp test/vectorTests.cpp test/apiTests.cpp test/utf8Tests.cpp test/dataTests.cpp test/cppTests.cpp test/commentTests.cpp test/errorTests.cpp test/wakkaTests.cpp -Lbin -lhumon-d -lCppUTest -lCppUTestExt
 echo r
-g++ -std=c++17 -Wall -o test/bin/test-r -O3 -Iinc test/testMain.cpp test/vectorTests.cpp test/apiTests.cpp test/utf8Tests.cpp test/dataTests.cpp test/cppTests.cpp test/commentTests.cpp test/errorTests.cpp -Lbin -lhumon -lCppUTest -lCppUTestExt
+g++ -std=c++17 -Wall -o test/bin/test-r -O3 -Iinc test/testMain.cpp test/vectorTests.cpp test/apiTests.cpp test/utf8Tests.cpp test/dataTests.cpp test/cppTests.cpp test/commentTests.cpp test/errorTests.cpp test/wakkaTests.cpp -Lbin -lhumon -lCppUTest -lCppUTestExt
 
 echo Done.
 

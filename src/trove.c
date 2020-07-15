@@ -829,20 +829,20 @@ void recordError(huTrove * trove, int errorCode, huToken const * pCur)
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
 
 
-void huTroveToString(huTrove const * trove, char * dest, int * destLength, huStoreParams * storeParams)
+int huTroveToString(huTrove const * trove, char * dest, int * destLength, huStoreParams * storeParams)
 {
     if (dest == NULL && destLength != NULL)
         { * destLength = 0; }
 
 #ifdef HUMON_CHECK_PARAMS
     if (trove == NULL || trove == hu_nullTrove || destLength == NULL)
-        { return; }
+        { return HU_ERROR_BADPARAMETER; }
     if (storeParams &&
         (storeParams->outputFormat < 0 || storeParams->outputFormat >= 3 || 
          storeParams->tabSize < 0 || 
          (storeParams->usingColors && storeParams->colorTable == NULL) ||
          storeParams->newline.ptr == NULL || storeParams->newline.size < 0))
-        { return; }
+        { return HU_ERROR_BADPARAMETER; }
 #endif
 
     huStoreParams localStoreParams;
@@ -852,20 +852,31 @@ void huTroveToString(huTrove const * trove, char * dest, int * destLength, huSto
         storeParams = & localStoreParams;
     }
 
-    // newline must be > 0; some things need a newline like // comments
-    if (storeParams->newline.size < 1)
-        { return; }
-
     if (storeParams->outputFormat == HU_OUTPUTFORMAT_XERO)
     {
         if (dest == NULL)
-            { * destLength = trove->dataStringSize; }
+            { * destLength = trove->dataStringSize + storeParams->printBom * 3; }
         else
-            { memcpy(dest, trove->dataString, * destLength); }
+        {
+            char * destWithBom = dest;
+            int bomLen = 0;
+            if (storeParams->printBom)
+            {
+                char utf8bom[] = { 0xef, 0xbb, 0xbf };
+                memcpy(dest, utf8bom, 3);
+                bomLen = 3;
+                destWithBom += bomLen;
+            }
+            memcpy(destWithBom, trove->dataString, * destLength - bomLen);
+        }
     }
     else if (storeParams->outputFormat == HU_OUTPUTFORMAT_PRETTY ||
              storeParams->outputFormat == HU_OUTPUTFORMAT_MINIMAL)
     {
+        // newline must be > 0; some things need a newline like // comments
+        if (storeParams->newline.size < 1)
+            { return HU_ERROR_BADPARAMETER; }
+
         huVector str;
         if (dest == NULL)
         {
@@ -880,48 +891,62 @@ void huTroveToString(huTrove const * trove, char * dest, int * destLength, huSto
         if (dest == NULL)
             { * destLength = str.numElements; }
     }
+
+    return HU_ERROR_NOERROR;
 }
 
 #pragma GCC diagnostic pop
 
-size_t huTroveToFileZ(huTrove const * trove, char const * path, huStoreParams * storeParams)
+int huTroveToFileZ(huTrove const * trove, char const * path, int * destLength, huStoreParams * storeParams)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (path == NULL)
-        { return 0; }
+        { return HU_ERROR_BADPARAMETER; }
 #endif
 
-    return huTroveToFileN(trove, path, strlen(path), storeParams);
+    return huTroveToFileN(trove, path, strlen(path), destLength, storeParams);
 }
 
-size_t huTroveToFileN(huTrove const * trove, char const * path, int pathLen, huStoreParams * storeParams)
+int huTroveToFileN(huTrove const * trove, char const * path, int pathLen, int * destLength, huStoreParams * storeParams)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == NULL || trove == hu_nullTrove || path == NULL)
-        { return 0; }
+        { return HU_ERROR_BADPARAMETER; }
     if (storeParams &&
         (storeParams->outputFormat < 0 || storeParams->outputFormat >= 3 || 
          storeParams->tabSize < 0 || 
          (storeParams->usingColors && storeParams->colorTable == NULL) ||
          storeParams->newline.ptr == NULL || storeParams->newline.size < 0))
-        { return 0; }
+        { return HU_ERROR_BADPARAMETER; }
 #endif
 
+    if (destLength)
+        { * destLength = 0; }
+
     int strLength = 0;
-    huTroveToString(trove, NULL, & strLength, storeParams);
+    int error = huTroveToString(trove, NULL, & strLength, storeParams);
+    if (error != HU_ERROR_NOERROR)
+        { return error; }
 
-    char * str = malloc(strLength + 1);
+    char * str = malloc(strLength);
     if (str == NULL)
-        { return 0; }
+        { return HU_ERROR_OUTOFMEMORY; }
 
-    huTroveToString(trove, str, & strLength, storeParams);
+    error = huTroveToString(trove, str, & strLength, storeParams);
+    if (error != HU_ERROR_NOERROR)
+        { free(str); return error; }
 
     FILE * fp = fopen(path, "w");
     if (fp == NULL)
-        { free(str); return 0; }
+        { free(str); return HU_ERROR_BADFILE; }
 
-    size_t ret = fwrite(str, sizeof(char), strLength, fp);
-
+    int writeLength = fwrite(str, sizeof(char), strLength, fp);
     free(str);
-    return ret;
+    if (writeLength != strLength)
+        { return HU_ERROR_BADFILE; }
+
+    if (destLength)
+        { * destLength = strLength; }
+
+    return HU_ERROR_NOERROR;
 }

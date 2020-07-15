@@ -3399,188 +3399,160 @@ TEST_GROUP(huTroveToString)
         l.teardown();
     }
 
-    std::string getFile(char const * path)
+    std::string makeFileName(std::string_view path, int outputFormat, bool useColors, bool printComments, bool printBom)
     {
+        std::string format = ".pp";
+        if (outputFormat == HU_OUTPUTFORMAT_XERO)
+            { format = ".px"; }
+        else if (outputFormat == HU_OUTPUTFORMAT_MINIMAL)
+            { format = ".pm"; }
+
+        std::string consPath = std::string {path} + 
+            format +
+            (printComments ? ".my" : ".mn") +
+            (useColors ? ".ca" : ".cn") +
+            (printBom ? ".by" : ".bn") + 
+            ".hu";
+
+        return consPath;        
+    }
+
+    std::string getFile(std::string_view path, int outputFormat, bool useColors, bool printComments, bool printBom)
+    {
+        std::string consPath = makeFileName(path, outputFormat, useColors, printComments, printBom);
         std::string str;
 
-        FILE * fp = fopen(path, "rb");
+        FILE * fp = fopen(consPath.data(), "rb");
         fseek(fp, 0L, SEEK_END);
         str.resize(ftell(fp));
         rewind(fp);
         if (fread((void*)str.c_str(), 1, str.size(), fp) != str.size())
             { str = "<could not read test file>"; }
         fclose(fp);
-                
+
+        return str;
+    }
+
+    std::string troveToString(std::string_view srcFile, int format, bool useColors, bool printComments, bool printBom)
+    {
+        huTrove const * tc = huMakeTroveFromFileN(srcFile.data(), srcFile.size(), NULL);
+
+        int toStrLen = 0;
+        huStoreParams storeParams;
+        huStringView colors[HU_COLORCODE_NUMCOLORKINDS];
+        if (useColors)
+            { huFillAnsiColorTable(colors); }
+        huInitStoreParamsZ(& storeParams, format, 4, useColors, colors, printComments, "\n", printBom);
+
+        int error = huTroveToString(tc, NULL, & toStrLen, & storeParams);
+        if (error != HU_ERROR_NOERROR)
+            { return ""; }
+
+        std::string str;
+        str.resize(toStrLen);
+        error = huTroveToString(tc, str.data(), & toStrLen, & storeParams);
+        if (error != HU_ERROR_NOERROR)
+            { return ""; }
+
+        huDestroyTrove(tc);
+
         return str;
     }
 };
 
+std::string testFiles[] = {
+    "test/testFiles/comments.hu",
+    "test/testFiles/commentsCstyle.hu",
+    "test/testFiles/quothTheHumon.hu",
+    "test/testFiles/utf8.hu",
+    "test/testFiles/utf8bom.hu",
+    "test/testFiles/utf16be.hu",
+    "test/testFiles/utf16bebom.hu",
+    "test/testFiles/utf16le.hu",
+    "test/testFiles/utf16lebom.hu",
+    "test/testFiles/utf32be.hu",
+    "test/testFiles/utf32bebom.hu",
+    "test/testFiles/utf32le.hu",
+    "test/testFiles/utf32lebom.hu"
+};
+
+
 TEST(huTroveToString, correctness)
 {
-    huTrove const * tc = huMakeTroveFromFileZ("test/testFiles/comments.hu", NULL);
-    auto file = getFile("test/testFiles/comments.hu");
-    char * toStr = NULL;
-    int toStrLen = 0;
-    huStoreParams params;
-    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, 4, false, NULL, true, "\n", false);
-    huTroveToString(tc, NULL, & toStrLen, & params);
-    LONGS_EQUAL_TEXT(file.size(), toStrLen, "comments.hu px len");
-    toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, & params);
-    MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "comments.hu px str");
-    delete [] toStr;
-    huDestroyTrove(tc);
+    for (auto testFile : testFiles)
+    {
+        for (int outputFormat = 0; outputFormat < 3; ++outputFormat)
+        {
+            for (bool useColors = false; ! useColors; useColors = !useColors)
+            {
+                for (bool printComments = false; ! printComments; printComments = !printComments)
+                {
+                    for (bool printBom = false; ! printBom; printBom = !printBom)
+                    {
+                        //if (testFile == testFiles[7])
+                        //    { bool debugBreak = true; }
 
-    tc = huMakeTroveFromFileZ("test/testFiles/comments.hu", NULL);
-    file = getFile("test/testFiles/comments-minimal.hu");
-    toStr = NULL;
-    toStrLen = 0;
-    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_MINIMAL, 4, false, NULL, true, "\n", false);
-    huTroveToString(tc, NULL, & toStrLen, & params);
-    LONGS_EQUAL_TEXT(file.size(), toStrLen, "comments.hu pm len");
-    toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, & params);
-    MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "comments.hu pm str");
-    delete [] toStr;
-    huDestroyTrove(tc);
+                        auto file = getFile(testFile, 
+                            outputFormat, useColors, printComments, printBom);
+                        auto ttos = troveToString(testFile,
+                            outputFormat, useColors, printComments, printBom);
+                        std::string consPath = makeFileName(testFile, outputFormat, useColors, printComments, printBom);
+                        LONGS_EQUAL_TEXT(file.size(), ttos.size(), consPath.data());
+                        MEMCMP_EQUAL_TEXT(file.data(), ttos.data(), file.size(), consPath.data());
+                    }
+                }
+            }
+        }
+    }
 
-    tc = huMakeTroveFromFileZ("test/testFiles/comments.hu", NULL);
-    file = getFile("test/testFiles/comments-pretty.hu");
-    toStr = NULL;
-    toStrLen = 0;
-    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_PRETTY, 4, false, NULL, true, "\n", false);
-    huTroveToString(tc, NULL, & toStrLen, & params);
-    LONGS_EQUAL_TEXT(file.size(), toStrLen, "comments.hu pp len");
-    toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, & params);
-    MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "comments.hu pp str");
-    delete [] toStr;
-    huDestroyTrove(tc);
-
-    tc = huMakeTroveFromFileZ("test/testFiles/quothTheHumon.hu", NULL);
-    file = getFile("test/testFiles/quothTheHumon.hu");
-    toStr = NULL;
-    toStrLen = 0;
-    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, 4, false, NULL, true, "\n", false);
-    huTroveToString(tc, NULL, & toStrLen, & params);
-    LONGS_EQUAL_TEXT(file.size(), toStrLen, "quothTheHumon.hu px len");
-    toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, & params);
-    MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "quothTheHumon.hu px str");
-    delete [] toStr;
-    huDestroyTrove(tc);
-
-    tc = huMakeTroveFromFileZ("test/testFiles/quothTheHumon.hu", NULL);
-    file = getFile("test/testFiles/quothTheHumon-minimal.hu");
-    toStr = NULL;
-    toStrLen = 0;
-    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_MINIMAL, 4, false, NULL, true, "\n", false);
-    huTroveToString(tc, NULL, & toStrLen, & params);
-    LONGS_EQUAL_TEXT(file.size(), toStrLen, "quothTheHumon.hu pm len");
-    toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, & params);
-    MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "quothTheHumon.hu pm str");
-    delete [] toStr;
-    huDestroyTrove(tc);
-
-    tc = huMakeTroveFromFileZ("test/testFiles/quothTheHumon.hu", NULL);
-    file = getFile("test/testFiles/quothTheHumon-pretty.hu");
-    toStr = NULL;
-    toStrLen = 0;
-    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_PRETTY, 4, false, NULL, true, "\n", false);
-    huTroveToString(tc, NULL, & toStrLen, & params);
-    LONGS_EQUAL_TEXT(file.size(), toStrLen, "quothTheHumon.hu pp len");
-    toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, & params);
-    MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "quothTheHumon.hu pp str");
-    delete [] toStr;
-    huDestroyTrove(tc);
-
-    tc = huMakeTroveFromFileZ("test/testFiles/utf8.hu", NULL);
-    file = getFile("test/testFiles/utf8.hu");
-    toStr = NULL;
-    toStrLen = 0;
-    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, 4, false, NULL, true, "\n", false);
-    huTroveToString(tc, NULL, & toStrLen, & params);
-    LONGS_EQUAL_TEXT(file.size(), toStrLen, "utf8.hu px len");
-    toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, & params);
-    MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "utf8.hu px str");
-    delete [] toStr;
-    huDestroyTrove(tc);
-
-    tc = huMakeTroveFromFileZ("test/testFiles/utf8.hu", NULL);
-    file = getFile("test/testFiles/utf8-minimal.hu");
-    toStr = NULL;
-    toStrLen = 0;
-    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_MINIMAL, 4, false, NULL, true, "\n", false);
-    huTroveToString(tc, NULL, & toStrLen, & params);
-    LONGS_EQUAL_TEXT(file.size(), toStrLen, "utf8.hu pm len");
-    toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, & params);
-    MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "utf8.hu pm str");
-    delete [] toStr;
-    huDestroyTrove(tc);
-
-    tc = huMakeTroveFromFileZ("test/testFiles/utf8.hu", NULL);
-    file = getFile("test/testFiles/utf8-pretty.hu");
-    toStr = NULL;
-    toStrLen = 0;
-    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_PRETTY, 4, false, NULL, true, "\n", false);
-    huTroveToString(tc, NULL, & toStrLen, & params);
-    LONGS_EQUAL_TEXT(file.size(), toStrLen, "utf8.hu pp len");
-    toStr = new char[toStrLen];
-    huTroveToString(tc, toStr, & toStrLen, & params);
-    MEMCMP_EQUAL_TEXT(file.data(), toStr, toStrLen, "utf8.hu pp str");
-    delete [] toStr;
-    huDestroyTrove(tc);
 }
 
 // Just doing patho tests -- this is heavily function-tested elsewhere.
 TEST(huTroveToString, pathological)
 {
+    int error = HU_ERROR_NOERROR;
     int strLen = 1024;
     huStoreParams params;
     huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, 4, false, NULL, true, "\n", false);
 
-    huTroveToString(NULL, NULL, & strLen, & params);
-    LONGS_EQUAL_TEXT(0, strLen, "NULL->str sz == 0");
+    error = huTroveToString(NULL, NULL, & strLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "NULL->str sz == 0");
 
     strLen = 1024;
-    huTroveToString(hu_nullTrove, NULL, & strLen, & params);
-    LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
+    error = huTroveToString(hu_nullTrove, NULL, & strLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
-    huTroveToString(l.trove, NULL, NULL, & params);
+    error = huTroveToString(l.trove, NULL, NULL, & params);
 
     strLen = 1024;
     huInitStoreParamsZ(& params, 3, 4, false, NULL, true, "\n", false);
-    huTroveToString(l.trove, NULL, & strLen, & params);
-    LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
+    error = huTroveToString(l.trove, NULL, & strLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
     strLen = 1024;
     huInitStoreParamsZ(& params, -1, 4, false, NULL, true, "\n", false);
-    huTroveToString(l.trove, NULL, & strLen, & params);
-    LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
+    error = huTroveToString(l.trove, NULL, & strLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
     strLen = 1024;
     huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, -1, false, NULL, true, "\n", false);
-    huTroveToString(l.trove, NULL, & strLen, & params);
-    LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
+    error = huTroveToString(l.trove, NULL, & strLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
     strLen = 1024;
     huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, -1, false, NULL, true, NULL, 1, false);
-    huTroveToString(l.trove, NULL, & strLen, & params);
-    LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
+    error = huTroveToString(l.trove, NULL, & strLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
     strLen = 1024;
     huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, -1, false, NULL, true, "\n", 0, false);
-    huTroveToString(l.trove, NULL, & strLen, & params);
-    LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
+    error = huTroveToString(l.trove, NULL, & strLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
     strLen = 1024;
     huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, -1, false, NULL, true, "\n", -1, false);
-    huTroveToString(l.trove, NULL, & strLen, & params);
-    LONGS_EQUAL_TEXT(0, strLen, "null->str sz == 0");
+    error = huTroveToString(l.trove, NULL, & strLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 }
 
 
@@ -3612,83 +3584,85 @@ TEST(huTroveToFile, pathological)
     if (acc != -1)
         { remove(validFile); }
 
-    int sv;
     huStoreParams params;
     huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, 4, false, NULL, false, "\n", false);
 
-    sv = huTroveToFileZ(NULL, validFile, & params);
-    LONGS_EQUAL_TEXT(0, sv, "NULL->file sz == 0");
+    int error = HU_ERROR_NOERROR;
+    int fileLen = 0;
+
+    error = huTroveToFileZ(NULL, validFile, & fileLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "NULL->file sz == 0");
     acc = access(validFile, F_OK);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
 
-    sv = huTroveToFileZ(hu_nullTrove, validFile, & params);
-    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+    error = huTroveToFileZ(hu_nullTrove, validFile, & fileLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
 
-    sv = huTroveToFileZ(hu_nullTrove, NULL, & params);
-    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+    error = huTroveToFileZ(hu_nullTrove, NULL, & fileLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
 
-    sv = huTroveToFileZ(hu_nullTrove, "", & params);
-    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+    error = huTroveToFileZ(hu_nullTrove, "", & fileLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
 
-    sv = huTroveToFileZ(hu_nullTrove, "..", & params);
-    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+    error = huTroveToFileZ(hu_nullTrove, "..", & fileLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
 
-    sv = huTroveToFileZ(hu_nullTrove, "/", & params);
-    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+    error = huTroveToFileZ(hu_nullTrove, "/", & fileLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
 
     huInitStoreParamsZ(& params, 3, 4, false, NULL, false, "\n", false);
-    sv = huTroveToFileZ(l.trove, validFile, & params);
-    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+    error = huTroveToFileZ(l.trove, validFile, & fileLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = access(validFile, F_OK);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
 
     huInitStoreParamsZ(& params, -1, 4, false, NULL, false, "\n", false);
-    sv = huTroveToFileZ(l.trove, validFile, & params);
-    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+    error = huTroveToFileZ(l.trove, validFile, & fileLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = access(validFile, F_OK);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
 
     huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, -1, false, NULL, false, "\n", false);
-    sv = huTroveToFileZ(l.trove, validFile, & params);
-    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+    error = huTroveToFileZ(l.trove, validFile, & fileLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = access(validFile, F_OK);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
 
     huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, 4, false, NULL, false, NULL, 1, false);
-    sv = huTroveToFileZ(l.trove, validFile, & params);
-    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+    error = huTroveToFileZ(l.trove, validFile, & fileLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = access(validFile, F_OK);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
 
     huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, 4, true, NULL, false, "\n", 1, false);
-    sv = huTroveToFileZ(l.trove, validFile, & params);
-    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+    error = huTroveToFileZ(l.trove, validFile, & fileLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = access(validFile, F_OK);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
 
-    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, 4, false, NULL, false, "\n", 0, false);
-    sv = huTroveToFileZ(l.trove, validFile, & params);
-    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_PRETTY, 4, false, NULL, false, "\n", 0, false);
+    error = huTroveToFileZ(l.trove, validFile, & fileLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = access(validFile, F_OK);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
 
     huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, 4, false, NULL, false, "\n", -1, false);
-    sv = huTroveToFileZ(l.trove, validFile, & params);
-    LONGS_EQUAL_TEXT(0, sv, "null->file sz == 0");
+    error = huTroveToFileZ(l.trove, validFile, & fileLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = access(validFile, F_OK);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)

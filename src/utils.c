@@ -88,6 +88,7 @@ char const * huOutputErrorToString(int rhs)
     case HU_ERROR_SYNTAXERROR: return "syntax error";
     case HU_ERROR_NOTFOUND: return "not found";    
     case HU_ERROR_ILLEGAL: return "illegal operation";
+    case HU_ERROR_BADPARAMETER: return "bad parameter";
     default: return "!!unknown!!";
     }
 }

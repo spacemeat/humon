@@ -217,34 +217,6 @@ int main(int argc, char ** argv)
         trove = getInput(in);
     }
 
-    std::optional<ColorTable> colorTable;
-    if (usingColors == UsingColors::ansi)
-        { colorTable.emplace(std::move(getAnsiColorTable())); }
-
-    std::string output;
-    switch(format)
-    {
-    case OutputFormat::xero:
-        output = trove.toPreservedString(printBom);
-        break;
-    case OutputFormat::minimal:
-        output = trove.toMinimalString(colorTable, printComments, "\n", printBom);
-        break;
-    case OutputFormat::pretty:
-        output = trove.toPrettyString(tabSize, colorTable, printComments, "\n", printBom);
-        break;
-    }
-
-    if (outputFile == "")
-    {
-        cout << output;
-    }
-    else
-    {
-        auto out = ofstream(outputFile);
-        out << output;
-    }
-
     if (trove.numErrors() > 0)
     {
         cerr << "Trove has errors:\n";
@@ -255,5 +227,60 @@ int main(int argc, char ** argv)
         return 2;
     }
 
+    std::optional<ColorTable> colorTable;
+    if (usingColors == UsingColors::ansi)
+        { colorTable.emplace(std::move(getAnsiColorTable())); }
+
+    std::string output;
+    ErrorCode error = ErrorCode::noError;
+
+    switch(format)
+    {
+    case OutputFormat::xero:
+        {
+            auto ret = trove.toXeroString(printBom);
+            if (holds_alternative<ErrorCode>(ret))
+                { error = get<ErrorCode>(ret); }
+            else
+                { output = get<string>(ret); }
+        }
+        break;
+    case OutputFormat::minimal:
+        {
+            auto ret = trove.toMinimalString(colorTable, printComments, "\n", printBom);
+            if (holds_alternative<ErrorCode>(ret))
+                { error = get<ErrorCode>(ret); }
+            else
+                { output = get<string>(ret); }
+        }
+        break;
+    case OutputFormat::pretty:
+        {
+            auto ret = trove.toPrettyString(tabSize, colorTable, printComments, "\n", printBom);
+            if (holds_alternative<ErrorCode>(ret))
+                { error = get<ErrorCode>(ret); }
+            else
+                { output = get<string>(ret); }
+        }
+        break;
+    }
+
+    if (error != ErrorCode::noError)
+    {
+        cerr << "Error encountered during printing: " << to_string(error) << "\n";
+    }
+    else
+    {
+        if (outputFile == "")
+        {
+            cout << output;
+        }
+        else
+        {
+            auto out = ofstream(outputFile);
+            out << output;
+        }
+    }
+    
     return 0;
 }

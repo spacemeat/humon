@@ -94,7 +94,11 @@ extern "C"
         HU_ERROR_SYNTAXERROR,               ///< General syntax error.
 
         HU_ERROR_NOTFOUND,                  ///< No node could be found at the address.
-        HU_ERROR_ILLEGAL                    ///< The address or node was illegal.
+        HU_ERROR_ILLEGAL,                   ///< The address or node was illegal.
+
+        HU_ERROR_BADPARAMETER,              ///< An API parameter is malformed or illegal.
+        HU_ERROR_BADFILE,                   ///< An attempt to open or operate on a file failed.
+        HU_ERROR_OUTOFMEMORY                ///< An internal memory allocation failed.
     };
 
     /// Returns a string representation of a huErrorCode.
@@ -427,12 +431,12 @@ extern "C"
     huNode const * huFindNodesByCommentContainingN(huTrove const * trove, char const * containedText, int containedTextLen, huNode const * startWith);
 
     /// Serializes a trove to text.
-    void huTroveToString(huTrove const * trove, char * dest, int * destLength, huStoreParams * storeParams);
+    int huTroveToString(huTrove const * trove, char * dest, int * destLength, huStoreParams * storeParams);
 
     /// Serializes a trove to file.
-    size_t huTroveToFileZ(huTrove const * trove, char const * path, huStoreParams * storeParams);
+    int huTroveToFileZ(huTrove const * trove, char const * path, int * destLength, huStoreParams * storeParams);
     /// Serializes a trove to file.
-    size_t huTroveToFileN(huTrove const * trove, char const * path, int pathLen, huStoreParams * storeParams);
+    int huTroveToFileN(huTrove const * trove, char const * path, int pathLen, int * destLength, huStoreParams * storeParams);
 
     void huFillAnsiColorTable(huStringView table[]);
 

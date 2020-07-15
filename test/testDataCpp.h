@@ -188,3 +188,32 @@ R"({@ dup: foo @ dup: bar
     }
 };
 
+
+struct htd_wakka
+{
+    std::string_view ts = 
+R"({
+    \key: \val
+    k\ey: v\al
+    key\ : val\  k\"ey: v\"al
+    \"key": \"val"
+    key\ key: val\ val
+    key\{key\}: val\{val\}
+    key\::val\:
+    \🤔:\∑
+}
+)"sv;
+
+    hu::Trove trove;
+    hu::Node root;
+
+    void setup()
+    {
+        trove = hu::Trove::fromString(ts);
+        root = trove.root();
+    }
+
+    void teardown()
+    {
+    }
+};

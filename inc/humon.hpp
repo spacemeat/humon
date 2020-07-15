@@ -9,6 +9,7 @@
 #include <array>
 #include <charconv>
 #include <optional>
+#include <variant>
 
 /// The Humon namespace.
 namespace hu
@@ -99,7 +100,8 @@ namespace hu
         nonuniqueKey = capi::HU_ERROR_NONUNIQUEKEY,             ///< A non-unique key was encountered in a dict or annotation.
         syntaxError = capi::HU_ERROR_SYNTAXERROR,               ///< General syntax error.
         notFound = capi::HU_ERROR_NOTFOUND,                     ///< No node could be found at the address.
-        illegal = capi::HU_ERROR_ILLEGAL                        ///< The operation was illegal.
+        illegal = capi::HU_ERROR_ILLEGAL,                       ///< The operation was illegal.
+        badParameter = capi::HU_ERROR_BADPARAMETER              ///< An API parameter is malformed or illegal.
     };
 
     /// Return a string representation of a hu::ErrorCode.
@@ -387,7 +389,7 @@ namespace hu
             { return Token(isNull() ? capi::hu_nullToken : cnode->lastValueToken); }
         Token lastToken() const noexcept            ///< Returns the last token of this node, including any annotation and comment tokens.
             { return Token(isNull() ? capi::hu_nullToken : cnode->lastToken); }
-        Node parentNode() const noexcept            ///< Returns the parent node of this node, or the null node if this is the root.
+        Node parent() const noexcept                ///< Returns the parent node of this node, or the null node if this is the root.
             { return Node(capi::huGetParentNode(cnode)); }
         int childOrdinal() const noexcept           ///< Returns the index of this node vis a vis its sibling nodes (starting at 0).
             { return isNull() ? -1 : cnode->childOrdinal; }
@@ -709,19 +711,19 @@ namespace hu
 
         bool isValid() const noexcept       ///< Returns whether the trove is null (not valid).
             { return ctrove != capi::hu_nullTrove && numErrors() == 0; }
-        bool isNull() const noexcept         ///< Returns whether the trove is null (not valid).
+        bool isNull() const noexcept        ///< Returns whether the trove is null (not valid).
             { return ctrove == nullptr; }
-        operator bool () const noexcept      ///< Returns whether the trove is valid (not null).
+        operator bool () const noexcept     ///< Returns whether the trove is valid (not null).
             { return isValid(); }
-        int numTokens() const noexcept       ///< Returns the number of tokens in the trove.
+        int numTokens() const noexcept      ///< Returns the number of tokens in the trove.
             { return capi::huGetNumTokens(ctrove); }
-        Token token(int idx) const noexcept  ///< Returns a Token by index.
+        Token token(int idx) const noexcept ///< Returns a Token by index.
             { return Token(capi::huGetToken(ctrove, idx)); }
-        int numNodes() const noexcept        ///< Returns the number of nodes in the trove.
+        int numNodes() const noexcept       ///< Returns the number of nodes in the trove.
             { return capi::huGetNumNodes(ctrove); }
-        Node node(int idx) const noexcept    ///< Returns a Node by index.
+        Node node(int idx) const noexcept   ///< Returns a Node by index.
             { return Node(capi::huGetNode(ctrove, idx)); }
-        bool hasRoot() const noexcept
+        bool hasRoot() const noexcept       ///< Returns whether the trove has a root node.
             { return numNodes() > 0; }
         Node root() const noexcept          ///< Returns the root node of the trove.
             { return capi::huGetRootNode(ctrove); }
@@ -819,21 +821,22 @@ namespace hu
         }
 
         /// Serializes a trove with the exact input token stream.
-        [[nodiscard]] std::string toPreservedString(bool printBom = false) const noexcept
+        [[nodiscard]] std::variant<std::string, ErrorCode> toXeroString(bool printBom = false) const noexcept
         {
             StoreParams sp = { OutputFormat::xero, 0, std::nullopt, true, "", printBom };
             return toString(sp);
         }
 
         /// Serializes a trove with the minimum token stream necessary to accurately convey the data.
-        [[nodiscard]] std::string toMinimalString(std::optional<ColorTable> const & colors = {}, 
+        [[nodiscard]] std::variant<std::string, ErrorCode> toMinimalString(std::optional<ColorTable> const & colors = {}, 
             bool printComments = true, std::string_view newline = "\n", bool printBom = false) const noexcept
         {
             StoreParams sp = { OutputFormat::minimal, 0, colors, printComments, newline, printBom };
             return toString(sp);
         }
 
-        [[nodiscard]] std::string toPrettyString(int tabSize = 4, 
+        /// Serializes a trove with whitespace formatting suitable for readability.
+        [[nodiscard]] std::variant<std::string, ErrorCode> toPrettyString(int tabSize = 4, 
             std::optional<ColorTable> const & colors = {}, bool printComments = true, 
             std::string_view newline = "\n", bool printBom = false) const noexcept 
         {
@@ -845,24 +848,73 @@ namespace hu
         /** Creates a UTF8 string which encodes the trove, as seen in a Humon file. 
          * The contents of the file are whitespace-formatted and colorized depending on
          * the parameters.
-         * \return A tuple containing a unique (self-managing) string pointer and the
-         * string's length.
+         * \return A variant containing either the encoded string, or an error code.
          */
-        [[nodiscard]] std::string toString(StoreParams & storeParams) const noexcept 
+        [[nodiscard]] std::variant<std::string, ErrorCode> toString(StoreParams & storeParams) const noexcept 
         {
             int strLength = 0;
-            capi::huTroveToString(ctrove, NULL, & strLength, & storeParams.cparams);
             std::string s;
+            int error = capi::huTroveToString(ctrove, NULL, & strLength, & storeParams.cparams);
+            if (error != capi::HU_ERROR_NOERROR)
+                { return static_cast<ErrorCode>(error); }
+            
             s.resize(strLength);
-            capi::huTroveToString(ctrove, s.data(), & strLength, & storeParams.cparams);
+            error = capi::huTroveToString(ctrove, s.data(), & strLength, & storeParams.cparams);
+            if (error != capi::HU_ERROR_NOERROR)
+                { return static_cast<ErrorCode>(error); }
+
             return s;
+        }
+
+        /// Serializes a trove with the exact input token stream.
+        [[nodiscard]] std::variant<int, ErrorCode> toXeroFile(std::string_view path, 
+            bool printBom = false) const noexcept
+        {
+            StoreParams sp = { OutputFormat::xero, 0, std::nullopt, true, "", printBom };
+            return toFile(path, sp);
+        }
+
+        /// Serializes a trove with the minimum token stream necessary to accurately convey the data.
+        [[nodiscard]] std::variant<int, ErrorCode> toMinimalFile(std::string_view path, 
+            std::optional<ColorTable> const & colors = {}, bool printComments = true,
+            std::string_view newline = "\n", bool printBom = false) const noexcept
+        {
+            StoreParams sp = { OutputFormat::minimal, 0, colors, printComments, newline, printBom };
+            return toFile(path, sp);
+        }
+
+        /// Serializes a trove with whitespace formatting suitable for readability.
+        [[nodiscard]] std::variant<int, ErrorCode> toPrettyFile(std::string_view path, 
+            int tabSize = 4, std::optional<ColorTable> const & colors = {}, bool printComments = true, 
+            std::string_view newline = "\n", bool printBom = false) const noexcept 
+        {
+            StoreParams sp = { OutputFormat::pretty, tabSize, colors, printComments, newline, printBom };
+            return toFile(path, sp);
+        }
+
+        /// Serializes a trove to a UTF8-formatted file.
+        /** Creates or overwrites a UTF8 file which encodes the trove, as seen in a Humon file. 
+         * The contents of the file are whitespace-formatted and colorized depending on
+         * the parameters.
+         * \return A variant containing either the number of bytes written to the file, or the
+         * an error code.
+         */
+        [[nodiscard]] std::variant<int, ErrorCode> toFile(std::string_view path, StoreParams & storeParams) const noexcept 
+        {
+            int outputLength = 0;
+            int error = capi::huTroveToFileN(ctrove, path.data(), path.size(), & outputLength, & storeParams.cparams);
+            if (error != capi::HU_ERROR_NOERROR)
+                { return error; }
+
+            return outputLength;
         }
 
         friend bool operator == (Trove const & lhs, Trove const & rhs) noexcept
             { return lhs.ctrove == rhs.ctrove; }
         friend bool operator != (Trove const & lhs, Trove const & rhs) noexcept
             { return lhs.ctrove != rhs.ctrove; }
-        // TODO: <=> when it's available.
+        // C++20: <=> when it's available.
+
         /// Returns whether `idx` is a valid child index of the root node. (Whether root has
         /// at least `idx`+1 children.)
         template <class IntType, 
