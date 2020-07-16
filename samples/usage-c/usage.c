@@ -13,8 +13,9 @@ int strntol(char const * str, int strLen, char const ** end, int radix)
 
 int main()
 {
-    huTrove const * trove = huMakeTroveFromFileZ("samples/sampleFiles/materials.hu", NULL);
-    if (trove != NULL && huGetNumErrors(trove) == 0)
+    huTrove const * trove = NULL;
+    int error = huMakeTroveFromFileZ(& trove, "samples/sampleFiles/materials.hu", NULL);
+    if (error == HU_ERROR_NOERROR && huGetNumErrors(trove) == 0)
     {
         huNode const * extentsNode = huGetNodeByFullAddressZ(trove, "/assets/brick-diffuse/importData/extents");
         huNode const * valueNode = huGetChildByIndex(extentsNode, 0);

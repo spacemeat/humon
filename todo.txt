@@ -1,7 +1,5 @@
 DONE THIS CHECKIN:
-P1 detect the BOMs, dummy
-P1 there needs to be a way to report errors on bad load / bad encoding
-P1 test string \ cases: \ at end, \ at beginning, \ before " in unquoted string, \ before space, \ before newline, \ before {, etc
+P1 Minor API improvements for error codes.
 
 TODO:
 P1 CMake, vcpkg

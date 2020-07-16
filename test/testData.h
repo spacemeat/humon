@@ -27,6 +27,7 @@ R"(// This is a trove comment.
 // This is also a trove comment.
 )"sv;
 
+    int error = HU_ERROR_NOERROR;
     huTrove const * trove = NULL;
     huNode const * root;
     huNode const * a;
@@ -38,7 +39,7 @@ R"(// This is a trove comment.
 
     void setup()
     {
-        trove = huMakeTroveFromStringN(ts.data(), ts.size(), NULL);
+        error = huMakeTroveFromStringN(& trove, ts.data(), ts.size(), NULL);
         root = huGetRootNode(trove);
         a = huGetChildByIndex(root, 0);
         bp = huGetChildByIndex(root, 1);
@@ -76,6 +77,7 @@ R"(// This is a trove comment.
 // This is a trove comment.
 )"sv;
 
+    int error = HU_ERROR_NOERROR;
     huTrove const * trove = NULL;
     huNode const * root;
     huNode const * a;
@@ -87,7 +89,7 @@ R"(// This is a trove comment.
 
     void setup()
     {
-        trove = huMakeTroveFromStringN(ts.data(), ts.size(), NULL);
+        error = huMakeTroveFromStringN(& trove, ts.data(), ts.size(), NULL);
         root = huGetRootNode(trove);
         a = huGetChildByIndex(root, 0);
         bp = huGetChildByIndex(root, 1);
@@ -126,6 +128,7 @@ R"(// This is a trove comment.
 // This is also a trove comment.
 )"sv;
 
+    int error = HU_ERROR_NOERROR;
     huTrove const * trove = NULL;
     huNode const * root;
     huNode const * a;
@@ -137,7 +140,7 @@ R"(// This is a trove comment.
 
     void setup()
     {
-        trove = huMakeTroveFromStringN(ts.data(), ts.size(), NULL);
+        error = huMakeTroveFromStringN(& trove, ts.data(), ts.size(), NULL);
         root = huGetRootNode(trove);
         a = huGetChildByIndex(root, 0);
         bp = huGetChildByIndex(root, 1);
@@ -179,6 +182,7 @@ R"({
 }
 )"sv;
 
+    int error = HU_ERROR_NOERROR;
     huTrove const * trove = NULL;
     huNode const * root;
     huNode const * a;
@@ -202,7 +206,7 @@ R"({
 
     void setup()
     {
-        trove = huMakeTroveFromStringN(ts.data(), ts.size(), NULL);
+        error = huMakeTroveFromStringN(& trove, ts.data(), ts.size(), NULL);
         root = huGetRootNode(trove);
         a = huGetChildByIndex(root, 0);
         b = huGetChildByIndex(root, 1);
@@ -242,6 +246,7 @@ R"({
 }
 )"sv;
 
+    int error = HU_ERROR_NOERROR;
     huTrove const * trove = NULL;
     huNode const * root;
     huNode const * aaa;
@@ -251,7 +256,7 @@ R"({
 
     void setup()
     {
-        trove = huMakeTroveFromStringN(ts.data(), ts.size(), NULL);
+        error = huMakeTroveFromStringN(& trove, ts.data(), ts.size(), NULL);
         root = huGetRootNode(trove);
         aaa = huGetChildByIndex(root, 0);
         ccc = huGetChildByIndex(root, 1);

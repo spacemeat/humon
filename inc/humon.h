@@ -98,7 +98,9 @@ extern "C"
 
         HU_ERROR_BADPARAMETER,              ///< An API parameter is malformed or illegal.
         HU_ERROR_BADFILE,                   ///< An attempt to open or operate on a file failed.
-        HU_ERROR_OUTOFMEMORY                ///< An internal memory allocation failed.
+        HU_ERROR_OUTOFMEMORY,               ///< An internal memory allocation failed.
+
+        HU_ERROR_TROVEHASERRORS             ///< The loading function succeeded, but the loaded trove has errors.
     };
 
     /// Returns a string representation of a huErrorCode.
@@ -347,13 +349,13 @@ extern "C"
     } huTrove;
 
     /// Creates a trove from a NULL-terminated string of Humon text.
-    huTrove const * huMakeTroveFromStringZ(char const * data, huLoadParams * loadParams);
+    int huMakeTroveFromStringZ(huTrove const ** trove, char const * data, huLoadParams * loadParams);
     /// Creates a trove from a string view of Humon text.
-    huTrove const * huMakeTroveFromStringN(char const * data, int dataLen, huLoadParams * loadParams);
+    int huMakeTroveFromStringN(huTrove const ** trove, char const * data, int dataLen, huLoadParams * loadParams);
     /// Creates a trove from a file.
-    huTrove const * huMakeTroveFromFileZ(char const * path, huLoadParams * loadParams);
+    int huMakeTroveFromFileZ(huTrove const ** trove, char const * path, huLoadParams * loadParams);
     /// Creates a trove from a file.
-    huTrove const * huMakeTroveFromFileN(char const * path, int pathLen, huLoadParams * loadParams);
+    int huMakeTroveFromFileN(huTrove const ** trove, char const * path, int pathLen, huLoadParams * loadParams);
 
     /// Reclaims all memory owned by a trove.
     void huDestroyTrove(huTrove const * trove);

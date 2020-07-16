@@ -39,7 +39,7 @@ R"(// This is a trove comment.
 
     void setup()
     {
-        trove = hu::Trove::fromString(ts);
+        trove = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts)));
         root = trove.root();
         a = root.child(0);
         bp = root.child(1);
@@ -77,7 +77,7 @@ R"({
 
     void setup()
     {
-        trove = hu::Trove::fromString(ts);
+        trove = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts)));
         root = trove.root();
         nint = root.child(0);
         nfloat = root.child(1);
@@ -103,7 +103,7 @@ struct htd_comments
 
     void setup()
     {
-        trove = hu::Trove::fromFile(file);
+        trove = std::move(std::get<hu::Trove>(hu::Trove::fromFile(file)));
         root = trove.root();
         k0 = root / "k0";
         k1 = root / "k1";
@@ -176,11 +176,11 @@ R"({@ dup: foo @ dup: bar
 
     void setup()
     {
-        trove0 = hu::Trove::fromString(ts0);
-        trove1 = hu::Trove::fromString(ts1);
-        trove2 = hu::Trove::fromString(ts2);
-        trove3 = hu::Trove::fromString(ts3);
-        trove4 = hu::Trove::fromString(ts4);
+        trove0 = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts0)));
+        trove1 = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts1)));
+        trove2 = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts2)));
+        trove3 = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts3)));
+        trove4 = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts4)));
     }
 
     void teardown()
@@ -209,7 +209,7 @@ R"({
 
     void setup()
     {
-        trove = hu::Trove::fromString(ts);
+        trove = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts)));
         root = trove.root();
     }
 

@@ -89,6 +89,9 @@ char const * huOutputErrorToString(int rhs)
     case HU_ERROR_NOTFOUND: return "not found";    
     case HU_ERROR_ILLEGAL: return "illegal operation";
     case HU_ERROR_BADPARAMETER: return "bad parameter";
+    case HU_ERROR_BADFILE: return "bad file";
+    case HU_ERROR_OUTOFMEMORY: return "out of memory";
+    case HU_ERROR_TROVEHASERRORS: return "trove has errors";
     default: return "!!unknown!!";
     }
 }

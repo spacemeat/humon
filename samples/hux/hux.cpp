@@ -1,3 +1,5 @@
+#define USE_NOEXCEPT
+
 #include "humon.hpp"
 #include <iostream>
 #include <cstring>
@@ -62,7 +64,7 @@ void eatWs(char *& arg)
 }
 
 
-Trove getInput(istream & input)
+[[nodiscard]] DeserializeResult getInput(istream & input)
 {
     return Trove::fromIstream(input);
 }
@@ -205,18 +207,27 @@ int main(int argc, char ** argv)
         { loadFromStdin = true; }
 
     // set up us the input
-    Trove trove;
+    DeserializeResult desRes;
     if (loadFromStdin)
-        { trove = getInput(cin); }
+    {
+        desRes = getInput(cin);
+    }
     else
     {
         auto in = ifstream (inputFile);
         if (in.is_open() == false)
             { cerr << "Could not open file " << inputFile << " for input.\n"; return 1; }
 
-        trove = getInput(in);
+        desRes = getInput(in);
     }
 
+    if (auto error = get_if<ErrorCode>(& desRes))
+    {
+        cerr << "Error loading the token stream: " << to_string(* error) << "\n";
+        return 2;
+    }
+
+    Trove trove = move(get<Trove>(desRes));
     if (trove.numErrors() > 0)
     {
         cerr << "Trove has errors:\n";
@@ -239,28 +250,28 @@ int main(int argc, char ** argv)
     case OutputFormat::xero:
         {
             auto ret = trove.toXeroString(printBom);
-            if (holds_alternative<ErrorCode>(ret))
-                { error = get<ErrorCode>(ret); }
+            if (auto str = get_if<std::string>(& ret))
+                { output = std::move(* str); }
             else
-                { output = get<string>(ret); }
+                { error = get<ErrorCode>(ret); }
         }
         break;
     case OutputFormat::minimal:
         {
             auto ret = trove.toMinimalString(colorTable, printComments, "\n", printBom);
-            if (holds_alternative<ErrorCode>(ret))
-                { error = get<ErrorCode>(ret); }
+            if (auto str = get_if<std::string>(& ret))
+                { output = std::move(* str); }
             else
-                { output = get<string>(ret); }
+                { error = get<ErrorCode>(ret); }
         }
         break;
     case OutputFormat::pretty:
         {
             auto ret = trove.toPrettyString(tabSize, colorTable, printComments, "\n", printBom);
-            if (holds_alternative<ErrorCode>(ret))
-                { error = get<ErrorCode>(ret); }
+            if (auto && str = get_if<std::string>(& ret))
+                { output = std::move(* str); }
             else
-                { output = get<string>(ret); }
+                { error = get<ErrorCode>(ret); }
         }
         break;
     }

@@ -78,8 +78,9 @@ Using the APIs is straightforward. To get the image's (x, y) extents above, we m
 
     #include <Humon.h>
     ...
-        huTrove const * trove = huMakeTroveFromFileZ("samples/sampleFiles/materials.hu", NULL);
-        if (trove != NULL && huGetNumErrors(trove) == 0)
+        huTrove const * trove = NULL;
+        int error = huMakeTroveFromFileZ(& trove, "samples/sampleFiles/materials.hu", NULL);
+        if (error == HU_ERROR_NOERROR && huGetNumErrors(trove) == 0)
         {
             huNode const * extentsNode = huGetNodeByFullAddressZ(trove, "/assets/brick-diffuse/importData/extents");
             huNode const * valueNode = huGetChildByIndex(extentsNode, 0);
@@ -88,20 +89,20 @@ Using the APIs is straightforward. To get the image's (x, y) extents above, we m
             valueNode = huGetChildByIndex(extentsNode, 1);
             sExt = valueNode ? & valueNode->valueToken->str : NULL;
             int extY = sExt ? strntol(sExt->ptr, sExt->size, NULL, 10) : 0;
-
-            ...
+            printf("Extents: (%d, %d)\n", extX, extY);
+            // ...
 
 or in C++:
 
     #include <Humon.hpp>
     ...
-        if (auto trove = hu::Trove::fromFile("samples/sampleFiles/materials.hu"sv);
-            trove)
+        auto desRes = hu::Trove::fromFile("samples/sampleFiles/materials.hu"sv);
+        if (auto trove = std::get_if<hu::Trove>(& desRes))
         {
-            auto extentsNode = trove.nodeByAddress("/assets/brick-diffuse/importData/extents"sv);
+            auto extentsNode = trove->nodeByAddress("/assets/brick-diffuse/importData/extents"sv);
             tuple xyExtents = { extentsNode / 0 / hu::val<int>{}, 
                                 extentsNode / 1 / hu::val<int>{} };
-            ...
+            std::cout << "Extents: (" << get<0>(xyExtents) << ", " << get<1>(xyExtents) << ")\n";            ...
 
 ### Installation
 If you're programming with Humon, or rather want to be, [here's how we install it, and do all the CMake yakkity smack]. If you're just using Humon files with some application, you don't need to do anything. Also here's a TextMate colorizer.
@@ -228,7 +229,7 @@ They can be numbers of course, but that's just a string to Humon. The rules for 
         this\ one: sure
         "this one here": "this is fine"
         "this
-one": yeppers
+    one": yep
         1: "fine, but remember: numbers are just strings to Humon and they won't be sorted"
         Δημοσθένους: "Unicode is fully recognized."
     }
@@ -278,7 +279,7 @@ Humon doesn't know or care about your comments. Humon commentary is just noise. 
 **Annotations are their own thing, and exist out of band.**
 Annotations are the only sort of language-y syntax-y feature of Humon. The first specs didn't include them, but as I used Humon in those early days, I found that I wanted a convenient shorthand that sort of *jumped out of the structure* to provide context data, or specify certain rare conditions. Something formal and machineable, but that also didn't force modifications to the structure in place. I settled on annotations.
 
-Any single node can have any number of annotations, which appear *after or within* the node. The trove can have them too, if an annotation appears before any other objects. Annotations begin with an `@` symbol, followed by either one key:value pair, or a dict of key:value pairs:
+Every node can have any number of annotations, which appear *after or within* the node--specifically, *after* any token belonging or associated to a node. The trove can have them too, if an annotation appears before any other objects. Annotations begin with an `@` symbol, followed by either one key:value pair, or a dict of key:value pairs:
 
     [
         nostromo @ movie-ref: alien
@@ -299,12 +300,12 @@ Humon supports reading files or in-memory strings encoded as any of:
 
 Humon respects all the whitespace characters that Unicode specifies, and supports all code points. When loading Humon data, you can specify an unknown encoding and Humon will attempt to figure out the encoding automatically, either according to the BOM or, if one is not present, by examining the bit pattern of the token stream.
 
-To Humon, any code point is either whitespace, language punctuation (which is only ever a single byte), or a word-token character. That's all the tokenizer understands. You can be strict about Unicode encoding legality (the default), or if you know your data is UTF8 and contains only legal code units, load it fast by skipping lots of checks.
+To Humon, any code point is either whitespace, language punctuation (which is only ever a single byte), or a word-token character. That's all the tokenizer understands. You can be strict about checking for encoding legality (on by default), or if you know your data is UTF8 and contains only legal code units, turn off strict Unicode and lots of checks are skipped for faster loading. Either way, special Unicode code points like continuations are simply considered word characters for keys or values or comments, and Humon doesn't ever check for Unicode's semantic correctness for sequences of code points.
 
 If this is all Groot to you, just rest assured that Humon can load any text file that any web server, browser, or basic text editor generally produces, regardless of platform / OS.
 
 **Humon writes UTF8.**
-While Humon can read all the UTFn formats, `Trove::toString`, `Trove::toFile`, and their helper functions can only generate UTF8, with or without BOM as you choose.
+While Humon can read all the normal UTFn formats, `Trove::toString`, `Trove::toFile`, and their helper functions can only generate UTF8, with or without BOM as you choose.
 
 > Why only UTF8? It's the ubiquitous encoding for the web and most Linux and OSX things, and Windows APIs can fully deal with it. But mainly, I just don't care enough about supporting these encodings beyond reading. Humon transcodes the token stream into UTF8 internally, and slams memory out on a `Trove::to*` call. See the manifesto at http://utf8everywhere.org/ to read an opinionated opinion.
 
@@ -317,12 +318,16 @@ Start with `#include <humon.hpp>`. The interface is contained in a namespace, `h
 
 To load a Humon trove, invoke one of `hu::Trove`'s static member functions:
 
-    auto trove = hu::Trove::fromString("{foo: [100, 200]}"sv);
-    auto troveFromFile = hu::Trove::fromFile("data/foo.hu"sv);
+    auto desResFromRam = hu::Trove::fromString("{foo: [100, 200]}"sv);
+    auto DesResFromFile = hu::Trove::fromFile("data/foo.hu"sv);
 
-These each return a `hu::Trove` object. Once you have a trove, all the loading from source is finished, and it's fully ready to use. You'll use the trove to get access to nodes and their data.
+These each return a `std::variant<hu::Trove, hu::ErrorCode>` object.Once you have a trove, all the loading from source is finished, and it's fully ready to use. You'll use the trove to get access to nodes and their data.
+
+> The error code is set if there was a problem loading the token stream before tokenization could begin. Bad parameters or an unusable encoding will disallow a trove from even being created. Beyond that point, a trove is made and returned, and will contain all the tokenization and parsing errors in the token stream.
 
 There are several ways to access a node. To get the root node, which is always at node index 0:
+
+    auto & trove = std::get<hu::Trove>(desResFromRam);
 
     auto rootNode = trove.root();
     // or
@@ -388,7 +393,7 @@ When crafting your own address string into Humon data, note that since dicts mai
 
 You can look up a node by its address:
 
-    node = trove.nodeByAddress("/foo/20/baz/3");
+    node = trove.nodeByAddress("/foo/0");
 
 You get a node object back, which is valid if the address is valid or nullish if not.
 
@@ -398,19 +403,26 @@ There are some finnicky bits about node addresses when considering that a dict's
 
 `hu::Node::address()` returns appropriately `"`-enquoted terms if it needs to, and will escape already-present `"` if it has to enquote such a term.
 
-    [
-        {
-            res/"game assets"/meshes.hu: {
+    {
+        bufferSources: {
+            res/"game\ assets"/meshes.hu: {
                 required: true
                 monitoredForChanges: true
             }
-        } {
-            res/"game assets"/materials.hu: {
+        } 
+        pipelineSources: {
+            res/"game\ assets"/materials.hu: {
                 required: false
                 monitoredForChanges: true
             }
         }
-    ]
+        renderPlans: {
+            res/"game\ assets"/renderPlan-overland.hu {
+                required: true
+                monitoredForChanges: true
+            }
+        }
+    }
 
     ...
 
@@ -420,7 +432,7 @@ There are some finnicky bits about node addresses when considering that a dict's
     ...
 
     $ runSample
-    Address: /1/"res/\"game assets\"/materials.hu"/required
+    Address: /1/"res/\"game\ assets\"/materials.hu"/required
 
 `hu::Node::address()` always returns an address that is legal to use in `hu::Trove::node()` to find the node again. You could even store those addresses (perhaps in other Humon data) for cross-referencing.
 
@@ -430,25 +442,28 @@ A relative address can be used to get from one node to another:
 
 Notice the relative path does not start with `/`. The relative address is taken from the node, not from the trove.
 
-There are explicit member functions for getting nodes by child index or key:
+There are explicit member functions for getting nodes by child index or key or parentage:
 
-    node = node.child(3);
-    node = node.child("goat");
+    auto node = trove.root();
+    node = node.child(1);
+    node = node.child(R"(res/"game\ assets"/materials.hu)"sv);
 
-    auto childNode = node.firstChild();
-    while (childNode)
+    auto childNode = trove.root().firstChild();                 
+    do
     {
-        ...
+        // do something with childNode
         childNode = childNode.nextSibling();
     }
+    while (childNode);
 
     node = node.parent();
+    node = node / 0 / "monitoredForChanges";
 
 So you've got a value node. Whooptie-doo. To get a value from it:
 
     string_view valStr = node.value();
     // or
-    int valInt = node / hu::val<int>{};
+    int valBool = node / hu::val<bool>{};
 
 > There are numerous Humon APIs that return a `std::string_view`, which might raise some of y'all's flags--`std::string_view`s do not own their own data. But remember, Humon objects are immutable and don't ever move in memory; the C++ objects just wrap pointers. Once the trove is loaded, none of its references go bad until the trove is destroyed. The returned `std::string_view`s point to memory that is static and good until the trove is gone, so in the case of Humon APIs, returning a `std::string_view` is copasetic. Just keep the trove around.
 
@@ -463,7 +478,12 @@ You can also define your own specialization of `hu::val<T>` for your own type. S
     {
     public:
         Version(std::string_view str) { ... }
-        std::array<int, NumRanks> ranks;
+        Version(std::initializer_list<int> init) { ... }
+        bool operator<(Version const & rhs) const { ... }
+        int operator [] (int compIdx) const { return components[compIdx]; }
+        friend std::ostream & operator << (std::ostream & out, Version const & v) { ... }
+    private:
+        std::array<int, NumRanks> components;
     };
 
     using V3 = Version<3>;
@@ -516,14 +536,14 @@ Annotations are described in detail below. They're essentially per-node metadata
     for (int i = 0; i < numAnnos; ++i)
     {
         auto [k, v] = node.annotation(i);
-        if (k == "numBits"sv) { ... }
-        else if (k == "numBytes"sv) { ... }
+        if (k == "numBits"sv) { }
+        else if (k == "numBytes"sv) { }
     }
     // or (slower; hu::Node::allAnnotations() allocates a std::vector):
     for (auto [k, v] : node.allAnnotations())
     {
-        if (k == "numBits"sv) { ... }
-        else if (k == "numBytes"sv) { ... }
+        if (k == "numBits"sv) { }
+        else if (k == "numBytes"sv) { }
     }
 
     bool hasNumBits = node.hasAnnotation("numBits"sv);  // verify annotation by key
@@ -567,15 +587,14 @@ Humon provides a function to make a `hu::ColorTable` with ANSI terminal color co
     hu::ColorTable colorTable = hu::getAnsiColorTable();
 
     // You can specify minimal whitespace and still use a color table for the tokens--see below.
+    tokStr = trove.toMinimalString(colorTable, false, "\n");
+    if (auto str = std::get_if<std::string>(& tokStr))
+        { cout << * str; }
 
-    tokStr = trove.toMinimalString(colorTable, false);
-    if (auto s = get_if<string>(& tokStr))
-        { cout << * s; }
-
-    // Pretty. Use an indentation of 4 spaces to format nested depths. Also doing CRLF newlines.
-    tokStr = trove.toPrettyString(4, colorTable, false, "\r\n");
-    if (auto s = get_if<string>(& tokStr))
-        { cout << * s; }
+    // Pretty. Use an indentation of 4 spaces to format nested depths.
+    tokStr = trove.toPrettyString(4, colorTable, false, "\n");
+    if (auto str = std::get_if<std::string>(& tokStr))
+        { cout << * str; }
 
 ### The principles applied to the C-family APIs
 Maybe you'd call them behaviors, but they embody the Humon principles.
@@ -678,8 +697,6 @@ Annotations are always *associated backward*. They modify the nearest non-commen
 
 If no nodes appear before an annotation, it applies to the trove. A great way to begin a Humon file spec is by specifying annnotations for the application version or config version for which the file is good. Maybe you're developing a code-generation suite cleverly called "hudo", and want to ensure the correct version of the engine is called to consume every model file, even older ones. Hudo could look for a version annotation on the trove, before examining any nodes, and use the appropriate engine version to interpret the structure:
 
-*hudo.hu:*:
-
     @ { app: hudo, hudo-version: 0.1.1 }
 
     {
@@ -690,19 +707,23 @@ If no nodes appear before an annotation, it applies to the trove. A great way to
         }
     }
 
-*loadModel.cpp:*
+    ...
 
-    if (auto trove = hu::Trove::fromFile("samples/sampleFiles/hudo.hu"sv);
-        trove)
+    desRes = hu::Trove::fromFile("samples/sampleFiles/hudo.hu"sv);
+    if (auto trove = std::get_if<hu::Trove>(& desRes))
     {
-        if (trove.annotation("app") != "hudo"sv)
+        if (trove->annotation("app") != "hudo"sv)
             { throw runtime_error("File is not a hudo file."); }
 
-        auto versionString = trove.annotation("hudo-version");
-        auto version = Version<3> { versionString };
-        if (version < Version<3> { 0, 1, 0 }) { /*...*/ }
-        else if (version < Version<3> { 0, 2, 0 }) { /*...*/ }
-        else ...
+        auto versionString = trove->annotation("hudo-version");
+        auto version = V3 { versionString.str() };
+        if      (version < V3 { 0, 1, 0 }) { std::cout << "Using version 0.0.x\n"; /*...*/ }
+        else if (version < V3 { 0, 2, 0 }) { std::cout << "Using version 0.1.x\n"; /*...*/ }
+        else { std::cout << "Using version 0.2.x\n"; /*...*/ }
+        // ...
+
+    $ runSample
+    Using version 0.1.x
 
 Like asserted earlier, annotations are 100% open in their use. Humon doesn't use any annotaton keys or values and doesn't interpret them. Applications can use them or not, but all annotations that are legal are guaranteed to be parsed, even if the application doesn't know about or use them at all. In this way you can embed metadata about objects in a Humon file, and even old versions of Humon apps will correctly read (and ignore) them.
 

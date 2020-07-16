@@ -39,7 +39,7 @@ TEST_GROUP(makers)
 
 TEST(makers, fromString)
 {
-    hu::Trove trove = hu::Trove::fromString(humon, {hu::Encoding::utf8, 2});
+    hu::Trove trove = std::move(std::get<hu::Trove>(hu::Trove::fromString(humon, {hu::Encoding::utf8, 2})));
     auto root = trove.root();
     CHECK_TEXT(root.kind() == hu::NodeKind::list, "load0");
     CHECK_TEXT(root.numChildren() == 1, "load1");

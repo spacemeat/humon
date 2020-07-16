@@ -512,10 +512,16 @@ int getEncodingFromBom(huStringView const * data, size_t * numBomChars, bool isM
 int swagEncodingFromString(huStringView const * data, size_t * numBomChars, huLoadParams * loadParams)
 {
     int bomEncoding = getEncodingFromBom(data, numBomChars, isMachineBigEndian());
+
+#ifdef HUMON_CAVEPERSON_DEBUGGING
     if (bomEncoding != HU_ENCODING_UNKNOWN)
-        { printf("Encoding detected from BOM: %d\n", bomEncoding); return bomEncoding; }
+        { printf("Encoding detected from BOM: %d\n", bomEncoding); }
     else
         { printf("Encoding not detected from BOM\n"); }
+#endif
+
+    if (bomEncoding != HU_ENCODING_UNKNOWN)
+        { return bomEncoding; }
 
     int const BLOCKSIZE = 64;
 
@@ -544,10 +550,12 @@ int swagEncodingFromString(huStringView const * data, size_t * numBomChars, huLo
 
     selectedEncoding = chooseFromAmbiguousEncodings(readers, numValidEncodings);
 
+#ifdef HUMON_CAVEPERSON_DEBUGGING
     if (selectedEncoding != NULL)
         { printf("Encoding determined from bit pattern: %d\n", (int)(selectedEncoding - readers)); }
     else
         { printf("Encoding not determined from bit pattern\n"); }
+#endif
 
     if (selectedEncoding != NULL)
         { return selectedEncoding - readers; }

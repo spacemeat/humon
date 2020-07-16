@@ -22,26 +22,32 @@ void initTrove(huTrove * trove, huLoadParams * loadParams)
 }
 
 
-huTrove const * huMakeTroveFromStringZ(char const * data, huLoadParams * loadParams)
+int huMakeTroveFromStringZ(huTrove const ** trovePtr, char const * data, huLoadParams * loadParams)
 {
+    if (trovePtr)
+        { * trovePtr = hu_nullTrove; }
+
 #ifdef HUMON_CHECK_PARAMS
     if (data == NULL)
-        { return hu_nullTrove; }
+        { return HU_ERROR_BADPARAMETER; }
 #endif
 
-    return huMakeTroveFromStringN(data, strlen(data), loadParams);
+    return huMakeTroveFromStringN(trovePtr, data, strlen(data), loadParams);
 }
 
 
-huTrove const * huMakeTroveFromStringN(char const * data, int dataLen, huLoadParams * loadParams)
+int huMakeTroveFromStringN(huTrove const ** trovePtr, char const * data, int dataLen, huLoadParams * loadParams)
 {
+    if (trovePtr)
+        { * trovePtr = hu_nullTrove; }
+
 #ifdef HUMON_CHECK_PARAMS
-    if (data == NULL || dataLen < 0)
-        { return hu_nullTrove; }
+    if (trovePtr == NULL || data == NULL || dataLen < 0)
+        { return HU_ERROR_BADPARAMETER; }
     if (loadParams &&
         (loadParams->encoding < 0 || loadParams->encoding > HU_ENCODING_UNKNOWN ||
          loadParams->tabSize < MIN_INPUT_TAB_SIZE || loadParams->tabSize > MAX_INPUT_TAB_SIZE))
-        { return hu_nullTrove; }
+        { return HU_ERROR_BADPARAMETER; }
 #endif
 
     huLoadParams localLoadParams;
@@ -58,12 +64,12 @@ huTrove const * huMakeTroveFromStringN(char const * data, int dataLen, huLoadPar
         size_t numEncBytes = 0;    // not useful here
         loadParams->encoding = swagEncodingFromString(& inputDataView, & numEncBytes, loadParams);
         if (loadParams->encoding == HU_ENCODING_UNKNOWN)
-            { return hu_nullTrove; }
+            { return HU_ERROR_BADENCODING; }
     }
     
     huTrove * trove = malloc(sizeof(huTrove));
     if (trove == NULL)
-        { return hu_nullTrove; }
+        { return HU_ERROR_OUTOFMEMORY; }
     initTrove(trove, loadParams);
 
     // TODO: Padding with 4 nulls for now; let's see if we actually need to.
@@ -79,7 +85,7 @@ huTrove const * huMakeTroveFromStringN(char const * data, int dataLen, huLoadPar
     if (newData == NULL)
     {
         free(trove);
-        return hu_nullTrove;
+        return HU_ERROR_OUTOFMEMORY;
     }
 
     size_t transcodedLen = 0;
@@ -87,8 +93,8 @@ huTrove const * huMakeTroveFromStringN(char const * data, int dataLen, huLoadPar
     if (error != HU_ERROR_NOERROR)
     {
         free(newData);
-        recordError(trove, error, NULL);
-        return trove;
+        free(trove);
+        return error;
     }
 
     // transcodedLen is guaranteed to be <= dataLen.
@@ -100,33 +106,42 @@ huTrove const * huMakeTroveFromStringN(char const * data, int dataLen, huLoadPar
     trove->dataString = newData;
     trove->dataStringSize = transcodedLen;
 
+    // Errors here are recorded in the trove object.
     huTokenizeTrove(trove);
     huParseTrove(trove);
- 
-    return trove;
+
+    * trovePtr = trove;
+
+    return huGetNumErrors(trove) == 0 ? HU_ERROR_NOERROR : HU_ERROR_TROVEHASERRORS;
 }
 
 
-huTrove const * huMakeTroveFromFileZ(char const * path, huLoadParams * loadParams)
+int huMakeTroveFromFileZ(huTrove const ** trovePtr, char const * path, huLoadParams * loadParams)
 {
+    if (trovePtr != NULL)
+        { * trovePtr = hu_nullTrove; }
+
 #ifdef HUMON_CHECK_PARAMS
     if (path == NULL)
-        { return hu_nullTrove; }
+        { return HU_ERROR_BADPARAMETER; }
 #endif
 
-    return huMakeTroveFromFileN(path, strlen(path), loadParams);
+    return huMakeTroveFromFileN(trovePtr, path, strlen(path), loadParams);
 }
 
 
-huTrove const * huMakeTroveFromFileN(char const * path, int pathLen, huLoadParams * loadParams)
+int huMakeTroveFromFileN(huTrove const ** trovePtr, char const * path, int pathLen, huLoadParams * loadParams)
 {
+    if (trovePtr != NULL)
+        { * trovePtr = hu_nullTrove; }
+
 #ifdef HUMON_CHECK_PARAMS
     if (path == NULL || pathLen < 1)
-        { return hu_nullTrove; }
+        { return HU_ERROR_BADPARAMETER; }
     if (loadParams &&
         (loadParams->encoding < 0 || loadParams->encoding > HU_ENCODING_UNKNOWN ||
          loadParams->tabSize < MIN_INPUT_TAB_SIZE || loadParams->tabSize > MAX_INPUT_TAB_SIZE))
-        { return hu_nullTrove; }
+        { return HU_ERROR_BADPARAMETER; }
 #endif
 
     huLoadParams localLoadParams;
@@ -136,21 +151,21 @@ huTrove const * huMakeTroveFromFileN(char const * path, int pathLen, huLoadParam
         loadParams = & localLoadParams;
     }
 
-    FILE * fp = fopen(path, "r");
+    FILE * fp = fopen(path, "rb");
     if (fp == NULL)
-        { return hu_nullTrove; }
+        { return HU_ERROR_BADFILE; }
 
     if (fseek(fp, 0, SEEK_END) != 0)
     {
         fclose(fp);
-        return hu_nullTrove;
+        return HU_ERROR_BADFILE;
     }
 
     int dataLen = ftell(fp);
     if (dataLen == -1L)
     {
         fclose(fp);
-        return hu_nullTrove;
+        return HU_ERROR_BADFILE;
     }
 
     rewind(fp);
@@ -162,7 +177,7 @@ huTrove const * huMakeTroveFromFileN(char const * path, int pathLen, huLoadParam
         if (loadParams->encoding == HU_ENCODING_UNKNOWN)
         {
             fclose(fp);
-            return hu_nullTrove;
+            return HU_ERROR_BADENCODING;
         }
     
         rewind(fp);
@@ -172,7 +187,7 @@ huTrove const * huMakeTroveFromFileN(char const * path, int pathLen, huLoadParam
     if (trove == NULL)
     {
         fclose(fp);
-        return hu_nullTrove;
+        return HU_ERROR_OUTOFMEMORY;
     }
     initTrove(trove, loadParams);
 
@@ -189,19 +204,16 @@ huTrove const * huMakeTroveFromFileN(char const * path, int pathLen, huLoadParam
     if (newData == NULL)
     {
         fclose(fp);
-        return hu_nullTrove;
+        return HU_ERROR_OUTOFMEMORY;
     }
 
     size_t transcodedLen = 0;
     int error = transcodeToUtf8FromFile(newData, & transcodedLen, fp, dataLen, loadParams);
-
     fclose(fp);
-
     if (error != HU_ERROR_NOERROR)
     {
         free(newData);
-        recordError(trove, error, NULL);
-        return trove;
+        return error;
     }
 
     // transcodedLen is guaranteed to be <= dataLen.
@@ -216,7 +228,9 @@ huTrove const * huMakeTroveFromFileN(char const * path, int pathLen, huLoadParam
     huTokenizeTrove(trove);
     huParseTrove(trove);
  
-    return trove;
+    * trovePtr = trove;
+
+    return huGetNumErrors(trove) == 0 ? HU_ERROR_NOERROR : HU_ERROR_TROVEHASERRORS;
 }
 
 
