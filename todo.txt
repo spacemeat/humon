@@ -1,11 +1,10 @@
 DONE THIS CHECKIN:
-P1 Minor API improvements for error codes.
+P1 Remove redundant NULL checks in HUMON_CHECK_PARAMS blocks.
 
 TODO:
 P1 CMake, vcpkg
 P1 doxygen
-P1 collapse out the humon_null* things to NULL.
-P1 string sizes should be size_t?
+P2 string sizes should be size_t?
 P1-2 linting
 P2 improve error recovery in parsing
 P2 more erroneous humon tests
