@@ -4,6 +4,28 @@
 #include "humon.h"
 #include "ansiColors.h"
 
+
+// The following are options you can set before #include <humon.h>
+
+/// Sets the stack-allocated block size for reading from file.
+#ifndef HUMON_FILE_BLOCK_SIZE
+#define HUMON_FILE_BLOCK_SIZE       (1 << 16)
+#endif
+
+/// Option to skip parameter checks for faster invocations.
+/// Only define HUMON_NO_PARAMETER_CHECKS if all your API calls are successful.
+#ifndef HUMON_NO_PARAMETER_CHECKS
+#define HUMON_CHECK_PARAMS
+#endif
+
+/// Option to examine useful debug reporting. Mainly for Humon development.
+//#define HUMON_CAVEPERSON_DEBUGGING
+
+/// Option to silence error reporting to STDERR.
+#ifndef HUMON_SUPPRESS_ERROR_TO_STDERR
+#define HUMON_ERRORS_TO_STDERR
+#endif
+
 #ifdef __cplusplus
 extern "C"
 {

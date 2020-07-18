@@ -38,7 +38,6 @@ char const * parseStateToString(int rhs)
 }
 
 
-
 void ensureContains(huTrove * trove, huNode * node, huToken const * token)
 {
     if (node == hu_nullNode)

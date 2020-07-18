@@ -4,10 +4,10 @@
 using namespace std;
 using namespace std::literals;
 
-template<int NumRanks>
+template<int NumComponents>
 struct Version
 {
-    Version(std::string_view verString)
+    Version(std::string_view verString = ""sv)
     {
         char const * cur = verString.data();
         int comp = 0;
@@ -21,7 +21,7 @@ struct Version
             }
             else if (*cur == '.')
             {
-                if (compIdx < NumRanks)
+                if (compIdx < NumComponents)
                 {
                     components[compIdx] = comp;
                     comp = 0;
@@ -32,8 +32,13 @@ struct Version
                 { comp = 0; break; }
             cur += 1;
         }
-        if (compIdx < NumRanks)
+        if (compIdx < NumComponents)
             { components[compIdx] = comp; }
+
+        for (int i = compIdx + 1; i < NumComponents; ++i)
+        {
+            components[i] = 0;
+        }
     }
 
     Version(std::initializer_list<int> init)
@@ -41,20 +46,20 @@ struct Version
         int i = 0;
         for (auto comp : init)
         {
-            if (i < NumRanks)   { components[i] = comp; }
+            if (i < NumComponents)   { components[i] = comp; }
             else                { break; }
             i += 1;
         }
 
-        for (int i = init.size(); i < NumRanks; ++i)
+        for (int i = init.size(); i < NumComponents; ++i)
         {
             components[i] = 0;
         }
     }
 
-    bool operator<(Version const & rhs) const
+    bool operator < (Version const & rhs) const
     {
-        for (int i = 0; i < NumRanks; ++i)
+        for (int i = 0; i < NumComponents; ++i)
         {
             if ((*this)[i] < rhs[i])
                 { return true; }
@@ -69,15 +74,15 @@ struct Version
 
     friend std::ostream & operator << (std::ostream & out, Version const & v)
     {
-        for (int i = 0; i < NumRanks - 1; ++i)
+        for (int i = 0; i < NumComponents - 1; ++i)
             { out << v[i] << "."; }
-        out << v[NumRanks - 1];
+        out << v[NumComponents - 1];
 
         return out;
     }
 
 private:
-    std::array<int, NumRanks> components;
+    std::array<int, NumComponents> components;
 };
 
 using V3 = Version<3>;
@@ -95,13 +100,22 @@ struct hu::val<V3>
 
 int main()
 {
-    auto desRes = hu::Trove::fromFile("samples/sampleFiles/materials.hu"sv);
-    if (auto trove = std::get_if<hu::Trove>(& desRes))
     {
-        auto extentsNode = trove->nodeByAddress("/assets/brick-diffuse/importData/extents"sv);
-        tuple xyExtents = { extentsNode / 0 / hu::val<int>{}, 
-                            extentsNode / 1 / hu::val<int>{} };
-        std::cout << "Extents: (" << get<0>(xyExtents) << ", " << get<1>(xyExtents) << ")\n";
+        auto desRes = hu::Trove::fromFile("samples/sampleFiles/materials.hu"sv);
+        if (auto trove = std::get_if<hu::Trove>(& desRes))
+        {
+            auto extentsNode = trove->nodeByAddress("/assets/brick-diffuse/importData/extents"sv);
+            tuple xyExtents = { extentsNode / 0 / hu::val<int>{}, 
+                                extentsNode / 1 / hu::val<int>{} };
+            std::cout << "Extents: (" << get<0>(xyExtents) << ", " << get<1>(xyExtents) << ")\n";
+        }
+    }
+
+    {
+        auto desRes = hu::Trove::fromFile("samples/sampleFiles/materials.hu"sv, { hu::Encoding::utf8});
+        if (auto trove = std::get_if<hu::Trove>(& desRes))
+        {
+        }
     }
 
     {
@@ -118,9 +132,12 @@ int main()
 
         auto node = rootNode / "foo" / 0;       cout << "node: " << node.address() << "\n";
         // or
-        node = trove.root() / "foo" / 0;        cout << "node: " << node.address() << "\n";
+        node = trove / "foo" / 0;               cout << "node: " << node.address() << "\n";
         // or
-        node = rootNode.relative("foo/0");      cout << "node: " << node.address() << "\n";
+        node = trove / "foo" / 1 / hu::Parent{} / 0;
+                                                cout << "node: " << node.address() << "\n";
+        // or
+        node = rootNode.nodeByAddress("foo/0"); cout << "node: " << node.address() << "\n";
         // or
         node = trove.nodeByAddress("/foo/0");   cout << "node: " << node.address() << "\n";
         // or
@@ -163,7 +180,7 @@ int main()
         }
     }
     renderPlans: {
-        res/"game\ assets"/renderPlan-overland.hu {
+        res/"game\ assets"/renderPlan-overland.hu: {
             required: true
             monitoredForChanges: true
         }
@@ -172,9 +189,9 @@ int main()
 )"sv;
 
         auto trove = move(get<hu::Trove>(hu::Trove::fromString(src)));
-        auto requiredNode = trove / 0 / 0 / "required";             cout << "required address: " << requiredNode.address() << "\n";
+        auto requiredNode = trove / 0 / 0 / "required";             cout << "required's address: " << requiredNode.address() << "\n";
         
-        auto relativeNode = requiredNode.relative("../.. / .. /1 / 0"); cout << "relative node address: " << relativeNode.address() << "\n";
+        auto relativeNode = requiredNode.nodeByAddress("../.. / .. /1 / 0"); cout << "relative node address: " << relativeNode.address() << "\n";
 
         auto node = trove.root();                                   cout << "node: " << node.address() << "\n";
         node = node.child(1);                                       cout << "node: " << node.address() << "\n";
@@ -188,8 +205,8 @@ int main()
         while (childNode);
 
         node = node.parent();                                       cout << "node: " << node.address() << "\n";
-        node = node / 0 / "monitoredForChanges";                    cout << "node: " << node.address() << "\n";
 
+        node = trove / "bufferSources" / 0 / "monitoredForChanges";
         string_view valStr = node.value();                          cout << "valStr: " << valStr << "\n";
         // or
         int valBool = node / hu::val<bool>{};                       cout << "valBool: " << valBool << "\n";
@@ -235,21 +252,21 @@ int main()
         for (int i = 0; i < numAnnos; ++i)
         {
             auto [k, v] = node.annotation(i);               cout << "k: " << k << "  v: " << v << "\n";
-            if (k == "numBits"sv) { }
-            else if (k == "numBytes"sv) { }
+            if (k == "numBits"sv) { /*...*/ }
+            else if (k == "numBytes"sv) { /*...*/ }
         }
         // or (slower; hu::Node::allAnnotations() allocates a std::vector):
         for (auto [k, v] : node.allAnnotations())
         {                                                   cout << "k: " << k << "  v: " << v << "\n";
-            if (k == "numBits"sv) { }
-            else if (k == "numBytes"sv) { }
+            if (k == "numBits"sv) { /*...*/ }
+            else if (k == "numBytes"sv) { /*...*/ }
         }
 
         bool hasNumBits = node.hasAnnotation("numBits"sv);  // verify annotation by key
                                                             cout << "hasNumBits: " << hasNumBits << "\n";
         auto annoValue = node.annotation("numBits"sv);      // get annotation by key
                                                             cout << "annoValue: " << annoValue << "\n";
-        // many annos in a single node might have the same value; scum through them all
+        // many annotationss in a single node might have the same value; scum through them all
         int num32Bit = node.numAnnotationsWithValue("32"sv);
                                                             cout << "num32Bit: " << num32Bit << "\n";
         for (int i = 0; i < num32Bit; ++i)
@@ -289,17 +306,20 @@ int main()
             { cout << * str; }
     }
 
-    desRes = hu::Trove::fromFile("samples/sampleFiles/hudo.hu"sv);
-    if (auto trove = std::get_if<hu::Trove>(& desRes))
     {
-        if (trove->annotation("app") != "hudo"sv)
-            { throw runtime_error("File is not a hudo file."); }
+        auto desRes = hu::Trove::fromFile("samples/sampleFiles/hudo.hu"sv);
+        if (auto trove = std::get_if<hu::Trove>(& desRes))
+        {
+            if (trove->annotation("app") != "hudo"sv)
+                { throw runtime_error("File is not a hudo file."); }
 
-        auto versionString = trove->annotation("hudo-version");
-        auto version = V3 { versionString.str() };
-        if      (version < V3 { 0, 1, 0 }) { std::cout << "Using version 0.0.x\n"; /*...*/ }
-        else if (version < V3 { 0, 2, 0 }) { std::cout << "Using version 0.1.x\n"; /*...*/ }
-        else { std::cout << "Using version 0.2.x\n"; /*...*/ }
+            auto versionString = trove->annotation("hudo-version");
+            auto version = V3 { versionString.str() };
+            if      (version < V3 { 0, 1, 0 }) { std::cout << "Using version 0.0.x\n"; /*...*/ }
+            else if (version < V3 { 0, 2, 0 }) { std::cout << "Using version 0.1.x\n"; /*...*/ }
+            else { std::cout << "Using latest version 0.2.x\n"; /*...*/ }
+            // ...
+        }
     }
 
     return 0;

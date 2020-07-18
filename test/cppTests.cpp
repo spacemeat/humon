@@ -39,7 +39,7 @@ TEST_GROUP(makers)
 
 TEST(makers, fromString)
 {
-    hu::Trove trove = std::move(std::get<hu::Trove>(hu::Trove::fromString(humon, {hu::Encoding::utf8, 2})));
+    hu::Trove trove = std::move(std::get<hu::Trove>(hu::Trove::fromString(humon, {hu::Encoding::utf8, true, 2})));
     auto root = trove.root();
     CHECK_TEXT(root.kind() == hu::NodeKind::list, "load0");
     CHECK_TEXT(root.numChildren() == 1, "load1");
@@ -120,8 +120,10 @@ TEST(cppSugar, sugar)
     LONGS_EQUAL_TEXT(1337, hu::val<TypeContainer>::extract("25.25"), "static extract - good");
     LONGS_EQUAL_TEXT(0xbadf00d, hu::val<TypeContainer>::extract("yeehaw"), "static extract - fail");
 
+    LONGS_EQUAL_TEXT(1337, t.trove / 1 / hu::Parent {} / 2 / hu::val<TypeContainer>{}, "custom hu::value good");
+
     auto spuriousNode = t.trove / "big" / "fat" / 0 / "sloppy" / "wet" / 1;
-    CHECK_TEXT(spuriousNode.isNull(), "wildly wrong path");    
+    CHECK_TEXT(spuriousNode.isNullish(), "wildly wrong path");    
 }
 
 TEST(cppSugar, annos)

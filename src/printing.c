@@ -353,6 +353,8 @@ void troveToPrettyString(huTrove const * trove, huVector * str, huStoreParams * 
         printUtf8Bom(& printer);
     }
 
+    appendColor(& printer, HU_COLORCODE_TOKENSTREAMBEGIN);
+
     // Print trove comments that precede the root node token; These are comments that appear before 
     // or amidst trove annotations, before the root. These will all be the first trove comments, so 
     // just start scumming from 0.
@@ -395,7 +397,7 @@ void troveToPrettyString(huTrove const * trove, huVector * str, huStoreParams * 
     if (printer.storeParams->outputFormat == HU_OUTPUTFORMAT_PRETTY)
         { appendNewline(& printer); }
     
-    appendColor(& printer, HU_COLORCODE_NONE);
+    appendColor(& printer, HU_COLORCODE_TOKENSTREAMEND);
 }
 
 
@@ -407,7 +409,8 @@ void setTableEntry(huStringView table[], int colorKind, char const * str)
 
 void huFillAnsiColorTable(huStringView table[])
 {
-    setTableEntry(table, HU_COLORCODE_NONE, darkGray);
+    setTableEntry(table, HU_COLORCODE_TOKENSTREAMBEGIN, "");
+    setTableEntry(table, HU_COLORCODE_TOKENSTREAMEND, off);
     setTableEntry(table, HU_COLORCODE_TOKENEND, "");
     setTableEntry(table, HU_COLORCODE_PUNCLIST, white);
     setTableEntry(table, HU_COLORCODE_PUNCDICT, white);

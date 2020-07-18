@@ -1,5 +1,9 @@
 DONE THIS CHECKIN:
-P1 Remove redundant NULL checks in HUMON_CHECK_PARAMS blocks.
+Lots of readme changes.
+Spellcheck pass on readme and docs.
+Minor API improvements.
+Formalize macros for noexcept.
+Added optional exception-throwing to nullish and bad-path cases.
 
 TODO:
 P1 CMake, vcpkg

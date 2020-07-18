@@ -108,14 +108,14 @@ bool isMachineBigEndian()
 }
 
 
-void huInitLoadParams(huLoadParams * params, int encoding, int tabSize, bool strictUnicode)
+void huInitLoadParams(huLoadParams * params, int encoding, bool strictUnicode, int tabSize)
 {
     params->encoding = encoding;
-    params->tabSize = tabSize;
     params->allowIllegalCodePoints = ! strictUnicode;
     params->allowOutOfRangeCodePoints = ! strictUnicode;
     params->allowOverlongEncodings = ! strictUnicode;
     params->allowUtf16UnmatchedSurrogates = ! strictUnicode;
+    params->tabSize = tabSize;
 }
 
 

@@ -53,7 +53,7 @@ int huMakeTroveFromStringN(huTrove const ** trovePtr, char const * data, int dat
     huLoadParams localLoadParams;
     if (loadParams == NULL)
     {
-        huInitLoadParams(& localLoadParams, HU_ENCODING_UTF8, 4, true);
+        huInitLoadParams(& localLoadParams, HU_ENCODING_UTF8, true, 4);
         loadParams = & localLoadParams;
     }
 
@@ -147,7 +147,7 @@ int huMakeTroveFromFileN(huTrove const ** trovePtr, char const * path, int pathL
     huLoadParams localLoadParams;
     if (loadParams == NULL)
     {
-        huInitLoadParams(& localLoadParams, HU_ENCODING_UNKNOWN, 4, true);
+        huInitLoadParams(& localLoadParams, HU_ENCODING_UNKNOWN, true, 4);
         loadParams = & localLoadParams;
     }
 

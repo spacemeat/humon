@@ -2089,7 +2089,7 @@ TEST(huMakeTroveFromString, pathological)
     huTrove const * trove = hu_nullTrove;
     int error = HU_ERROR_NOERROR;
     huLoadParams params;
-    huInitLoadParams(& params, HU_ENCODING_UTF8, 4, true);
+    huInitLoadParams(& params, HU_ENCODING_UTF8, true, 4);
 
     error = huMakeTroveFromStringZ(NULL, "", & params);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
@@ -2145,7 +2145,7 @@ TEST(huMakeTroveFromFile, pathological)
     huTrove const * trove = hu_nullTrove;
     int error = HU_ERROR_NOERROR;
     huLoadParams params;
-    huInitLoadParams(& params, HU_ENCODING_UTF8, 4, true);
+    huInitLoadParams(& params, HU_ENCODING_UTF8, true, 4);
 
     error = huMakeTroveFromFileZ(NULL, "", & params);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);

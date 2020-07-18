@@ -8,18 +8,6 @@ extern "C"
 {
 #endif
 
-// The following are options you can set before #include <humon.h>
-#ifdef DEBUG
-#define HUMON_CHECK_PARAMS
-#endif
-//#define HUMON_CAVEPERSON_DEBUGGING
-//#define HUMON_ERRORS_TO_STDERR
-
-#ifndef HUMON_FILE_BLOCK_SIZE
-/// Sets the stack-allocated block size for reading from file.
-#define HUMON_FILE_BLOCK_SIZE       (1 << 16)
-#endif
-
     static int const MIN_INPUT_TAB_SIZE = 1;
     static int const MAX_INPUT_TAB_SIZE = 1024;
 
@@ -59,9 +47,9 @@ extern "C"
     enum huNodeKind
     {
         HU_NODEKIND_NULL,   ///< Invalid node. And invalid address returns a null node.
-        HU_NODEKIND_LIST,   ///< List node. The node ontains a sequence of unassociated objects in maintained order.
-        HU_NODEKIND_DICT,   ///< Dict node. The node ontains a sequence of string-associated objects in maintained order.
-        HU_NODEKIND_VALUE   ///< Value node. The node ontains a string value, and no children.
+        HU_NODEKIND_LIST,   ///< List node. The node contains a sequence of unassociated objects in maintained order.
+        HU_NODEKIND_DICT,   ///< Dict node. The node contains a sequence of string-associated objects in maintained order.
+        HU_NODEKIND_VALUE   ///< Value node. The node contains a string value, and no children.
     };
 
     /// Returns a string representation of a huNodeKind.
@@ -70,7 +58,7 @@ extern "C"
     /// Specifies the style of whitespacing in Humon text.
     enum huOutputFormat
     {
-        HU_OUTPUTFORMAT_XERO,///< Byte-for-byte copy of the original.
+        HU_OUTPUTFORMAT_XERO,       ///< Byte-for-byte copy of the original.
         HU_OUTPUTFORMAT_MINIMAL,    ///< Reduces as much whitespace as possible.
         HU_OUTPUTFORMAT_PRETTY      ///< Formats the text in a standard, human-friendly way.
     };
@@ -109,8 +97,9 @@ extern "C"
     /// Specifies a style ID for colorized printing.
     enum huColorCode
     {
-        HU_COLORCODE_NONE = 0,                  ///< No color
-        HU_COLORCODE_TOKENEND,                 ///< End-of-token color code.
+        HU_COLORCODE_TOKENSTREAMBEGIN,          ///< Beginning-of-token stream color code.
+        HU_COLORCODE_TOKENSTREAMEND,            ///< End-of-token stream color code.
+        HU_COLORCODE_TOKENEND,                  ///< End-of-token color code.
         HU_COLORCODE_PUNCLIST,                  ///< List punctuation style. ([,]) 
         HU_COLORCODE_PUNCDICT,                  ///< Dict punctuation style. ({,})
         HU_COLORCODE_PUNCKEYVALUESEP,           ///< Key-value separator style. (:)
@@ -220,7 +209,7 @@ extern "C"
         bool allowUtf16UnmatchedSurrogates;
     } huLoadParams;
 
-    void huInitLoadParams(huLoadParams * params, int encoding, int tabSize, bool strictUnicode);
+    void huInitLoadParams(huLoadParams * params, int encoding, bool strictUnicode, int tabSize);
 
     /// 
     /** */
@@ -243,7 +232,7 @@ extern "C"
         bool usingColors, huStringView const * colorTable,  bool printComments, char const * newline, int newlineSize, bool printBom);
 
     /// Encodes a Humon data node.
-    /** Humon nodes make up a heirarchical structure, stemming from a single root node.
+    /** Humon nodes make up a hierarchical structure, stemming from a single root node.
      * Humon troves contain a reference to the root, and store all nodes in an indexable
      * array. A node is either a list, a dict, or a value node. Any number of comments 
      * and annotations can be associated to a node. */
@@ -287,7 +276,7 @@ extern "C"
     /// Returns if a node has a value token tracked. (All non-null nodes always should.)
     bool huHasValue(huNode const * node);
 
-    /// Returns the entire nexted text of a node, including associated comments and annotations.
+    /// Returns the entire nested text of a node, including associated comments and annotations.
     huStringView huGetNestedValue(huNode const * node);
 
     /// Returns the number of annotations associated to a node.
@@ -336,7 +325,7 @@ extern "C"
      * string, and can output Humon to file or string as well. */
     typedef struct huTrove_tag
     {
-        int encoding;               ///< The input Unicode encoding for laods.
+        int encoding;               ///< The input Unicode encoding for loads.
         char const * dataString;    ///< The buffer containing the Humon text as loaded. Owned by the trove. Humon takes care to NULL-terminate this string.
         int dataStringSize;         ///< The size of the buffer.
         huVector tokens;            ///< Manages a huToken []. This is the array of tokens lexed from the Humon text.
