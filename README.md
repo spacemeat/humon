@@ -144,27 +144,27 @@ So there's YAML. It basically does what I want but its syntax is complex, and ha
 So, this project proposes Humon as a replacement for those tasks that JSON is performing but shouldn't, and YAML might be performing if it was more accessible. Specifically, those spaces where humans interact with structured text data, and those places where we could be, but are inhibited by inconvenience or a rigid format like .ini.
 
 ### Some terms
-`Humon`: The format, API, implementation of the API, files memory blocks or data streams that contain expressions of data in the format, or that data.
+*Humon*: The format, API, implementation of the API, files memory blocks or data streams that contain expressions of data in the format, or that data.
 
-`trove`: A tokenized and parsed, in-memory representation of Humon data which stems from a single root node, and against which Humon APIs are programmed.
+*trove*: A tokenized and parsed, in-memory representation of Humon data which stems from a single root node, and against which Humon APIs are programmed.
 
-`token stream`: The text of a Humon file or in-memory text string. I use this language to refer to Humon text content like in a file, rather than tokenized or parsed Humon data in a trove.
+*token stream*: The text of a Humon file or in-memory text string. I use this language to refer to Humon text content like in a file, rather than tokenized or parsed Humon data in a trove.
 
-`token`: A word or sequence of words in a Humon token stream, which are meaningful to Humon and you at a granular level. `{` is a token, as is a value like `"foo"`, as is a whole comment like `/* I am just an utterance. */`. (Comments are considered single tokens for parsing purposes.) Every token is owned either by a single node, or (in special cases) by the trove itself. A token array is maintained by the trove, and provides content and position information (row, column) for each token, if that sort of thing is interesting to you.
+*token*: A word or sequence of words in a Humon token stream, which are meaningful to Humon and you at a granular level. `{` is a token, as is a value like `"foo"`, as is a whole comment like `/* I am just an utterance. */`. (Comments are considered single tokens for parsing purposes.) Every token is owned either by a single node, or (in special cases) by the trove itself. A token array is maintained by the trove, and provides content and position information (row, column) for each token, if that sort of thing is interesting to you.
 
-`node`: A unit of structure in a Humon data hierarchy. There are three kinds of nodes: lists, dicts (dictionaries), and values. Lists and dicts can store any kinds of nodes as children. Nodes are the abstraction of the structure. The trove maintains an array of nodes parsed from the token array.
+*node*: A unit of structure in a Humon data hierarchy. There are three kinds of nodes: lists, dicts (dictionaries), and values. Lists and dicts can store any kinds of nodes as children. Nodes are the abstraction of the structure. The trove maintains an array of nodes parsed from the token array.
 
-`list`: A node that contains a sequential collection of zero or more nodes as children.  In the language, the list is the bounding `[ ]` around the child nodes. In the API, a list's children can be accessed by index.
+*list*: A node that contains a sequential collection of zero or more nodes as children.  In the language, the list is the bounding `[ ]` around the child nodes. In the API, a list's children can be accessed by index.
 
-`dict`: A node that contains a sequential collection of zero or more nodes as children, where each node is associated with a key. In the language, the dict is the bounding `{ }` around the child nodes, each of which must be preceded by a key and `:`. In the API, a dict's children can be accessed by index or by key.
+*dict*: A node that contains a sequential collection of zero or more nodes as children, where each node is associated with a key. In the language, the dict is the bounding `{ }` around the child nodes, each of which must be preceded by a key and `:`. In the API, a dict's children can be accessed by index or by key.
 
-`key`: An associated string for a dict's child. A key must be a string of nonzero length. Within a dict, keys must be unique. There is no maximum length defined, and keys can be quoted. (Quoted values can be multiline strings, but that's a strange way to spec a key.) Any Unicode code point that is not whitespace or punctuation counts as a key character.
+*key*: An associated string for a dict's child. A key must be a string of nonzero length. Within a dict, keys must be unique. There is no maximum length defined, and keys can be quoted. (Quoted values can be multiline strings, but that's a strange way to spec a key.) Any Unicode code point that is not whitespace or punctuation counts as a key character.
 
-`value`: A node that contains a single string value. Values can be quoted; quoted values can be multiline strings. As with keys, any Unicode code point that is not whitespace or punctuation counts as a value character.
+*value*: A node that contains a single string value. Values can be quoted; quoted values can be multiline strings. As with keys, any Unicode code point that is not whitespace or punctuation counts as a value character.
 
-`comment`: A string of words that are not exposed as values in nodes. They're mainly for humans to make notes, but there are APIs to search for comments and get their associated nodes, in case that's useful.
+*comment*: A string of words that are not exposed as values in nodes. They're mainly for humans to make notes, but there are APIs to search for comments and get their associated nodes, in case that's useful.
 
-`annotation`: One of a collection of key:value string pairs associated to a node or a trove. They are exposed as special values in nodes, and are globally searchable by key and/or value. Any node can have any number of annotations, as long as they have unique keys (like in a dict).
+*annotation*: One of a collection of key:value string pairs associated to a node or a trove. They are exposed as special values in nodes, and are globally searchable by key and/or value. Any node can have any number of annotations, as long as they have unique keys (like in a dict).
 
 ### The principles applied to the language
 
@@ -536,7 +536,7 @@ Now you can use it:
 C++ will deduce tye type of `toolVersion` above from the `V3` template parameter passed to `hu::val<>`. `hu::val<T>` is a convenience which allows you to code the lookup and conversion in line, without grouping parentheses. You can also use the extractor member to convert strings by themselves:
 
     auto const literalVersion = "9.2.1";
-    auto toolVersion = hu::val<V3>::extract(literalVersion);
+    auto toolVersion = hu::val<V3>::extract(literalVersion);    cout << "toolVersion: " << toolVersion << "\n";
 
 Annotations are described in detail below. They're essentially per-node metadata. Examine a node's annotations in several ways:
 

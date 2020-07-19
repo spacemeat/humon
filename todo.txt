@@ -1,9 +1,7 @@
 DONE THIS CHECKIN:
-Lots of readme changes.
-Spellcheck pass on readme and docs.
-Minor API improvements.
-Formalize macros for noexcept.
-Added optional exception-throwing to nullish and bad-path cases.
+Some project file organization.
+Switch to python3 build script.
+Start to put CMake stuff in. I don't know.
 
 TODO:
 P1 CMake, vcpkg

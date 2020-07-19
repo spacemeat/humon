@@ -410,19 +410,19 @@ void setTableEntry(huStringView table[], int colorKind, char const * str)
 void huFillAnsiColorTable(huStringView table[])
 {
     setTableEntry(table, HU_COLORCODE_TOKENSTREAMBEGIN, "");
-    setTableEntry(table, HU_COLORCODE_TOKENSTREAMEND, off);
+    setTableEntry(table, HU_COLORCODE_TOKENSTREAMEND, ansi_off);
     setTableEntry(table, HU_COLORCODE_TOKENEND, "");
-    setTableEntry(table, HU_COLORCODE_PUNCLIST, white);
-    setTableEntry(table, HU_COLORCODE_PUNCDICT, white);
-    setTableEntry(table, HU_COLORCODE_PUNCKEYVALUESEP, white);
-    setTableEntry(table, HU_COLORCODE_PUNCANNOTATE, darkBlue);
-    setTableEntry(table, HU_COLORCODE_PUNCANNOTATEDICT, darkBlue);
-    setTableEntry(table, HU_COLORCODE_PUNCANNOTATEKEYVALUESEP, darkBlue);
-    setTableEntry(table, HU_COLORCODE_KEY, darkCyan);
-    setTableEntry(table, HU_COLORCODE_VALUE, lightCyan);
-    setTableEntry(table, HU_COLORCODE_COMMENT, darkGreen);
-    setTableEntry(table, HU_COLORCODE_ANNOKEY, darkMagenta);
-    setTableEntry(table, HU_COLORCODE_ANNOVALUE, lightMagenta);
-    setTableEntry(table, HU_COLORCODE_WHITESPACE, darkGray);
+    setTableEntry(table, HU_COLORCODE_PUNCLIST, ansi_white);
+    setTableEntry(table, HU_COLORCODE_PUNCDICT, ansi_white);
+    setTableEntry(table, HU_COLORCODE_PUNCKEYVALUESEP, ansi_white);
+    setTableEntry(table, HU_COLORCODE_PUNCANNOTATE, ansi_darkBlue);
+    setTableEntry(table, HU_COLORCODE_PUNCANNOTATEDICT, ansi_darkBlue);
+    setTableEntry(table, HU_COLORCODE_PUNCANNOTATEKEYVALUESEP, ansi_darkBlue);
+    setTableEntry(table, HU_COLORCODE_KEY, ansi_darkCyan);
+    setTableEntry(table, HU_COLORCODE_VALUE, ansi_lightCyan);
+    setTableEntry(table, HU_COLORCODE_COMMENT, ansi_darkGreen);
+    setTableEntry(table, HU_COLORCODE_ANNOKEY, ansi_darkMagenta);
+    setTableEntry(table, HU_COLORCODE_ANNOVALUE, ansi_lightMagenta);
+    setTableEntry(table, HU_COLORCODE_WHITESPACE, ansi_darkGray);
 }
 

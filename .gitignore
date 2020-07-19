@@ -37,9 +37,4 @@ mmap_address.bin
 .vscode/*
 
 # Project-specific
-bin/*
-test/bin/*
-samples/bin/*
-test/testFiles/*-minimal.hu
-test/testFiles/*-pretty.hu
-build/*
+/build/*
