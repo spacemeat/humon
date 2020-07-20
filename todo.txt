@@ -1,10 +1,8 @@
 DONE THIS CHECKIN:
-Some project file organization.
-Switch to python3 build script.
-Start to put CMake stuff in. I don't know.
+Improvements to CMake. I think this is okay.
 
 TODO:
-P1 CMake, vcpkg
+P1 vcpkg
 P1 doxygen
 P2 string sizes should be size_t?
 P1-2 linting

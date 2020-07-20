@@ -1,3 +1,5 @@
+#define HUMON_SUPPRESS_NOEXCEPT
+
 #include <sstream>
 #include <string.h>
 #include <string_view>

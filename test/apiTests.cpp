@@ -2167,18 +2167,18 @@ TEST(huMakeTroveFromFile, pathological)
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile / == NULL");
 
     params.encoding = -1;
-    error = huMakeTroveFromFileZ(& trove, "src/test/testFiles/utf8.hu", & params);
+    error = huMakeTroveFromFileZ(& trove, "../test/testFiles/utf8.hu", & params);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile encoding=-1 == NULL");
 
     params.encoding = HU_ENCODING_UNKNOWN + 1;
-    error = huMakeTroveFromFileZ(& trove, "src/test/testFiles/utf8.hu", & params);
+    error = huMakeTroveFromFileZ(& trove, "../test/testFiles/utf8.hu", & params);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile encoding=unk+1 == NULL");
 
     params.encoding = HU_ENCODING_UTF8;
     params.tabSize = -1;
-    error = huMakeTroveFromFileZ(& trove, "src/test/testFiles/utf8.hu", & params);
+    error = huMakeTroveFromFileZ(& trove, "../test/testFiles/utf8.hu", & params);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile tabSize=-1 == NULL");
 }
@@ -3484,19 +3484,19 @@ TEST_GROUP(huTroveToString)
 };
 
 std::string testFiles[] = {
-    "test/testFiles/comments.hu",
-    "test/testFiles/commentsCstyle.hu",
-    "test/testFiles/quothTheHumon.hu",
-    "test/testFiles/utf8.hu",
-    "test/testFiles/utf8bom.hu",
-    "test/testFiles/utf16be.hu",
-    "test/testFiles/utf16bebom.hu",
-    "test/testFiles/utf16le.hu",
-    "test/testFiles/utf16lebom.hu",
-    "test/testFiles/utf32be.hu",
-    "test/testFiles/utf32bebom.hu",
-    "test/testFiles/utf32le.hu",
-    "test/testFiles/utf32lebom.hu"
+    "../test/testFiles/comments.hu",
+    "../test/testFiles/commentsCstyle.hu",
+    "../test/testFiles/quothTheHumon.hu",
+    "../test/testFiles/utf8.hu",
+    "../test/testFiles/utf8bom.hu",
+    "../test/testFiles/utf16be.hu",
+    "../test/testFiles/utf16bebom.hu",
+    "../test/testFiles/utf16le.hu",
+    "../test/testFiles/utf16lebom.hu",
+    "../test/testFiles/utf32be.hu",
+    "../test/testFiles/utf32bebom.hu",
+    "../test/testFiles/utf32le.hu",
+    "../test/testFiles/utf32lebom.hu"
 };
 
 

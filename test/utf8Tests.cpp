@@ -1,3 +1,5 @@
+#define HUMON_SUPPRESS_NOEXCEPT
+
 #include <string_view>
 #include <cstring>
 #include "humon.hpp"
@@ -12,7 +14,7 @@ TEST_GROUP(utf8)
 
     void setup()
     {
-        trove = move(get<hu::Trove>(hu::Trove::fromFile("test/testFiles/utf8.hu")));
+        trove = move(get<hu::Trove>(hu::Trove::fromFile("../test/testFiles/utf8.hu")));
     }
 
     void teardown()

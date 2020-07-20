@@ -1,3 +1,5 @@
+#define HUMON_SUPPRESS_NOEXCEPT
+
 #include <sstream>
 #include <iostream>
 #include <string.h>
