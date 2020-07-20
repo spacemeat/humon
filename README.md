@@ -105,7 +105,19 @@ or in C++:
             std::cout << "Extents: (" << get<0>(xyExtents) << ", " << get<1>(xyExtents) << ")\n";            ...
 
 ### Installation
-If you're programming with Humon, or rather want to be, [here's how we install it, and do all the CMake yakkity smack]. If you're just using Humon files with some application, you don't need to do anything. Also here's a TextMate colorizer.
+If you're just using Humon files with some application you've installed, you don't need to do anything. However, the project contains a directory called `vscode/humon-lang` which contains a TextMate colorizer for VS Code. You can copy the `humon-lang` directory into your `~/.vscode/extensions` directory, and VS Code will make files with a ".hu" extension a bit more colorful.
+
+Building Humon is easy enough. Starting from the Humon project directory:
+
+    ~/src/humon$ mkdir build && cd build
+    ~/src/humon/build$ cmake ..
+    ~/src/humon/build$ make
+
+The binary artifacts are produced in `humon/build/src`. Currently, you can just copy the built `humon/build/src/libhumon-d.a` and the headers from `humon/include`. Eventually the CMake project will be more pro.
+
+Alternatively, there's a python3 build script, which places the artifacts at `humon/build/bin`. It doesn't use CMake, but has only been tested on Ubuntu. When running the tests produced, be sure to run from the build directory:
+
+    ~/src/humon/build$ bin/humon-test-d
 
 ### Humon version
 Humon uses three values in its language/API versioning scheme: `major.minor.revision` For changes that do not affect the API, the revision is incremented. For changes that only add to the API but do not break builds or behaviors, the minor value is incremented. For breaking changes, the major value is incremented. The version will generally refer to the API version; the Humon format is considered stable. (Though of course, it's only Humon, and may not know of its own imperfections yet.)
@@ -778,3 +790,17 @@ If no nodes appear before an annotation, it applies to the trove. A great way to
 
 Like asserted earlier, annotations are 100% open in their use. Humon doesn't use any annotation keys or values and doesn't interpret them. Applications can use them or not, but all annotations that are legal are guaranteed to be parsed, even if the application doesn't know about or use them at all. In this way you can embed metadata about objects in a Humon file, and even old versions of Humon apps will correctly read (and ignore) them, because all official versions of Humon always have.
 
+## The future of Humonity
+
+Near-future features include:
+* Language bindings for Python
+* Language bindings for .NET
+* Language bindings for Node
+* Language bindings for Rust
+* Accept alloc/free alternatives in the C lib
+* Modules for C++
+* Single-header-ify the C++ (as an alternative to modules)
+* Constexpr All The Things in the single-header version. Kind of a research project.
+* Type size overrides for some of the runtime data elements
+* Better CMake for proper building, testing, installation, etc. What's extant is pretty spartan.
+* C++ Range views for depth- and breadth-first node visitation

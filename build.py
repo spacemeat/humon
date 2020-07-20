@@ -163,8 +163,8 @@ if __name__ == "__main__":
         "test/vectorTests.cpp",
         "test/wakkaTests.cpp"
     ]
-    buildExe("test-d", src, ["include/humon"], [binDir], ["humon-d", "CppUTest", "CppUTestExt"], True, False)
-    buildExe("test-r", src, ["include/humon"], [binDir], ["humon-d", "CppUTest", "CppUTestExt"], False, False)
+    buildExe("humon-test-d", src, ["include/humon"], [binDir], ["humon-d", "CppUTest", "CppUTestExt"], True, False)
+    buildExe("humon-test-r", src, ["include/humon"], [binDir], ["humon-d", "CppUTest", "CppUTestExt"], False, False)
 
     src = ["apps/readmeSrc/usage.c"]
     buildExe("readmeSrc-c", src, ["include/humon"], [binDir], ["humon-d"], True, True)

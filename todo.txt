@@ -1,9 +1,10 @@
 DONE THIS CHECKIN:
-Improvements to CMake. I think this is okay.
+Future section of readme.
+Minor build change.
 
 TODO:
-P1 vcpkg
 P1 doxygen
+P2 vcpkg
 P2 string sizes should be size_t?
 P1-2 linting
 P2 improve error recovery in parsing
