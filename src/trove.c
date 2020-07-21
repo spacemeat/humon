@@ -853,7 +853,7 @@ int huTroveToString(huTrove const * trove, char * dest, int * destLength, huStor
         { return HU_ERROR_BADPARAMETER; }
     if (storeParams &&
         (storeParams->outputFormat < 0 || storeParams->outputFormat >= 3 || 
-         storeParams->tabSize < 0 || 
+         storeParams->indentSize < 0 || 
          (storeParams->usingColors && storeParams->colorTable == NULL) ||
          storeParams->newline.ptr == NULL || storeParams->newline.size < 0))
         { return HU_ERROR_BADPARAMETER; }
@@ -862,7 +862,7 @@ int huTroveToString(huTrove const * trove, char * dest, int * destLength, huStor
     huStoreParams localStoreParams;
     if (storeParams == NULL)
     {
-        huInitStoreParamsN(& localStoreParams, HU_OUTPUTFORMAT_PRETTY, 4, false, NULL, true, "\n", 1, false );
+        huInitStoreParamsN(& localStoreParams, HU_OUTPUTFORMAT_PRETTY, 4, false, false, NULL, true, "\n", 1, false );
         storeParams = & localStoreParams;
     }
 
@@ -928,7 +928,7 @@ int huTroveToFileN(huTrove const * trove, char const * path, int pathLen, int * 
         { return HU_ERROR_BADPARAMETER; }
     if (storeParams &&
         (storeParams->outputFormat < 0 || storeParams->outputFormat >= 3 || 
-         storeParams->tabSize < 0 || 
+         storeParams->indentSize < 0 || 
          (storeParams->usingColors && storeParams->colorTable == NULL) ||
          storeParams->newline.ptr == NULL || storeParams->newline.size < 0))
         { return HU_ERROR_BADPARAMETER; }

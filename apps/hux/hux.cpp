@@ -21,7 +21,8 @@ void printUsage()
   -my do print comments  [default]
   -mn do not print comments
  
-  -t <tabSize> use tab size  [default=4]
+  -i <indentSize> use indentSize spaces for indentation  [default=4]
+  -it use \t for indentation
 
   -cn do not use colors  [default]
   -ca use ansi colors
@@ -74,7 +75,7 @@ enum class ExpectedArgument
 {
     cmdSwitch,
     outputFile,
-    tabSize
+    indentSize
 };
 
 
@@ -102,7 +103,8 @@ int main(int argc, char ** argv)
 
     OutputFormat format = OutputFormat::pretty;
     bool printComments = true;
-    int tabSize = 4;
+    int indentSize = 4;
+    bool indentWithTabs = false;
     UsingColors usingColors = UsingColors::none;
     bool printBom = false;
 
@@ -144,16 +146,19 @@ int main(int argc, char ** argv)
                 return 1;
             }
 
-            else if (argMatches(arg, "-t"))
-                { expectedArg = ExpectedArgument::tabSize; }
-            else if (argStartsWith(arg, "-t"))
+            else if (argMatches(arg, "-it"))
+                { indentWithTabs = true; }
+            else if (argMatches(arg, "-i"))
+                { expectedArg = ExpectedArgument::indentSize; }
+            else if (argStartsWith(arg, "-i"))
             {
-                if(auto [p, ec] = std::from_chars(arg + 2, arg + argLen, tabSize, 10);
+                if(auto [p, ec] = std::from_chars(arg + 2, arg + argLen, indentSize, 10);
                     ec != std::errc())
                 {
-                    cerr << "Invalid tab size argument for -t.\n";
+                    cerr << "Invalid indent size argument for -i.\n";
                     return 1;
                 }
+                indentWithTabs = false;
             }
 
             else if (argMatches(arg, "-cn"))
@@ -191,11 +196,11 @@ int main(int argc, char ** argv)
             outputFile = arg;
             expectedArg = ExpectedArgument::cmdSwitch;
             break;
-        case ExpectedArgument::tabSize:
-            if(auto [p, ec] = std::from_chars(arg, arg + strlen(arg), tabSize, 10);
+        case ExpectedArgument::indentSize:
+            if(auto [p, ec] = std::from_chars(arg, arg + strlen(arg), indentSize, 10);
                 ec != std::errc())
             {
-                cerr << "Invalid tab size argument for -t.\n";
+                cerr << "Invalid indentSize size argument for -i.\n";
                 return 1;
             }
             expectedArg = ExpectedArgument::cmdSwitch;
@@ -267,7 +272,7 @@ int main(int argc, char ** argv)
         break;
     case OutputFormat::pretty:
         {
-            auto ret = trove.toPrettyString(tabSize, colorTable, printComments, "\n", printBom);
+            auto ret = trove.toPrettyString(indentSize, indentWithTabs, colorTable, printComments, "\n", printBom);
             if (auto && str = get_if<std::string>(& ret))
                 { output = std::move(* str); }
             else

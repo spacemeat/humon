@@ -302,7 +302,7 @@ int main()
             { cout << * str; }
 
         // Pretty. Use an indentation of 4 spaces to format nested depths.
-        tokStr = trove.toPrettyString(4, colorTable, false, "\n");
+        tokStr = trove.toPrettyString(4, false, colorTable, false, "\n");
         if (auto str = std::get_if<std::string>(& tokStr))
             { cout << * str; }
     }

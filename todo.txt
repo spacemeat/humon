@@ -1,6 +1,7 @@
 DONE THIS CHECKIN:
-Future section of readme.
-Minor build change.
+Added doxygen config
+Minor API change to shore up Unicode validation checking parameters.
+Added indentWithTabs.
 
 TODO:
 P1 doxygen

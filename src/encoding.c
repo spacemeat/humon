@@ -881,9 +881,7 @@ int transcodeToUtf8FromString(char * dest, size_t * numBytesEncoded, huStringVie
     // slams memory. You can separately specify strictUnicode for output for
     // huTroveTo* functions. Humon won't be fooled by overlong imposters.
     if (loadParams->encoding == HU_ENCODING_UTF8 && 
-        loadParams->allowOutOfRangeCodePoints == true &&
-        loadParams->allowIllegalCodePoints == true &&
-        loadParams->allowOverlongEncodings == true)
+        loadParams->allowOutOfRangeCodePoints == true)
     {
         // skip the BOM if there is one
         if (memcmp(src, utf8_bom, sizeof(utf8_bom)) == 0)
@@ -957,9 +955,7 @@ int transcodeToUtf8FromFile(char * dest, size_t * numBytesEncoded, FILE * fp, in
     // slams memory. You can separately specify strictUnicode for output for
     // huTroveTo* functions. Humon won't be fooled by overlong imposters.
     if (loadParams->encoding == HU_ENCODING_UTF8 && 
-        loadParams->allowOutOfRangeCodePoints == true &&
-        loadParams->allowIllegalCodePoints == true &&
-        loadParams->allowOverlongEncodings == true)
+        loadParams->allowOutOfRangeCodePoints == true)
         { return fread(dest, 1, srcLen, fp); }
     else
     {

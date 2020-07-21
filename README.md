@@ -638,7 +638,7 @@ Humon provides a function to make a `hu::ColorTable` with ANSI terminal color co
         { cout << * str; }
 
     // Pretty. Use an indentation of 4 spaces to format nested depths.
-    tokStr = trove.toPrettyString(4, colorTable, false, "\n");
+    tokStr = trove.toPrettyString(4, false, colorTable, false, "\n");
     if (auto str = std::get_if<std::string>(& tokStr))
         { cout << * str; }
 

@@ -37,4 +37,5 @@ mmap_address.bin
 .vscode/*
 
 # Project-specific
-/build/*
+/build
+/docs

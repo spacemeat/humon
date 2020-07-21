@@ -111,29 +111,28 @@ bool isMachineBigEndian()
 void huInitLoadParams(huLoadParams * params, int encoding, bool strictUnicode, int tabSize)
 {
     params->encoding = encoding;
-    params->allowIllegalCodePoints = ! strictUnicode;
     params->allowOutOfRangeCodePoints = ! strictUnicode;
-    params->allowOverlongEncodings = ! strictUnicode;
     params->allowUtf16UnmatchedSurrogates = ! strictUnicode;
     params->tabSize = tabSize;
 }
 
 
-void huInitStoreParamsZ(huStoreParams * params, int outputFormat, int tabSize, 
-    bool usingColors, huStringView const * colorTable,  bool printComments, 
+void huInitStoreParamsZ(huStoreParams * params, int outputFormat, int indentSize, 
+    bool indentWithTabs, bool usingColors, huStringView const * colorTable,  bool printComments, 
     char const * newline, bool printBom)
 {
-    huInitStoreParamsN(params, outputFormat, tabSize, usingColors, colorTable, 
+    huInitStoreParamsN(params, outputFormat, indentSize, indentWithTabs, usingColors, colorTable, 
         printComments, newline, strlen(newline), printBom);
 }
 
 
-void huInitStoreParamsN(huStoreParams * params, int outputFormat, int tabSize, 
-    bool usingColors, huStringView const * colorTable,  bool printComments, 
+void huInitStoreParamsN(huStoreParams * params, int outputFormat, int indentSize, 
+    bool indentWithTabs, bool usingColors, huStringView const * colorTable,  bool printComments, 
     char const * newline, int newlineSize, bool printBom)
 {
     params->outputFormat = outputFormat;
-    params->tabSize = tabSize;
+    params->indentSize = indentSize;
+    params->indentWithTabs = indentWithTabs;
     params->usingColors = usingColors;
     params->colorTable = colorTable;
     params->printComments = printComments;

@@ -3465,7 +3465,7 @@ TEST_GROUP(huTroveToString)
         huStringView colors[HU_COLORCODE_NUMCOLORKINDS];
         if (useColors)
             { huFillAnsiColorTable(colors); }
-        huInitStoreParamsZ(& storeParams, format, 4, useColors, colors, printComments, "\n", printBom);
+        huInitStoreParamsZ(& storeParams, format, 4, false, useColors, colors, printComments, "\n", printBom);
 
         error = huTroveToString(tc, NULL, & toStrLen, & storeParams);
         if (error != HU_ERROR_NOERROR)
@@ -3536,7 +3536,7 @@ TEST(huTroveToString, pathological)
     int error = HU_ERROR_NOERROR;
     int strLen = 1024;
     huStoreParams params;
-    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, 4, false, NULL, true, "\n", false);
+    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, 4, false, false, NULL, true, "\n", false);
 
     error = huTroveToString(NULL, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "NULL->str sz == 0");
@@ -3548,32 +3548,32 @@ TEST(huTroveToString, pathological)
     error = huTroveToString(l.trove, NULL, NULL, & params);
 
     strLen = 1024;
-    huInitStoreParamsZ(& params, 3, 4, false, NULL, true, "\n", false);
+    huInitStoreParamsZ(& params, 3, 4, false, false, NULL, true, "\n", false);
     error = huTroveToString(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
     strLen = 1024;
-    huInitStoreParamsZ(& params, -1, 4, false, NULL, true, "\n", false);
+    huInitStoreParamsZ(& params, -1, 4, false, false, NULL, true, "\n", false);
     error = huTroveToString(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
     strLen = 1024;
-    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, -1, false, NULL, true, "\n", false);
+    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, -1, false, false, NULL, true, "\n", false);
     error = huTroveToString(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
     strLen = 1024;
-    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, -1, false, NULL, true, NULL, 1, false);
+    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, -1, false, false, NULL, true, NULL, 1, false);
     error = huTroveToString(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
     strLen = 1024;
-    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, -1, false, NULL, true, "\n", 0, false);
+    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, -1, false, false, NULL, true, "\n", 0, false);
     error = huTroveToString(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
     strLen = 1024;
-    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, -1, false, NULL, true, "\n", -1, false);
+    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, -1, false, false, NULL, true, "\n", -1, false);
     error = huTroveToString(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 }
@@ -3608,7 +3608,7 @@ TEST(huTroveToFile, pathological)
         { remove(validFile); }
 
     huStoreParams params;
-    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, 4, false, NULL, false, "\n", false);
+    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, 4, false, false, NULL, false, "\n", false);
 
     int error = HU_ERROR_NOERROR;
     int fileLen = 0;
@@ -3635,7 +3635,7 @@ TEST(huTroveToFile, pathological)
     error = huTroveToFileZ(hu_nullTrove, "/", & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
 
-    huInitStoreParamsZ(& params, 3, 4, false, NULL, false, "\n", false);
+    huInitStoreParamsZ(& params, 3, 4, false, false, NULL, false, "\n", false);
     error = huTroveToFileZ(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = access(validFile, F_OK);
@@ -3643,7 +3643,7 @@ TEST(huTroveToFile, pathological)
     if (acc != -1)
         { remove(validFile); }
 
-    huInitStoreParamsZ(& params, -1, 4, false, NULL, false, "\n", false);
+    huInitStoreParamsZ(& params, -1, 4, false, false, NULL, false, "\n", false);
     error = huTroveToFileZ(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = access(validFile, F_OK);
@@ -3651,7 +3651,7 @@ TEST(huTroveToFile, pathological)
     if (acc != -1)
         { remove(validFile); }
 
-    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, -1, false, NULL, false, "\n", false);
+    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, -1, false, false, NULL, false, "\n", false);
     error = huTroveToFileZ(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = access(validFile, F_OK);
@@ -3659,7 +3659,7 @@ TEST(huTroveToFile, pathological)
     if (acc != -1)
         { remove(validFile); }
 
-    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, 4, false, NULL, false, NULL, 1, false);
+    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, 4, false, false, NULL, false, NULL, 1, false);
     error = huTroveToFileZ(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = access(validFile, F_OK);
@@ -3667,7 +3667,7 @@ TEST(huTroveToFile, pathological)
     if (acc != -1)
         { remove(validFile); }
 
-    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, 4, true, NULL, false, "\n", 1, false);
+    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, 4, false, true, NULL, false, "\n", 1, false);
     error = huTroveToFileZ(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = access(validFile, F_OK);
@@ -3675,7 +3675,7 @@ TEST(huTroveToFile, pathological)
     if (acc != -1)
         { remove(validFile); }
 
-    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_PRETTY, 4, false, NULL, false, "\n", 0, false);
+    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_PRETTY, 4, false, false, NULL, false, "\n", 0, false);
     error = huTroveToFileZ(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = access(validFile, F_OK);
@@ -3683,7 +3683,7 @@ TEST(huTroveToFile, pathological)
     if (acc != -1)
         { remove(validFile); }
 
-    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, 4, false, NULL, false, "\n", -1, false);
+    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, 4, false, false, NULL, false, "\n", -1, false);
     error = huTroveToFileZ(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = access(validFile, F_OK);

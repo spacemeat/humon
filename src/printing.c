@@ -44,11 +44,28 @@ void ensureWs(PrintTracker * printer)
 }
 
 
+void appendTabs(PrintTracker * printer, int numTabs)
+{
+    char const tabs[] = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t"; // 16 tabs
+    while (numTabs > 16)
+    {
+        appendString(printer, tabs, 16);
+        numTabs -= 16;
+    }
+    appendString(printer, tabs, numTabs);
+    printer->lastPrintWasUnquotedWord = false;
+    printer->lastPrintWasWhitespace = true;
+}
+
+
 void appendIndent(PrintTracker * printer)
 {
     if (printer->storeParams->outputFormat == HU_OUTPUTFORMAT_MINIMAL || printer->lastPrintWasIndent)
         { return; }
-    appendWs(printer, printer->storeParams->tabSize * printer->currentDepth);
+    if (printer->storeParams->indentWithTabs)
+        { appendTabs(printer, printer->currentDepth); }
+    else
+        { appendWs(printer, printer->storeParams->indentSize * printer->currentDepth); }
     printer->lastPrintWasIndent = true;
     printer->lastPrintWasUnquotedWord = false;
     printer->lastPrintWasWhitespace = true;

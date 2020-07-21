@@ -46,7 +46,7 @@ extern "C"
     /// Specifies the kind of node represented by a particular huNode.
     enum huNodeKind
     {
-        HU_NODEKIND_NULL,   ///< Invalid node. And invalid address returns a null node.
+        HU_NODEKIND_NULL,   ///< Invalid node. An invalid address returns a null node.
         HU_NODEKIND_LIST,   ///< List node. The node contains a sequence of unassociated objects in maintained order.
         HU_NODEKIND_DICT,   ///< Dict node. The node contains a sequence of string-associated objects in maintained order.
         HU_NODEKIND_VALUE   ///< Value node. The node contains a string value, and no children.
@@ -197,26 +197,23 @@ extern "C"
         int col;                        ///< Location info for tokenizer errors.
     } huError;
 
-    /// 
-    /** */
+    /// Encapsulates a selection of parameters to control how Humon interprets the input for loading.
     typedef struct huLoadParams_tag
     {
         int encoding;
-        int tabSize;
-        bool allowIllegalCodePoints;
         bool allowOutOfRangeCodePoints;
-        bool allowOverlongEncodings;
         bool allowUtf16UnmatchedSurrogates;
+        int tabSize;
     } huLoadParams;
-
+    /// Fill in a huLoadParams struct quickly.
     void huInitLoadParams(huLoadParams * params, int encoding, bool strictUnicode, int tabSize);
 
-    /// 
-    /** */
+    /// Encapsulates a selection of parameters to control the serialization of a trove.
     typedef struct huStoreParams_tag
     {
         int outputFormat;
-        int tabSize;
+        int indentSize;
+        bool indentWithTabs;
         bool usingColors;
         huStringView const * colorTable;
         bool printComments;
@@ -226,9 +223,11 @@ extern "C"
 
     typedef struct huTrove_tag huTrove;
 
-    void huInitStoreParamsZ(huStoreParams * params, int outputFormat, int tabSize, 
+    /// Fill in a huStoreParams struct quickly.
+    void huInitStoreParamsZ(huStoreParams * params, int outputFormat, int indentSize, bool indentWithTabs, 
         bool usingColors, huStringView const * colorTable,  bool printComments, char const * newline, bool printBom);
-    void huInitStoreParamsN(huStoreParams * params, int outputFormat, int tabSize, 
+    /// Fill in a huStoreParams struct quickly.
+    void huInitStoreParamsN(huStoreParams * params, int outputFormat, int indentSize, bool indentWithTabs, 
         bool usingColors, huStringView const * colorTable,  bool printComments, char const * newline, int newlineSize, bool printBom);
 
     /// Encodes a Humon data node.

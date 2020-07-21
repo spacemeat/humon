@@ -89,7 +89,7 @@ namespace hu
     /// Specifies the kind of node represented by a particular hu::Node.
     enum class NodeKind : int
     {
-        null = capi::HU_NODEKIND_NULL,      ///< Invalid node. And invalid address returns a null node.
+        null = capi::HU_NODEKIND_NULL,      ///< Invalid node. An invalid address returns a null node.
         list = capi::HU_NODEKIND_LIST,      ///< List node. The node contains a sequence of unassociated objects in maintained order.
         dict = capi::HU_NODEKIND_DICT,      ///< Dict node. The node contains a sequence of string-associated objects in maintained order.
         value = capi::HU_NODEKIND_VALUE     ///< Value node. The node contains a string value, and no children.
@@ -181,7 +181,7 @@ namespace hu
     struct val
     { };
 
-
+    /// Extractor for type int.
     template<>
     struct val<int>
     {
@@ -197,6 +197,7 @@ namespace hu
     };
 
 
+    /// Extractor for type float.
     template <>
     struct val<float>
     {
@@ -215,6 +216,7 @@ namespace hu
         }
     };
 
+    /// Extractor for type double.
     template <>
     struct val<double>
     {
@@ -233,6 +235,7 @@ namespace hu
         }
     };
 
+    /// Extractor for type std::string_view.
     template <>
     struct val<std::string_view>
     {
@@ -242,6 +245,7 @@ namespace hu
         }
     };
 
+    /// Extractor for type std::string.
     template <>
     struct val<std::string>
     {
@@ -251,6 +255,7 @@ namespace hu
         }
     };
 
+    /// Extractor for type bool. Parses English spelling of "true" for truth.
     template <>
     struct val<bool>
     {
@@ -279,46 +284,59 @@ namespace hu
 
     using ColorTable = std::array<std::string_view, capi::HU_COLORCODE_NUMCOLORKINDS>;
 
+    /// Encapsulates a selection of parameters to control how Humon interprets the input for loading.
     class LoadParams
     {
     public:
+        /// Construct with sane defaults.
         LoadParams(Encoding encoding = Encoding::unknown, bool strictUnicode = true, int tabSize = 4) HUMON_NOEXCEPT
         {
             capi::huInitLoadParams(& cparams, static_cast<int>(encoding), strictUnicode, tabSize);
         }
 
+        /// Expect a particular Unicode encoding, or Encoding::unknown.
         void setEncoding(Encoding encoding) HUMON_NOEXCEPT { cparams.encoding = static_cast<int>(encoding); }
-        void setAllowIllegalCodePoints(bool shallWe) HUMON_NOEXCEPT { cparams.allowIllegalCodePoints = shallWe; }
-        void setAllowOutOfRangeCodePoints(bool shallWe) HUMON_NOEXCEPT { cparams.allowIllegalCodePoints = shallWe; }
-        void setAllowOverlongEncodings(bool shallWe) HUMON_NOEXCEPT { cparams.allowIllegalCodePoints = shallWe; }
-        void setAllowUtf16UnmatchedSurrogates(bool shallWe) HUMON_NOEXCEPT { cparams.allowIllegalCodePoints = shallWe; }
+        /// Allow code points that are out of Unicode range.
+        void setAllowOutOfRangeCodePoints(bool shallWe) HUMON_NOEXCEPT { cparams.allowOutOfRangeCodePoints = shallWe; }
+        /// Allow unpaired surrogate code units in UTF-16.
+        void setAllowUtf16UnmatchedSurrogates(bool shallWe) HUMON_NOEXCEPT { cparams.allowUtf16UnmatchedSurrogates = shallWe; }
+        /// Use this tab size when computing the column of a token and the token stream contains tabs.
         void setTabSize(int tabSize) HUMON_NOEXCEPT { cparams.tabSize = tabSize; }
 
+        /// Get the encoding to expect.
         int encoding() const HUMON_NOEXCEPT { return cparams.encoding; }
-        bool allowIllegalCodePoints() const HUMON_NOEXCEPT { return cparams.allowIllegalCodePoints; }
-        bool allowOutOfRangeCodePoints() const HUMON_NOEXCEPT { return cparams.allowIllegalCodePoints; }
-        bool allowOverlongEncodings() const HUMON_NOEXCEPT { return cparams.allowIllegalCodePoints; }
-        bool allowUtf16UnmatchedSurrogates() const HUMON_NOEXCEPT { return cparams.allowIllegalCodePoints; }
+        /// Get whether out-of-range Unicode code points are allowed.
+        bool allowOutOfRangeCodePoints() const HUMON_NOEXCEPT { return cparams.allowOutOfRangeCodePoints; }
+        /// Get whether unpaired surrogates in UTF-16 are allowed.
+        bool allowUtf16UnmatchedSurrogates() const HUMON_NOEXCEPT { return cparams.allowUtf16UnmatchedSurrogates; }
+        /// Get the tab size used to compute column information in token streams that contain tabs.
         int tabSize() const HUMON_NOEXCEPT { return cparams.tabSize; }
 
+        /// Aggregated C structure.
         capi::huLoadParams cparams;
     };
 
-
+    /// Encapsulates a selection of parameters to control the serialization of a trove.
     class StoreParams
     {
     public:
-        StoreParams(OutputFormat outputFormat, int tabSize = 4, 
+        /// Construct with sane defaults.
+        StoreParams(OutputFormat outputFormat, int indentSize = 4, bool indentWithTabs = false,
             std::optional<ColorTable> const & colors = {}, bool printComments = true, 
             std::string_view newline = "\n", bool printBom = false) HUMON_NOEXCEPT
         {
-            capi::huInitStoreParamsN(& cparams, static_cast<int>(outputFormat), tabSize, 
+            capi::huInitStoreParamsN(& cparams, static_cast<int>(outputFormat), indentSize, indentWithTabs,
                 false, capiColorTable, printComments, newline.data(), newline.size(), printBom);
             setColorTable(colors);
         }
 
+        /// Set the whitespace formatting.
         void setFormat(OutputFormat outputFormat) HUMON_NOEXCEPT { cparams.outputFormat = static_cast<int>(outputFormat); }
-        void setTabSize(int tabSize) HUMON_NOEXCEPT { cparams.tabSize = tabSize; }
+        /// Set the number of spaces to use for indentation.
+        void setIndentSize(int indentSize) HUMON_NOEXCEPT { cparams.indentSize = indentSize; }
+        /// Use tab instead of spaces for indentation.
+        void setIndentWithTabs(bool shallWe) HUMON_NOEXCEPT { cparams.indentWithTabs = shallWe; }
+        /// Use the given color table.
         void setColorTable(std::optional<ColorTable> const & colors) HUMON_NOEXCEPT
         {
             if (colors)
@@ -334,11 +352,18 @@ namespace hu
             else
                 { cparams.usingColors = false; }
         }
+        /// Set whether to print comment tokens in the output.
         void setPrintComments(bool shallWe) HUMON_NOEXCEPT { cparams.printComments = shallWe; }
+        /// Set the character string to use for a newline.
         void setNewline(std::string_view newline) HUMON_NOEXCEPT { cparams.newline.ptr = newline.data(); cparams.newline.size = newline.size(); }
 
+        /// Get the whitespace formatting.
         OutputFormat outputFormat() const HUMON_NOEXCEPT { return static_cast<OutputFormat>(cparams.outputFormat); }
-        int tabSize() { return cparams.tabSize; }
+        /// Get the number of spaces to use for indentation.
+        int indentSize() { return cparams.indentSize; }
+        /// Get whether to use tabs instead of spaces for indentation.
+        bool indentWithTabs() { return cparams.indentWithTabs; }
+        /// Get the color table.
         std::optional<ColorTable> colorTable() const HUMON_NOEXCEPT
         {
             if (cparams.usingColors == false)
@@ -353,9 +378,12 @@ namespace hu
             }
             return newColorTable;
         }
+        /// Get whether to print comments.
         bool printComments() const HUMON_NOEXCEPT { return cparams.printComments; }
+        /// Get the newline sequence.
         std::string newline() const HUMON_NOEXCEPT { return { cparams.newline.ptr, (size_t) cparams.newline.size }; }
 
+        /// Aggregated C struct.
         capi::huStoreParams cparams;
         capi::huStringView capiColorTable[capi::HU_COLORCODE_NUMCOLORKINDS];
     };
@@ -662,8 +690,7 @@ namespace hu
          * 
          * The purpose of val<T> is to allow users to write code like:
          *      auto sv = materialsTrove / "assets" / "brick-diffuse" / "src" / 
-         *                0 / h::val<string_view> {};
-         *      auto f = configTrove | "/config/display/aspectRatio" / h::val<float> {}; */
+         *                0 / h::val<string_view> {};*/
         template <class U>
         [[nodiscard]] inline U operator / (val<U> ve) const HUMON_PATH_NOEXCEPT
         {
@@ -686,7 +713,7 @@ namespace hu
         /** Each node in a trove has a unique address, separate from its node index, 
          * which is represented by a series of keys or index values from the root,
          * separated by `/`s. The address is guaranteed to work with 
-         * Trove::getNode(std::string_view). */
+         * Trove::nodeByAddress(). */
         [[nodiscard]] std::string address() const HUMON_NOEXCEPT
         {
             check();
@@ -774,10 +801,7 @@ namespace hu
          * be a null trove, but rather will be loaded with no nodes, and errors marking 
          * tokens. This function does not close the stream once it has finished reading.
          * 
-         * \maxNumBytes: If 0, `fromIstream` reads the stream until EOF is encountered.
-         * \inputTabSize: If the Humon contains tabs, this value modulates the tokens'
-         * reported column values to match what a text editor with this tabstop would
-         * display. */
+         * \maxNumBytes: If 0, `fromIstream` reads the stream until EOF is encountered.*/
         [[nodiscard]] static DeserializeResult fromIstream(std::istream & in, 
             LoadParams loadParams = { Encoding::unknown }, size_t maxNumBytes = 0) HUMON_NOEXCEPT
         {
@@ -953,7 +977,7 @@ namespace hu
         /// Serializes a trove with the exact input token stream.
         [[nodiscard]] std::variant<std::string, ErrorCode> toXeroString(bool printBom = false) const HUMON_NOEXCEPT
         {
-            StoreParams sp = { OutputFormat::xero, 0, std::nullopt, true, "", printBom };
+            StoreParams sp = { OutputFormat::xero, 0, false, std::nullopt, true, "", printBom };
             return toString(sp);
         }
 
@@ -961,16 +985,16 @@ namespace hu
         [[nodiscard]] std::variant<std::string, ErrorCode> toMinimalString(std::optional<ColorTable> const & colors = {}, 
             bool printComments = true, std::string_view newline = "\n", bool printBom = false) const HUMON_NOEXCEPT
         {
-            StoreParams sp = { OutputFormat::minimal, 0, colors, printComments, newline, printBom };
+            StoreParams sp = { OutputFormat::minimal, 0, false, colors, printComments, newline, printBom };
             return toString(sp);
         }
 
         /// Serializes a trove with whitespace formatting suitable for readability.
-        [[nodiscard]] std::variant<std::string, ErrorCode> toPrettyString(int tabSize = 4, 
-            std::optional<ColorTable> const & colors = {}, bool printComments = true, 
+        [[nodiscard]] std::variant<std::string, ErrorCode> toPrettyString(int indentSize = 4, 
+            bool indentWithTabs = false, std::optional<ColorTable> const & colors = {}, bool printComments = true, 
             std::string_view newline = "\n", bool printBom = false) const HUMON_NOEXCEPT 
         {
-            StoreParams sp = { OutputFormat::pretty, tabSize, colors, printComments, newline, printBom };
+            StoreParams sp = { OutputFormat::pretty, indentSize, indentWithTabs, colors, printComments, newline, printBom };
             return toString(sp);
         }
 
@@ -1000,7 +1024,7 @@ namespace hu
         [[nodiscard]] std::variant<int, ErrorCode> toXeroFile(std::string_view path, 
             bool printBom = false) const HUMON_NOEXCEPT
         {
-            StoreParams sp = { OutputFormat::xero, 0, std::nullopt, true, "", printBom };
+            StoreParams sp = { OutputFormat::xero, 0, false, std::nullopt, true, "", printBom };
             return toFile(path, sp);
         }
 
@@ -1009,16 +1033,16 @@ namespace hu
             std::optional<ColorTable> const & colors = {}, bool printComments = true,
             std::string_view newline = "\n", bool printBom = false) const HUMON_NOEXCEPT
         {
-            StoreParams sp = { OutputFormat::minimal, 0, colors, printComments, newline, printBom };
+            StoreParams sp = { OutputFormat::minimal, 0, false, colors, printComments, newline, printBom };
             return toFile(path, sp);
         }
 
         /// Serializes a trove with whitespace formatting suitable for readability.
         [[nodiscard]] std::variant<int, ErrorCode> toPrettyFile(std::string_view path, 
-            int tabSize = 4, std::optional<ColorTable> const & colors = {}, bool printComments = true, 
+            int indentSize = 4, bool indentWithTabs = false, std::optional<ColorTable> const & colors = {}, bool printComments = true, 
             std::string_view newline = "\n", bool printBom = false) const HUMON_NOEXCEPT 
         {
-            StoreParams sp = { OutputFormat::pretty, tabSize, colors, printComments, newline, printBom };
+            StoreParams sp = { OutputFormat::pretty, indentSize, indentWithTabs, colors, printComments, newline, printBom };
             return toFile(path, sp);
         }
 
