@@ -1,6 +1,6 @@
 import humon
 
-hu = humon.loads("{a: b c: {d: e f: g} h: [i j k]}")
+hu = humon.fromString("{a: b c: {d: e f: g} h: [i j k]}")
 
 valA = hu / 'a'
 valD = hu / 'c' / 'd'
