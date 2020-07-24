@@ -456,14 +456,14 @@ void eatQuotedAddressWord(huScanner * scanner, char quoteChar, int * len, int * 
         }
         else
         {
-            if (scanner->curCursor->codePoint == quoteChar)
+            if (scanner->curCursor->codePoint == (uint32_t) quoteChar)
             {
                 * col += 1;
                 nextCharacter(scanner);
                 eating = false;
             }
             else if (scanner->curCursor->codePoint == '\\' && 
-                     scanner->nextCursor->codePoint == quoteChar)  // TODO: ensure not running off the end
+                     scanner->nextCursor->codePoint == (uint32_t) quoteChar)  // TODO: ensure not running off the end
             {
                 * col += 1;
                 * len += 1;

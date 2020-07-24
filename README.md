@@ -112,6 +112,8 @@ Building Humon is easy enough. Starting from the Humon project directory:
     ~/src/humon$ mkdir build && cd build
     ~/src/humon/build$ cmake ..
     ~/src/humon/build$ make
+    ~/src/humon/build$ make docs-c
+    ~/src/humon/build$ make docs-cpp
 
 The binary artifacts are produced in `humon/build/src`. Currently, you can just copy the built `humon/build/src/libhumon-d.a` and the headers from `humon/include`. Eventually the CMake project will be more pro.
 

@@ -533,13 +533,13 @@ void eatQuotedWord(huScanner * scanner, int tabSize, int * len, int * line, int 
                 nextCharacter(scanner);
 
                 // skip over the escaped quote so we don't encounter it and end the string
-                if (scanner->curCursor->codePoint == quoteChar)
+                if (scanner->curCursor->codePoint == (uint32_t) quoteChar)
                 {
                     * len += scanner->curCursor->charLength;
                     nextCharacter(scanner);
                 }
             }
-            else if (scanner->curCursor->codePoint == quoteChar)
+            else if (scanner->curCursor->codePoint == (uint32_t) quoteChar)
             {
                 nextCharacter(scanner);
                 eating = false;

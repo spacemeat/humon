@@ -30,7 +30,7 @@ lt_white_fg = '\033[97m'
 
 def doShellCommand(cmd):
     print (f"{lt_black_fg}{cmd}{all_off}")
-    return os.system(cmd)
+    return subprocess.run(cmd, shell=True, check=True).returncode
 
 
 def buildObj (target, src, incDirs, debug, pic, cLanguage):

@@ -101,7 +101,7 @@ int main(int argc, char ** argv)
     string inputFile;
     string outputFile;
 
-    OutputFormat format = OutputFormat::pretty;
+    WhitespaceFormat format = WhitespaceFormat::pretty;
     bool printComments = true;
     int indentSize = 4;
     bool indentWithTabs = false;
@@ -125,11 +125,11 @@ int main(int argc, char ** argv)
                     return 0;
                 }
             else if (argMatches(arg, "-pp"))
-                { format = OutputFormat::pretty; }
+                { format = WhitespaceFormat::pretty; }
             else if (argMatches(arg, "-px"))
-                { format = OutputFormat::xero; }
+                { format = WhitespaceFormat::xero; }
             else if (argMatches(arg, "-pm"))
-                { format = OutputFormat::minimal; }
+                { format = WhitespaceFormat::minimal; }
             else if (argStartsWith(arg, "-p"))
             {
                 cerr << "Invalid format argument for -p.\n";
@@ -252,7 +252,7 @@ int main(int argc, char ** argv)
 
     switch(format)
     {
-    case OutputFormat::xero:
+    case WhitespaceFormat::xero:
         {
             auto ret = trove.toXeroString(printBom);
             if (auto str = get_if<std::string>(& ret))
@@ -261,7 +261,7 @@ int main(int argc, char ** argv)
                 { error = get<ErrorCode>(ret); }
         }
         break;
-    case OutputFormat::minimal:
+    case WhitespaceFormat::minimal:
         {
             auto ret = trove.toMinimalString(colorTable, printComments, "\n", printBom);
             if (auto str = get_if<std::string>(& ret))
@@ -270,7 +270,7 @@ int main(int argc, char ** argv)
                 { error = get<ErrorCode>(ret); }
         }
         break;
-    case OutputFormat::pretty:
+    case WhitespaceFormat::pretty:
         {
             auto ret = trove.toPrettyString(indentSize, indentWithTabs, colorTable, printComments, "\n", printBom);
             if (auto && str = get_if<std::string>(& ret))
