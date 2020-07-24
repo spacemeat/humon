@@ -40,3 +40,5 @@ mmap_address.bin
 build/
 python/build/
 docs/
+
+*.pyc

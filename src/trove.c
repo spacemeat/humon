@@ -338,7 +338,7 @@ huNode const * huGetRootNode(huTrove const * trove)
 }
 
 
-huNode const * huGetNode(huTrove const * trove, int nodeIdx)
+huNode const * huGetNodeByIndex(huTrove const * trove, int nodeIdx)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == hu_nullTrove)
@@ -349,6 +349,47 @@ huNode const * huGetNode(huTrove const * trove, int nodeIdx)
         { return (huNode *) trove->nodes.buffer + nodeIdx; }
 
     return hu_nullNode;
+}
+
+
+huNode const * huGetNodeByFullAddressZ(huTrove const * trove, char const * address)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (address == NULL)
+        { return hu_nullNode; }
+#endif
+
+    return huGetNodeByFullAddressN(trove, address, strlen(address));
+}
+
+
+huNode const * huGetNodeByFullAddressN(huTrove const * trove, char const * address, int addressLen)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == hu_nullTrove || address == NULL || addressLen < 0)
+        { return hu_nullNode; }
+#endif
+
+    // parse address; must start with '/' to start at root
+    if (addressLen <= 0)
+        { return hu_nullNode; }
+
+    huScanner scanner;
+    initScanner(& scanner, NULL, address, addressLen);
+    int line = 0;  // unused
+    int col = 0;
+
+    eatWs(& scanner, 1, & line, & col);
+    char const * wordStart = scanner.curCursor->character;
+
+    if (scanner.curCursor->codePoint != '/')
+        { return hu_nullNode; }
+
+    huNode const * root = huGetRootNode(trove);
+    if (root->kind == HU_NODEKIND_NULL)
+        { return hu_nullNode; }
+
+    return huGetNodeByRelativeAddressN(root, wordStart + 1, addressLen - col - 1);
 }
 
 
@@ -560,47 +601,6 @@ huToken const * huGetTroveComment(huTrove const * trove, int commentIdx)
 }
 
 
-huNode const * huGetNodeByFullAddressZ(huTrove const * trove, char const * address)
-{
-#ifdef HUMON_CHECK_PARAMS
-    if (address == NULL)
-        { return hu_nullNode; }
-#endif
-
-    return huGetNodeByFullAddressN(trove, address, strlen(address));
-}
-
-
-huNode const * huGetNodeByFullAddressN(huTrove const * trove, char const * address, int addressLen)
-{
-#ifdef HUMON_CHECK_PARAMS
-    if (trove == hu_nullTrove || address == NULL || addressLen < 0)
-        { return hu_nullNode; }
-#endif
-
-    // parse address; must start with '/' to start at root
-    if (addressLen <= 0)
-        { return hu_nullNode; }
-
-    huScanner scanner;
-    initScanner(& scanner, NULL, address, addressLen);
-    int line = 0;  // unused
-    int col = 0;
-
-    eatWs(& scanner, 1, & line, & col);
-    char const * wordStart = scanner.curCursor->character;
-
-    if (scanner.curCursor->codePoint != '/')
-        { return hu_nullNode; }
-
-    huNode const * root = huGetRootNode(trove);
-    if (root->kind == HU_NODEKIND_NULL)
-        { return hu_nullNode; }
-
-    return huGetNodeByRelativeAddressN(root, wordStart + 1, addressLen - col - 1);
-}
-
-
 // User must free(retval.buffer);
 huNode const * huFindNodesWithAnnotationKeyZ(huTrove const * trove, char const * key, huNode const * startWith)
 {
@@ -626,7 +626,7 @@ huNode const * huFindNodesWithAnnotationKeyN(huTrove const * trove, char const *
         { beg = startWith->nodeIdx + 1; }
     for (int i = beg; i < huGetNumNodes(trove); ++i)
     {
-        huNode const * node = huGetNode(trove, i);
+        huNode const * node = huGetNodeByIndex(trove, i);
         bool hasOne = huHasAnnotationWithKeyN(node, key, keyLen);
         if (hasOne)
             { return node; }
@@ -661,7 +661,7 @@ huNode const * huFindNodesWithAnnotationValueN(huTrove const * trove, char const
         { beg = startWith->nodeIdx + 1; }
     for (int i = beg; i < huGetNumNodes(trove); ++i)
     {
-        huNode const * node = huGetNode(trove, i);
+        huNode const * node = huGetNodeByIndex(trove, i);
         int na = huGetNumAnnotationsWithValueN(node, value, valueLen);
         if (na > 0)
            { return node; }
@@ -720,7 +720,7 @@ huNode const * huFindNodesWithAnnotationKeyValueNN(huTrove const * trove, char c
         { beg = startWith->nodeIdx + 1; }
     for (int i = beg; i < huGetNumNodes(trove); ++i)
     {
-        huNode const * node = huGetNode(trove, i);
+        huNode const * node = huGetNodeByIndex(trove, i);
         huToken const * anno = huGetAnnotationWithKeyN(node, key, keyLen);
         if (anno != hu_nullToken)
         {
@@ -758,7 +758,7 @@ huNode const * huFindNodesByCommentContainingN(huTrove const * trove, char const
         { beg = startWith->nodeIdx + 1; }
     for (int i = beg; i < huGetNumNodes(trove); ++i)
     {
-        huNode const * node = huGetNode(trove, i);
+        huNode const * node = huGetNodeByIndex(trove, i);
 
         int na = huGetNumComments(node);
         for (int j = 0; j < na; ++j)

@@ -303,7 +303,7 @@ void parseTroveRecursive(huTrove * trove, int * tokenIdx, huNode * parentNode, i
                     parseTroveRecursive(trove, tokenIdx, nodeCreatedThisState, depth + 1, 
                         PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END, commentQueue);
 
-                    nodeCreatedThisState = (huNode *) huGetNode(trove, nctsIdx);
+                    nodeCreatedThisState = (huNode *) huGetNodeByIndex(trove, nctsIdx);
                 }
                 break;
 
@@ -325,7 +325,7 @@ void parseTroveRecursive(huTrove * trove, int * tokenIdx, huNode * parentNode, i
                     parseTroveRecursive(trove, tokenIdx, nodeCreatedThisState, depth + 1, 
                         PS_IN_DICT_EXPECT_KEY_OR_END, commentQueue);
 
-                    nodeCreatedThisState = (huNode *) huGetNode(trove, nctsIdx);
+                    nodeCreatedThisState = (huNode *) huGetNodeByIndex(trove, nctsIdx);
                 }
                 break;
 
@@ -345,7 +345,7 @@ void parseTroveRecursive(huTrove * trove, int * tokenIdx, huNode * parentNode, i
                     setValueToken(nodeCreatedThisState, tok);
                     setLastValueToken(nodeCreatedThisState, tok);
 
-                    nodeCreatedThisState = (huNode *) huGetNode(trove, nctsIdx);
+                    nodeCreatedThisState = (huNode *) huGetNodeByIndex(trove, nctsIdx);
                 }
                 break;
 
@@ -397,7 +397,7 @@ void parseTroveRecursive(huTrove * trove, int * tokenIdx, huNode * parentNode, i
                 {
                     int parentIdx = parentNode->nodeIdx;
                     nodeCreatedThisState = allocNewNode(trove, HU_NODEKIND_LIST, tok);
-                    parentNode = (huNode *) huGetNode(trove, parentIdx);
+                    parentNode = (huNode *) huGetNodeByIndex(trove, parentIdx);
                     int nctsIdx = nodeCreatedThisState->nodeIdx;
 
                     setValueToken(nodeCreatedThisState, tok);
@@ -406,8 +406,8 @@ void parseTroveRecursive(huTrove * trove, int * tokenIdx, huNode * parentNode, i
                     parseTroveRecursive(trove, tokenIdx, nodeCreatedThisState, depth + 1, 
                         PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END, commentQueue);
 
-                    nodeCreatedThisState = (huNode *) huGetNode(trove, nctsIdx);
-                    parentNode = (huNode *) huGetNode(trove, parentIdx);
+                    nodeCreatedThisState = (huNode *) huGetNodeByIndex(trove, nctsIdx);
+                    parentNode = (huNode *) huGetNodeByIndex(trove, parentIdx);
                 }
                 break;
 
@@ -420,7 +420,7 @@ void parseTroveRecursive(huTrove * trove, int * tokenIdx, huNode * parentNode, i
                 {
                     int parentIdx = parentNode->nodeIdx;
                     nodeCreatedThisState = allocNewNode(trove, HU_NODEKIND_DICT, tok);
-                    parentNode = (huNode *) huGetNode(trove, parentIdx);
+                    parentNode = (huNode *) huGetNodeByIndex(trove, parentIdx);
                     int nctsIdx = nodeCreatedThisState->nodeIdx;
 
                     setValueToken(nodeCreatedThisState, tok);
@@ -429,8 +429,8 @@ void parseTroveRecursive(huTrove * trove, int * tokenIdx, huNode * parentNode, i
                     parseTroveRecursive(trove, tokenIdx, nodeCreatedThisState, depth + 1, 
                         PS_IN_DICT_EXPECT_KEY_OR_END, commentQueue);
 
-                    nodeCreatedThisState = (huNode *) huGetNode(trove, nctsIdx);
-                    parentNode = (huNode *) huGetNode(trove, parentIdx);
+                    nodeCreatedThisState = (huNode *) huGetNodeByIndex(trove, nctsIdx);
+                    parentNode = (huNode *) huGetNodeByIndex(trove, parentIdx);
                 }
                 break;
 
@@ -442,7 +442,7 @@ void parseTroveRecursive(huTrove * trove, int * tokenIdx, huNode * parentNode, i
                 {
                     int parentIdx = parentNode->nodeIdx;
                     nodeCreatedThisState = allocNewNode(trove, HU_NODEKIND_VALUE, tok);
-                    parentNode = (huNode *) huGetNode(trove, parentIdx);
+                    parentNode = (huNode *) huGetNodeByIndex(trove, parentIdx);
 
                     setValueToken(nodeCreatedThisState, tok);
                     setLastValueToken(nodeCreatedThisState, tok);
@@ -509,7 +509,7 @@ void parseTroveRecursive(huTrove * trove, int * tokenIdx, huNode * parentNode, i
                 {
                     int parentIdx = parentNode->nodeIdx;
                     nodeCreatedThisState = allocNewNode(trove, HU_NODEKIND_NULL, tok);
-                    parentNode = (huNode *) huGetNode(trove, parentIdx);
+                    parentNode = (huNode *) huGetNodeByIndex(trove, parentIdx);
                     int nctsIdx = nodeCreatedThisState->nodeIdx;
 
                     associateEnqueuedComments(trove, nodeCreatedThisState, commentQueue);
@@ -518,8 +518,8 @@ void parseTroveRecursive(huTrove * trove, int * tokenIdx, huNode * parentNode, i
                     parseTroveRecursive(trove, tokenIdx, nodeCreatedThisState, depth + 1, 
                         PS_IN_DICT_EXPECT_KVS, commentQueue);
 
-                    nodeCreatedThisState = (huNode *) huGetNode(trove, nctsIdx);
-                    parentNode = (huNode *) huGetNode(trove, parentIdx);
+                    nodeCreatedThisState = (huNode *) huGetNodeByIndex(trove, nctsIdx);
+                    parentNode = (huNode *) huGetNodeByIndex(trove, parentIdx);
                 }
                 break;
 
@@ -572,7 +572,7 @@ void parseTroveRecursive(huTrove * trove, int * tokenIdx, huNode * parentNode, i
                     parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1, 
                         PS_IN_DICT_EXPECT_START_OR_VALUE, commentQueue);
 
-                    parentNode = (huNode *) huGetNode(trove, parentIdx);
+                    parentNode = (huNode *) huGetNodeByIndex(trove, parentIdx);
                 }
                 return;
 
@@ -614,7 +614,7 @@ void parseTroveRecursive(huTrove * trove, int * tokenIdx, huNode * parentNode, i
                     parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1, 
                         PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END, commentQueue);
 
-                    parentNode = (huNode *) huGetNode(trove, parentIdx);
+                    parentNode = (huNode *) huGetNodeByIndex(trove, parentIdx);
                 }
                 return;
 
@@ -629,7 +629,7 @@ void parseTroveRecursive(huTrove * trove, int * tokenIdx, huNode * parentNode, i
                     parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1, 
                         PS_IN_DICT_EXPECT_KEY_OR_END, commentQueue);
 
-                    parentNode = (huNode *) huGetNode(trove, parentIdx);
+                    parentNode = (huNode *) huGetNodeByIndex(trove, parentIdx);
                 }
                 return;
 

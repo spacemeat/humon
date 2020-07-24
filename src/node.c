@@ -42,7 +42,7 @@ huNode const * huGetParentNode(huNode const * node)
         { return hu_nullNode; }
 #endif
 
-    return huGetNode(node->trove, node->parentNodeIdx);
+    return huGetNodeByIndex(node->trove, node->parentNodeIdx);
 }
 
 
@@ -67,7 +67,7 @@ huNode const * huGetChildByIndex(huNode const * node, int childOrdinal)
     if (childOrdinal >= huGetNumChildren(node))
         { return hu_nullNode; }
 
-    return huGetNode(node->trove, 
+    return huGetNodeByIndex(node->trove, 
         * (int *) getVectorElement(& node->childNodeIdxs, childOrdinal));
 }
 
@@ -115,7 +115,7 @@ huNode const * huGetFirstChild(huNode const * node)
     if (huGetNumChildren(node) == 0)
         { return hu_nullNode; }
 
-    return huGetNode(node->trove, 
+    return huGetNodeByIndex(node->trove, 
         * (int *) getVectorElement(& node->childNodeIdxs, 0));
 }
 
@@ -149,17 +149,6 @@ bool huHasKey(huNode const * node)
 #endif
 
     return node->keyToken != hu_nullToken;
-}
-
-
-bool huHasValue(huNode const * node)
-{
-#ifdef HUMON_CHECK_PARAMS
-    if (node == hu_nullNode)
-        { return false; }
-#endif
-
-    return node->valueToken != hu_nullToken;
 }
 
 

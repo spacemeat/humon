@@ -341,51 +341,6 @@ TEST(huHasKey, pathological)
 }
 
 
-TEST_GROUP(huHasValue)
-{
-    htd_listOfLists l;
-    htd_dictOfDicts d;
-
-    void setup()
-    {
-        l.setup();
-        d.setup();
-    }
-
-    void teardown()
-    {
-        d.teardown();
-        l.teardown();
-    }
-};
-
-TEST(huHasValue, lists)
-{
-    CHECK_EQUAL_TEXT(true, huHasValue(l.root), "root.true == true");
-    CHECK_EQUAL_TEXT(true, huHasValue(l.a), "a.true == true");
-    CHECK_EQUAL_TEXT(true, huHasValue(l.bp), "bp.true == true");
-    CHECK_EQUAL_TEXT(true, huHasValue(l.cpp), "cpp.true == true");
-    CHECK_EQUAL_TEXT(true, huHasValue(l.cp), "cp.true == true");
-    CHECK_EQUAL_TEXT(true, huHasValue(l.c), "c.true == true");
-}
-
-TEST(huHasValue, dicts)
-{
-    CHECK_EQUAL_TEXT(true, huHasValue(d.root), "root.true == true");
-    CHECK_EQUAL_TEXT(true, huHasValue(d.a), "a.true == true");
-    CHECK_EQUAL_TEXT(true, huHasValue(d.bp), "bp.true == true");
-    CHECK_EQUAL_TEXT(true, huHasValue(d.cpp), "cpp.true == true");
-    CHECK_EQUAL_TEXT(true, huHasValue(d.cp), "cp.true == true");
-    CHECK_EQUAL_TEXT(true, huHasValue(d.c), "c.true == true");
-}
-
-TEST(huHasValue, pathological)
-{
-    CHECK_EQUAL_TEXT(false, huHasValue(NULL), "NULL.true == false");
-    CHECK_EQUAL_TEXT(false, huHasValue(hu_nullNode), "null.true == false");
-}
-
-
 TEST_GROUP(huGetNestedValue)
 {
     htd_listOfLists l;
@@ -2361,25 +2316,25 @@ TEST_GROUP(huGetNode)
 
 TEST(huGetNode, normal)
 {
-    CHECK(huGetNode(l.trove, 0) != hu_nullNode);
-    LONGS_EQUAL_TEXT(HU_NODEKIND_LIST, huGetNode(l.trove, 0)->kind, "l gn 0 == list");
-    LONGS_EQUAL_TEXT(-1, huGetNode(l.trove, 0)->parentNodeIdx, "l gn 0 == root");
-    CHECK(huGetNode(d.trove, 0) != hu_nullNode);
-    LONGS_EQUAL_TEXT(HU_NODEKIND_DICT, huGetNode(d.trove, 0)->kind, "d gn 0 == dict");
-    LONGS_EQUAL_TEXT(-1, huGetNode(d.trove, 0)->parentNodeIdx, "d gn 0 == root");
+    CHECK(huGetNodeByIndex(l.trove, 0) != hu_nullNode);
+    LONGS_EQUAL_TEXT(HU_NODEKIND_LIST, huGetNodeByIndex(l.trove, 0)->kind, "l gn 0 == list");
+    LONGS_EQUAL_TEXT(-1, huGetNodeByIndex(l.trove, 0)->parentNodeIdx, "l gn 0 == root");
+    CHECK(huGetNodeByIndex(d.trove, 0) != hu_nullNode);
+    LONGS_EQUAL_TEXT(HU_NODEKIND_DICT, huGetNodeByIndex(d.trove, 0)->kind, "d gn 0 == dict");
+    LONGS_EQUAL_TEXT(-1, huGetNodeByIndex(d.trove, 0)->parentNodeIdx, "d gn 0 == root");
 
-    CHECK(huGetNode(l.trove, 1) != hu_nullNode);
-    LONGS_EQUAL_TEXT(HU_NODEKIND_VALUE, huGetNode(l.trove, 1)->kind, "l gn 1 == list");
-    LONGS_EQUAL_TEXT(0, huGetNode(l.trove, 1)->parentNodeIdx, "l gn 1 == child of root");
-    CHECK(huGetNode(d.trove, 1) != hu_nullNode);
-    LONGS_EQUAL_TEXT(HU_NODEKIND_VALUE, huGetNode(d.trove, 1)->kind, "d gn 1 == dict");
-    LONGS_EQUAL_TEXT(0, huGetNode(d.trove, 1)->parentNodeIdx, "d gn 1 == child of root");
+    CHECK(huGetNodeByIndex(l.trove, 1) != hu_nullNode);
+    LONGS_EQUAL_TEXT(HU_NODEKIND_VALUE, huGetNodeByIndex(l.trove, 1)->kind, "l gn 1 == list");
+    LONGS_EQUAL_TEXT(0, huGetNodeByIndex(l.trove, 1)->parentNodeIdx, "l gn 1 == child of root");
+    CHECK(huGetNodeByIndex(d.trove, 1) != hu_nullNode);
+    LONGS_EQUAL_TEXT(HU_NODEKIND_VALUE, huGetNodeByIndex(d.trove, 1)->kind, "d gn 1 == dict");
+    LONGS_EQUAL_TEXT(0, huGetNodeByIndex(d.trove, 1)->parentNodeIdx, "d gn 1 == child of root");
 }
 
 TEST(huGetNode, pathological)
 {
-    POINTERS_EQUAL_TEXT(hu_nullNode, huGetNode(NULL, 0), "NULL gn 0 == null");
-    POINTERS_EQUAL_TEXT(hu_nullNode, huGetNode(hu_nullTrove, 0), "null gn 0 == null");
+    POINTERS_EQUAL_TEXT(hu_nullNode, huGetNodeByIndex(NULL, 0), "NULL gn 0 == null");
+    POINTERS_EQUAL_TEXT(hu_nullNode, huGetNodeByIndex(hu_nullTrove, 0), "null gn 0 == null");
 }
 
 
