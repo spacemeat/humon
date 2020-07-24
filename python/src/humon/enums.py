@@ -65,7 +65,7 @@ class ColorCode(IntEnum):
     ANNOKEY = _enumConsts.HU_COLORCODE_ANNOKEY		# Annotation key style.
     ANNOVALUE = _enumConsts.HU_COLORCODE_ANNOVALUE		# Annotation value style.
     WHITESPACE = _enumConsts.HU_COLORCODE_WHITESPACE		# Whitespace style (including commas).
-    NUMCOLORKINDS = _enumConsts.HU_COLORCODE_NUMCOLORKINDS		# One past the last style code.
+    NUMCOLORS = _enumConsts.HU_COLORCODE_NUMCOLORS		# One past the last style code.
 
 class VectorKind(IntEnum):
     COUNTING = _enumConsts.HU_VECTORKIND_COUNTING		# The vector is set up to count characters only.

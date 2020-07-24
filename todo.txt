@@ -1,9 +1,10 @@
 DONE THIS CHECKIN:
-More properly hide nonpublic impls. Add some doxy for internals. Aligned hu prefixes with publics only.
+Enums work. Add Node, a few more Trove APIs.
 
 TODO:
 P1 static-ify private C fns
 P1 search for TODOs
+P1 optional color for error output
 P1 doxygen
 P2 vcpkg
 P2 string sizes should be size_t?

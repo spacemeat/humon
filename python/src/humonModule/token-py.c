@@ -29,7 +29,7 @@ static int Token_init(TokenObject * self, PyObject * args, PyObject * kwds)
 {
     // TODO: Py_ADDREF / Py_DECREF on args, self?
     PyObject * capsule = NULL;
-    if (! PyArg_ParseTuple(args, "(O)", & capsule))
+    if (! PyArg_ParseTuple(args, "O", & capsule))
         { return -1; }
     
     if (! PyCapsule_CheckExact(capsule))
@@ -61,12 +61,9 @@ static PyObject * Token_get_kind(TokenObject * self, void * closure)
     if (! checkYourSelf(self))
         { return NULL; }
 
-    PyObject * val = getEnumValue(".enums", "TokenKind", self->tokenPtr->kind);
+    PyObject * val = getEnumValue("humon.enums", "TokenKind", self->tokenPtr->kind);
     if (val == NULL)
-    {
-        PyErr_SetString(PyExc_ValueError, "bad enum constant lookup");
-        return NULL;
-    }
+        { return NULL; }
 
     return val;
 }

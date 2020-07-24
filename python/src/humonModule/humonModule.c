@@ -16,7 +16,7 @@ PyMODINIT_FUNC PyInit_humon(void)
     if (module == NULL)
         { return NULL; }
     
-    // Import the enums module, where "somepackage.enums"
+    // Import the enums module, where ".enums"
     // is the full name of the enums module
     PyObject * enums = PyImport_ImportModule("humon.enums");
     if (enums == NULL) {
@@ -24,8 +24,12 @@ PyMODINIT_FUNC PyInit_humon(void)
         return NULL;
     }
 
-    Py_DECREF(enums);
+//    Py_DECREF(enums);
     
+    if (RegisterTokenType(module) < 0)
+        { return NULL; }
+    if (RegisterNodeType(module) < 0)
+        { return NULL; }
     if (RegisterTroveType(module) < 0)
         { return NULL; }
     

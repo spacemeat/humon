@@ -31,5 +31,3 @@ def doShellCommand(cmd):
 
 if __name__ == "__main__":
     doShellCommand("python3 setup.py build")
-    #doShellCommand("cp build/lib.linux-x86_64-3.7/humon/_enumConsts.cpython-37m-x86_64-linux-gnu.so package/humon/_enumConsts.so")
-    #doShellCommand("cp build/lib.linux-x86_64-3.7/humon.cpython-37m-x86_64-linux-gnu.so package/humon/humon.so")

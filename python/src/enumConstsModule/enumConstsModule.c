@@ -63,7 +63,7 @@ void AddEnumConstantsToModule(PyObject * module)
     PyModule_AddIntConstant(module, "HU_COLORCODE_ANNOKEY", HU_COLORCODE_ANNOKEY);
     PyModule_AddIntConstant(module, "HU_COLORCODE_ANNOVALUE", HU_COLORCODE_ANNOVALUE);
     PyModule_AddIntConstant(module, "HU_COLORCODE_WHITESPACE", HU_COLORCODE_WHITESPACE);
-    PyModule_AddIntConstant(module, "HU_COLORCODE_NUMCOLORKINDS", HU_COLORCODE_NUMCOLORKINDS);
+    PyModule_AddIntConstant(module, "HU_COLORCODE_NUMCOLORS", HU_COLORCODE_NUMCOLORS);
 
     PyModule_AddIntConstant(module, "HU_VECTORKIND_COUNTING", HU_VECTORKIND_COUNTING);
     PyModule_AddIntConstant(module, "HU_VECTORKIND_PREALLOCATED", HU_VECTORKIND_PREALLOCATED);
@@ -80,7 +80,7 @@ static PyModuleDef enumConstsModule =
 };
 
 
-PyMODINIT_FUNC PyInit_humon(void)
+PyMODINIT_FUNC PyInit__enumConsts(void)
 {
     PyObject * module = PyModule_Create(& enumConstsModule);
     if (module == NULL)

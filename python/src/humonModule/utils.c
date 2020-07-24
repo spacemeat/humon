@@ -5,16 +5,19 @@ PyObject * getEnumValue(char const * moduleName, char const * enumName, int valu
 {
     PyObject * enums = PyImport_AddModule(moduleName);
     if (enums == NULL) {
+        PyErr_SetString(PyExc_ValueError, "Could not find module");
         return NULL;
     }
 
     PyObject * enumType = PyObject_GetAttrString(enums, enumName);
     if (enumType == NULL) {
+        PyErr_SetString(PyExc_ValueError, "Could not find enum");
         return NULL;
     }
 
     PyObject * inst = PyObject_CallFunction(enumType, "(i)", value);
     if (inst == NULL) {
+        PyErr_SetString(PyExc_ValueError, "Could not find enum value");
         Py_DECREF(enumType);
         return NULL;
     }

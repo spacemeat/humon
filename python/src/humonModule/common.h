@@ -15,9 +15,12 @@ enum VectorElementTypeEnum
 
 
 extern PyTypeObject TokenType;
+extern PyTypeObject NodeType;
 extern PyTypeObject TroveType;
 
 PyObject * getEnumValue(char const * moduleName, char const * enumName, int value);
 
+int RegisterTokenType(PyObject * module);
+int RegisterNodeType(PyObject * module);
 int RegisterTroveType(PyObject * module);
 

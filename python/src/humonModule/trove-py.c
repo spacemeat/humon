@@ -72,7 +72,7 @@ static PyObject * Trove_getToken(TroveObject * self, PyObject * args)
         { return NULL; }
 
     int idx = -1;
-    if (!PyArg_ParseTuple(args, "(i)", & idx))
+    if (!PyArg_ParseTuple(args, "i", & idx))
         { return NULL; }
 
     huToken const * token = huGetToken(self->trovePtr, idx);
@@ -82,12 +82,79 @@ static PyObject * Trove_getToken(TroveObject * self, PyObject * args)
     PyObject * capsule = PyCapsule_New((void *) token, NULL, NULL);
     if (capsule == NULL)
         { return NULL; }
+    
+    PyObject * newArgs = Py_BuildValue("(O)", capsule);
+    if (newArgs == NULL)
+        { return NULL; }
 
-    PyObject * tokenObj = PyObject_CallObject((PyObject *) & TokenType, NULL);
+    PyObject * tokenObj = PyObject_CallObject((PyObject *) & TokenType, newArgs);
     if (tokenObj == NULL)
         { return NULL; }
     
+    Py_DECREF(args);
+
     return tokenObj;
+}
+
+static PyObject * Trove_getNumNodes(TroveObject * self, PyObject * Py_UNUSED(ignored))
+    { return checkYourSelf(self)
+        ? PyLong_FromLong(huGetNumNodes(self->trovePtr))
+        : NULL; }
+
+static PyObject * Trove_getRootNode(TroveObject * self, PyObject * Py_UNUSED(ignored))
+{
+    if (! checkYourSelf(self))
+        { return NULL; }
+
+    huNode const * node = huGetRootNode(self->trovePtr);
+    if (node == NULL)
+        { return NULL; }
+
+    PyObject * capsule = PyCapsule_New((void *) node, NULL, NULL);
+    if (capsule == NULL)
+        { return NULL; }
+    
+    PyObject * newArgs = Py_BuildValue("(O)", capsule);
+    if (newArgs == NULL)
+        { return NULL; }
+
+    PyObject * nodeObj = PyObject_CallObject((PyObject *) & NodeType, newArgs);
+    if (nodeObj == NULL)
+        { return NULL; }
+    
+    Py_DECREF(nodeObj);
+
+    return nodeObj;
+}
+
+static PyObject * Trove_getNodeByIndex(TroveObject * self, PyObject * args)
+{
+    if (! checkYourSelf(self))
+        { return NULL; }
+
+    int idx = -1;
+    if (!PyArg_ParseTuple(args, "i", & idx))
+        { return NULL; }
+
+    huNode const * node = huGetNodeByIndex(self->trovePtr, idx);
+    if (node == NULL)
+        { return NULL; }
+
+    PyObject * capsule = PyCapsule_New((void *) node, NULL, NULL);
+    if (capsule == NULL)
+        { return NULL; }
+    
+    PyObject * newArgs = Py_BuildValue("(O)", capsule);
+    if (newArgs == NULL)
+        { return NULL; }
+
+    PyObject * nodeObj = PyObject_CallObject((PyObject *) & NodeType, newArgs);
+    if (nodeObj == NULL)
+        { return NULL; }
+    
+    Py_DECREF(newArgs);
+
+    return nodeObj;
 }
 
 static PyMemberDef Trove_members[] = 
@@ -99,6 +166,9 @@ static PyMethodDef Trove_methods[] =
 {
     { "getNumTokens", (PyCFunction) Trove_getNumTokens, METH_NOARGS, "Return the number of tokens in a trove." },
     { "getToken", (PyCFunction) Trove_getToken, METH_VARARGS, "Return a token from a trove by index." },
+    { "getNumNodes", (PyCFunction) Trove_getNumNodes, METH_NOARGS, "Return the number of tokens in a trove." },
+    { "getRootNode", (PyCFunction) Trove_getRootNode, METH_NOARGS, "Return a token from a trove by index." },
+    { "getNodeByIndex", (PyCFunction) Trove_getNodeByIndex, METH_VARARGS, "Return a token from a trove by index." },
     { NULL }
 };
 
