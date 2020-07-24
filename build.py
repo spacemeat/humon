@@ -30,7 +30,7 @@ lt_white_fg = '\033[97m'
 
 def doShellCommand(cmd):
     print (f"{lt_black_fg}{cmd}{all_off}")
-    return os.system(cmd)
+    return subprocess.run(cmd, shell=True, check=True).returncode
 
 
 def buildObj (target, src, incDirs, debug, pic, cLanguage):
@@ -69,6 +69,23 @@ def buildLib (target, srcList, incDirs, debug):
         doto = f"{objDir}/{os.path.basename(src)}{'-d' if debug else ''}.o"
         dotos.append(doto)
         buildObj(doto, src, incDirs, debug, False, src.endswith(".c"))
+
+    cmd = f"ar cr -o {binDir}/{target} {' '.join(dotos)}"
+    return doShellCommand(cmd)
+
+
+def buildPythonLib (target ,srcList, incDirc, debug):
+    global objDir
+
+    target=f"lib{target}{'-rd' if debug else '-r'}.a"
+
+    print (f"{dk_yellow_fg}Building static relocatable library {lt_yellow_fg}{target}{all_off}")
+    
+    dotos = []
+    for src in srcList:
+        doto = f"{objDir}/{os.path.basename(src)}{'-rd' if debug else '-r'}.o"
+        dotos.append(doto)
+        buildObj(doto, src, incDirs, debug, True, src.endswith(".c"))
 
     cmd = f"ar cr -o {binDir}/{target} {' '.join(dotos)}"
     return doShellCommand(cmd)
@@ -149,6 +166,7 @@ if __name__ == "__main__":
     ]
     buildLib("humon", src, incDirs, True)
     buildLib("humon", src, incDirs, False)
+    buildPythonLib("humon", src, incDirs, False)
     buildSo("humon", src, incDirs, True)
     buildSo("humon", src, incDirs, False)
 
