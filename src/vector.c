@@ -3,7 +3,7 @@
 #include "humon.internal.h"
 
 
-void huInitVectorForCounting(huVector * vector)
+void initVectorForCounting(huVector * vector)
 {
     vector->kind = HU_VECTORKIND_COUNTING;
     vector->buffer = NULL;
@@ -13,7 +13,7 @@ void huInitVectorForCounting(huVector * vector)
 }
 
 
-void huInitVectorPreallocated(huVector * vector, void * buffer, int elementSize, int numElements)
+void initVectorPreallocated(huVector * vector, void * buffer, int elementSize, int numElements)
 {
     vector->kind = HU_VECTORKIND_PREALLOCATED;
     vector->buffer = buffer;
@@ -23,7 +23,7 @@ void huInitVectorPreallocated(huVector * vector, void * buffer, int elementSize,
 }
 
 
-void huInitGrowableVector(huVector * vector, int elementSize)
+void initGrowableVector(huVector * vector, int elementSize)
 {
     vector->kind = HU_VECTORKIND_GROWABLE;
     vector->buffer = NULL;
@@ -33,7 +33,7 @@ void huInitGrowableVector(huVector * vector, int elementSize)
 }
 
 
-void huDestroyVector(huVector const * vector)
+void destroyVector(huVector const * vector)
 {
     // you bet your sweet bippy I'm casting away the const    
     if (vector->kind == HU_VECTORKIND_GROWABLE &&
@@ -45,37 +45,37 @@ void huDestroyVector(huVector const * vector)
 }
 
 
-void huResetVector(huVector * vector)
+void resetVector(huVector * vector)
 {
     switch(vector->kind)
     {
     case HU_VECTORKIND_COUNTING:
-        huInitVectorForCounting(vector);
+        initVectorForCounting(vector);
         break;
     case HU_VECTORKIND_PREALLOCATED:
-        huInitVectorPreallocated(vector, vector->buffer, vector->elementSize, vector->numElements);
+        initVectorPreallocated(vector, vector->buffer, vector->elementSize, vector->numElements);
         break;
     case HU_VECTORKIND_GROWABLE:
-        huDestroyVector(vector);    // doesn't change .elementSize
-        huInitGrowableVector(vector, vector->elementSize);
+        destroyVector(vector);    // doesn't change .elementSize
+        initGrowableVector(vector, vector->elementSize);
         break;
     }
 }
 
 
-int huGetVectorSize(huVector const * vector)
+int getVectorSize(huVector const * vector)
 {
     return vector->numElements;
 }
 
 
-void * huGetVectorElement(huVector const * vector, int idx)
+void * getVectorElement(huVector const * vector, int idx)
 {
     return vector->buffer + vector->elementSize * idx;
 }
 
 
-void * huGrowVector(huVector * vector, int * numElements)
+void * growVector(huVector * vector, int * numElements)
 {
     char * next = NULL;
     int numToAppend = * numElements;
@@ -132,10 +132,10 @@ void * huGrowVector(huVector * vector, int * numElements)
 }
 
 
-int huAppendToVector(huVector * vector, void const * data, int numElements)
+int appendToVector(huVector * vector, void const * data, int numElements)
 {
     int maxAppend = numElements;
-    void * dest = huGrowVector(vector, & maxAppend);
+    void * dest = growVector(vector, & maxAppend);
     if (vector->kind != HU_VECTORKIND_COUNTING)
         { memcpy(dest, data, maxAppend * vector->elementSize); }
 

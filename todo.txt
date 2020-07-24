@@ -1,6 +1,5 @@
 DONE THIS CHECKIN:
-WhitespaceFormat API rename.
-A little doxy stuff.
+More properly hide nonpublic impls. Add some doxy for internals. Aligned hu prefixes with publics only.
 
 TODO:
 P1 static-ify private C fns

@@ -4,7 +4,7 @@
 #include "humon.internal.h"
 
 
-void huInitNode(huNode * node, huTrove const * trove)
+void initNode(huNode * node, huTrove const * trove)
 {
     node->trove = trove;
     node->nodeIdx = -1;
@@ -16,22 +16,22 @@ void huInitNode(huNode * node, huTrove const * trove)
     node->lastToken = hu_nullToken;
     node->childOrdinal = 0;
     node->parentNodeIdx = -1;
-    huInitGrowableVector(& node->childNodeIdxs, sizeof(int));
-    huInitGrowableVector(& node->annotations, sizeof(huAnnotation));
-    huInitGrowableVector(& node->comments, sizeof(huComment));
+    initGrowableVector(& node->childNodeIdxs, sizeof(int));
+    initGrowableVector(& node->annotations, sizeof(huAnnotation));
+    initGrowableVector(& node->comments, sizeof(huComment));
 }
 
 
-void huDestroyNode(huNode const * node)
+void destroyNode(huNode const * node)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (node == hu_nullNode)
         { return; }
 #endif
 
-    huDestroyVector(& node->childNodeIdxs);
-    huDestroyVector(& node->annotations);
-    huDestroyVector(& node->comments);
+    destroyVector(& node->childNodeIdxs);
+    destroyVector(& node->annotations);
+    destroyVector(& node->comments);
 }
 
 
@@ -68,7 +68,7 @@ huNode const * huGetChildByIndex(huNode const * node, int childOrdinal)
         { return hu_nullNode; }
 
     return huGetNode(node->trove, 
-        * (int *) huGetVectorElement(& node->childNodeIdxs, childOrdinal));
+        * (int *) getVectorElement(& node->childNodeIdxs, childOrdinal));
 }
 
 
@@ -116,7 +116,7 @@ huNode const * huGetFirstChild(huNode const * node)
         { return hu_nullNode; }
 
     return huGetNode(node->trove, 
-        * (int *) huGetVectorElement(& node->childNodeIdxs, 0));
+        * (int *) getVectorElement(& node->childNodeIdxs, 0));
 }
 
 
@@ -402,7 +402,7 @@ huToken const * huGetCommentsContainingN(huNode const * node, char const * conta
 }
 
 
-void eatAddressWord(huScanner * scanner, int * len, int * col)
+static void eatAddressWord(huScanner * scanner, int * len, int * col)
 {
     // The first character is already confirmed a word char, so, next please.
     * len += scanner->curCursor->charLength;
@@ -412,7 +412,7 @@ void eatAddressWord(huScanner * scanner, int * len, int * col)
     bool eating = true;
     while (eating)
     {
-        analyzeWhitespace(scanner);
+        //analyzeWhitespace(scanner);
         if (scanner->curCursor->isEof)
             { eating = false; }
         else if (scanner->curCursor->isNewline || scanner->curCursor->isSpace)
@@ -436,7 +436,7 @@ void eatAddressWord(huScanner * scanner, int * len, int * col)
 }
 
 
-void eatQuotedAddressWord(huScanner * scanner, char quoteChar, int * len, int * col)
+static void eatQuotedAddressWord(huScanner * scanner, char quoteChar, int * len, int * col)
 {
     // The first character is already confirmed quoteChar, so, next please.
     * col += 1;
@@ -445,7 +445,7 @@ void eatQuotedAddressWord(huScanner * scanner, char quoteChar, int * len, int * 
     bool eating = true;
     while (eating)
     {
-        analyzeWhitespace(scanner);
+        //analyzeWhitespace(scanner);
         if (scanner->curCursor->isEof)
             { eating = false; }
         else if (scanner->curCursor->isNewline)
@@ -516,7 +516,7 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
         { return hu_nullNode; }
 
     huScanner scanner;
-    huInitScanner(& scanner, NULL, address, addressLen);
+    initScanner(& scanner, NULL, address, addressLen);
     int line = 0;  // unused
     int col = 0;
 
@@ -621,7 +621,7 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
 
 
 // This is kinda fugly. But for most cases (x < 1000) it's probably fine.
-int log10i(unsigned int x)
+static int log10i(unsigned int x)
 {
          if (x < 1 * 10) { return 0; }
     else if (x < 1 * 100) { return 1; }
@@ -647,39 +647,7 @@ int log10i(unsigned int x)
 }
 
 
-int huGetNodeAddressLength(huNode const * node)
-{
-#ifdef HUMON_CHECK_PARAMS
-    if (node == hu_nullNode)
-        { return 0; }
-#endif
-
-    int addressLen = 0; 
-
-    huNode const * n = node;
-    if (n->parentNodeIdx == -1)
-        { return 1; } // for the root if node is root
-    while (n->parentNodeIdx != -1)
-    {
-        huNode const * parentN = huGetParentNode(n);
-        if (parentN->kind == HU_NODEKIND_DICT)
-        {
-            addressLen += n->keyToken->str.size;
-        }
-        else if (parentN->kind == HU_NODEKIND_LIST)
-        {
-            addressLen += log10i((unsigned int) n->childOrdinal) + 1;
-        }
-
-        addressLen += 1;  // for the node '/'
-        n = parentN;
-    }
-
-    return addressLen;
-}
-
-
-void getNodeAddressRec(huNode const * node, PrintTracker * printer)
+static void getNodeAddressRec(huNode const * node, PrintTracker * printer)
 {
     huVector * str = printer->str;
 
@@ -695,7 +663,7 @@ void getNodeAddressRec(huNode const * node, PrintTracker * printer)
     if (parentNode->kind == HU_NODEKIND_LIST)
     {
         int numBytes = log10i((unsigned int) node->childOrdinal) + 1;
-        char * nn = huGrowVector(str, & numBytes);
+        char * nn = growVector(str, & numBytes);
 
         // If we're printing the string and not just counting,
         if (str->elementSize > 0)
@@ -786,11 +754,11 @@ void huGetNodeAddress(huNode const * node, char * dest, int * destLen)
     huVector str;
     if (dest == NULL)
     {
-        huInitVectorForCounting(& str); // counting only
+        initVectorForCounting(& str); // counting only
     }
     else
     {
-        huInitVectorPreallocated(& str, dest, sizeof(char), * destLen);
+        initVectorPreallocated(& str, dest, sizeof(char), * destLen);
     }
 
     PrintTracker printer = {

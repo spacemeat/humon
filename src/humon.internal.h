@@ -31,25 +31,30 @@ extern "C"
 {
 #endif
 
+    int min(int a, int b);
+    int max(int a, int b);
+
+    /// Returns whether a string is contained in another string.
     bool stringInString(char const * haystack, int haystackLen, char const * needle, int needleLen);
 
     /// Initializes a vector to zero size. Vector can count characters but not store them. Does not allocate.
-    void huInitVectorForCounting(huVector * vector);
+    void initVectorForCounting(huVector * vector);
     /// Initializes a vector with a preallocated buffer. Does not allocate, and cannot grow.
-    void huInitVectorPreallocated(huVector * vector, void * buffer, int elementSize, int numElements);
+    void initVectorPreallocated(huVector * vector, void * buffer, int elementSize, int numElements);
     /// Initializes a vector to zero size. Does not allocate yet.
-    void huInitGrowableVector(huVector * vector, int elementSize);
-
+    void initGrowableVector(huVector * vector, int elementSize);
     /// Frees the memory owned by a huVector.
-    void huDestroyVector(huVector const * vector);
+    void destroyVector(huVector const * vector);
     /// Returns the number of elements in a huVector.
-    int huGetVectorSize(huVector const * vector);
+    int getVectorSize(huVector const * vector);
     /// Returns a pointer to an element in a huVector.
-    void * huGetVectorElement(huVector const * vector, int idx);
-
-    void huResetVector(huVector * vector);
-    int huAppendToVector(huVector * vector, void const * data, int numElements);
-    void * huGrowVector(huVector * vector, int * numElements);
+    void * getVectorElement(huVector const * vector, int idx);
+    /// Resets a vector to its Init* state.
+    void resetVector(huVector * vector);
+    /// Adds an array of elements to the vector, and returns the number of elements successfully appended.
+    int appendToVector(huVector * vector, void const * data, int numElements);
+    /// Grows a growable vector, and return a pointer to the first element of the appended entries.
+    void * growVector(huVector * vector, int * numElements);
 
     typedef struct huCursor_tag
     {
@@ -72,37 +77,50 @@ extern "C"
         huCursor cursors[2];
     } huScanner;
 
+    /// Return if the CPU is a big-endian CPU.
     bool isMachineBigEndian();
 
-    void huInitScanner(huScanner * scanner, huTrove * trove, char const * str, int strLen);
-    int getcharLength(char const * cur);
+    /// Move the scanner's character cursor by one.
     void nextCharacter(huScanner * cursor);
-    void analyzeCharacter(huScanner * cursor);
-    void analyzeWhitespace(huScanner * cursor);
+    /// Initialize a huScanner.
+    void initScanner(huScanner * scanner, huTrove * trove, char const * str, int strLen);
+    /// Move the scanner's character cursor past any whitespace.
     void eatWs(huScanner * cursor, int tabSize, int * line, int * col);
-    bool parseInt(huScanner * scanner, int encoding, int * integer);
 
-    void huInitNode(huNode * node, huTrove const * trove);
-    void huDestroyNode(huNode const * node);
+    /// Initialize a huNode object.
+    void initNode(huNode * node, huTrove const * trove);
+    /// Destroy a huNode object's contents.
+    void destroyNode(huNode const * node);
 
+    /// Add a huToken to a trove's token array.
     huToken * allocNewToken(huTrove * trove, int kind, char const * str, int size, int line, int col, int endLine, int endCol, char quoteChar);
+    /// Add a huNode to a trove's node array.
     huNode * allocNewNode(huTrove * trove, int nodeKind, huToken const * firstToken);
 
+    /// Add a huError to a trove's error array during tokenization.
     void recordTokenizeError(huTrove * trove, int errorCode, int line, int col);
-    void recordError(huTrove * trove, int errorCode, huToken const * pCur);
+    /// Add a huError to a trove's error array during parsing.
+    void recordParseError(huTrove * trove, int errorCode, huToken const * pCur);
 
+    /// Attempt to determine the Unicode encoding of a string in memory.
     int swagEncodingFromString(huStringView const * data, size_t * numBomChars, huLoadParams * loadParams);
+    /// Attempt to determine the Unicode encoding of a file.
     int swagEncodingFromFile(FILE * fp, int fileSize, size_t * numBomChars, huLoadParams * loadParams);
+    /// Transcode a string in memory from its native encoding to a UTF-8 memory buffer.
     int transcodeToUtf8FromString(char * dest, size_t * numBytesEncoded, huStringView const * src, huLoadParams * loadParams);
+    /// Transcode a file from its native encoding to a UTF-8 memory buffer.
     int transcodeToUtf8FromFile(char * dest, size_t * numBytesEncoded, FILE * fp, int srcLen, huLoadParams * loadParams);
 
-    void huTokenizeTrove(huTrove * trove);
-    void huParseTrove(huTrove * trove);
+    /// Extracts the tokens from a token stream.
+    void tokenizeTrove(huTrove * trove);
+    /// Extracts the nodes from a token array.
+    void parseTrove(huTrove * trove);
 
-    int min(int a, int b);
-    int max(int a, int b);
-
-    // printing token streams and node addresses
+    /// Manages printing a dynamic string.
+    /** An object of this class manages a memory string which 
+     * is printed small bits at a time. It also tracks the kind
+     * of text printed, so as to properly format the whitespace
+     * according to settings. */
     typedef struct PrintTracker_tag
     {
         huTrove const * trove;
@@ -117,19 +135,9 @@ extern "C"
         bool lastPrintWasWhitespace;
     } PrintTracker;
 
+    /// This appends a string to a PrintTracker.
     void appendString(PrintTracker * printer, char const * addend, int size);
-    void appendWs(PrintTracker * printer, int numChars);
-    void appendIndent(PrintTracker * printer);
-    void appendNewline(PrintTracker * printer);
-    void appendColor(PrintTracker * printer, int colorCode);
-    void appendColoredString(PrintTracker * printer, char const * addend, int size, int colorCode);
-    void appendColoredToken(PrintTracker * printer, huToken const * tok, int colorCode);
-    void printForwardComment(PrintTracker * printer, huToken const * tok);
-    void printTrailingComment(PrintTracker * printer, huToken const * tok);
-    int printAllPrecedingComments(PrintTracker * printer, huNode const * node, huToken const * tok, int startingWith);
-    int printAllTrailingComments(PrintTracker * printer, huNode const * node, huToken const * tok, int startingWith);
-    void printAnnotations(PrintTracker * printer, huVector const * annotations, bool isTroveAnnotations);
-    void printNode(PrintTracker * printer, huNode const * node);
+    /// This prints a trove to a whitespace-formatted string.
     void troveToPrettyString(huTrove const * trove, huVector * str, huStoreParams * storeParams);
 
 #ifdef __cplusplus

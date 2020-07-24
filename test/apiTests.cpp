@@ -3462,7 +3462,7 @@ TEST_GROUP(huTroveToString)
 
         int toStrLen = 0;
         huStoreParams storeParams;
-        huStringView colors[HU_COLORCODE_NUMCOLORKINDS];
+        huStringView colors[HU_COLORCODE_NUMCOLORS];
         if (useColors)
             { huFillAnsiColorTable(colors); }
         huInitStoreParamsZ(& storeParams, format, 4, false, useColors, colors, printComments, "\n", printBom);

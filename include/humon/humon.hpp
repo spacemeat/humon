@@ -60,7 +60,7 @@ namespace hu
     };
 
     /// Return a string representation of a hu::Encoding.
-    static inline char const * to_string(Encoding rhs) HUMON_NOEXCEPT
+    inline char const * to_string(Encoding rhs) HUMON_NOEXCEPT
     {
         return capi::huEncodingToString((int) rhs);
     }
@@ -81,7 +81,7 @@ namespace hu
     };
 
     /// Return a string representation of a hu::TokenKind.
-    static inline char const * to_string(TokenKind rhs) HUMON_NOEXCEPT
+    inline char const * to_string(TokenKind rhs) HUMON_NOEXCEPT
     {
         return capi::huTokenKindToString((int) rhs);
     }
@@ -96,7 +96,7 @@ namespace hu
     };
 
     /// Return a string representation of a hu::NodeKind.
-    static inline char const * to_string(NodeKind rhs) HUMON_NOEXCEPT
+    inline char const * to_string(NodeKind rhs) HUMON_NOEXCEPT
     {
         return capi::huNodeKindToString((int) rhs);
     }
@@ -110,7 +110,7 @@ namespace hu
     };
 
     /// Return a string representation of a hu::WhitespaceFormat.
-    static inline char const * to_string(WhitespaceFormat rhs) HUMON_NOEXCEPT
+    inline char const * to_string(WhitespaceFormat rhs) HUMON_NOEXCEPT
     {
         return capi::huWhitespaceFormatToString((int) rhs);
     }
@@ -136,7 +136,7 @@ namespace hu
     };
 
     /// Return a string representation of a hu::ErrorCode.
-    static inline char const * to_string(ErrorCode rhs) HUMON_NOEXCEPT
+    inline char const * to_string(ErrorCode rhs) HUMON_NOEXCEPT
     {
         return capi::huOutputErrorToString((int) rhs);
     }
@@ -162,7 +162,7 @@ namespace hu
         annoValue = capi::HU_COLORCODE_ANNOVALUE,                   ///< Annotation value style.
         whitespace = capi::HU_COLORCODE_WHITESPACE,                 ///< Whitespace style (including commas).
 
-        numColorCodes = capi::HU_COLORCODE_NUMCOLORKINDS            ///< One past the last style code.
+        numColors = capi::HU_COLORCODE_NUMCOLORS                    ///< One past the last style code.
     };
 
     /// Value extraction template for in-line grokking of value nodes.
@@ -277,12 +277,12 @@ namespace hu
     };
 
     // Conversion from capi::huStringView to std::string_view. Mostly internal, no doxygen.
-    static inline std::string_view make_sv(capi::huStringView const & husv) HUMON_NOEXCEPT
+    inline std::string_view make_sv(capi::huStringView const & husv) HUMON_NOEXCEPT
     {
         return std::string_view(husv.ptr, husv.size);
     }
 
-    using ColorTable = std::array<std::string_view, capi::HU_COLORCODE_NUMCOLORKINDS>;
+    using ColorTable = std::array<std::string_view, capi::HU_COLORCODE_NUMCOLORS>;
 
     /// Encapsulates a selection of parameters to control how Humon interprets the input for loading.
     class LoadParams
@@ -342,7 +342,7 @@ namespace hu
             if (colors)
             {
                 std::string_view const * sv = (* colors).data();
-                for (size_t i = 0; i < capi::HU_COLORCODE_NUMCOLORKINDS; ++i)
+                for (size_t i = 0; i < capi::HU_COLORCODE_NUMCOLORS; ++i)
                 {
                     capiColorTable[i].ptr = sv[i].data();
                     capiColorTable[i].size = sv[i].size();
@@ -371,7 +371,7 @@ namespace hu
             
             ColorTable newColorTable;
             std::string_view * sv = newColorTable.data();
-            for (int i = 0; i < capi::HU_COLORCODE_NUMCOLORKINDS; ++i)
+            for (int i = 0; i < capi::HU_COLORCODE_NUMCOLORS; ++i)
             {
                 sv[i] = { capiColorTable[i].ptr,
                           (size_t) capiColorTable[i].size };
@@ -385,7 +385,7 @@ namespace hu
 
         /// Aggregated C struct.
         capi::huStoreParams cparams;
-        capi::huStringView capiColorTable[capi::HU_COLORCODE_NUMCOLORKINDS];
+        capi::huStringView capiColorTable[capi::HU_COLORCODE_NUMCOLORS];
     };
 
     class Trove;
@@ -394,7 +394,7 @@ namespace hu
     typedef std::variant<std::string, ErrorCode> SerializeResult;
 
     // Either throws or returns false.
-    static inline void checkNotNull(void const * cp) HUMON_NOEXCEPT
+    inline void checkNotNull(void const * cp) HUMON_NOEXCEPT
     {
 #ifdef HUMON_USING_EXCEPTIONS
         if (cp == nullptr)
@@ -1171,12 +1171,12 @@ namespace hu
 
 
     /// Fills an array with string table values for ANSI color terminals.
-    static inline ColorTable getAnsiColorTable() HUMON_NOEXCEPT
+    inline ColorTable getAnsiColorTable() HUMON_NOEXCEPT
     {
         ColorTable table;        
-        capi::huStringView nativeTable[capi::HU_COLORCODE_NUMCOLORKINDS];
+        capi::huStringView nativeTable[capi::HU_COLORCODE_NUMCOLORS];
         capi::huFillAnsiColorTable(nativeTable);
-        for (size_t i = 0; i < capi::HU_COLORCODE_NUMCOLORKINDS; ++i)
+        for (size_t i = 0; i < capi::HU_COLORCODE_NUMCOLORS; ++i)
             { table[i] = {nativeTable[i].ptr, static_cast<size_t>(nativeTable[i].size)}; }
 
         return table;
