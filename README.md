@@ -361,7 +361,7 @@ There are several ways to access a node. To get the root node, which is always a
     // or
     rootNode = trove.nodeByAddress("/");
     // or
-    rootNode = trove.node(0);
+    rootNode = trove.nodeByIndex(0);
 
 These each return a `hu::Node` object. 
 

@@ -129,7 +129,7 @@ int main()
         // or
         rootNode = trove.nodeByAddress("/");    cout << "rootNode: " << rootNode.address() << "\n";
         // or
-        rootNode = trove.node(0);               cout << "rootNode: " << rootNode.address() << "\n";
+        rootNode = trove.nodeByIndex(0);        cout << "rootNode: " << rootNode.address() << "\n";
 
         auto node = rootNode / "foo" / 0;       cout << "node: " << node.address() << "\n";
         // or

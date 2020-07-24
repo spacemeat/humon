@@ -513,11 +513,9 @@ namespace hu
         bool hasKey() const HUMON_NOEXCEPT                ///< Returns whether this node has a key. (If it's in a dict.)
             { check(); return capi::huHasKey(cnode); }
         Token key() const HUMON_NOEXCEPT                  ///< Returns the key token, or the null token if this is not in a dict.
-            { check(); return Token(hasKey() ? cnode->keyToken : capi::hu_nullToken); }
-        bool hasValue() const HUMON_NOEXCEPT              ///< Returns whether the node has a value token. Should always be true.
-            { check(); return capi::huHasValue(cnode); }
+            { check(); return Token(isValid() ? cnode->keyToken : capi::hu_nullToken); }
         Token value() const HUMON_NOEXCEPT                ///< Returns the first value token that encodes this node.
-            { check(); return Token(hasValue() ? cnode->valueToken : capi::hu_nullToken); }
+            { check(); return Token(isValid() ? cnode->valueToken : capi::hu_nullToken); }
         int numAnnotations() const HUMON_NOEXCEPT         ///< Returns the number of annotations associated to this node.
             { check(); return capi::huGetNumAnnotations(cnode); }
         /// Returns the `idx`th annotation.
@@ -526,7 +524,9 @@ namespace hu
         std::tuple<Token, Token> annotation(int idx) const HUMON_NOEXCEPT 
         {
             check();
-            auto canno = capi::huGetAnnotation(cnode, idx); 
+            auto canno = capi::huGetAnnotation(cnode, idx);
+            if (canno == nullptr)
+                return { Token(capi::hu_nullToken), Token(capi::hu_nullToken) };
             return { Token(canno->key), Token(canno->value) };
         }
         /// Returns a new collection of all this node's annotations.
@@ -874,8 +874,8 @@ namespace hu
             { return Token(capi::huGetToken(ctrove, idx)); }
         int numNodes() const HUMON_NOEXCEPT       ///< Returns the number of nodes in the trove.
             { return capi::huGetNumNodes(ctrove); }
-        Node node(int idx) const HUMON_NOEXCEPT   ///< Returns a Node by index.
-            { return Node(capi::huGetNode(ctrove, idx)); }
+        Node nodeByIndex(int idx) const HUMON_NOEXCEPT   ///< Returns a Node by index.
+            { return Node(capi::huGetNodeByIndex(ctrove, idx)); }
         bool hasRoot() const HUMON_NOEXCEPT       ///< Returns whether the trove has a root node.
             { return numNodes() > 0; }
         Node root() const HUMON_NOEXCEPT          ///< Returns the root node of the trove.

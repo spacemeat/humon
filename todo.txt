@@ -1,5 +1,5 @@
 DONE THIS CHECKIN:
-More properly hide nonpublic impls. Add some doxy for internals. Aligned hu prefixes with publics only.
+Rearranging, renaming, pruning the API.
 
 TODO:
 P1 static-ify private C fns
