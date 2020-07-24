@@ -83,19 +83,7 @@ typedef struct ReadState_tag
 } ReadState;
 
 
-int numUtf8Bytes(uint32_t validCodePoint)
-{
-    if (validCodePoint < 1 << 7)
-        { return 1; }
-    else if (validCodePoint < (1 << 11))
-        { return 2; }
-    else if (validCodePoint < (1 << 16))
-        { return 3; }
-    return 4;
-}
-
-
-void initReaders(ReadState readers[], huLoadParams * loadParams)
+static void initReaders(ReadState readers[], huLoadParams * loadParams)
 {
     bool machineIsBigEndian = isMachineBigEndian();
 
@@ -171,7 +159,7 @@ void initReaders(ReadState readers[], huLoadParams * loadParams)
 }
 
 
-void scanUtf8(uint8_t codeUnit, ReadState * rs)
+static void scanUtf8(uint8_t codeUnit, ReadState * rs)
 {
     if (rs->bytesRemaining > 0)
     {
@@ -224,7 +212,7 @@ void scanUtf8(uint8_t codeUnit, ReadState * rs)
 }
 
 
-void scanUtf16(uint16_t codeUnit, ReadState * rs)
+static void scanUtf16(uint16_t codeUnit, ReadState * rs)
 {
     bool foundValidCodeUnit = false;
     if (rs->bytesRemaining > 0)
@@ -280,7 +268,7 @@ void scanUtf16(uint16_t codeUnit, ReadState * rs)
 }
 
 
-void scanUtf32(uint32_t codeUnit, ReadState * rs)
+static void scanUtf32(uint32_t codeUnit, ReadState * rs)
 {
     // If we find out we should include surrogates (technically no, but for compatibility),
     // we'll remove the second predicate here.
@@ -300,7 +288,7 @@ void scanUtf32(uint32_t codeUnit, ReadState * rs)
 }
 
 
-void swagEncodingFromBlock(char const * block, int blockSize, ReadState * readers, int * numValidEncodings)
+static void swagEncodingFromBlock(char const * block, int blockSize, ReadState * readers, int * numValidEncodings)
 {
     char const * u8Cur = block;
     char const * u16beCur = block;
@@ -413,7 +401,7 @@ void swagEncodingFromBlock(char const * block, int blockSize, ReadState * reader
 }
 
 
-ReadState * chooseFromAmbiguousEncodings(ReadState readers[], int numValidEncodings)
+static ReadState * chooseFromAmbiguousEncodings(ReadState readers[], int numValidEncodings)
 {
     // If we finished scanning while expecting more bytes in a multi-codeUnit 
     // encoding, that encoding is bunk. (UTF32 never has more than one code unit.)
@@ -482,7 +470,7 @@ ReadState * chooseFromAmbiguousEncodings(ReadState readers[], int numValidEncodi
 }
 
 
-int getEncodingFromBom(huStringView const * data, size_t * numBomChars, bool isMachineBigEndian)
+static int getEncodingFromBom(huStringView const * data, size_t * numBomChars, bool isMachineBigEndian)
 {
     int encoding = HU_ENCODING_UNKNOWN;
 
@@ -612,7 +600,7 @@ int swagEncodingFromFile(FILE * fp, int fileSize, size_t * numBomChars, huLoadPa
 }
 
 
-size_t appendEncodedUtf8CodePoint(char * dest, uint32_t codePoint)
+static size_t appendEncodedUtf8CodePoint(char * dest, uint32_t codePoint)
 {
     int encodedLen = 0;
 
@@ -658,7 +646,7 @@ size_t appendEncodedUtf8CodePoint(char * dest, uint32_t codePoint)
 }
 
 
-size_t transcodeToUtf8FromBlock_utf8(char * dest, char const * block, int blockSize, ReadState * reader)
+static size_t transcodeToUtf8FromBlock_utf8(char * dest, char const * block, int blockSize, ReadState * reader)
 {
     uint8_t const * uCur = (uint8_t const *) block;
     int encodedLen = 0;
@@ -686,7 +674,7 @@ size_t transcodeToUtf8FromBlock_utf8(char * dest, char const * block, int blockS
 }
 
 
-size_t transcodeToUtf8FromBlock_utf16be(char * dest, char const * block, int blockSize, ReadState * reader)
+static size_t transcodeToUtf8FromBlock_utf16be(char * dest, char const * block, int blockSize, ReadState * reader)
 {
     char const * uCur = block;
     int encodedLen = 0;
@@ -724,7 +712,7 @@ size_t transcodeToUtf8FromBlock_utf16be(char * dest, char const * block, int blo
 }
 
 
-size_t transcodeToUtf8FromBlock_utf16le(char * dest, char const * block, int blockSize, ReadState * reader)
+static size_t transcodeToUtf8FromBlock_utf16le(char * dest, char const * block, int blockSize, ReadState * reader)
 {
     char const * uCur = block;
     int encodedLen = 0;
@@ -763,7 +751,7 @@ size_t transcodeToUtf8FromBlock_utf16le(char * dest, char const * block, int blo
 }
 
 
-size_t transcodeToUtf8FromBlock_utf32be(char * dest, char const * block, int blockSize, ReadState * reader)
+static size_t transcodeToUtf8FromBlock_utf32be(char * dest, char const * block, int blockSize, ReadState * reader)
 {
     char const * uCur = block;
     int encodedLen = 0;
@@ -805,7 +793,7 @@ size_t transcodeToUtf8FromBlock_utf32be(char * dest, char const * block, int blo
 }
 
 
-size_t transcodeToUtf8FromBlock_utf32le(char * dest, char const * block, int blockSize, ReadState * reader)
+static size_t transcodeToUtf8FromBlock_utf32le(char * dest, char const * block, int blockSize, ReadState * reader)
 {
     char const * uCur = block;
     int encodedLen = 0;
@@ -847,7 +835,7 @@ size_t transcodeToUtf8FromBlock_utf32le(char * dest, char const * block, int blo
 }
 
 
-size_t transcodeToUtf8FromBlock(char * dest, char const * block, int blockSize, ReadState * reader)
+static size_t transcodeToUtf8FromBlock(char * dest, char const * block, int blockSize, ReadState * reader)
 {
     switch(reader->loadParams->encoding)
     {

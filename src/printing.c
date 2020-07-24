@@ -4,23 +4,23 @@
 #include "ansiColors.h"
 
 
-void printUtf8Bom(PrintTracker * printer)
+static void printUtf8Bom(PrintTracker * printer)
 {
     char bom[] = { 0xef, 0xbb, 0xbf };
-    huAppendToVector(printer->str, bom, 3);
+    appendToVector(printer->str, bom, 3);
 }
 
 
 void appendString(PrintTracker * printer, char const * addend, int size)
 {
-    huAppendToVector(printer->str, addend, size);
+    appendToVector(printer->str, addend, size);
     printer->lastPrintWasIndent = false;
     printer->lastPrintWasNewline = false;
     printer->lastPrintWasWhitespace = false;
 }
 
 
-void appendWs(PrintTracker * printer, int numChars)
+static void appendWs(PrintTracker * printer, int numChars)
 {
     if (printer->storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_MINIMAL)
         { numChars = max(numChars, 1); }
@@ -37,14 +37,14 @@ void appendWs(PrintTracker * printer, int numChars)
 }
 
 
-void ensureWs(PrintTracker * printer)
+static void ensureWs(PrintTracker * printer)
 {
     if (printer->lastPrintWasWhitespace == false)
         { appendWs(printer, 1); }
 }
 
 
-void appendTabs(PrintTracker * printer, int numTabs)
+static void appendTabs(PrintTracker * printer, int numTabs)
 {
     char const tabs[] = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t"; // 16 tabs
     while (numTabs > 16)
@@ -58,7 +58,7 @@ void appendTabs(PrintTracker * printer, int numTabs)
 }
 
 
-void appendIndent(PrintTracker * printer)
+static void appendIndent(PrintTracker * printer)
 {
     if (printer->storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_MINIMAL || printer->lastPrintWasIndent)
         { return; }
@@ -72,7 +72,7 @@ void appendIndent(PrintTracker * printer)
 }
 
 
-void appendNewline(PrintTracker * printer)
+static void appendNewline(PrintTracker * printer)
 {
     if (printer->lastPrintWasNewline)
         { return; }
@@ -83,7 +83,7 @@ void appendNewline(PrintTracker * printer)
 }
 
 
-void appendColor(PrintTracker * printer, int colorCode)
+static void appendColor(PrintTracker * printer, int colorCode)
 {
     if (printer->storeParams->usingColors == false)
         { return; }
@@ -92,7 +92,7 @@ void appendColor(PrintTracker * printer, int colorCode)
 }
 
 
-void appendColoredString(PrintTracker * printer, char const * addend, int size, int colorCode)
+static void appendColoredString(PrintTracker * printer, char const * addend, int size, int colorCode)
 {
     appendColor(printer, colorCode);
     appendString(printer, addend, size);
@@ -101,7 +101,7 @@ void appendColoredString(PrintTracker * printer, char const * addend, int size, 
 }
 
 
-void appendColoredToken(PrintTracker * printer, huToken const * tok, int colorCode)
+static void appendColoredToken(PrintTracker * printer, huToken const * tok, int colorCode)
 {
     // prevent adjacent unquoted words from abutting
     if (printer->lastPrintWasUnquotedWord && tok->kind != HU_TOKENKIND_COMMENT)
@@ -117,7 +117,7 @@ void appendColoredToken(PrintTracker * printer, huToken const * tok, int colorCo
 }
 
 
-void printForwardComment(PrintTracker * printer, huToken const * tok)
+static void printForwardComment(PrintTracker * printer, huToken const * tok)
 {
     if (printer->storeParams->printComments == false)
         { return; }
@@ -129,7 +129,7 @@ void printForwardComment(PrintTracker * printer, huToken const * tok)
 }
 
 
-void printTrailingComment(PrintTracker * printer, huToken const * tok)
+static void printTrailingComment(PrintTracker * printer, huToken const * tok)
 {
     if (printer->storeParams->printComments == false)
         { return; }
@@ -140,7 +140,7 @@ void printTrailingComment(PrintTracker * printer, huToken const * tok)
 }
 
 
-int printAllPrecedingComments(PrintTracker * printer, huNode const * node, huToken const * tok, int startingWith)
+static int printAllPrecedingComments(PrintTracker * printer, huNode const * node, huToken const * tok, int startingWith)
 {
     int commentIdx = startingWith;
     int numComments = huGetNumComments(node);
@@ -163,7 +163,7 @@ int printAllPrecedingComments(PrintTracker * printer, huNode const * node, huTok
 }
 
 
-int printAllTrailingComments(PrintTracker * printer, huNode const * node, huToken const * tok, int startingWith)
+static int printAllTrailingComments(PrintTracker * printer, huNode const * node, huToken const * tok, int startingWith)
 {
     int commentIdx = startingWith;
     int numComments = huGetNumComments(node);
@@ -187,9 +187,9 @@ int printAllTrailingComments(PrintTracker * printer, huNode const * node, huToke
 }
 
 
-void printAnnotations(PrintTracker * printer, huVector const * annotations, bool isTroveAnnotations)
+static void printAnnotations(PrintTracker * printer, huVector const * annotations, bool isTroveAnnotations)
 {
-    int numAnnos = huGetVectorSize(annotations);
+    int numAnnos = getVectorSize(annotations);
     if (numAnnos == 0)
         { return; }
 
@@ -224,7 +224,7 @@ void printAnnotations(PrintTracker * printer, huVector const * annotations, bool
     {
         if (annoIdx > 0 && printer->storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
             { ensureWs(printer); }
-        huAnnotation * anno = huGetVectorElement(annotations, annoIdx);
+        huAnnotation * anno = getVectorElement(annotations, annoIdx);
         appendColoredToken(printer, anno->key, HU_COLORCODE_ANNOKEY);
         appendColoredString(printer, ":", 1, HU_COLORCODE_PUNCANNOTATEKEYVALUESEP);
         if (printer->storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
@@ -243,7 +243,7 @@ void printAnnotations(PrintTracker * printer, huVector const * annotations, bool
 }
 
 
-void printNode(PrintTracker * printer, huNode const * node)
+static void printNode(PrintTracker * printer, huNode const * node)
 {    
     int numComments = huGetNumComments(node);
     int commentIdx = 0;
@@ -418,7 +418,7 @@ void troveToPrettyString(huTrove const * trove, huVector * str, huStoreParams * 
 }
 
 
-void setTableEntry(huStringView table[], int colorKind, char const * str)
+static void setTableEntry(huStringView table[], int colorKind, char const * str)
 {
     table[colorKind].ptr = str; table[colorKind].size = strlen(str);
 }

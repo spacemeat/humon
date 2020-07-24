@@ -103,7 +103,7 @@ extern "C"
         HU_COLORCODE_ANNOKEY,                   ///< Annotation key style.
         HU_COLORCODE_ANNOVALUE,                 ///< Annotation value style.
         HU_COLORCODE_WHITESPACE,                ///< Whitespace style (including commas).
-        HU_COLORCODE_NUMCOLORKINDS              ///< One past the last style code.
+        HU_COLORCODE_NUMCOLORS                  ///< One past the last style code.
     };
 
     enum huVectorKind
@@ -148,7 +148,7 @@ extern "C"
      * particular token in a Humon file. Every token is read and tracked with a huToken. */
     typedef struct huToken_tag
     {
-        short kind;             ///< A huTokenKind value.
+        short kind;             ///< The kind of token this is (huTokenKind).
         char quoteChar;         ///< Whether the token is a quoted string.
         huStringView str;       ///< A view of the token string.
         int line;               ///< The line number in the file where the token begins.
@@ -195,6 +195,7 @@ extern "C"
         bool allowUtf16UnmatchedSurrogates;
         int tabSize;
     } huLoadParams;
+
     /// Fill in a huLoadParams struct quickly.
     void huInitLoadParams(huLoadParams * params, int encoding, bool strictUnicode, int tabSize);
 
@@ -418,6 +419,7 @@ extern "C"
     /// Serializes a trove to file.
     int huTroveToFileN(huTrove const * trove, char const * path, int pathLen, int * destLength, huStoreParams * storeParams);
 
+    /// Fills an array of HU_COLORCODE_NUMCOLORS huStringViews with ANSI terminal color codes for printing to console.
     void huFillAnsiColorTable(huStringView table[]);
 
     extern huToken const * hu_nullToken;

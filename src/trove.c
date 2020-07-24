@@ -9,14 +9,14 @@ void initTrove(huTrove * trove, huLoadParams * loadParams)
     trove->dataStringSize = 0;
     trove->encoding = loadParams->encoding;
 
-    huInitGrowableVector(& trove->tokens, sizeof(huToken));
-    huInitGrowableVector(& trove->nodes, sizeof(huNode));
-    huInitGrowableVector(& trove->errors, sizeof(huError));
+    initGrowableVector(& trove->tokens, sizeof(huToken));
+    initGrowableVector(& trove->nodes, sizeof(huNode));
+    initGrowableVector(& trove->errors, sizeof(huError));
 
     trove->inputTabSize = loadParams->tabSize;
 
-    huInitGrowableVector(& trove->annotations, sizeof(huAnnotation));
-    huInitGrowableVector(& trove->comments, sizeof(huComment));
+    initGrowableVector(& trove->annotations, sizeof(huAnnotation));
+    initGrowableVector(& trove->comments, sizeof(huComment));
 
     trove->lastAnnoToken = NULL;
 }
@@ -108,8 +108,8 @@ int huMakeTroveFromStringN(huTrove const ** trovePtr, char const * data, int dat
     trove->dataStringSize = transcodedLen;
 
     // Errors here are recorded in the trove object.
-    huTokenizeTrove(trove);
-    huParseTrove(trove);
+    tokenizeTrove(trove);
+    parseTrove(trove);
 
     * trovePtr = trove;
 
@@ -227,8 +227,8 @@ int huMakeTroveFromFileN(huTrove const ** trovePtr, char const * path, int pathL
     trove->dataString = newData;
     trove->dataStringSize = transcodedLen;
 
-    huTokenizeTrove(trove);
-    huParseTrove(trove);
+    tokenizeTrove(trove);
+    parseTrove(trove);
  
     * trovePtr = trove;
 
@@ -252,12 +252,12 @@ void huDestroyTrove(huTrove const * trove)
         ncTrove->dataStringSize = 0;
     }
 
-    huDestroyVector(& ncTrove->tokens);
-    huDestroyVector(& ncTrove->nodes);
-    huDestroyVector(& ncTrove->errors);
+    destroyVector(& ncTrove->tokens);
+    destroyVector(& ncTrove->nodes);
+    destroyVector(& ncTrove->errors);
 
-    huDestroyVector(& ncTrove->annotations);
-    huDestroyVector(& ncTrove->comments);
+    destroyVector(& ncTrove->annotations);
+    destroyVector(& ncTrove->comments);
 
     free(ncTrove);
 }
@@ -293,7 +293,7 @@ huToken * allocNewToken(huTrove * trove, int kind,
     int endCol, char quoteChar)
 {
     int num = 1;
-    huToken * newToken = huGrowVector(& trove->tokens, & num);
+    huToken * newToken = growVector(& trove->tokens, & num);
     if (num == 0)
         { return (huToken *) hu_nullToken; }
 
@@ -583,7 +583,7 @@ huNode const * huGetNodeByFullAddressN(huTrove const * trove, char const * addre
         { return hu_nullNode; }
 
     huScanner scanner;
-    huInitScanner(& scanner, NULL, address, addressLen);
+    initScanner(& scanner, NULL, address, addressLen);
     int line = 0;  // unused
     int col = 0;
 
@@ -778,15 +778,15 @@ huNode * allocNewNode(huTrove * trove, int nodeKind, huToken const * firstToken)
     int num = 1;
 
     // TODO: Remove this debug hook
-    int foo = huGetVectorSize(& trove->nodes);
+    int foo = getVectorSize(& trove->nodes);
     if (foo > 15)
         { num = 1; }
 
-    huNode * newNode = huGrowVector(& trove->nodes, & num);
+    huNode * newNode = growVector(& trove->nodes, & num);
     if (num == 0)
         { return (huNode *) hu_nullNode; }
 
-    huInitNode(newNode, trove);
+    initNode(newNode, trove);
     int newNodeIdx = newNode - (huNode *) trove->nodes.buffer;
     newNode->nodeIdx = newNodeIdx;
     newNode->kind = nodeKind;
@@ -811,7 +811,7 @@ void recordTokenizeError(huTrove * trove, int errorCode, int line, int col)
 #endif
 
     int num = 1;
-    huError * error = huGrowVector(& trove->errors, & num);
+    huError * error = growVector(& trove->errors, & num);
     if (num)
     {
         error->errorCode = errorCode;
@@ -822,7 +822,7 @@ void recordTokenizeError(huTrove * trove, int errorCode, int line, int col)
 }
 
 
-void recordError(huTrove * trove, int errorCode, huToken const * pCur)
+void recordParseError(huTrove * trove, int errorCode, huToken const * pCur)
 {
 #ifdef HUMON_ERRORS_TO_STDERR
     fprintf (stderr, "%sError%s: line: %d    col: %d    %s\n", ansi_lightRed, ansi_off, 
@@ -830,7 +830,7 @@ void recordError(huTrove * trove, int errorCode, huToken const * pCur)
 #endif
 
     int num = 1;
-    huError * error = huGrowVector(& trove->errors, & num);
+    huError * error = growVector(& trove->errors, & num);
     if (num)
     {
         error->errorCode = errorCode;
@@ -896,11 +896,11 @@ int huTroveToString(huTrove const * trove, char * dest, int * destLength, huStor
         huVector str;
         if (dest == NULL)
         {
-            huInitVectorForCounting(& str); // counting only
+            initVectorForCounting(& str); // counting only
         }
         else
         {
-            huInitVectorPreallocated(& str, dest, sizeof(char), * destLength);
+            initVectorPreallocated(& str, dest, sizeof(char), * destLength);
         }
 
         troveToPrettyString(trove, & str, storeParams);

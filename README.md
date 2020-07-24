@@ -626,7 +626,7 @@ This will generate an uncolored, well-formatted token stream, or an error code. 
     // Minimal whitespace, with old style HTML line breaks (default is "\n").
     tokStr = trove.toMinimalString({}, true, "<br />");
 
-For printing with colors, specify a color table of type `hu::ColorTable`, which is just a type alias for `std::array<std::string_view, capi::HU_COLORCODE_NUMCOLORKINDS>`. You can set these values manually; each string corresponds index-wise to color codes in `hu::ColorCode`, and is inserted just before the appropriate token in the printed token stream. There are a few special values: `hu::ColorCode::tokenStreamBegin` which is placed before all other characters, `hu::ColorCode::tokenEnd` which is placed after *each* colored token, and `hu::ColorCode::tokenStreamEnd` which is placed after the *last* token in the token stream.
+For printing with colors, specify a color table of type `hu::ColorTable`, which is just a type alias for `std::array<std::string_view, capi::HU_COLORCODE_NUMCOLORS>`. You can set these values manually; each string corresponds index-wise to color codes in `hu::ColorCode`, and is inserted just before the appropriate token in the printed token stream. There are a few special values: `hu::ColorCode::tokenStreamBegin` which is placed before all other characters, `hu::ColorCode::tokenEnd` which is placed after *each* colored token, and `hu::ColorCode::tokenStreamEnd` which is placed after the *last* token in the token stream.
 
 > Sometimes C-style enums can be more convenient than C++ enum classes. It's okay to admit it. You can use the analogous `hu::capi::huColorCode`, or `huColorCode` as defined in the `humon.h` C header.
 

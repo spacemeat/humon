@@ -17,10 +17,10 @@ TEST_GROUP(huVectorTests)
     }
 };
 
-TEST(huVectorTests, huInitVectorForCounting)
+TEST(huVectorTests, initVectorForCounting)
 {
     huVector v;
-    huInitVectorForCounting(&v);
+    initVectorForCounting(&v);
 
     POINTERS_EQUAL(NULL, v.buffer);
     LONGS_EQUAL(0, v.elementSize);
@@ -28,7 +28,7 @@ TEST(huVectorTests, huInitVectorForCounting)
     LONGS_EQUAL(0, v.vectorCapacity);
 
     int g = 1;
-    auto p = huGrowVector(&v, &g);
+    auto p = growVector(&v, &g);
     LONGS_EQUAL(1, g);
     POINTERS_EQUAL(NULL, p);
     POINTERS_EQUAL(NULL, v.buffer);
@@ -37,7 +37,7 @@ TEST(huVectorTests, huInitVectorForCounting)
     LONGS_EQUAL(0, v.vectorCapacity);
 
     g = 1;
-    p = huGrowVector(&v, &g);
+    p = growVector(&v, &g);
     LONGS_EQUAL(1, g);
     POINTERS_EQUAL(NULL, p);
     POINTERS_EQUAL(NULL, v.buffer);
@@ -46,7 +46,7 @@ TEST(huVectorTests, huInitVectorForCounting)
     LONGS_EQUAL(0, v.vectorCapacity);
 
     g = 1000;
-    p = huGrowVector(&v, &g);
+    p = growVector(&v, &g);
     LONGS_EQUAL(1000, g);
     POINTERS_EQUAL(NULL, p);
     POINTERS_EQUAL(NULL, v.buffer);
@@ -55,12 +55,12 @@ TEST(huVectorTests, huInitVectorForCounting)
     LONGS_EQUAL(0, v.vectorCapacity);
 }
 
-TEST(huVectorTests, huInitVectorPreallocated)
+TEST(huVectorTests, initVectorPreallocated)
 {
     huVector v;
     int numElements = 100;
     char buf[numElements];
-    huInitVectorPreallocated(&v, buf, 1, numElements);
+    initVectorPreallocated(&v, buf, 1, numElements);
 
     POINTERS_EQUAL(buf, v.buffer);
     LONGS_EQUAL(1, v.elementSize);
@@ -68,7 +68,7 @@ TEST(huVectorTests, huInitVectorPreallocated)
     LONGS_EQUAL(100, v.vectorCapacity);
 
     int g = 1;  
-    auto p = huGrowVector(&v, &g);
+    auto p = growVector(&v, &g);
     LONGS_EQUAL(1, g);
     POINTERS_EQUAL(v.buffer, p);
     LONGS_EQUAL(1, v.elementSize);
@@ -76,7 +76,7 @@ TEST(huVectorTests, huInitVectorPreallocated)
     LONGS_EQUAL(100, v.vectorCapacity);
 
     g = 1;  
-    p = huGrowVector(&v, &g);
+    p = growVector(&v, &g);
     LONGS_EQUAL(1, g);
     POINTERS_EQUAL((char*) v.buffer + 1, p);
     LONGS_EQUAL(1, v.elementSize);
@@ -84,7 +84,7 @@ TEST(huVectorTests, huInitVectorPreallocated)
     LONGS_EQUAL(100, v.vectorCapacity);
 
     g = 2000;
-    p = huGrowVector(&v, &g);
+    p = growVector(&v, &g);
     LONGS_EQUAL(98, g);
     POINTERS_EQUAL((char*) v.buffer + 2, p);
     LONGS_EQUAL(1, v.elementSize);
@@ -92,7 +92,7 @@ TEST(huVectorTests, huInitVectorPreallocated)
     LONGS_EQUAL(100, v.vectorCapacity);
 
     g = 1;
-    p = huGrowVector(&v, &g);
+    p = growVector(&v, &g);
     LONGS_EQUAL(0, g);
     POINTERS_EQUAL(NULL, p);
     LONGS_EQUAL(1, v.elementSize);
@@ -100,10 +100,10 @@ TEST(huVectorTests, huInitVectorPreallocated)
     LONGS_EQUAL(100, v.vectorCapacity);
 }
 
-TEST(huVectorTests, huInitGrowableVector)
+TEST(huVectorTests, initGrowableVector)
 {
     huVector v;
-    huInitGrowableVector(&v, 1);
+    initGrowableVector(&v, 1);
 
     POINTERS_EQUAL(NULL, v.buffer);
     LONGS_EQUAL(1, v.elementSize);
@@ -111,7 +111,7 @@ TEST(huVectorTests, huInitGrowableVector)
     LONGS_EQUAL(0, v.vectorCapacity);
 
     int g = 1;  
-    auto p = huGrowVector(&v, &g);
+    auto p = growVector(&v, &g);
     LONGS_EQUAL(1, g);
     POINTERS_EQUAL(v.buffer, p);
     LONGS_EQUAL(1, v.elementSize);
@@ -119,7 +119,7 @@ TEST(huVectorTests, huInitGrowableVector)
     LONGS_EQUAL(16, v.vectorCapacity);
 
     g = 1;  
-    p = huGrowVector(&v, &g);
+    p = growVector(&v, &g);
     LONGS_EQUAL(1, g);
     POINTERS_EQUAL((char*) v.buffer + 1, p);
     LONGS_EQUAL(1, v.elementSize);
@@ -127,7 +127,7 @@ TEST(huVectorTests, huInitGrowableVector)
     LONGS_EQUAL(16, v.vectorCapacity);
 
     g = 2004;
-    p = huGrowVector(&v, &g);
+    p = growVector(&v, &g);
     LONGS_EQUAL(2004, g);
     POINTERS_EQUAL((char*) v.buffer + 2, p);
     LONGS_EQUAL(1, v.elementSize);
@@ -135,12 +135,12 @@ TEST(huVectorTests, huInitGrowableVector)
     LONGS_EQUAL(2048, v.vectorCapacity);
 
     g = 1;
-    p = huGrowVector(&v, &g);
+    p = growVector(&v, &g);
     LONGS_EQUAL(1, g);
     POINTERS_EQUAL((char*) v.buffer + 2006, p);
     LONGS_EQUAL(1, v.elementSize);
     LONGS_EQUAL(2007, v.numElements);
     LONGS_EQUAL(2048, v.vectorCapacity);
 
-    huDestroyVector(&v);
+    destroyVector(&v);
 }
