@@ -62,13 +62,13 @@ char const * huNodeKindToString(int rhs)
 }
 
 
-char const * huOutputFormatToString(int rhs)
+char const * huWhitespaceFormatToString(int rhs)
 {
     switch(rhs)
     {
-    case HU_OUTPUTFORMAT_XERO: return "xero";
-    case HU_OUTPUTFORMAT_MINIMAL: return "minimal";
-    case HU_OUTPUTFORMAT_PRETTY: return "pretty";
+    case HU_WHITESPACEFORMAT_XERO: return "xero";
+    case HU_WHITESPACEFORMAT_MINIMAL: return "minimal";
+    case HU_WHITESPACEFORMAT_PRETTY: return "pretty";
     default: return "!!unknown!!";
     }
 }
@@ -117,20 +117,20 @@ void huInitLoadParams(huLoadParams * params, int encoding, bool strictUnicode, i
 }
 
 
-void huInitStoreParamsZ(huStoreParams * params, int outputFormat, int indentSize, 
+void huInitStoreParamsZ(huStoreParams * params, int WhitespaceFormat, int indentSize, 
     bool indentWithTabs, bool usingColors, huStringView const * colorTable,  bool printComments, 
     char const * newline, bool printBom)
 {
-    huInitStoreParamsN(params, outputFormat, indentSize, indentWithTabs, usingColors, colorTable, 
+    huInitStoreParamsN(params, WhitespaceFormat, indentSize, indentWithTabs, usingColors, colorTable, 
         printComments, newline, strlen(newline), printBom);
 }
 
 
-void huInitStoreParamsN(huStoreParams * params, int outputFormat, int indentSize, 
+void huInitStoreParamsN(huStoreParams * params, int WhitespaceFormat, int indentSize, 
     bool indentWithTabs, bool usingColors, huStringView const * colorTable,  bool printComments, 
     char const * newline, int newlineSize, bool printBom)
 {
-    params->outputFormat = outputFormat;
+    params->WhitespaceFormat = WhitespaceFormat;
     params->indentSize = indentSize;
     params->indentWithTabs = indentWithTabs;
     params->usingColors = usingColors;

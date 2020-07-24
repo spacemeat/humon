@@ -8,18 +8,15 @@ extern "C"
 {
 #endif
 
-    static int const MIN_INPUT_TAB_SIZE = 1;
-    static int const MAX_INPUT_TAB_SIZE = 1024;
-
     /// Specifies the supported Unicode encodings.
     enum huEncoding
     {
-        HU_ENCODING_UTF8,
-        HU_ENCODING_UTF16_BE,
-        HU_ENCODING_UTF16_LE,
-        HU_ENCODING_UTF32_BE,
-        HU_ENCODING_UTF32_LE,
-        HU_ENCODING_UNKNOWN
+        HU_ENCODING_UTF8,       ///< Specifies UTF-8 encoding.
+        HU_ENCODING_UTF16_BE,   ///< Specifies UTF-16 big-endian encoding.
+        HU_ENCODING_UTF16_LE,   ///< Specifies UTF-16 little-endian encoding.
+        HU_ENCODING_UTF32_BE,   ///< Specifies UTF-32 big-endian encoding.
+        HU_ENCODING_UTF32_LE,   ///< Specifies UTF-32 little-endian encoding.
+        HU_ENCODING_UNKNOWN     ///< Specifies that the encoding is unknown.
     };
 
     /// Returns a string representation of a huTokenKind.
@@ -56,38 +53,32 @@ extern "C"
     char const * huNodeKindToString(int rhs);
 
     /// Specifies the style of whitespacing in Humon text.
-    enum huOutputFormat
+    enum huWhitespaceFormat
     {
-        HU_OUTPUTFORMAT_XERO,       ///< Byte-for-byte copy of the original.
-        HU_OUTPUTFORMAT_MINIMAL,    ///< Reduces as much whitespace as possible.
-        HU_OUTPUTFORMAT_PRETTY      ///< Formats the text in a standard, human-friendly way.
+        HU_WHITESPACEFORMAT_XERO,       ///< Byte-for-byte copy of the original.
+        HU_WHITESPACEFORMAT_MINIMAL,    ///< Reduces as much whitespace as possible.
+        HU_WHITESPACEFORMAT_PRETTY      ///< Formats the text in a standard, human-friendly way.
     };
 
-    /// Returns a string representation of a huOutputFormat.
-   char const * huOutputFormatToString(int rhs);
+    /// Returns a string representation of a huWhitespaceFormat.
+   char const * huWhitespaceFormatToString(int rhs);
 
     /// Specifies a tokenizing or parsing error code, or lookup error.
     enum huErrorCode
     {
         HU_ERROR_NOERROR,                   ///< No error.
-
         HU_ERROR_BADENCODING,               ///< The Unicode encoding is malformed.
-
         HU_ERROR_UNFINISHEDQUOTE,           ///< The quoted text was not endquoted.
         HU_ERROR_UNFINISHEDCSTYLECOMMENT,   ///< The C-style comment was not closed.
-
         HU_ERROR_UNEXPECTEDEOF,             ///< The text ended early.
         HU_ERROR_TOOMANYROOTS,              ///< There is more than one root node detected.
         HU_ERROR_NONUNIQUEKEY,              ///< A non-unique key was encountered in a dict or annotation.
         HU_ERROR_SYNTAXERROR,               ///< General syntax error.
-
         HU_ERROR_NOTFOUND,                  ///< No node could be found at the address.
         HU_ERROR_ILLEGAL,                   ///< The address or node was illegal.
-
         HU_ERROR_BADPARAMETER,              ///< An API parameter is malformed or illegal.
         HU_ERROR_BADFILE,                   ///< An attempt to open or operate on a file failed.
         HU_ERROR_OUTOFMEMORY,               ///< An internal memory allocation failed.
-
         HU_ERROR_TROVEHASERRORS             ///< The loading function succeeded, but the loaded trove has errors.
     };
 
@@ -112,15 +103,14 @@ extern "C"
         HU_COLORCODE_ANNOKEY,                   ///< Annotation key style.
         HU_COLORCODE_ANNOVALUE,                 ///< Annotation value style.
         HU_COLORCODE_WHITESPACE,                ///< Whitespace style (including commas).
-
         HU_COLORCODE_NUMCOLORKINDS              ///< One past the last style code.
     };
 
     enum huVectorKind
     {
-        HU_VECTORKIND_COUNTING,
-        HU_VECTORKIND_PREALLOCATED,
-        HU_VECTORKIND_GROWABLE
+        HU_VECTORKIND_COUNTING,         ///< The vector is set up to count characters only.
+        HU_VECTORKIND_PREALLOCATED,     ///< The vector is set with a preallocated, maximum buffer.
+        HU_VECTORKIND_GROWABLE          ///< The vector is set up with an unbounded growable buffer.
     };
 
     /// Describes and owns an array of memory elements.
@@ -158,7 +148,7 @@ extern "C"
      * particular token in a Humon file. Every token is read and tracked with a huToken. */
     typedef struct huToken_tag
     {
-        short kind;        ///< A huTokenKind value.
+        short kind;             ///< A huTokenKind value.
         char quoteChar;         ///< Whether the token is a quoted string.
         huStringView str;       ///< A view of the token string.
         int line;               ///< The line number in the file where the token begins.
@@ -211,7 +201,7 @@ extern "C"
     /// Encapsulates a selection of parameters to control the serialization of a trove.
     typedef struct huStoreParams_tag
     {
-        int outputFormat;
+        int WhitespaceFormat;
         int indentSize;
         bool indentWithTabs;
         bool usingColors;
@@ -224,10 +214,10 @@ extern "C"
     typedef struct huTrove_tag huTrove;
 
     /// Fill in a huStoreParams struct quickly.
-    void huInitStoreParamsZ(huStoreParams * params, int outputFormat, int indentSize, bool indentWithTabs, 
+    void huInitStoreParamsZ(huStoreParams * params, int WhitespaceFormat, int indentSize, bool indentWithTabs, 
         bool usingColors, huStringView const * colorTable,  bool printComments, char const * newline, bool printBom);
     /// Fill in a huStoreParams struct quickly.
-    void huInitStoreParamsN(huStoreParams * params, int outputFormat, int indentSize, bool indentWithTabs, 
+    void huInitStoreParamsN(huStoreParams * params, int WhitespaceFormat, int indentSize, bool indentWithTabs, 
         bool usingColors, huStringView const * colorTable,  bool printComments, char const * newline, int newlineSize, bool printBom);
 
     /// Encodes a Humon data node.

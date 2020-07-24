@@ -102,17 +102,17 @@ namespace hu
     }
 
     /// Specifies the style of whitespacing in Humon text.
-    enum class OutputFormat : int
+    enum class WhitespaceFormat : int
     {
-        xero = capi::HU_OUTPUTFORMAT_XERO,                  ///< Byte-for-byte copy of the original.
-        minimal = capi::HU_OUTPUTFORMAT_MINIMAL,            ///< Reduces as much whitespace as possible.
-        pretty = capi::HU_OUTPUTFORMAT_PRETTY               ///< Formats the text in a standard, human-friendly way.
+        xero = capi::HU_WHITESPACEFORMAT_XERO,                  ///< Byte-for-byte copy of the original.
+        minimal = capi::HU_WHITESPACEFORMAT_MINIMAL,            ///< Reduces as much whitespace as possible.
+        pretty = capi::HU_WHITESPACEFORMAT_PRETTY               ///< Formats the text in a standard, human-friendly way.
     };
 
-    /// Return a string representation of a hu::OutputFormat.
-    static inline char const * to_string(OutputFormat rhs) HUMON_NOEXCEPT
+    /// Return a string representation of a hu::WhitespaceFormat.
+    static inline char const * to_string(WhitespaceFormat rhs) HUMON_NOEXCEPT
     {
-        return capi::huOutputFormatToString((int) rhs);
+        return capi::huWhitespaceFormatToString((int) rhs);
     }
 
     /// Specifies a tokenizing or parsing error code, or lookup error.
@@ -321,17 +321,17 @@ namespace hu
     {
     public:
         /// Construct with sane defaults.
-        StoreParams(OutputFormat outputFormat, int indentSize = 4, bool indentWithTabs = false,
+        StoreParams(WhitespaceFormat WhitespaceFormat, int indentSize = 4, bool indentWithTabs = false,
             std::optional<ColorTable> const & colors = {}, bool printComments = true, 
             std::string_view newline = "\n", bool printBom = false) HUMON_NOEXCEPT
         {
-            capi::huInitStoreParamsN(& cparams, static_cast<int>(outputFormat), indentSize, indentWithTabs,
+            capi::huInitStoreParamsN(& cparams, static_cast<int>(WhitespaceFormat), indentSize, indentWithTabs,
                 false, capiColorTable, printComments, newline.data(), newline.size(), printBom);
             setColorTable(colors);
         }
 
         /// Set the whitespace formatting.
-        void setFormat(OutputFormat outputFormat) HUMON_NOEXCEPT { cparams.outputFormat = static_cast<int>(outputFormat); }
+        void setFormat(WhitespaceFormat WhitespaceFormat) HUMON_NOEXCEPT { cparams.WhitespaceFormat = static_cast<int>(WhitespaceFormat); }
         /// Set the number of spaces to use for indentation.
         void setIndentSize(int indentSize) HUMON_NOEXCEPT { cparams.indentSize = indentSize; }
         /// Use tab instead of spaces for indentation.
@@ -358,7 +358,7 @@ namespace hu
         void setNewline(std::string_view newline) HUMON_NOEXCEPT { cparams.newline.ptr = newline.data(); cparams.newline.size = newline.size(); }
 
         /// Get the whitespace formatting.
-        OutputFormat outputFormat() const HUMON_NOEXCEPT { return static_cast<OutputFormat>(cparams.outputFormat); }
+        WhitespaceFormat whitespaceFormat() const HUMON_NOEXCEPT { return static_cast<WhitespaceFormat>(cparams.WhitespaceFormat); }
         /// Get the number of spaces to use for indentation.
         int indentSize() { return cparams.indentSize; }
         /// Get whether to use tabs instead of spaces for indentation.
@@ -977,7 +977,7 @@ namespace hu
         /// Serializes a trove with the exact input token stream.
         [[nodiscard]] std::variant<std::string, ErrorCode> toXeroString(bool printBom = false) const HUMON_NOEXCEPT
         {
-            StoreParams sp = { OutputFormat::xero, 0, false, std::nullopt, true, "", printBom };
+            StoreParams sp = { WhitespaceFormat::xero, 0, false, std::nullopt, true, "", printBom };
             return toString(sp);
         }
 
@@ -985,7 +985,7 @@ namespace hu
         [[nodiscard]] std::variant<std::string, ErrorCode> toMinimalString(std::optional<ColorTable> const & colors = {}, 
             bool printComments = true, std::string_view newline = "\n", bool printBom = false) const HUMON_NOEXCEPT
         {
-            StoreParams sp = { OutputFormat::minimal, 0, false, colors, printComments, newline, printBom };
+            StoreParams sp = { WhitespaceFormat::minimal, 0, false, colors, printComments, newline, printBom };
             return toString(sp);
         }
 
@@ -994,7 +994,7 @@ namespace hu
             bool indentWithTabs = false, std::optional<ColorTable> const & colors = {}, bool printComments = true, 
             std::string_view newline = "\n", bool printBom = false) const HUMON_NOEXCEPT 
         {
-            StoreParams sp = { OutputFormat::pretty, indentSize, indentWithTabs, colors, printComments, newline, printBom };
+            StoreParams sp = { WhitespaceFormat::pretty, indentSize, indentWithTabs, colors, printComments, newline, printBom };
             return toString(sp);
         }
 
@@ -1024,7 +1024,7 @@ namespace hu
         [[nodiscard]] std::variant<int, ErrorCode> toXeroFile(std::string_view path, 
             bool printBom = false) const HUMON_NOEXCEPT
         {
-            StoreParams sp = { OutputFormat::xero, 0, false, std::nullopt, true, "", printBom };
+            StoreParams sp = { WhitespaceFormat::xero, 0, false, std::nullopt, true, "", printBom };
             return toFile(path, sp);
         }
 
@@ -1033,7 +1033,7 @@ namespace hu
             std::optional<ColorTable> const & colors = {}, bool printComments = true,
             std::string_view newline = "\n", bool printBom = false) const HUMON_NOEXCEPT
         {
-            StoreParams sp = { OutputFormat::minimal, 0, false, colors, printComments, newline, printBom };
+            StoreParams sp = { WhitespaceFormat::minimal, 0, false, colors, printComments, newline, printBom };
             return toFile(path, sp);
         }
 
@@ -1042,7 +1042,7 @@ namespace hu
             int indentSize = 4, bool indentWithTabs = false, std::optional<ColorTable> const & colors = {}, bool printComments = true, 
             std::string_view newline = "\n", bool printBom = false) const HUMON_NOEXCEPT 
         {
-            StoreParams sp = { OutputFormat::pretty, indentSize, indentWithTabs, colors, printComments, newline, printBom };
+            StoreParams sp = { WhitespaceFormat::pretty, indentSize, indentWithTabs, colors, printComments, newline, printBom };
             return toFile(path, sp);
         }
 

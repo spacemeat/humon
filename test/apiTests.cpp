@@ -3419,12 +3419,12 @@ TEST_GROUP(huTroveToString)
         l.teardown();
     }
 
-    std::string makeFileName(std::string_view path, int outputFormat, bool useColors, bool printComments, bool printBom)
+    std::string makeFileName(std::string_view path, int WhitespaceFormat, bool useColors, bool printComments, bool printBom)
     {
         std::string format = ".pp";
-        if (outputFormat == HU_OUTPUTFORMAT_XERO)
+        if (WhitespaceFormat == HU_WHITESPACEFORMAT_XERO)
             { format = ".px"; }
-        else if (outputFormat == HU_OUTPUTFORMAT_MINIMAL)
+        else if (WhitespaceFormat == HU_WHITESPACEFORMAT_MINIMAL)
             { format = ".pm"; }
 
         std::string consPath = std::string {path} + 
@@ -3437,9 +3437,9 @@ TEST_GROUP(huTroveToString)
         return consPath;        
     }
 
-    std::string getFile(std::string_view path, int outputFormat, bool useColors, bool printComments, bool printBom)
+    std::string getFile(std::string_view path, int WhitespaceFormat, bool useColors, bool printComments, bool printBom)
     {
-        std::string consPath = makeFileName(path, outputFormat, useColors, printComments, printBom);
+        std::string consPath = makeFileName(path, WhitespaceFormat, useColors, printComments, printBom);
         std::string str;
 
         FILE * fp = fopen(consPath.data(), "rb");
@@ -3504,7 +3504,7 @@ TEST(huTroveToString, correctness)
 {
     for (auto testFile : testFiles)
     {
-        for (int outputFormat = 0; outputFormat < 3; ++outputFormat)
+        for (int WhitespaceFormat = 0; WhitespaceFormat < 3; ++WhitespaceFormat)
         {
             for (bool useColors = false; ! useColors; useColors = !useColors)
             {
@@ -3516,10 +3516,10 @@ TEST(huTroveToString, correctness)
                         //    { bool debugBreak = true; }
 
                         auto file = getFile(testFile, 
-                            outputFormat, useColors, printComments, printBom);
+                            WhitespaceFormat, useColors, printComments, printBom);
                         auto ttos = troveToString(testFile,
-                            outputFormat, useColors, printComments, printBom);
-                        std::string consPath = makeFileName(testFile, outputFormat, useColors, printComments, printBom);
+                            WhitespaceFormat, useColors, printComments, printBom);
+                        std::string consPath = makeFileName(testFile, WhitespaceFormat, useColors, printComments, printBom);
                         LONGS_EQUAL_TEXT(file.size(), ttos.size(), consPath.data());
                         MEMCMP_EQUAL_TEXT(file.data(), ttos.data(), file.size(), consPath.data());
                     }
@@ -3536,7 +3536,7 @@ TEST(huTroveToString, pathological)
     int error = HU_ERROR_NOERROR;
     int strLen = 1024;
     huStoreParams params;
-    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, 4, false, false, NULL, true, "\n", false);
+    huInitStoreParamsZ(& params, HU_WHITESPACEFORMAT_XERO, 4, false, false, NULL, true, "\n", false);
 
     error = huTroveToString(NULL, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "NULL->str sz == 0");
@@ -3558,22 +3558,22 @@ TEST(huTroveToString, pathological)
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
     strLen = 1024;
-    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, -1, false, false, NULL, true, "\n", false);
+    huInitStoreParamsZ(& params, HU_WHITESPACEFORMAT_XERO, -1, false, false, NULL, true, "\n", false);
     error = huTroveToString(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
     strLen = 1024;
-    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, -1, false, false, NULL, true, NULL, 1, false);
+    huInitStoreParamsN(& params, HU_WHITESPACEFORMAT_XERO, -1, false, false, NULL, true, NULL, 1, false);
     error = huTroveToString(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
     strLen = 1024;
-    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, -1, false, false, NULL, true, "\n", 0, false);
+    huInitStoreParamsN(& params, HU_WHITESPACEFORMAT_XERO, -1, false, false, NULL, true, "\n", 0, false);
     error = huTroveToString(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
     strLen = 1024;
-    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, -1, false, false, NULL, true, "\n", -1, false);
+    huInitStoreParamsN(& params, HU_WHITESPACEFORMAT_XERO, -1, false, false, NULL, true, "\n", -1, false);
     error = huTroveToString(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 }
@@ -3608,7 +3608,7 @@ TEST(huTroveToFile, pathological)
         { remove(validFile); }
 
     huStoreParams params;
-    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, 4, false, false, NULL, false, "\n", false);
+    huInitStoreParamsZ(& params, HU_WHITESPACEFORMAT_XERO, 4, false, false, NULL, false, "\n", false);
 
     int error = HU_ERROR_NOERROR;
     int fileLen = 0;
@@ -3651,7 +3651,7 @@ TEST(huTroveToFile, pathological)
     if (acc != -1)
         { remove(validFile); }
 
-    huInitStoreParamsZ(& params, HU_OUTPUTFORMAT_XERO, -1, false, false, NULL, false, "\n", false);
+    huInitStoreParamsZ(& params, HU_WHITESPACEFORMAT_XERO, -1, false, false, NULL, false, "\n", false);
     error = huTroveToFileZ(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = access(validFile, F_OK);
@@ -3659,7 +3659,7 @@ TEST(huTroveToFile, pathological)
     if (acc != -1)
         { remove(validFile); }
 
-    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, 4, false, false, NULL, false, NULL, 1, false);
+    huInitStoreParamsN(& params, HU_WHITESPACEFORMAT_XERO, 4, false, false, NULL, false, NULL, 1, false);
     error = huTroveToFileZ(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = access(validFile, F_OK);
@@ -3667,7 +3667,7 @@ TEST(huTroveToFile, pathological)
     if (acc != -1)
         { remove(validFile); }
 
-    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, 4, false, true, NULL, false, "\n", 1, false);
+    huInitStoreParamsN(& params, HU_WHITESPACEFORMAT_XERO, 4, false, true, NULL, false, "\n", 1, false);
     error = huTroveToFileZ(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = access(validFile, F_OK);
@@ -3675,7 +3675,7 @@ TEST(huTroveToFile, pathological)
     if (acc != -1)
         { remove(validFile); }
 
-    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_PRETTY, 4, false, false, NULL, false, "\n", 0, false);
+    huInitStoreParamsN(& params, HU_WHITESPACEFORMAT_PRETTY, 4, false, false, NULL, false, "\n", 0, false);
     error = huTroveToFileZ(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = access(validFile, F_OK);
@@ -3683,7 +3683,7 @@ TEST(huTroveToFile, pathological)
     if (acc != -1)
         { remove(validFile); }
 
-    huInitStoreParamsN(& params, HU_OUTPUTFORMAT_XERO, 4, false, false, NULL, false, "\n", -1, false);
+    huInitStoreParamsN(& params, HU_WHITESPACEFORMAT_XERO, 4, false, false, NULL, false, "\n", -1, false);
     error = huTroveToFileZ(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = access(validFile, F_OK);

@@ -1,9 +1,10 @@
 DONE THIS CHECKIN:
-Added doxygen config
-Minor API change to shore up Unicode validation checking parameters.
-Added indentWithTabs.
+WhitespaceFormat API rename.
+A little doxy stuff.
 
 TODO:
+P1 static-ify private C fns
+P1 search for TODOs
 P1 doxygen
 P2 vcpkg
 P2 string sizes should be size_t?

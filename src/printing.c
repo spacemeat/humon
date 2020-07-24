@@ -22,7 +22,7 @@ void appendString(PrintTracker * printer, char const * addend, int size)
 
 void appendWs(PrintTracker * printer, int numChars)
 {
-    if (printer->storeParams->outputFormat == HU_OUTPUTFORMAT_MINIMAL)
+    if (printer->storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_MINIMAL)
         { numChars = max(numChars, 1); }
 
     char const spaces[] = "                "; // 16 spaces
@@ -60,7 +60,7 @@ void appendTabs(PrintTracker * printer, int numTabs)
 
 void appendIndent(PrintTracker * printer)
 {
-    if (printer->storeParams->outputFormat == HU_OUTPUTFORMAT_MINIMAL || printer->lastPrintWasIndent)
+    if (printer->storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_MINIMAL || printer->lastPrintWasIndent)
         { return; }
     if (printer->storeParams->indentWithTabs)
         { appendTabs(printer, printer->currentDepth); }
@@ -124,7 +124,7 @@ void printForwardComment(PrintTracker * printer, huToken const * tok)
     appendIndent(printer);
     appendColoredToken(printer, tok, HU_COLORCODE_COMMENT);
     printer->lastPrintWasUnquotedWord = false;
-    if (tok->str.ptr[1] == '/' || printer->storeParams->outputFormat == HU_OUTPUTFORMAT_PRETTY)
+    if (tok->str.ptr[1] == '/' || printer->storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
         { appendNewline(printer); }
 }
 
@@ -174,7 +174,7 @@ int printAllTrailingComments(PrintTracker * printer, huNode const * node, huToke
         if (comm->line == tok->line)
         {
             if (printer->storeParams->printComments &&
-                printer->storeParams->outputFormat == HU_OUTPUTFORMAT_PRETTY)
+                printer->storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
                 { appendWs(printer, 1); }
 
             printTrailingComment(printer, comm);
@@ -196,7 +196,7 @@ void printAnnotations(PrintTracker * printer, huVector const * annotations, bool
     // if we're printing an annotation on a new line (because of a comment, say)
     if (printer->lastPrintWasNewline)
     {
-        if (printer->storeParams->outputFormat == HU_OUTPUTFORMAT_PRETTY && printer->currentDepth > 0)
+        if (printer->storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY && printer->currentDepth > 0)
         {
             printer->currentDepth += 1;
             appendIndent(printer);
@@ -205,35 +205,35 @@ void printAnnotations(PrintTracker * printer, huVector const * annotations, bool
     }
     else
     {
-        if (printer->storeParams->outputFormat == HU_OUTPUTFORMAT_PRETTY && 
+        if (printer->storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY && 
             (printer->currentDepth > 0 || isTroveAnnotations == false))
             { appendWs(printer, 1); }
     }
     
     appendColoredString(printer, "@", 1, HU_COLORCODE_PUNCANNOTATE);
-    if (printer->storeParams->outputFormat == HU_OUTPUTFORMAT_PRETTY)
+    if (printer->storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
         { appendWs(printer, 1); }
 
     if (numAnnos > 1)
     {
         appendColoredString(printer, "{", 1, HU_COLORCODE_PUNCANNOTATEDICT);
-        if (printer->storeParams->outputFormat == HU_OUTPUTFORMAT_PRETTY)
+        if (printer->storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
             { appendWs(printer, 1); }
     }
     for (int annoIdx = 0; annoIdx < numAnnos; ++annoIdx)
     {
-        if (annoIdx > 0 && printer->storeParams->outputFormat == HU_OUTPUTFORMAT_PRETTY)
+        if (annoIdx > 0 && printer->storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
             { ensureWs(printer); }
         huAnnotation * anno = huGetVectorElement(annotations, annoIdx);
         appendColoredToken(printer, anno->key, HU_COLORCODE_ANNOKEY);
         appendColoredString(printer, ":", 1, HU_COLORCODE_PUNCANNOTATEKEYVALUESEP);
-        if (printer->storeParams->outputFormat == HU_OUTPUTFORMAT_PRETTY)
+        if (printer->storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
             { appendWs(printer, 1); }
         appendColoredToken(printer, anno->value, HU_COLORCODE_ANNOVALUE);        
     }
     if (numAnnos > 1)
     {
-        if (printer->storeParams->outputFormat == HU_OUTPUTFORMAT_PRETTY)
+        if (printer->storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
             { appendWs(printer, 1); }
         appendColoredString(printer, "}", 1, HU_COLORCODE_PUNCANNOTATEDICT);
     }
@@ -253,7 +253,7 @@ void printNode(PrintTracker * printer, huNode const * node)
 
     //  if parent is a dict
     //      print key
-    if (printer->storeParams->outputFormat == HU_OUTPUTFORMAT_PRETTY)
+    if (printer->storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
         { appendNewline(printer); }
     appendIndent(printer);
     huNode const * parentNode = huGetParentNode(node);
@@ -263,7 +263,7 @@ void printNode(PrintTracker * printer, huNode const * node)
     {
         appendColoredToken(printer, node->keyToken, HU_COLORCODE_KEY);
         appendColoredString(printer, ":", 1, HU_COLORCODE_PUNCKEYVALUESEP);
-        if (printer->storeParams->outputFormat == HU_OUTPUTFORMAT_PRETTY)
+        if (printer->storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
             { appendWs(printer, 1); }
     }
 
@@ -290,7 +290,7 @@ void printNode(PrintTracker * printer, huNode const * node)
         commentIdx = printAllPrecedingComments(printer, node, node->lastValueToken, commentIdx);
         
         printer->currentDepth -= 1;
-        if (printer->storeParams->outputFormat == HU_OUTPUTFORMAT_PRETTY)
+        if (printer->storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
             { appendNewline(printer); }
         appendIndent(printer);
         appendColoredString(printer, "]", 1, HU_COLORCODE_PUNCLIST);
@@ -317,7 +317,7 @@ void printNode(PrintTracker * printer, huNode const * node)
         }
         commentIdx = printAllPrecedingComments(printer, node, node->lastValueToken, commentIdx);
         printer->currentDepth -= 1;
-        if (printer->storeParams->outputFormat == HU_OUTPUTFORMAT_PRETTY)
+        if (printer->storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
             { appendNewline(printer); }
         appendIndent(printer);
         appendColoredString(printer, "}", 1, HU_COLORCODE_PUNCDICT);
@@ -339,7 +339,7 @@ void printNode(PrintTracker * printer, huNode const * node)
     int startIdx = commentIdx;
     for (; commentIdx < numComments; ++commentIdx)
     {
-        if (commentIdx == startIdx && printer->storeParams->outputFormat == HU_OUTPUTFORMAT_PRETTY && printer->storeParams->printComments)
+        if (commentIdx == startIdx && printer->storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY && printer->storeParams->printComments)
             { appendNewline(printer); }
         huToken const * comm = huGetComment(node, commentIdx);
         {
@@ -411,7 +411,7 @@ void troveToPrettyString(huTrove const * trove, huVector * str, huStoreParams * 
         printForwardComment(& printer, comm);
     }
 
-    if (printer.storeParams->outputFormat == HU_OUTPUTFORMAT_PRETTY)
+    if (printer.storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
         { appendNewline(& printer); }
     
     appendColor(& printer, HU_COLORCODE_TOKENSTREAMEND);
