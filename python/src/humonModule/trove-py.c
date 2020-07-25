@@ -79,15 +79,7 @@ static PyObject * Trove_getToken(TroveObject * self, PyObject * args)
     if (token == NULL)
         { return NULL; }
 
-    PyObject * capsule = PyCapsule_New((void *) token, NULL, NULL);
-    if (capsule == NULL)
-        { return NULL; }
-    
-    PyObject * newArgs = Py_BuildValue("(O)", capsule);
-    if (newArgs == NULL)
-        { return NULL; }
-
-    PyObject * tokenObj = PyObject_CallObject((PyObject *) & TokenType, newArgs);
+    PyObject * tokenObj = makeToken(token);
     if (tokenObj == NULL)
         { return NULL; }
     
@@ -110,20 +102,10 @@ static PyObject * Trove_getRootNode(TroveObject * self, PyObject * Py_UNUSED(ign
     if (node == NULL)
         { return NULL; }
 
-    PyObject * capsule = PyCapsule_New((void *) node, NULL, NULL);
-    if (capsule == NULL)
-        { return NULL; }
-    
-    PyObject * newArgs = Py_BuildValue("(O)", capsule);
-    if (newArgs == NULL)
-        { return NULL; }
-
-    PyObject * nodeObj = PyObject_CallObject((PyObject *) & NodeType, newArgs);
+    PyObject * nodeObj = makeNode(self, node);
     if (nodeObj == NULL)
         { return NULL; }
     
-    Py_DECREF(nodeObj);
-
     return nodeObj;
 }
 
@@ -140,20 +122,10 @@ static PyObject * Trove_getNodeByIndex(TroveObject * self, PyObject * args)
     if (node == NULL)
         { return NULL; }
 
-    PyObject * capsule = PyCapsule_New((void *) node, NULL, NULL);
-    if (capsule == NULL)
-        { return NULL; }
-    
-    PyObject * newArgs = Py_BuildValue("(OO)", self, capsule);
-    if (newArgs == NULL)
-        { return NULL; }
-
-    PyObject * nodeObj = PyObject_CallObject((PyObject *) & NodeType, newArgs);
+    PyObject * nodeObj = makeNode(self, node);
     if (nodeObj == NULL)
         { return NULL; }
     
-    Py_DECREF(newArgs);
-
     return nodeObj;
 }
 

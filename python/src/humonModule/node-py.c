@@ -37,7 +37,7 @@ static int Node_init(NodeObject * self, PyObject * args, PyObject * kwds)
     
     // TODO: check type of arg0 to be a Trove
     PyTypeObject * type = Py_TYPE(trove);
-    if (strncmp(type->tp_name, "humon.Trove", strlen("humon.Trove") != 0)
+    if (strcmp(type->tp_name, "humon.Trove") != 0)
     {
         PyErr_SetString(PyExc_ValueError, "Argument 1 must be a humon.Trove.");
         return -1;
@@ -73,23 +73,98 @@ static bool checkYourSelf(NodeObject * self)
 }
 
 
+static PyObject * Node_get_trove(NodeObject * self, void * closure)
+    { return checkYourSelf(self)
+        ? self->trove
+        : NULL; }
+
 static PyObject * Node_get_nodeIdx(NodeObject * self, void * closure)
     { return checkYourSelf(self)
         ? PyLong_FromLong(self->nodePtr->nodeIdx)
         : NULL; }
 
-
 static PyObject * Node_get_kind(NodeObject * self, void * closure)
+    { return checkYourSelf(self)
+        ? getEnumValue("humon.enums", "NodeKind", self->nodePtr->kind)
+        : NULL; }
+
+static PyObject * Node_get_firstToken(NodeObject * self, void * closure)
+    { return checkYourSelf(self)
+        ? makeToken(self->nodePtr->firstToken)
+        : NULL; }
+
+static PyObject * Node_get_keyToken(NodeObject * self, void * closure)
+    { return checkYourSelf(self)
+        ? makeToken(self->nodePtr->keyToken)
+        : NULL; }
+
+static PyObject * Node_get_valueToken(NodeObject * self, void * closure)
+    { return checkYourSelf(self)
+        ? makeToken(self->nodePtr->valueToken)
+        : NULL; }
+
+static PyObject * Node_get_lastValueToken(NodeObject * self, void * closure)
+    { return checkYourSelf(self)
+        ? makeToken(self->nodePtr->lastValueToken)
+        : NULL; }
+
+static PyObject * Node_get_lastToken(NodeObject * self, void * closure)
+    { return checkYourSelf(self)
+        ? makeToken(self->nodePtr->lastToken)
+        : NULL; }
+
+static PyObject * Node_get_parentNodeIdx(NodeObject * self, void * closure)
+    { return checkYourSelf(self)
+        ? PyLong_FromLong(self->nodePtr->lastToken)
+        : NULL; }
+
+static PyObject * Node_get_childOrdinal(NodeObject * self, void * closure)
+    { return checkYourSelf(self)
+        ? PyLong_FromLong(self->nodePtr->childOrdinal)
+        : NULL; }
+
+static PyObject * Node_get_numChildren(NodeObject * self, void * closure)
+    { return checkYourSelf(self)
+        ? PyLong_FromLong(huGetNumChildren(self->nodePtr))
+        : NULL; }
+
+static PyObject * Node_get_firstChild(NodeObject * self, void * closure)
+    { return checkYourSelf(self)
+        ? makeNode(self->trove, huGetFirstChild(self->nodePtr))
+        : NULL; }
+
+static PyObject * Node_get_nextSibling(NodeObject * self, void * closure)
+    { return checkYourSelf(self)
+        ? makeNode(self->trove, huGetNextSibling(self->nodePtr))
+        : NULL; }
+
+static PyObject * Node_get_address(NodeObject * self, void * closure)
 {
     if (! checkYourSelf(self))
         { return NULL; }
 
-    PyObject * val = getEnumValue("humon.enums", "NodeKind", self->nodePtr->kind);
-    if (val == NULL)
+    int * strLen = 0;
+    char * str = NULL;
+    huGetAddress(self->nodePtr, str, & strLen);
+    str = malloc(strLen);
+    if (str == NULL)
         { return NULL; }
+    huGetAddress(self->nodePtr, str, & strLen);
+    PyObject * pystr = PyUnicode_FromStringAndSize(str, strLen);
+    free(str);
 
-    return val;
+    return pystr;
 }
+
+static PyObject * Node_get_hasKey(NodeObject * self, void * closure)
+    { return checkYourSelf(self)
+        ? PyBool_FromLong(huHasKey(self->nodePtr))
+        : NULL; }
+
+static PyObject * Node_get_tokenStream(NodeObject * self, void * closure)
+    { return checkYourSelf(self)
+        ? PyBool_FromLong(huHasKey(self->nodePtr))
+        : NULL; }
 
 
 static PyObject * Node_str(NodeObject * self, PyObject * Py_UNUSED(ignored))
@@ -130,11 +205,11 @@ static PyGetSetDef Node_getsetters[] =
     { "numChildren", (getter) Node_get_numChildren, (setter) NULL, "The number of children a node has." },
     { "firstChild", (getter) Node_get_firstChild, (setter) NULL, "The first child of node (index 0)." },
     { "nextSibling", (getter) Node_get_nextSibling, (setter) NULL, "The next sibling in the child index order of a node." },
+    { "address", (getter) Node_get_address, (setter) NULL, "The full address of a node." },
     { "hasKey", (getter) Node_get_hasKey, (setter) NULL, "Returns whether a node has a key token tracked. (If it's a member of a dict.)" },
-    { "nestedValue", (getter) Node_get_nestedValue, (setter) NULL, "The entire nested text of a node, including child nodes and associated comments and annotations." },
+    { "nestedValue", (getter) Node_get_substring, (setter) NULL, "The entire nested text of a node, including child nodes and associated comments and annotations." },
     { "numAnnotations", (getter) Node_get_numAnnotations, (setter) NULL, "Return the number of annotations associated to a node." },
     { "numComments", (getter) Node_get_numComments, (setter) NULL, "Return the number of comments associated to a node." },
-    { "address", (getter) Node_get_address, (setter) NULL, "The full address of a node." },
     { NULL }
 };
 
@@ -143,9 +218,9 @@ static PyMethodDef Node_methods[] =
     { "str", (PyCFunction) Node_str, METH_NOARGS, "The node string." },
     { "getParent", (PyCFunction) Node_getParent, METH_NOARGS, "Get a node's parent." },
     { "getChild", (PyCFunction) Node_getChild, METH_VARARGS | METH_KEYWORDS, "Get a node's parent." },
+    { "getRelative", (PyCFunction) Node_str, METH_VARARGS, "Get a node by relative address." },
     { "getAnnotations", (PyCFunction) Node_str, METH_VARARGS | METH_KEYWORDS, "Get a node's annotations." },
     { "getComments", (PyCFunction) Node_str, METH_VARARGS | METH_KEYWORDS, "Get a node's comments." },
-    { "getRelativeNode", (PyCFunction) Node_str, METH_VARARGS, "Get a node by relative address." },
     { NULL }
 };
 
@@ -180,4 +255,28 @@ int RegisterNodeType(PyObject * module)
     }
 
     return 0;
+}
+
+
+static PyObject * makeNode(PyObject * trove, huNode const * nodePtr)
+{
+    PyObject * nodeObj = NULL;
+
+    if (nodePtr != NULL)
+    {        
+        PyObject * capsule = PyCapsule_New((void *) nodePtr, NULL, NULL);
+        if (capsule != NULL)
+        {
+            PyObject * newArgs = Py_BuildValue("(OO)", trove, capsule);
+            if (newArgs != NULL)
+            {
+                nodeObj = PyObject_CallObject((PyObject *) & NodeType, newArgs);
+                Py_DECREF(newArgs);
+            }
+        
+            Py_DECREF(capsule);
+        }
+    }
+
+    return nodeObj;
 }

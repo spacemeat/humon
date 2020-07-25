@@ -57,16 +57,9 @@ static bool checkYourSelf(TokenObject * self)
 }
 
 static PyObject * Token_get_kind(TokenObject * self, void * closure)
-{
-    if (! checkYourSelf(self))
-        { return NULL; }
-
-    PyObject * val = getEnumValue("humon.enums", "TokenKind", self->tokenPtr->kind);
-    if (val == NULL)
-        { return NULL; }
-
-    return val;
-}
+    { return checkYourSelf(self)
+        ? getEnumValue("humon.enums", "TokenKind", self->tokenPtr->kind)
+        : NULL; }
 
 static PyObject * Token_get_line(TokenObject * self, void * closure)
     { return checkYourSelf(self)
@@ -145,4 +138,27 @@ int RegisterTokenType(PyObject * module)
     }
 
     return 0;
+}
+
+
+static PyObject * makeToken(huToken const * tokenPtr)
+{
+    PyObject * tokenObj = NULL;
+
+    if (tokenPtr != NULL)
+    {
+        PyObject * capsule = PyCapsule_New((void *) tokenPtr, NULL, NULL);
+        if (capsule != NULL)
+        {
+            PyObject * newArgs = Py_BuildValue("(O)", capsule);
+            if (newArgs != NULL)
+            {
+                PyObject * tokenObj = PyObject_CallObject((PyObject *) & TokenType, newArgs);
+                Py_DECREF(newArgs);
+            }
+            Py_DECREF(capsule);
+        }
+    }
+
+    return tokenObj;
 }
