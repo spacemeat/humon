@@ -256,7 +256,7 @@ static void printNode(PrintTracker * printer, huNode const * node)
     if (printer->storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
         { appendNewline(printer); }
     appendIndent(printer);
-    huNode const * parentNode = huGetParentNode(node);
+    huNode const * parentNode = huGetParent(node);
 
     // print key if we have one
     if (parentNode != hu_nullNode && parentNode->kind == HU_NODEKIND_DICT)

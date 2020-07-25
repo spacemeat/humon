@@ -75,7 +75,7 @@ void associateComment(huTrove * trove, huNode * node, huToken const * tok)
     int addLen = 32;
     if (node)
     {
-        huGetNodeAddress(node, address, & addLen);
+        huGetAddress(node, address, & addLen);
         printf("Associating comment: %s%.*s%s to node %s%s%s\n", 
             darkGreen, tok->str.size, tok->str.ptr, off,
             lightBlue, address, off );
@@ -107,7 +107,7 @@ void associateEnqueuedComments(huTrove * trove, huNode * node, huVector * commen
     int addLen = 32;
     if (node)
     {
-        huGetNodeAddress(node, address, & addLen);
+        huGetAddress(node, address, & addLen);
         printf("Associating enqueued %scomments%s to node %s%s%s\n", darkGreen, off,
             lightBlue, address, off);
     }
@@ -185,7 +185,7 @@ void addChildNode(huTrove * trove, huNode * node, huNode * child)
 #ifdef HUMON_CAVEPERSON_DEBUGGING
     char address[32] = { 0 };
     int addLen = 32;
-    huGetNodeAddress(node, address, & addLen);
+    huGetAddress(node, address, & addLen);
     printf("Adding child node to node %s%s%s\n",
         lightBlue, address, off);
 #endif
@@ -251,7 +251,7 @@ void parseTroveRecursive(huTrove * trove, int * tokenIdx, huNode * parentNode, i
         int addLen = 32;
         if (parentNode)
         {
-            huGetNodeAddress(parentNode, address, & addLen);
+            huGetAddress(parentNode, address, & addLen);
             printf("PTR: tokenIdx: %d  token: '%.*s'  parentNode: %s  depth: %d  state: %s\n",
                 * tokenIdx, tok->str.size, tok->str.ptr, address, depth, parseStateToString(state));
         }
