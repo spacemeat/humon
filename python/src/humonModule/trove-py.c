@@ -144,7 +144,7 @@ static PyObject * Trove_getNodeByIndex(TroveObject * self, PyObject * args)
     if (capsule == NULL)
         { return NULL; }
     
-    PyObject * newArgs = Py_BuildValue("(O)", capsule);
+    PyObject * newArgs = Py_BuildValue("(OO)", self, capsule);
     if (newArgs == NULL)
         { return NULL; }
 
