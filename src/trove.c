@@ -896,6 +896,22 @@ void recordParseError(huTrove * trove, int errorCode, huToken const * pCur)
 }
 
 
+huStringView huGetTroveTokenStream(huTrove const * trove)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == hu_nullTrove)
+       { return (huStringView) { .ptr = "", .size = 0}; }
+#endif
+
+    huStringView sv = {
+        .ptr = trove->dataString,
+        .size = trove->dataStringSize
+    };
+
+    return sv;
+}
+
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
 

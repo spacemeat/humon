@@ -341,7 +341,7 @@ TEST(huHasKey, pathological)
 }
 
 
-TEST_GROUP(huGetNestedValue)
+TEST_GROUP(huGetTokenStream)
 {
     htd_listOfLists l;
     htd_dictOfDicts d;
@@ -362,7 +362,7 @@ TEST_GROUP(huGetNestedValue)
     }
 };
 
-TEST(huGetNestedValue, lists)
+TEST(huGetTokenStream, lists)
 {
     auto strA = R"(// This is a aaaa right here.
     a           @a:a        @type:value     // aaaa)"sv;
@@ -379,9 +379,9 @@ TEST(huGetNestedValue, lists)
         ]       @c:cp       @type:list      // cp
     ]           @c:cpp      @type:list      // cpp)"sv;
 
-    auto sA = huGetNestedValue(l.a);
-    auto sBp = huGetNestedValue(l.bp);
-    auto sCpp = huGetNestedValue(l.cpp);
+    auto sA = huGetTokenStream(l.a);
+    auto sBp = huGetTokenStream(l.bp);
+    auto sCpp = huGetTokenStream(l.cpp);
 
     LONGS_EQUAL_TEXT(strA.size(), sA.size, "a sz");
     STRNCMP_EQUAL_TEXT(strA.data(), sA.ptr, strA.size(), "a str");
@@ -391,7 +391,7 @@ TEST(huGetNestedValue, lists)
     STRNCMP_EQUAL_TEXT(strCpp.data(), sCpp.ptr, strCpp.size(), "cpp str");
 }
 
-TEST(huGetNestedValue, dicts)
+TEST(huGetTokenStream, dicts)
 {
     auto strA = R"(// This is a aaaa right here.
     ak:a            @a:a        @type:value     // aaaa)"sv;
@@ -408,9 +408,9 @@ TEST(huGetNestedValue, dicts)
         }           @c:cp       @type:dict      // cp
     }               @c:cpp      @type:dict      // cpp)"sv;
 
-    auto sA = huGetNestedValue(d.a);
-    auto sBp = huGetNestedValue(d.bp);
-    auto sCpp = huGetNestedValue(d.cpp);
+    auto sA = huGetTokenStream(d.a);
+    auto sBp = huGetTokenStream(d.bp);
+    auto sCpp = huGetTokenStream(d.cpp);
 
     LONGS_EQUAL_TEXT(strA.size(), sA.size, "a sz");
     STRNCMP_EQUAL_TEXT(strA.data(), sA.ptr, strA.size(), "a str");
@@ -420,17 +420,17 @@ TEST(huGetNestedValue, dicts)
     STRNCMP_EQUAL_TEXT(strCpp.data(), sCpp.ptr, strCpp.size(), "cpp str");
 }
 
-TEST(huGetNestedValue, stringy)
+TEST(huGetTokenStream, stringy)
 {
     auto strA = R"("aaa": bbb)"sv;
     auto strB = R"(ccc: "ddd")"sv;
     auto strC = R"("eee": "fff")"sv;
     auto strD = R"(ggg: hhh)"sv;
 
-    auto sA = huGetNestedValue(s.aaa);
-    auto sB = huGetNestedValue(s.ccc);
-    auto sC = huGetNestedValue(s.eee);
-    auto sD = huGetNestedValue(s.ggg);
+    auto sA = huGetTokenStream(s.aaa);
+    auto sB = huGetTokenStream(s.ccc);
+    auto sC = huGetTokenStream(s.eee);
+    auto sD = huGetTokenStream(s.ggg);
 
     LONGS_EQUAL_TEXT(strA.size(), sA.size, "aaa sz");
     STRNCMP_EQUAL_TEXT(strA.data(), sA.ptr, strA.size(), "aaa str");
@@ -442,13 +442,13 @@ TEST(huGetNestedValue, stringy)
     STRNCMP_EQUAL_TEXT(strD.data(), sD.ptr, strD.size(), "ggg str");
 }
 
-TEST(huGetNestedValue, pathological)
+TEST(huGetTokenStream, pathological)
 {
-    auto str = huGetNestedValue(NULL);
+    auto str = huGetTokenStream(NULL);
     LONGS_EQUAL_TEXT(0, str.size, "NULL -> 0 sz");
     POINTERS_EQUAL_TEXT(NULL, str.ptr, "NULL -> 0 sz");
 
-    str = huGetNestedValue(hu_nullNode);
+    str = huGetTokenStream(hu_nullNode);
     LONGS_EQUAL_TEXT(0, str.size, "NULL -> 0 sz");
     POINTERS_EQUAL_TEXT(NULL, str.ptr, "NULL -> 0 sz");
 }
