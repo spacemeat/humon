@@ -141,6 +141,16 @@ namespace hu
         return capi::huOutputErrorToString((int) rhs);
     }
 
+    /// Specifies how a trove responds to errors.
+    enum class ErrorResponse
+    {
+        mum = capi::HU_ERRORRESPONSE_MUM,
+        stdout = capi::HU_ERRORRESPONSE_STDOUT,
+        stderr = capi::HU_ERRORRESPONSE_STDERR,
+        stdoutAnsiColor = capi::HU_ERRORRESPONSE_STDOUTANSICOLOR,
+        stderrAnsiColor = capi::HU_ERRORRESPONSE_STDERRANSICOLOR,
+        numResponses = capi::HU_ERRORRESPONSE_NUMRESPONSES
+    };
 
     /// Specifies a style ID for colorized printing.
     enum class ColorCode
@@ -746,10 +756,12 @@ namespace hu
          * be a null trove, but rather will be loaded with no nodes, and errors marking 
          * tokens. */
         [[nodiscard]] static DeserializeResult fromString(std::string_view data,
-            LoadParams loadParams = { Encoding::utf8 }) HUMON_NOEXCEPT
+            LoadParams loadParams = { Encoding::utf8 }, 
+            ErrorResponse errorRespose = ErrorResponse::stderrAnsiColor) HUMON_NOEXCEPT
         {
             capi::huTrove const * trove = capi::hu_nullTrove;
-            int error = capi::huMakeTroveFromStringN(& trove, data.data(), data.size(), & loadParams.cparams);
+            int error = capi::huMakeTroveFromStringN(& trove, data.data(), data.size(), 
+                & loadParams.cparams, static_cast<int>(errorRespose));
 
             if (error != capi::HU_ERROR_NOERROR &&
                 error != capi::HU_ERROR_TROVEHASERRORS)
@@ -765,10 +777,12 @@ namespace hu
          * be a null trove, but rather will be loaded with no nodes, and errors marking 
          * tokens. */
         [[nodiscard]] static DeserializeResult fromString(char const * data, int dataLen, 
-            LoadParams loadParams = { Encoding::utf8 }) HUMON_NOEXCEPT
+            LoadParams loadParams = { Encoding::utf8 }, 
+            ErrorResponse errorRespose = ErrorResponse::stderrAnsiColor) HUMON_NOEXCEPT
         {
             capi::huTrove const * trove = capi::hu_nullTrove;
-            int error = capi::huMakeTroveFromStringN(& trove, data, dataLen, & loadParams.cparams);
+            int error = capi::huMakeTroveFromStringN(& trove, data, dataLen, 
+                & loadParams.cparams, static_cast<int>(errorRespose));
             if (error != capi::HU_ERROR_NOERROR &&
                 error != capi::HU_ERROR_TROVEHASERRORS)
                 { return static_cast<ErrorCode>(error); }
@@ -783,10 +797,12 @@ namespace hu
          * be a null trove, but rather will be loaded with no nodes, and errors marking 
          * tokens. */
         [[nodiscard]] static DeserializeResult fromFile(std::string_view path,
-            LoadParams loadParams = { Encoding::unknown }) HUMON_NOEXCEPT
+            LoadParams loadParams = { Encoding::unknown }, 
+            ErrorResponse errorRespose = ErrorResponse::stderrAnsiColor) HUMON_NOEXCEPT
         {
             capi::huTrove const * trove = capi::hu_nullTrove;
-            int error = capi::huMakeTroveFromFileN(& trove, path.data(), path.size(), & loadParams.cparams);
+            int error = capi::huMakeTroveFromFileN(& trove, path.data(), path.size(), 
+                & loadParams.cparams, static_cast<int>(errorRespose));
             if (error != capi::HU_ERROR_NOERROR &&
                 error != capi::HU_ERROR_TROVEHASERRORS)
                 { return static_cast<ErrorCode>(error); }
@@ -803,13 +819,14 @@ namespace hu
          * 
          * \maxNumBytes: If 0, `fromIstream` reads the stream until EOF is encountered.*/
         [[nodiscard]] static DeserializeResult fromIstream(std::istream & in, 
-            LoadParams loadParams = { Encoding::unknown }, size_t maxNumBytes = 0) HUMON_NOEXCEPT
+            LoadParams loadParams = { Encoding::unknown }, size_t maxNumBytes = 0, 
+            ErrorResponse errorResponse = ErrorResponse::stderrAnsiColor) HUMON_NOEXCEPT
         {
             if (maxNumBytes == 0)
             {
                 std::stringstream buffer;
                 buffer << in.rdbuf();
-                return fromString(buffer.str(), loadParams);
+                return fromString(buffer.str(), loadParams, errorResponse);
             }
             else
             {
@@ -817,7 +834,7 @@ namespace hu
                 buffer.reserve(maxNumBytes + 1);
                 in.read(buffer.data(), maxNumBytes);
                 buffer[maxNumBytes] = '\0'; // TODO: Necessary?
-                return fromString(buffer.data(), loadParams);
+                return fromString(buffer.data(), loadParams, errorResponse);
             }
         }
     

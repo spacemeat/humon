@@ -79,7 +79,8 @@ Using the APIs is straightforward. To get the image's (x, y) extents above, we m
     #include <Humon.h>
     ...
         huTrove const * trove = NULL;
-        int error = huMakeTroveFromFileZ(& trove, "samples/sampleFiles/materials.hu", NULL);
+        int error = huMakeTroveFromFileZ(& trove, "samples/sampleFiles/materials.hu", NULL,
+            HU_ERRORRESPONSE_STDERRANSICOLOR);
         if (error == HU_ERROR_NOERROR && huGetNumErrors(trove) == 0)
         {
             huNode const * extentsNode = huGetNodeByFullAddressZ(trove, "/assets/brick-diffuse/importData/extents");

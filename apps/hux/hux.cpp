@@ -67,7 +67,7 @@ void eatWs(char *& arg)
 
 [[nodiscard]] DeserializeResult getInput(istream & input)
 {
-    return Trove::fromIstream(input);
+    return Trove::fromIstream(input, {}, 0, ErrorResponse::mum);
 }
 
 

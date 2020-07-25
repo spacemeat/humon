@@ -1,8 +1,7 @@
 DONE THIS CHECKIN:
-Rearranging, renaming, pruning the API.
+Added error response to trove, to control output stream and colorization.
 
 TODO:
-P1 static-ify private C fns
 P1 search for TODOs
 P1 doxygen
 P2 vcpkg
