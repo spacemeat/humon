@@ -178,11 +178,11 @@ R"({@ dup: foo @ dup: bar
 
     void setup()
     {
-        trove0 = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts0)));
-        trove1 = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts1)));
-        trove2 = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts2)));
-        trove3 = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts3)));
-        trove4 = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts4)));
+        trove0 = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts0, {}, hu::ErrorResponse::mum)));
+        trove1 = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts1, {}, hu::ErrorResponse::mum)));
+        trove2 = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts2, {}, hu::ErrorResponse::mum)));
+        trove3 = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts3, {}, hu::ErrorResponse::mum)));
+        trove4 = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts4, {}, hu::ErrorResponse::mum)));
     }
 
     void teardown()

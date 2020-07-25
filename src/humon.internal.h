@@ -21,11 +21,6 @@
 /// Option to examine useful debug reporting. Mainly for Humon development.
 //#define HUMON_CAVEPERSON_DEBUGGING
 
-/// Option to silence error reporting to STDERR.
-#ifndef HUMON_SUPPRESS_ERROR_TO_STDERR
-#define HUMON_ERRORS_TO_STDERR
-#endif
-
 #ifdef __cplusplus
 extern "C"
 {

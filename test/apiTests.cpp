@@ -2046,33 +2046,49 @@ TEST(huMakeTroveFromString, pathological)
     huLoadParams params;
     huInitLoadParams(& params, HU_ENCODING_UTF8, true, 4);
 
-    error = huMakeTroveFromStringZ(NULL, "", & params);
+    error = huMakeTroveFromStringZ(NULL, "", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
 
-    error = huMakeTroveFromStringZ(& trove, NULL, & params);
+    trove = (huTrove const *) 4;
+    error = huMakeTroveFromStringZ(& trove, NULL, & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromString NULL == NULL");
 
-    error = huMakeTroveFromStringZ(& trove, "", & params);
+    trove = (huTrove const *) 4;
+    error = huMakeTroveFromStringZ(& trove, "", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_NOERROR, error);
     CHECK_TEXT(hu_nullTrove != trove, "fromString '' != NULL");
     huDestroyTrove(trove);
 
+    trove = (huTrove const *) 4;
     params.encoding = -1;
-    error = huMakeTroveFromStringZ(& trove, "[]", & params);
+    error = huMakeTroveFromStringZ(& trove, "[]", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "encoding=-1 == NULL");
 
+    trove = (huTrove const *) 4;
     params.encoding = HU_ENCODING_UNKNOWN + 1;
-    error = huMakeTroveFromStringZ(& trove, "[]", & params);
+    error = huMakeTroveFromStringZ(& trove, "[]", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "encoding=unk+1 == NULL");
 
+    trove = (huTrove const *) 4;
     params.encoding = HU_ENCODING_UTF8;
     params.tabSize = -1;
-    error = huMakeTroveFromStringZ(& trove, "[]", & params);
+    error = huMakeTroveFromStringZ(& trove, "[]", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "tabs=-1 == NULL");
+
+    trove = (huTrove const *) 4;
+    params.tabSize = 4;
+    error = huMakeTroveFromStringZ(& trove, "[]", & params, -1);
+    LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
+    POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "errorResponse=-1 == NULL");
+
+    trove = (huTrove const *) 4;
+    error = huMakeTroveFromStringZ(& trove, "[]", & params, HU_ERRORRESPONSE_NUMRESPONSES);
+    LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
+    POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "errorResponse=big == NULL");
 }
 
 
@@ -2102,40 +2118,59 @@ TEST(huMakeTroveFromFile, pathological)
     huLoadParams params;
     huInitLoadParams(& params, HU_ENCODING_UTF8, true, 4);
 
-    error = huMakeTroveFromFileZ(NULL, "", & params);
-    LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
-
-    error = huMakeTroveFromFileZ(& trove, NULL, & params);
+    error = huMakeTroveFromFileZ(NULL, "", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile NULL == NULL");
 
-    error = huMakeTroveFromFileZ(& trove, "", & params);
+    trove = (huTrove const *) 4;
+    error = huMakeTroveFromFileZ(& trove, NULL, & params, HU_ERRORRESPONSE_MUM);
+    LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
+    POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile NULL == NULL");
+
+    trove = (huTrove const *) 4;
+    error = huMakeTroveFromFileZ(& trove, "", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile '' == NULL");
 
-    error = huMakeTroveFromFileZ(& trove, "..", & params);
+    trove = (huTrove const *) 4;
+    error = huMakeTroveFromFileZ(& trove, "..", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADFILE, error);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile .. == NULL");
 
-    error = huMakeTroveFromFileZ(& trove, "/", & params);
+    trove = (huTrove const *) 4;
+    error = huMakeTroveFromFileZ(& trove, "/", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADFILE, error);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile / == NULL");
 
+    trove = (huTrove const *) 4;
     params.encoding = -1;
-    error = huMakeTroveFromFileZ(& trove, "../test/testFiles/utf8.hu", & params);
+    error = huMakeTroveFromFileZ(& trove, "../test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile encoding=-1 == NULL");
 
+    trove = (huTrove const *) 4;
     params.encoding = HU_ENCODING_UNKNOWN + 1;
-    error = huMakeTroveFromFileZ(& trove, "../test/testFiles/utf8.hu", & params);
+    error = huMakeTroveFromFileZ(& trove, "../test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile encoding=unk+1 == NULL");
 
+    trove = (huTrove const *) 4;
     params.encoding = HU_ENCODING_UTF8;
     params.tabSize = -1;
-    error = huMakeTroveFromFileZ(& trove, "../test/testFiles/utf8.hu", & params);
+    error = huMakeTroveFromFileZ(& trove, "../test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile tabSize=-1 == NULL");
+
+    trove = (huTrove const *) 4;
+    params.tabSize = 4;
+    error = huMakeTroveFromFileZ(& trove, "../test/testFiles/utf8.hu", & params, -1);
+    LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
+    POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile errorResponse=-1 == NULL");
+
+    trove = (huTrove const *) 4;
+    error = huMakeTroveFromFileZ(& trove, "../test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_NUMRESPONSES);
+    LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
+    POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile errorResponse=high == NULL");
 }
 
 
@@ -3411,7 +3446,7 @@ TEST_GROUP(huTroveToString)
     std::string troveToString(std::string_view srcFile, int format, bool useColors, bool printComments, bool printBom)
     {
         huTrove const * tc = nullptr;
-        int error = huMakeTroveFromFileN(& tc, srcFile.data(), srcFile.size(), NULL);
+        int error = huMakeTroveFromFileN(& tc, srcFile.data(), srcFile.size(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
         if (error != HU_ERROR_NOERROR)
             { return "<could not make trove>"; }
 

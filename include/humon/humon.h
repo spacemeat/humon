@@ -85,6 +85,18 @@ extern "C"
     /// Returns a string representation of a huErrorCode.
     char const * huOutputErrorToString(int rhs);
 
+    /// Specifies how a trove responds to errors.
+    enum huErrorResponse
+    {
+        HU_ERRORRESPONSE_MUM,               ///< Do not output errors to any stream.
+        HU_ERRORRESPONSE_STDOUT,            ///< Report errors to stdout.
+        HU_ERRORRESPONSE_STDERR,            ///< Report errors to stderr.
+        HU_ERRORRESPONSE_STDOUTANSICOLOR,   ///< Report errors to stdout with ANSI color codes.
+        HU_ERRORRESPONSE_STDERRANSICOLOR,   ///< Report errors to stderr with ANSI color codes.
+
+        HU_ERRORRESPONSE_NUMRESPONSES
+    };
+
     /// Specifies a style ID for colorized printing.
     enum huColorCode
     {
@@ -318,6 +330,7 @@ extern "C"
         huVector tokens;            ///< Manages a huToken []. This is the array of tokens lexed from the Humon text.
         huVector nodes;             ///< Manages a huNode []. This is the array of node objects parsed from tokens.
         huVector errors;            ///< Manages a huError []. This is an array of errors encountered during load.
+        int errorResponse;          ///< How the trove respones to errors during load.
         int inputTabSize;           ///< The tab length Humon uses to compute column values for tokens.
         huVector annotations;       ///< Manages a huAnnotation []. Contains the annotations associated to the trove.
         huVector comments;          ///< Manages a huComment[]. Contains the comments associated to the trove.
@@ -325,13 +338,13 @@ extern "C"
     } huTrove;
 
     /// Creates a trove from a NULL-terminated string of Humon text.
-    int huMakeTroveFromStringZ(huTrove const ** trove, char const * data, huLoadParams * loadParams);
+    int huMakeTroveFromStringZ(huTrove const ** trove, char const * data, huLoadParams * loadParams, int errorResponse);
     /// Creates a trove from a string view of Humon text.
-    int huMakeTroveFromStringN(huTrove const ** trove, char const * data, int dataLen, huLoadParams * loadParams);
+    int huMakeTroveFromStringN(huTrove const ** trove, char const * data, int dataLen, huLoadParams * loadParams, int errorResponse);
     /// Creates a trove from a file.
-    int huMakeTroveFromFileZ(huTrove const ** trove, char const * path, huLoadParams * loadParams);
+    int huMakeTroveFromFileZ(huTrove const ** trove, char const * path, huLoadParams * loadParams, int errorResponse);
     /// Creates a trove from a file.
-    int huMakeTroveFromFileN(huTrove const ** trove, char const * path, int pathLen, huLoadParams * loadParams);
+    int huMakeTroveFromFileN(huTrove const ** trove, char const * path, int pathLen, huLoadParams * loadParams, int errorResponse);
 
     /// Reclaims all memory owned by a trove.
     void huDestroyTrove(huTrove const * trove);
