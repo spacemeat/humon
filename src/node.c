@@ -525,7 +525,7 @@ bool huHasKey(huNode const * node)
 }
 
 
-huStringView huGetNestedValue(huNode const * node)
+huStringView huGetTokenStream(huNode const * node)
 {
     huStringView str;
     str.ptr = NULL;

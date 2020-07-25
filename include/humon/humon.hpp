@@ -715,7 +715,7 @@ namespace hu
         std::string_view nestedValue() const HUMON_NOEXCEPT
         {
             check();
-            auto sv = capi::huGetNestedValue(cnode);
+            auto sv = capi::huGetTokenStream(cnode);
             return make_sv(sv);
         }
 

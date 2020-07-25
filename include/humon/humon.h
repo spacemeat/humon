@@ -284,7 +284,7 @@ extern "C"
     bool huHasKey(huNode const * node);
 
     /// Returns the entire nested text of a node, including child nodes and associated comments and annotations.
-    huStringView huGetNestedValue(huNode const * node);
+    huStringView huGetTokenStream(huNode const * node);
 
     /// Returns the number of annotations associated to a node.
     int huGetNumAnnotations(huNode const * node);
@@ -421,6 +421,9 @@ extern "C"
     huNode const * huFindNodesByCommentContainingZ(huTrove const * trove, char const * containedText, huNode const * startWith);
     /// Returns a collection of all nodes in a trove with a comment which contains specific text.
     huNode const * huFindNodesByCommentContainingN(huTrove const * trove, char const * containedText, int containedTextLen, huNode const * startWith);
+
+    /// Returns the entire text of a trove, including all nodes and all comments and annotations.
+    huStringView huGetTroveTokenStream(huTrove const * trove);
 
     /// Serializes a trove to text.
     int huTroveToString(huTrove const * trove, char * dest, int * destLength, huStoreParams * storeParams);
