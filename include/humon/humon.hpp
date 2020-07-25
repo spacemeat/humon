@@ -498,7 +498,7 @@ namespace hu
         Token lastToken() const HUMON_NOEXCEPT            ///< Returns the last token of this node, including any annotation and comment tokens.
             { check(); return Token(isValid() ? cnode->lastToken :  capi::hu_nullToken); }
         Node parent() const HUMON_NOEXCEPT                ///< Returns the parent node of this node, or the null node if this is the root.
-            { check(); return Node(capi::huGetParentNode(cnode)); }
+            { check(); return Node(capi::huGetParent(cnode)); }
         int childOrdinal() const HUMON_NOEXCEPT           ///< Returns the index of this node vis a vis its sibling nodes (starting at 0).
             { check(); return isValid() ? cnode->childOrdinal : -1; }
         int numChildren() const HUMON_NOEXCEPT            ///< Returns the number of children of this node.
@@ -519,7 +519,7 @@ namespace hu
          * through the hierarchy. A key or index between the slashes indicates the child node to
          * access. */
         Node nodeByAddress(std::string_view relativeAddress) const HUMON_NOEXCEPT
-            { check(); return capi::huGetNodeByRelativeAddressN(cnode, relativeAddress.data(), relativeAddress.size()); }
+            { check(); return capi::huGetRelativeN(cnode, relativeAddress.data(), relativeAddress.size()); }
         bool hasKey() const HUMON_NOEXCEPT                ///< Returns whether this node has a key. (If it's in a dict.)
             { check(); return capi::huHasKey(cnode); }
         Token key() const HUMON_NOEXCEPT                  ///< Returns the key token, or the null token if this is not in a dict.
@@ -728,10 +728,10 @@ namespace hu
         {
             check();
             int len = 0;
-            capi::huGetNodeAddress(cnode, NULL, & len);
+            capi::huGetAddress(cnode, NULL, & len);
             std::string s;
             s.resize(len);
-            capi::huGetNodeAddress(cnode, s.data(), & len);
+            capi::huGetAddress(cnode, s.data(), & len);
             return s;
         }
 

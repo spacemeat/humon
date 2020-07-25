@@ -7,7 +7,7 @@
 
 // ------------------------------ NODE API TESTS
 
-TEST_GROUP(huGetParentNode)
+TEST_GROUP(huGetParent)
 {
     htd_listOfLists l;
     htd_dictOfDicts d;
@@ -25,54 +25,54 @@ TEST_GROUP(huGetParentNode)
     }
 };
 
-TEST(huGetParentNode, lists)
+TEST(huGetParent, lists)
 {
-    auto pn = huGetParentNode(l.a);
+    auto pn = huGetParent(l.a);
     POINTERS_EQUAL_TEXT(l.root, pn, "root == ap");
 
-    pn = huGetParentNode(l.b);
+    pn = huGetParent(l.b);
     POINTERS_EQUAL_TEXT(l.bp, pn, "l.bp == l.b.parent");
-    pn = huGetParentNode(pn);
+    pn = huGetParent(pn);
     POINTERS_EQUAL_TEXT(l.root, pn, "root == l.bp.parent");
 
-    pn = huGetParentNode(l.c);
+    pn = huGetParent(l.c);
     POINTERS_EQUAL_TEXT(l.cp, pn, "l.cp == l.c.parent");
-    pn = huGetParentNode(pn);
+    pn = huGetParent(pn);
     POINTERS_EQUAL_TEXT(l.cpp, pn, "l.cp == l.cp.parent");
-    pn = huGetParentNode(pn);
+    pn = huGetParent(pn);
     POINTERS_EQUAL_TEXT(l.root, pn, "root == l.cpp.parent");
     
-    pn = huGetParentNode(l.root);
+    pn = huGetParent(l.root);
     POINTERS_EQUAL_TEXT(NULL, pn, "root's parent is not NULL");
 }
 
-TEST(huGetParentNode, dicts)
+TEST(huGetParent, dicts)
 {
-    auto pn = huGetParentNode(d.a);
+    auto pn = huGetParent(d.a);
     POINTERS_EQUAL_TEXT(d.root, pn, "root == ap");
 
-    pn = huGetParentNode(d.b);
+    pn = huGetParent(d.b);
     POINTERS_EQUAL_TEXT(d.bp, pn, "d.bp == d.b.parent");
-    pn = huGetParentNode(pn);
+    pn = huGetParent(pn);
     POINTERS_EQUAL_TEXT(d.root, pn, "root == d.bp.parent");
 
-    pn = huGetParentNode(d.c);
+    pn = huGetParent(d.c);
     POINTERS_EQUAL_TEXT(d.cp, pn, "d.cp == d.c.parent");
-    pn = huGetParentNode(pn);
+    pn = huGetParent(pn);
     POINTERS_EQUAL_TEXT(d.cpp, pn, "d.cp == d.cp.parent");
-    pn = huGetParentNode(pn);
+    pn = huGetParent(pn);
     POINTERS_EQUAL_TEXT(d.root, pn, "root == d.cpp.parent");
     
-    pn = huGetParentNode(d.root);
+    pn = huGetParent(d.root);
     POINTERS_EQUAL_TEXT(NULL, pn, "root's parent is not NULL");
 }
 
-TEST(huGetParentNode, pathological)
+TEST(huGetParent, pathological)
 {
-    auto pn = huGetParentNode(NULL);
+    auto pn = huGetParent(NULL);
     POINTERS_EQUAL_TEXT(NULL, pn, "NULL's parent is not NULL");
 
-    pn = huGetParentNode(hu_nullNode);
+    pn = huGetParent(hu_nullNode);
     POINTERS_EQUAL_TEXT(NULL, pn, "nullNode's parent is not NULL");
 }
 
@@ -1517,106 +1517,106 @@ TEST_GROUP(huGetNodeByRelativeAddress)
 
 TEST(huGetNodeByRelativeAddress, lists)
 {
-    POINTERS_EQUAL(l.a, huGetNodeByRelativeAddressZ(l.root, "0"));
-    POINTERS_EQUAL(l.root, huGetNodeByRelativeAddressZ(l.root, "0/.."));
-    POINTERS_EQUAL(l.root, huGetNodeByRelativeAddressZ(l.a, ".."));
-    POINTERS_EQUAL(l.b, huGetNodeByRelativeAddressZ(l.bp, "0"));
-    POINTERS_EQUAL(l.bp, huGetNodeByRelativeAddressZ(l.bp, "0/.."));
-    POINTERS_EQUAL(l.root, huGetNodeByRelativeAddressZ(l.bp, "0/../.."));
-    POINTERS_EQUAL(l.cp, huGetNodeByRelativeAddressZ(l.cpp, "0"));
-    POINTERS_EQUAL(l.c, huGetNodeByRelativeAddressZ(l.cpp, "0/0"));
-    POINTERS_EQUAL(l.cpp, huGetNodeByRelativeAddressZ(l.cpp, "0/0/../.."));
-    POINTERS_EQUAL(l.c, huGetNodeByRelativeAddressZ(l.cp, "0"));
-    POINTERS_EQUAL(l.cpp, huGetNodeByRelativeAddressZ(l.cp, ".."));
-    POINTERS_EQUAL(l.cp, huGetNodeByRelativeAddressZ(l.c, ".."));
-    POINTERS_EQUAL(l.cpp, huGetNodeByRelativeAddressZ(l.c, "../.."));
-    POINTERS_EQUAL(l.root, huGetNodeByRelativeAddressZ(l.c, "../../.."));
-    POINTERS_EQUAL(l.b, huGetNodeByRelativeAddressZ(l.a, "../1/0"));
-    POINTERS_EQUAL(l.c, huGetNodeByRelativeAddressZ(l.a, "../2/0/0"));
-    POINTERS_EQUAL(l.a, huGetNodeByRelativeAddressZ(l.b, "../../0"));
-    POINTERS_EQUAL(l.c, huGetNodeByRelativeAddressZ(l.b, "../../2/0/0"));
-    POINTERS_EQUAL(l.a, huGetNodeByRelativeAddressZ(l.c, "../../../0"));
-    POINTERS_EQUAL(l.b, huGetNodeByRelativeAddressZ(l.c, "../../../1/0"));
-    POINTERS_EQUAL(l.c, huGetNodeByRelativeAddressZ(l.b, " .. / .. / 2 / 0 / 0 "));
+    POINTERS_EQUAL(l.a, huGetRelativeZ(l.root, "0"));
+    POINTERS_EQUAL(l.root, huGetRelativeZ(l.root, "0/.."));
+    POINTERS_EQUAL(l.root, huGetRelativeZ(l.a, ".."));
+    POINTERS_EQUAL(l.b, huGetRelativeZ(l.bp, "0"));
+    POINTERS_EQUAL(l.bp, huGetRelativeZ(l.bp, "0/.."));
+    POINTERS_EQUAL(l.root, huGetRelativeZ(l.bp, "0/../.."));
+    POINTERS_EQUAL(l.cp, huGetRelativeZ(l.cpp, "0"));
+    POINTERS_EQUAL(l.c, huGetRelativeZ(l.cpp, "0/0"));
+    POINTERS_EQUAL(l.cpp, huGetRelativeZ(l.cpp, "0/0/../.."));
+    POINTERS_EQUAL(l.c, huGetRelativeZ(l.cp, "0"));
+    POINTERS_EQUAL(l.cpp, huGetRelativeZ(l.cp, ".."));
+    POINTERS_EQUAL(l.cp, huGetRelativeZ(l.c, ".."));
+    POINTERS_EQUAL(l.cpp, huGetRelativeZ(l.c, "../.."));
+    POINTERS_EQUAL(l.root, huGetRelativeZ(l.c, "../../.."));
+    POINTERS_EQUAL(l.b, huGetRelativeZ(l.a, "../1/0"));
+    POINTERS_EQUAL(l.c, huGetRelativeZ(l.a, "../2/0/0"));
+    POINTERS_EQUAL(l.a, huGetRelativeZ(l.b, "../../0"));
+    POINTERS_EQUAL(l.c, huGetRelativeZ(l.b, "../../2/0/0"));
+    POINTERS_EQUAL(l.a, huGetRelativeZ(l.c, "../../../0"));
+    POINTERS_EQUAL(l.b, huGetRelativeZ(l.c, "../../../1/0"));
+    POINTERS_EQUAL(l.c, huGetRelativeZ(l.b, " .. / .. / 2 / 0 / 0 "));
 
-    POINTERS_EQUAL(hu_nullNode, huGetNodeByRelativeAddressZ(l.root, ".."));
-    POINTERS_EQUAL(hu_nullNode, huGetNodeByRelativeAddressZ(l.a, "0"));
-    POINTERS_EQUAL(hu_nullNode, huGetNodeByRelativeAddressZ(l.root, "3"));
-    POINTERS_EQUAL(hu_nullNode, huGetNodeByRelativeAddressZ(l.root, "0/0"));
-    POINTERS_EQUAL(hu_nullNode, huGetNodeByRelativeAddressZ(l.root, "1/1"));
-    POINTERS_EQUAL(hu_nullNode, huGetNodeByRelativeAddressZ(l.root, "1/0/0"));
+    POINTERS_EQUAL(hu_nullNode, huGetRelativeZ(l.root, ".."));
+    POINTERS_EQUAL(hu_nullNode, huGetRelativeZ(l.a, "0"));
+    POINTERS_EQUAL(hu_nullNode, huGetRelativeZ(l.root, "3"));
+    POINTERS_EQUAL(hu_nullNode, huGetRelativeZ(l.root, "0/0"));
+    POINTERS_EQUAL(hu_nullNode, huGetRelativeZ(l.root, "1/1"));
+    POINTERS_EQUAL(hu_nullNode, huGetRelativeZ(l.root, "1/0/0"));
 }
 
 TEST(huGetNodeByRelativeAddress, dicts)
 {
-    POINTERS_EQUAL(d.a, huGetNodeByRelativeAddressZ(d.root, "0"));
-    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.root, "0/.."));
-    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.a, ".."));
-    POINTERS_EQUAL(d.b, huGetNodeByRelativeAddressZ(d.bp, "0"));
-    POINTERS_EQUAL(d.bp, huGetNodeByRelativeAddressZ(d.bp, "0/.."));
-    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.bp, "0/../.."));
-    POINTERS_EQUAL(d.cp, huGetNodeByRelativeAddressZ(d.cpp, "0"));
-    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.cpp, "0/0"));
-    POINTERS_EQUAL(d.cpp, huGetNodeByRelativeAddressZ(d.cpp, "0/0/../.."));
-    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.cp, "0"));
-    POINTERS_EQUAL(d.cpp, huGetNodeByRelativeAddressZ(d.cp, ".."));
-    POINTERS_EQUAL(d.cp, huGetNodeByRelativeAddressZ(d.c, ".."));
-    POINTERS_EQUAL(d.cpp, huGetNodeByRelativeAddressZ(d.c, "../.."));
-    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.c, "../../.."));
-    POINTERS_EQUAL(d.b, huGetNodeByRelativeAddressZ(d.a, "../1/0"));
-    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.a, "../2/0/0"));
-    POINTERS_EQUAL(d.a, huGetNodeByRelativeAddressZ(d.b, "../../0"));
-    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.b, "../../2/0/0"));
-    POINTERS_EQUAL(d.a, huGetNodeByRelativeAddressZ(d.c, "../../../0"));
-    POINTERS_EQUAL(d.b, huGetNodeByRelativeAddressZ(d.c, "../../../1/0"));
-    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.b, " .. / .. / 2 / 0 / 0 "));
+    POINTERS_EQUAL(d.a, huGetRelativeZ(d.root, "0"));
+    POINTERS_EQUAL(d.root, huGetRelativeZ(d.root, "0/.."));
+    POINTERS_EQUAL(d.root, huGetRelativeZ(d.a, ".."));
+    POINTERS_EQUAL(d.b, huGetRelativeZ(d.bp, "0"));
+    POINTERS_EQUAL(d.bp, huGetRelativeZ(d.bp, "0/.."));
+    POINTERS_EQUAL(d.root, huGetRelativeZ(d.bp, "0/../.."));
+    POINTERS_EQUAL(d.cp, huGetRelativeZ(d.cpp, "0"));
+    POINTERS_EQUAL(d.c, huGetRelativeZ(d.cpp, "0/0"));
+    POINTERS_EQUAL(d.cpp, huGetRelativeZ(d.cpp, "0/0/../.."));
+    POINTERS_EQUAL(d.c, huGetRelativeZ(d.cp, "0"));
+    POINTERS_EQUAL(d.cpp, huGetRelativeZ(d.cp, ".."));
+    POINTERS_EQUAL(d.cp, huGetRelativeZ(d.c, ".."));
+    POINTERS_EQUAL(d.cpp, huGetRelativeZ(d.c, "../.."));
+    POINTERS_EQUAL(d.root, huGetRelativeZ(d.c, "../../.."));
+    POINTERS_EQUAL(d.b, huGetRelativeZ(d.a, "../1/0"));
+    POINTERS_EQUAL(d.c, huGetRelativeZ(d.a, "../2/0/0"));
+    POINTERS_EQUAL(d.a, huGetRelativeZ(d.b, "../../0"));
+    POINTERS_EQUAL(d.c, huGetRelativeZ(d.b, "../../2/0/0"));
+    POINTERS_EQUAL(d.a, huGetRelativeZ(d.c, "../../../0"));
+    POINTERS_EQUAL(d.b, huGetRelativeZ(d.c, "../../../1/0"));
+    POINTERS_EQUAL(d.c, huGetRelativeZ(d.b, " .. / .. / 2 / 0 / 0 "));
 
-    POINTERS_EQUAL(d.a, huGetNodeByRelativeAddressZ(d.root, "ak"));
-    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.root, "ak/.."));
-    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.a, ".."));
-    POINTERS_EQUAL(d.b, huGetNodeByRelativeAddressZ(d.bp, "bk"));
-    POINTERS_EQUAL(d.bp, huGetNodeByRelativeAddressZ(d.bp, "bk/.."));
-    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.bp, "bk/../.."));
-    POINTERS_EQUAL(d.cp, huGetNodeByRelativeAddressZ(d.cpp, "ck"));
-    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.cpp, "ck/ck"));
-    POINTERS_EQUAL(d.cpp, huGetNodeByRelativeAddressZ(d.cpp, "ck/ck/../.."));
-    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.cp, "ck"));
-    POINTERS_EQUAL(d.cpp, huGetNodeByRelativeAddressZ(d.cp, ".."));
-    POINTERS_EQUAL(d.cp, huGetNodeByRelativeAddressZ(d.c, ".."));
-    POINTERS_EQUAL(d.cpp, huGetNodeByRelativeAddressZ(d.c, "../.."));
-    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.c, "../../.."));
-    POINTERS_EQUAL(d.b, huGetNodeByRelativeAddressZ(d.a, "../bk/bk"));
-    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.a, "../ck/ck/ck"));
-    POINTERS_EQUAL(d.a, huGetNodeByRelativeAddressZ(d.b, "../../ak"));
-    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.b, "../../ck/ck/ck"));
-    POINTERS_EQUAL(d.a, huGetNodeByRelativeAddressZ(d.c, "../../../ak"));
-    POINTERS_EQUAL(d.b, huGetNodeByRelativeAddressZ(d.c, "../../../bk/bk"));
-    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.b, " .. / .. / ck / ck / ck "));
-    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.b, "../../`ck`/'ck'/\"ck\""));
-    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.b, " .. / .. / `ck` / 'ck' / \"ck\" "));
+    POINTERS_EQUAL(d.a, huGetRelativeZ(d.root, "ak"));
+    POINTERS_EQUAL(d.root, huGetRelativeZ(d.root, "ak/.."));
+    POINTERS_EQUAL(d.root, huGetRelativeZ(d.a, ".."));
+    POINTERS_EQUAL(d.b, huGetRelativeZ(d.bp, "bk"));
+    POINTERS_EQUAL(d.bp, huGetRelativeZ(d.bp, "bk/.."));
+    POINTERS_EQUAL(d.root, huGetRelativeZ(d.bp, "bk/../.."));
+    POINTERS_EQUAL(d.cp, huGetRelativeZ(d.cpp, "ck"));
+    POINTERS_EQUAL(d.c, huGetRelativeZ(d.cpp, "ck/ck"));
+    POINTERS_EQUAL(d.cpp, huGetRelativeZ(d.cpp, "ck/ck/../.."));
+    POINTERS_EQUAL(d.c, huGetRelativeZ(d.cp, "ck"));
+    POINTERS_EQUAL(d.cpp, huGetRelativeZ(d.cp, ".."));
+    POINTERS_EQUAL(d.cp, huGetRelativeZ(d.c, ".."));
+    POINTERS_EQUAL(d.cpp, huGetRelativeZ(d.c, "../.."));
+    POINTERS_EQUAL(d.root, huGetRelativeZ(d.c, "../../.."));
+    POINTERS_EQUAL(d.b, huGetRelativeZ(d.a, "../bk/bk"));
+    POINTERS_EQUAL(d.c, huGetRelativeZ(d.a, "../ck/ck/ck"));
+    POINTERS_EQUAL(d.a, huGetRelativeZ(d.b, "../../ak"));
+    POINTERS_EQUAL(d.c, huGetRelativeZ(d.b, "../../ck/ck/ck"));
+    POINTERS_EQUAL(d.a, huGetRelativeZ(d.c, "../../../ak"));
+    POINTERS_EQUAL(d.b, huGetRelativeZ(d.c, "../../../bk/bk"));
+    POINTERS_EQUAL(d.c, huGetRelativeZ(d.b, " .. / .. / ck / ck / ck "));
+    POINTERS_EQUAL(d.c, huGetRelativeZ(d.b, "../../`ck`/'ck'/\"ck\""));
+    POINTERS_EQUAL(d.c, huGetRelativeZ(d.b, " .. / .. / `ck` / 'ck' / \"ck\" "));
 
-    POINTERS_EQUAL(hu_nullNode, huGetNodeByRelativeAddressZ(d.root, ".."));
-    POINTERS_EQUAL(hu_nullNode, huGetNodeByRelativeAddressZ(d.a, "0"));
-    POINTERS_EQUAL(hu_nullNode, huGetNodeByRelativeAddressZ(d.root, "3"));
-    POINTERS_EQUAL(hu_nullNode, huGetNodeByRelativeAddressZ(d.root, "0/0"));
-    POINTERS_EQUAL(hu_nullNode, huGetNodeByRelativeAddressZ(d.root, "1/1"));
-    POINTERS_EQUAL(hu_nullNode, huGetNodeByRelativeAddressZ(d.root, "1/0/0"));
+    POINTERS_EQUAL(hu_nullNode, huGetRelativeZ(d.root, ".."));
+    POINTERS_EQUAL(hu_nullNode, huGetRelativeZ(d.a, "0"));
+    POINTERS_EQUAL(hu_nullNode, huGetRelativeZ(d.root, "3"));
+    POINTERS_EQUAL(hu_nullNode, huGetRelativeZ(d.root, "0/0"));
+    POINTERS_EQUAL(hu_nullNode, huGetRelativeZ(d.root, "1/1"));
+    POINTERS_EQUAL(hu_nullNode, huGetRelativeZ(d.root, "1/0/0"));
 }
 
 TEST(huGetNodeByRelativeAddress, pathological)
 {
-    POINTERS_EQUAL(hu_nullNode, huGetNodeByRelativeAddressZ(NULL, "0"));
-    POINTERS_EQUAL(hu_nullNode, huGetNodeByRelativeAddressZ(hu_nullNode, "0"));
-    POINTERS_EQUAL(hu_nullNode, huGetNodeByRelativeAddressZ(l.root, "-1"));
-    POINTERS_EQUAL(hu_nullNode, huGetNodeByRelativeAddressZ(l.a, "-1"));
-    POINTERS_EQUAL(hu_nullNode, huGetNodeByRelativeAddressZ(l.root, NULL));
-    POINTERS_EQUAL(l.root, huGetNodeByRelativeAddressZ(l.root, ""));
-    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.root, ""));
-    POINTERS_EQUAL(hu_nullNode, huGetNodeByRelativeAddressZ(l.root, "/"));
+    POINTERS_EQUAL(hu_nullNode, huGetRelativeZ(NULL, "0"));
+    POINTERS_EQUAL(hu_nullNode, huGetRelativeZ(hu_nullNode, "0"));
+    POINTERS_EQUAL(hu_nullNode, huGetRelativeZ(l.root, "-1"));
+    POINTERS_EQUAL(hu_nullNode, huGetRelativeZ(l.a, "-1"));
+    POINTERS_EQUAL(hu_nullNode, huGetRelativeZ(l.root, NULL));
+    POINTERS_EQUAL(l.root, huGetRelativeZ(l.root, ""));
+    POINTERS_EQUAL(d.root, huGetRelativeZ(d.root, ""));
+    POINTERS_EQUAL(hu_nullNode, huGetRelativeZ(l.root, "/"));
 }
 
 
-TEST_GROUP(huGetNodeAddress)
+TEST_GROUP(huGetAddress)
 {
     htd_listOfLists l;
     htd_dictOfDicts d;
@@ -1637,73 +1637,73 @@ TEST_GROUP(huGetNodeAddress)
     }
 };
 
-TEST(huGetNodeAddress, lists)
+TEST(huGetAddress, lists)
 {
     int addressLen = 0;
-    huGetNodeAddress(l.root, NULL, & addressLen);
+    huGetAddress(l.root, NULL, & addressLen);
     char * s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(l.root, s, & addressLen);
+    huGetAddress(l.root, s, & addressLen);
     auto exp = "/";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(l.a, NULL, & addressLen);
+    huGetAddress(l.a, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(l.a, s, & addressLen);
+    huGetAddress(l.a, s, & addressLen);
     exp = "/0";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(l.bp, NULL, & addressLen);
+    huGetAddress(l.bp, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(l.bp, s, & addressLen);
+    huGetAddress(l.bp, s, & addressLen);
     exp = "/1";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(l.b, NULL, & addressLen);
+    huGetAddress(l.b, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(l.b, s, & addressLen);
+    huGetAddress(l.b, s, & addressLen);
     exp = "/1/0";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(l.cpp, NULL, & addressLen);
+    huGetAddress(l.cpp, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(l.cpp, s, & addressLen);
+    huGetAddress(l.cpp, s, & addressLen);
     exp = "/2";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(l.cp, NULL, & addressLen);
+    huGetAddress(l.cp, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(l.cp, s, & addressLen);
+    huGetAddress(l.cp, s, & addressLen);
     exp = "/2/0";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(l.c, NULL, & addressLen);
+    huGetAddress(l.c, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(l.c, s, & addressLen);
+    huGetAddress(l.c, s, & addressLen);
     exp = "/2/0/0";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
@@ -1711,101 +1711,101 @@ TEST(huGetNodeAddress, lists)
 }
 
 
-TEST(huGetNodeAddress, dicts)
+TEST(huGetAddress, dicts)
 {
     int addressLen = 0;
-    huGetNodeAddress(d.root, NULL, & addressLen);
+    huGetAddress(d.root, NULL, & addressLen);
     char * s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(d.root, s, & addressLen);
+    huGetAddress(d.root, s, & addressLen);
     auto exp = "/";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(d.a, NULL, & addressLen);
+    huGetAddress(d.a, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(d.a, s, & addressLen);
+    huGetAddress(d.a, s, & addressLen);
     exp = "/ak";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(d.bp, NULL, & addressLen);
+    huGetAddress(d.bp, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(d.bp, s, & addressLen);
+    huGetAddress(d.bp, s, & addressLen);
     exp = "/bk";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(d.b, NULL, & addressLen);
+    huGetAddress(d.b, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(d.b, s, & addressLen);
+    huGetAddress(d.b, s, & addressLen);
     exp = "/bk/bk";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(d.cpp, NULL, & addressLen);
+    huGetAddress(d.cpp, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(d.cpp, s, & addressLen);
+    huGetAddress(d.cpp, s, & addressLen);
     exp = "/ck";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(d.cp, NULL, & addressLen);
+    huGetAddress(d.cp, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(d.cp, s, & addressLen);
+    huGetAddress(d.cp, s, & addressLen);
     exp = "/ck/ck";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(d.c, NULL, & addressLen);
+    huGetAddress(d.c, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(d.c, s, & addressLen);
+    huGetAddress(d.c, s, & addressLen);
     exp = "/ck/ck/ck";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     delete [] s;
 }
 
-TEST(huGetNodeAddress, overflow)
+TEST(huGetAddress, overflow)
 {
     int addressLen = 0;
-    huGetNodeAddress(d.c, NULL, & addressLen);
+    huGetAddress(d.c, NULL, & addressLen);
     char * s = new char[addressLen + 1];
     s[addressLen] = '\0';
     addressLen = 3;
     s[addressLen] = '!';
-    huGetNodeAddress(d.c, s, & addressLen);
+    huGetAddress(d.c, s, & addressLen);
     char const * exp = "/ck!";             // contains "/ck/ck/ck"
     LONGS_EQUAL(3, addressLen);
     STRNCMP_EQUAL(exp, s, 4);
     delete [] s;
 }
 
-TEST(huGetNodeAddress, funky)
+TEST(huGetAddress, funky)
 {
     int addressLen = 0;
-    huGetNodeAddress(a.a, NULL, & addressLen);
+    huGetAddress(a.a, NULL, & addressLen);
     char * s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(a.a, s, & addressLen);
+    huGetAddress(a.a, s, & addressLen);
     auto exp = "/\"/\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
@@ -1813,10 +1813,10 @@ TEST(huGetNodeAddress, funky)
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(a.b, NULL, & addressLen);
+    huGetAddress(a.b, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(a.b, s, & addressLen);
+    huGetAddress(a.b, s, & addressLen);
     exp = "/\"a/b\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
@@ -1824,10 +1824,10 @@ TEST(huGetNodeAddress, funky)
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(a.c, NULL, & addressLen);
+    huGetAddress(a.c, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(a.c, s, & addressLen);
+    huGetAddress(a.c, s, & addressLen);
     exp = "/\"/b\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
@@ -1835,10 +1835,10 @@ TEST(huGetNodeAddress, funky)
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(a.d, NULL, & addressLen);
+    huGetAddress(a.d, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(a.d, s, & addressLen);
+    huGetAddress(a.d, s, & addressLen);
     exp = "/\"a/\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
@@ -1846,10 +1846,10 @@ TEST(huGetNodeAddress, funky)
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(a.e, NULL, & addressLen);
+    huGetAddress(a.e, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(a.e, s, & addressLen);
+    huGetAddress(a.e, s, & addressLen);
     exp = "/\"/\\\"foo\\\"\"";      //        /"/\"foo\"
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
@@ -1857,10 +1857,10 @@ TEST(huGetNodeAddress, funky)
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(a.f, NULL, & addressLen);
+    huGetAddress(a.f, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(a.f, s, & addressLen);
+    huGetAddress(a.f, s, & addressLen);
     exp = "/\"/\\\"foo'bar'\\\"\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
@@ -1868,10 +1868,10 @@ TEST(huGetNodeAddress, funky)
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(a.g, NULL, & addressLen);
+    huGetAddress(a.g, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(a.g, s, & addressLen);
+    huGetAddress(a.g, s, & addressLen);
     exp = "/\"/\\\"foo'bar`baz`'\\\"\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
@@ -1879,10 +1879,10 @@ TEST(huGetNodeAddress, funky)
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(a.h, NULL, & addressLen);
+    huGetAddress(a.h, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(a.h, s, & addressLen);
+    huGetAddress(a.h, s, & addressLen);
     exp = "/\"/'foo`bar\\\"baz\\\"`'\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
@@ -1890,10 +1890,10 @@ TEST(huGetNodeAddress, funky)
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(a.i, NULL, & addressLen);
+    huGetAddress(a.i, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(a.i, s, & addressLen);
+    huGetAddress(a.i, s, & addressLen);
     exp = "/\"/`foo\\\"bar'baz'\\\"`\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
@@ -1901,10 +1901,10 @@ TEST(huGetNodeAddress, funky)
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(a.j, NULL, & addressLen);
+    huGetAddress(a.j, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(a.j, s, & addressLen);
+    huGetAddress(a.j, s, & addressLen);
     exp = "/\"a\\\"foo\\\"/\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
@@ -1912,10 +1912,10 @@ TEST(huGetNodeAddress, funky)
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(a.k, NULL, & addressLen);
+    huGetAddress(a.k, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(a.k, s, & addressLen);
+    huGetAddress(a.k, s, & addressLen);
     exp = "/\"a\\\"foo'bar'\\\"/\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
@@ -1923,10 +1923,10 @@ TEST(huGetNodeAddress, funky)
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(a.l, NULL, & addressLen);
+    huGetAddress(a.l, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(a.l, s, & addressLen);
+    huGetAddress(a.l, s, & addressLen);
     exp = "/\"a\\\"foo'bar`baz`'\\\"/\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
@@ -1934,10 +1934,10 @@ TEST(huGetNodeAddress, funky)
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(a.m, NULL, & addressLen);
+    huGetAddress(a.m, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(a.m, s, & addressLen);
+    huGetAddress(a.m, s, & addressLen);
     exp = "/\"a'foo`bar\\\"baz\\\"`'/\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
@@ -1945,10 +1945,10 @@ TEST(huGetNodeAddress, funky)
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(a.n, NULL, & addressLen);
+    huGetAddress(a.n, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(a.n, s, & addressLen);
+    huGetAddress(a.n, s, & addressLen);
     exp = "/\"a`foo\\\"bar'baz'\\\"`/\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
@@ -1956,10 +1956,10 @@ TEST(huGetNodeAddress, funky)
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(a.o, NULL, & addressLen);
+    huGetAddress(a.o, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(a.o, s, & addressLen);
+    huGetAddress(a.o, s, & addressLen);
     exp = "/\"0\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
@@ -1967,10 +1967,10 @@ TEST(huGetNodeAddress, funky)
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(a.p, NULL, & addressLen);
+    huGetAddress(a.p, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(a.p, s, & addressLen);
+    huGetAddress(a.p, s, & addressLen);
     exp = "/01m";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
@@ -1978,10 +1978,10 @@ TEST(huGetNodeAddress, funky)
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(a.q, NULL, & addressLen);
+    huGetAddress(a.q, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(a.q, s, & addressLen);
+    huGetAddress(a.q, s, & addressLen);
     exp = "/\"/\\\"0123456789012345678901234567890123456789\\\"\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
@@ -1989,10 +1989,10 @@ TEST(huGetNodeAddress, funky)
     delete [] s;
 
     addressLen = 0;
-    huGetNodeAddress(a.r, NULL, & addressLen);
+    huGetAddress(a.r, NULL, & addressLen);
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
-    huGetNodeAddress(a.r, s, & addressLen);
+    huGetAddress(a.r, s, & addressLen);
     exp = "/\"a\\\"0123456789012345678901234567890123456789\\\"/\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
@@ -2000,20 +2000,20 @@ TEST(huGetNodeAddress, funky)
     delete [] s;
 }
 
-TEST(huGetNodeAddress, pathological)
+TEST(huGetAddress, pathological)
 {
     int len = 256;
     char str[256] = {0};
-    huGetNodeAddress(NULL, NULL, & len);
+    huGetAddress(NULL, NULL, & len);
     LONGS_EQUAL_TEXT(0, str[0], "NULL");
 
-    huGetNodeAddress(NULL, str, & len);
+    huGetAddress(NULL, str, & len);
     LONGS_EQUAL_TEXT(0, str[0], "NULL");
 
-    huGetNodeAddress(hu_nullNode, NULL, & len);
+    huGetAddress(hu_nullNode, NULL, & len);
     LONGS_EQUAL_TEXT(0, str[0], "null");
 
-    huGetNodeAddress(hu_nullNode, str, & len);
+    huGetAddress(hu_nullNode, str, & len);
     LONGS_EQUAL_TEXT(0, str[0], "null");
 }
 

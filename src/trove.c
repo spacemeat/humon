@@ -414,7 +414,7 @@ huNode const * huGetNodeByFullAddressN(huTrove const * trove, char const * addre
     if (root->kind == HU_NODEKIND_NULL)
         { return hu_nullNode; }
 
-    return huGetNodeByRelativeAddressN(root, wordStart + 1, addressLen - col - 1);
+    return huGetRelativeN(root, wordStart + 1, addressLen - col - 1);
 }
 
 

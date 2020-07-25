@@ -241,7 +241,7 @@ extern "C"
     typedef struct huNode_tag
     {
         huTrove const * trove;              ///< The trove tracking this node.
-        int nodeIdx;                        ///< The index of this node in the tracking array.
+        int nodeIdx;                        ///< The index of this node in its trove's tracking array.
         int kind;                           ///< A huNodeKind value.
         huToken const * firstToken;         ///< The first token which contributes to this node, including any annotation and comment tokens.
         huToken const * keyToken;           ///< The key token if the node is inside a dict.
@@ -258,7 +258,7 @@ extern "C"
     } huNode;
 
     /// Gets a pointer to a node's parent.
-    huNode const * huGetParentNode(huNode const * node);
+    huNode const * huGetParent(huNode const * node);
     /// Gets the number of children a node has.
     int huGetNumChildren(huNode const * node);
     /// Gets a child of a node by child index.
@@ -272,10 +272,18 @@ extern "C"
     /// Returns the next sibling in the child index order of a node.
     huNode const * huGetNextSibling(huNode const * node);
 
-    /// Returns if a node has a key token tracked. (If it's a member of a dict.)
+    /// Looks up a node by relative address to a node.    
+    huNode const * huGetRelativeZ(huNode const * node, char const * address);
+    /// Looks up a node by relative address to a node.    
+    huNode const * huGetRelativeN(huNode const * node, char const * address, int addressLen);
+
+    /// Gets the full address of a node, or the length of that address.
+    void huGetAddress(huNode const * node, char * address, int * addressLen);
+
+    /// Returns whether a node has a key token tracked. (If it's a member of a dict.)
     bool huHasKey(huNode const * node);
 
-    /// Returns the entire nested text of a node, including associated comments and annotations.
+    /// Returns the entire nested text of a node, including child nodes and associated comments and annotations.
     huStringView huGetNestedValue(huNode const * node);
 
     /// Returns the number of annotations associated to a node.
@@ -310,13 +318,6 @@ extern "C"
     /// Returns all comment tokens associated to a node which contain the specified substring.
     huToken const * huGetCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen, huToken const * startWith);
 
-    /// Looks up a node by relative address to a node.    
-    huNode const * huGetNodeByRelativeAddressZ(huNode const * node, char const * address);
-    /// Looks up a node by relative address to a node.    
-    huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * address, int addressLen);
-
-    /// Gets the full address of a node, or the length of that address.
-    void huGetNodeAddress(huNode const * node, char * address, int * addressLen);
 
     /// Encodes a Humon data trove.
     /** A trove stores all the tokens and nodes in a loaded Humon file. It is your main access
