@@ -29,7 +29,7 @@ class NodeKind(IntEnum):
     VALUE = _enumConsts.HU_NODEKIND_VALUE		# Value node. The node contains a string value, and no children.
 
 class WhitespaceFormat(IntEnum):
-    XERO = _enumConsts.HU_WHITESPACEFORMAT_XERO		# Byte-for-byte copy of the original.
+    CLONED = _enumConsts.HU_WHITESPACEFORMAT_CLONED		# Byte-for-byte copy of the original.
     MINIMAL = _enumConsts.HU_WHITESPACEFORMAT_MINIMAL		# Reduces as much whitespace as possible.
     PRETTY = _enumConsts.HU_WHITESPACEFORMAT_PRETTY		# Formats the text in a standard, human-friendly way.
 

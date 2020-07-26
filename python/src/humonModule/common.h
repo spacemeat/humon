@@ -18,7 +18,7 @@ extern PyTypeObject TokenType;
 extern PyTypeObject NodeType;
 extern PyTypeObject TroveType;
 
-PyObject * getEnumValue(char const * moduleName, char const * enumName, int value);
+PyObject * getEnumValue(char const * enumName, int value);
 PyObject * makeToken(huToken const * token);
 PyObject * makeNode(PyObject * trove, huNode const * node);
 

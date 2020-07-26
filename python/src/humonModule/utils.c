@@ -1,9 +1,9 @@
 #include "common.h"
 
 
-PyObject * getEnumValue(char const * moduleName, char const * enumName, int value)
+PyObject * getEnumValue(char const * enumName, int value)
 {
-    PyObject * enums = PyImport_AddModule(moduleName);
+    PyObject * enums = PyImport_AddModule("humon.enums");
     if (enums == NULL) {
         PyErr_SetString(PyExc_ValueError, "Could not find module");
         return NULL;
@@ -25,5 +25,3 @@ PyObject * getEnumValue(char const * moduleName, char const * enumName, int valu
     Py_DECREF(enumType);
     return inst;
 }
-
-

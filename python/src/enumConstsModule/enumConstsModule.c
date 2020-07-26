@@ -29,7 +29,7 @@ void AddEnumConstantsToModule(PyObject * module)
     PyModule_AddIntConstant(module, "HU_NODEKIND_DICT", HU_NODEKIND_DICT);
     PyModule_AddIntConstant(module, "HU_NODEKIND_VALUE", HU_NODEKIND_VALUE);
 
-    PyModule_AddIntConstant(module, "HU_WHITESPACEFORMAT_XERO", HU_WHITESPACEFORMAT_XERO);
+    PyModule_AddIntConstant(module, "HU_WHITESPACEFORMAT_CLONED", HU_WHITESPACEFORMAT_CLONED);
     PyModule_AddIntConstant(module, "HU_WHITESPACEFORMAT_MINIMAL", HU_WHITESPACEFORMAT_MINIMAL);
     PyModule_AddIntConstant(module, "HU_WHITESPACEFORMAT_PRETTY", HU_WHITESPACEFORMAT_PRETTY);
 

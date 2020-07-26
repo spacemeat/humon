@@ -85,7 +85,7 @@ static PyObject * Node_get_nodeIdx(NodeObject * self, void * closure)
 
 static PyObject * Node_get_kind(NodeObject * self, void * closure)
     { return checkYourSelf(self)
-        ? getEnumValue("humon.enums", "NodeKind", self->nodePtr->kind)
+        ? getEnumValue("NodeKind", self->nodePtr->kind)
         : NULL; }
 
 static PyObject * Node_get_firstToken(NodeObject * self, void * closure)

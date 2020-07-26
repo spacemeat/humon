@@ -41,9 +41,9 @@ static int Trove_init(TroveObject * self, PyObject * args, PyObject * kwds)
     if (string == NULL)
         { return -1; }
 
-    huLoadParams params;
-    huInitLoadParams(& params, HU_ENCODING_UTF8, true, tabSize);
-    int error = huMakeTroveFromStringN(& self->trovePtr, string, stringLen, & params);
+    huDeserializeOptions params;
+    huInitDeserializeOptions(& params, HU_ENCODING_UTF8, true, tabSize);
+    int error = huDeserializeTroveN(& self->trovePtr, string, stringLen, & params, HU_ERRORRESPONSE_MUM);
     if (error != HU_ERROR_NOERROR)
         { return -1; }
 
@@ -89,6 +89,31 @@ static PyObject * Trove_get_rootNode(TroveObject * self, PyObject * Py_UNUSED(ig
 }
 
 
+static PyObject * Trove_get_numErrors(TroveObject * self, PyObject * Py_UNUSED(ignored))
+    { return checkYourSelf(self)
+        ? PyLong_FromLong(huGetNumErrors(self->trovePtr))
+        : NULL; }
+
+static PyObject * Trove_get_numTroveAnnotations(TroveObject * self, PyObject * Py_UNUSED(ignored))
+    { return checkYourSelf(self)
+        ? PyLong_FromLong(huGetNumTroveAnnotations(self->trovePtr))
+        : NULL; }
+
+static PyObject * Trove_get_numTroveComments(TroveObject * self, PyObject * Py_UNUSED(ignored))
+    { return checkYourSelf(self)
+        ? PyLong_FromLong(huGetNumTroveComments(self->trovePtr))
+        : NULL; }
+
+static PyObject * Trove_get_tokenStream(TroveObject * self, PyObject * Py_UNUSED(ignored))
+{
+    if (! checkYourSelf(self))
+        { return NULL; }
+
+    huStringView sv = huGetTokenStream(self->trovePtr);
+    return PyUnicode_FromStringAndSize(sv.ptr, sv.size);
+}
+
+
 static PyObject * Trove_getToken(TroveObject * self, PyObject * args)
 {
     if (! checkYourSelf(self))
@@ -131,6 +156,191 @@ static PyObject * Trove_getNodeByIndex(TroveObject * self, PyObject * args)
     
     return nodeObj;
 }
+
+
+static PyObject * Trove_getNodeByAddress(TroveObject * self, PyObject * args)
+{
+    if (! checkYourSelf(self))
+        { return NULL; }
+
+    char * address = NULL;
+    int addressLen = 0;
+    if (!PyArg_ParseTuple(args, "s#", & address, & addressLen))
+        { return NULL; }
+
+    return makeNode(self, huGetNodeByAddressN(self->trovePtr, address, addressLen));
+}
+
+
+static PyObject * Trove_getError(TroveObject * self, PyObject * args)
+{
+    if (! checkYourSelf(self))
+        { return NULL; }
+
+    int idx = -1;
+    if (!PyArg_ParseTuple(args, "i", & idx))
+        { return NULL; }
+
+    huError const * err = huGetError(self->trovePtr, idx);
+    return Py_BuildValue("(OO)", getEnumValue("ErrorCode", err->errorCode), makeToken(err->token));
+}
+
+
+static PyObject * Trove_getTroveAnnotations(TroveObject * self, PyObject * args, PyObject * kwargs)
+{
+    if (! checkYourSelf(self))
+        { return NULL; }
+
+    static char * keywords[] = { "key", "value", NULL };
+
+    char const * key = NULL;
+    int keyLen = 0;
+    char const * value = NULL;
+    int valueLen = 0;
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|s#s#", & key, & keyLen, & value, & valueLen))
+        { return NULL; }
+
+    if (key && ! value)
+    {
+        // look up by key, return one token
+        huToken const * tok = huGetTroveAnnotationWithKeyN(self->trovePtr, key, keyLen);
+        return makeToken(tok);
+    }
+    else if (! key && value)
+    {
+        // look up by value, return n tokens
+        PyObject * list = Py_BuildValue("[]");
+        int len = 0;
+        huToken const * tok = NULL;
+        do
+        {
+            tok = huGetTroveAnnotationWithValueN(self->trovePtr, value, valueLen, len);
+            if (tok)
+            {
+                PyList_SetItem(list, (Py_ssize_t) len, makeToken(tok));
+                len += 1;
+            }
+        } while (tok != NULL);
+
+        return list;        
+    }
+    else if (key && value)
+    {
+        // look up by key, return whether key->value (bool)
+        huToken const * tok = huGetTroveAnnotationWithKeyN(self->trovePtr, key, keyLen);
+        return PyBool_FromLong(strncmp(tok->str.ptr, value, min(tok->str.size, valueLen)) == 0);
+    }
+
+    return NULL;
+}
+
+
+static PyObject * Trove_getTroveComment(TroveObject * self, PyObject * args)
+{
+    if (! checkYourSelf(self))
+        { return NULL; }
+
+    int idx = -1;
+
+    if (! PyArg_ParseTuple(args, "i", & idx))
+        { return NULL; }
+
+    if (idx < 0)
+        { return NULL; }
+
+    return makeToken(huGetTroveComment(self->trovePtr, idx));
+}
+
+
+static PyObject * Trove_findNodesWithAnnotations(TroveObject * self, PyObject * args, PyObject * kwargs)
+{
+    if (! checkYourSelf(self))
+        { return NULL; }
+
+    static char * keywords[] = { "key", "value", NULL };
+
+    char const * key = NULL;
+    int keyLen = 0;
+    char const * value = NULL;
+    int valueLen = 0;
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|s#s#", & key, & keyLen, & value, & valueLen))
+        { return NULL; }
+
+    PyObject * list = Py_BuildValue("[]");
+    int len = 0;
+    huNode const * node = NULL;
+
+    if (key && ! value)
+    {
+        // look up by key
+        do
+        {
+            node = huFindNodesWithAnnotationKeyN(self->trovePtr, key, keyLen, node);
+            if (node)
+            {
+                PyList_SetItem(list, (Py_ssize_t) len, makeNode(self, node));
+                len += 1;
+            }
+        } while (node);
+    }
+    else if (! key && value)
+    {
+        // look up by value
+        do
+        {
+            node = huFindNodesWithAnnotationValueN(self->trovePtr, value, valueLen, len);
+            if (node)
+            {
+                PyList_SetItem(list, (Py_ssize_t) len, makeNode(self, node));
+                len += 1;
+            }
+        } while (node != NULL);
+    }
+    else if (key && value)
+    {
+        // look up by key and value
+        do
+        {
+            node = huFindNodesWithAnnotationKeyValueNN(self->trovePtr, key, keyLen, value, valueLen, node);
+            if (node)
+            {
+                PyList_SetItem(list, (Py_ssize_t) len, makeNode(self, node));
+                len += 1;
+            }
+        } while (node);
+    }
+
+    return list;
+}
+
+
+static PyObject * Trove_findNodesByCommentContaining(TroveObject * self, PyObject * args, PyObject * kwargs)
+{
+    if (! checkYourSelf(self))
+        { return NULL; }
+
+    char const * text = NULL;
+    int textLen = 0;
+    if (!PyArg_ParseTupleargs(args, "s#", & text, & textLen))
+        { return NULL; }
+
+    PyObject * list = Py_BuildValue("[]");
+    int len = 0;
+    huNode const * node = NULL;
+
+    do
+    {
+        node = huFindNodesByCommentContainingN(self->trovePtr, text, textLen, node);
+        if (node)
+        {
+            PyList_SetItem(list, (Py_ssize_t) len, makeNode(self, node));
+            len += 1;
+        }
+    } while (node);
+
+    return list;
+}
+
 
 static PyMemberDef Trove_members[] = 
 {
