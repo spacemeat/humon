@@ -3,18 +3,18 @@
 #include "humon.internal.h"
 
 
-void initTrove(huTrove * trove, huLoadParams * loadParams, int errorResponse)
+void initTrove(huTrove * trove, huDeserializeOptions * DeserializeOptions, int errorResponse)
 {
     trove->dataString = NULL;
     trove->dataStringSize = 0;
-    trove->encoding = loadParams->encoding;
+    trove->encoding = DeserializeOptions->encoding;
 
     initGrowableVector(& trove->tokens, sizeof(huToken));
     initGrowableVector(& trove->nodes, sizeof(huNode));
     initGrowableVector(& trove->errors, sizeof(huError));
 
     trove->errorResponse = errorResponse;
-    trove->inputTabSize = loadParams->tabSize;
+    trove->inputTabSize = DeserializeOptions->tabSize;
 
     initGrowableVector(& trove->annotations, sizeof(huAnnotation));
     initGrowableVector(& trove->comments, sizeof(huComment));
@@ -23,7 +23,7 @@ void initTrove(huTrove * trove, huLoadParams * loadParams, int errorResponse)
 }
 
 
-int huMakeTroveFromStringZ(huTrove const ** trovePtr, char const * data, huLoadParams * loadParams, int errorResponse)
+int huDeserializeTroveZ(huTrove const ** trovePtr, char const * data, huDeserializeOptions * DeserializeOptions, int errorResponse)
 {
     if (trovePtr)
         { * trovePtr = hu_nullTrove; }
@@ -33,11 +33,11 @@ int huMakeTroveFromStringZ(huTrove const ** trovePtr, char const * data, huLoadP
         { return HU_ERROR_BADPARAMETER; }
 #endif
 
-    return huMakeTroveFromStringN(trovePtr, data, strlen(data), loadParams, errorResponse);
+    return huDeserializeTroveN(trovePtr, data, strlen(data), DeserializeOptions, errorResponse);
 }
 
 
-int huMakeTroveFromStringN(huTrove const ** trovePtr, char const * data, int dataLen, huLoadParams * loadParams, int errorResponse)
+int huDeserializeTroveN(huTrove const ** trovePtr, char const * data, int dataLen, huDeserializeOptions * DeserializeOptions, int errorResponse)
 {
     if (trovePtr)
         { * trovePtr = hu_nullTrove; }
@@ -45,30 +45,30 @@ int huMakeTroveFromStringN(huTrove const ** trovePtr, char const * data, int dat
 #ifdef HUMON_CHECK_PARAMS
     if (trovePtr == NULL || data == NULL || dataLen < 0)
         { return HU_ERROR_BADPARAMETER; }
-    if (loadParams &&
-        (loadParams->encoding < 0 ||
-         loadParams->encoding > HU_ENCODING_UNKNOWN ||
-         loadParams->tabSize < 0))
+    if (DeserializeOptions &&
+        (DeserializeOptions->encoding < 0 ||
+         DeserializeOptions->encoding > HU_ENCODING_UNKNOWN ||
+         DeserializeOptions->tabSize < 0))
         { return HU_ERROR_BADPARAMETER; }
     if (errorResponse < 0 ||
         errorResponse >= HU_ERRORRESPONSE_NUMRESPONSES)
         { return HU_ERROR_BADPARAMETER; }
 #endif
 
-    huLoadParams localLoadParams;
-    if (loadParams == NULL)
+    huDeserializeOptions localDeserializeOptions;
+    if (DeserializeOptions == NULL)
     {
-        huInitLoadParams(& localLoadParams, HU_ENCODING_UTF8, true, 4);
-        loadParams = & localLoadParams;
+        huInitDeserializeOptions(& localDeserializeOptions, HU_ENCODING_UTF8, true, 4);
+        DeserializeOptions = & localDeserializeOptions;
     }
 
     huStringView inputDataView = { data, dataLen };
 
-    if (loadParams->encoding == HU_ENCODING_UNKNOWN)
+    if (DeserializeOptions->encoding == HU_ENCODING_UNKNOWN)
     {
         size_t numEncBytes = 0;    // not useful here
-        loadParams->encoding = swagEncodingFromString(& inputDataView, & numEncBytes, loadParams);
-        if (loadParams->encoding == HU_ENCODING_UNKNOWN)
+        DeserializeOptions->encoding = swagEncodingFromString(& inputDataView, & numEncBytes, DeserializeOptions);
+        if (DeserializeOptions->encoding == HU_ENCODING_UNKNOWN)
         {
             // TODO: Depending on errorResponse, output something
             return HU_ERROR_BADENCODING;
@@ -82,7 +82,7 @@ int huMakeTroveFromStringN(huTrove const ** trovePtr, char const * data, int dat
         return HU_ERROR_OUTOFMEMORY;
     }
         
-    initTrove(trove, loadParams, errorResponse);
+    initTrove(trove, DeserializeOptions, errorResponse);
 
     // TODO: Padding with 4 nulls for now; let's see if we actually need to.
     // We're guaranteed that UTF8 strings will be no longer than the transcoded UTF* 
@@ -90,9 +90,9 @@ int huMakeTroveFromStringN(huTrove const ** trovePtr, char const * data, int dat
     // can contain unpaired surrogates, and Humon will accept them if strictUnicode
     // is clear. At that point, a UTF8 string can be longer than its UTF16, so we
     // have to double the size.
-    int sizeFactor = loadParams->allowUtf16UnmatchedSurrogates == false && 
-                       (loadParams->encoding == HU_ENCODING_UTF16_BE ||
-                        loadParams->encoding == HU_ENCODING_UTF16_LE) ? 2 : 1;
+    int sizeFactor = DeserializeOptions->allowUtf16UnmatchedSurrogates == false && 
+                       (DeserializeOptions->encoding == HU_ENCODING_UTF16_BE ||
+                        DeserializeOptions->encoding == HU_ENCODING_UTF16_LE) ? 2 : 1;
     char * newData = malloc(dataLen * sizeFactor + 4);
     if (newData == NULL)
     {
@@ -102,7 +102,7 @@ int huMakeTroveFromStringN(huTrove const ** trovePtr, char const * data, int dat
     }
 
     size_t transcodedLen = 0;
-    int error = transcodeToUtf8FromString(newData, & transcodedLen, & inputDataView, loadParams);
+    int error = transcodeToUtf8FromString(newData, & transcodedLen, & inputDataView, DeserializeOptions);
     if (error != HU_ERROR_NOERROR)
     {
         free(newData);
@@ -129,7 +129,7 @@ int huMakeTroveFromStringN(huTrove const ** trovePtr, char const * data, int dat
 }
 
 
-int huMakeTroveFromFileZ(huTrove const ** trovePtr, char const * path, huLoadParams * loadParams, int errorResponse)
+int huDeserializeTroveFromFileZ(huTrove const ** trovePtr, char const * path, huDeserializeOptions * DeserializeOptions, int errorResponse)
 {
     if (trovePtr != NULL)
         { * trovePtr = hu_nullTrove; }
@@ -139,11 +139,11 @@ int huMakeTroveFromFileZ(huTrove const ** trovePtr, char const * path, huLoadPar
         { return HU_ERROR_BADPARAMETER; }
 #endif
 
-    return huMakeTroveFromFileN(trovePtr, path, strlen(path), loadParams, errorResponse);
+    return huDeserializeTroveFromFileN(trovePtr, path, strlen(path), DeserializeOptions, errorResponse);
 }
 
 
-int huMakeTroveFromFileN(huTrove const ** trovePtr, char const * path, int pathLen, huLoadParams * loadParams, int errorResponse)
+int huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const * path, int pathLen, huDeserializeOptions * DeserializeOptions, int errorResponse)
 {
     if (trovePtr != NULL)
         { * trovePtr = hu_nullTrove; }
@@ -151,21 +151,21 @@ int huMakeTroveFromFileN(huTrove const ** trovePtr, char const * path, int pathL
 #ifdef HUMON_CHECK_PARAMS
     if (path == NULL || pathLen < 1)
         { return HU_ERROR_BADPARAMETER; }
-    if (loadParams &&
-        (loadParams->encoding < 0 ||
-         loadParams->encoding > HU_ENCODING_UNKNOWN ||
-         loadParams->tabSize < 0))
+    if (DeserializeOptions &&
+        (DeserializeOptions->encoding < 0 ||
+         DeserializeOptions->encoding > HU_ENCODING_UNKNOWN ||
+         DeserializeOptions->tabSize < 0))
         { return HU_ERROR_BADPARAMETER; }
     if (errorResponse < 0 ||
         errorResponse >= HU_ERRORRESPONSE_NUMRESPONSES)
         { return HU_ERROR_BADPARAMETER; }
 #endif
 
-    huLoadParams localLoadParams;
-    if (loadParams == NULL)
+    huDeserializeOptions localDeserializeOptions;
+    if (DeserializeOptions == NULL)
     {
-        huInitLoadParams(& localLoadParams, HU_ENCODING_UNKNOWN, true, 4);
-        loadParams = & localLoadParams;
+        huInitDeserializeOptions(& localDeserializeOptions, HU_ENCODING_UNKNOWN, true, 4);
+        DeserializeOptions = & localDeserializeOptions;
     }
 
     FILE * fp = fopen(path, "rb");
@@ -192,11 +192,11 @@ int huMakeTroveFromFileN(huTrove const ** trovePtr, char const * path, int pathL
 
     rewind(fp);
 
-    if (loadParams->encoding == HU_ENCODING_UNKNOWN)
+    if (DeserializeOptions->encoding == HU_ENCODING_UNKNOWN)
     {
         size_t numEncBytes = 0;    // not useful here
-        loadParams->encoding = swagEncodingFromFile(fp, dataLen, & numEncBytes, loadParams);
-        if (loadParams->encoding == HU_ENCODING_UNKNOWN)
+        DeserializeOptions->encoding = swagEncodingFromFile(fp, dataLen, & numEncBytes, DeserializeOptions);
+        if (DeserializeOptions->encoding == HU_ENCODING_UNKNOWN)
         {
             fclose(fp);
             // TODO: Depending on errorResponse, output something
@@ -214,7 +214,7 @@ int huMakeTroveFromFileN(huTrove const ** trovePtr, char const * path, int pathL
         return HU_ERROR_OUTOFMEMORY;
     }
 
-    initTrove(trove, loadParams, errorResponse);
+    initTrove(trove, DeserializeOptions, errorResponse);
 
     // TODO: Padding with 4 nulls for now; let's see if we actually need to.
     // We're guaranteed that UTF8 strings will be no longer than the transcoded UTF* 
@@ -222,9 +222,9 @@ int huMakeTroveFromFileN(huTrove const ** trovePtr, char const * path, int pathL
     // can contain unpaired surrogates, and Humon will accept them if strictUnicode
     // is clear. At that point, a UTF8 string can be longer than its UTF16, so we
     // have to double the size.
-    int sizeFactor = loadParams->allowUtf16UnmatchedSurrogates == false &&
-                       (loadParams->encoding == HU_ENCODING_UTF16_BE ||
-                        loadParams->encoding == HU_ENCODING_UTF16_LE) ? 2 : 1;
+    int sizeFactor = DeserializeOptions->allowUtf16UnmatchedSurrogates == false &&
+                       (DeserializeOptions->encoding == HU_ENCODING_UTF16_BE ||
+                        DeserializeOptions->encoding == HU_ENCODING_UTF16_LE) ? 2 : 1;
     char * newData = malloc(dataLen * sizeFactor + 4);
     if (newData == NULL)
     {
@@ -234,7 +234,7 @@ int huMakeTroveFromFileN(huTrove const ** trovePtr, char const * path, int pathL
     }
 
     size_t transcodedLen = 0;
-    int error = transcodeToUtf8FromFile(newData, & transcodedLen, fp, dataLen, loadParams);
+    int error = transcodeToUtf8FromFile(newData, & transcodedLen, fp, dataLen, DeserializeOptions);
     fclose(fp);
     if (error != HU_ERROR_NOERROR)
     {
@@ -563,39 +563,35 @@ int huGetNumTroveAnnotationsWithValueN(huTrove const * trove, char const * value
 }
 
 
-huToken const * huGetTroveAnnotationWithValueZ(huTrove const * trove, char const * value, int annotationIdx)
+huToken const * huGetTroveAnnotationWithValueZ(huTrove const * trove, char const * value, int * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (value  == NULL)
         { return hu_nullToken; }
 #endif
 
-    return huGetTroveAnnotationWithValueN(trove, value, strlen(value), annotationIdx);
+    return huGetTroveAnnotationWithValueN(trove, value, strlen(value), cursor);
 }
 
 
-huToken const * huGetTroveAnnotationWithValueN(huTrove const * trove, char const * value, int valueLen, int annotationIdx)
+huToken const * huGetTroveAnnotationWithValueN(huTrove const * trove, char const * value, int valueLen, int * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (trove == hu_nullTrove || value  == NULL || valueLen < 0 || annotationIdx < 0)
+    if (trove == hu_nullTrove || value  == NULL || valueLen < 0 || cursor == NULL || * cursor < 0)
         { return hu_nullToken; }
 #endif
 
-    int matches = 0;
-    for (int i = 0; i < trove->annotations.numElements; ++i)
+    huToken const * token = hu_nullToken;
+    for (; * cursor < trove->annotations.numElements; ++ * cursor)
     { 
-        huAnnotation * anno = (huAnnotation *) trove->annotations.buffer + i;
+        huAnnotation const * anno = (huAnnotation *) trove->annotations.buffer + * cursor;
         if (anno->value->str.size == valueLen && 
             strncmp(anno->value->str.ptr, value, valueLen) == 0)
-        {
-            if (matches == annotationIdx)
-                { return anno->key; }
-
-            matches += 1;
-        }
+            { token = anno->key; break; }
     }
 
-    return hu_nullToken;
+    * cursor += 1;
+    return token;
 }
 
 
@@ -626,132 +622,33 @@ huToken const * huGetTroveComment(huTrove const * trove, int commentIdx)
 }
 
 
-// User must free(retval.buffer);
-huNode const * huFindNodesWithAnnotationKeyZ(huTrove const * trove, char const * key, huNode const * startWith)
+huNode const * huFindNodesWithAnnotationKeyZ(huTrove const * trove, char const * key, int * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (key == NULL)
        { return hu_nullNode; }
 #endif
 
-    return huFindNodesWithAnnotationKeyN(trove, key, strlen(key), startWith);
+    return huFindNodesWithAnnotationKeyN(trove, key, strlen(key), cursor);
 }
 
 
-// User must free(retval.buffer);
-huNode const * huFindNodesWithAnnotationKeyN(huTrove const * trove, char const * key, int keyLen, huNode const * startWith)
+huNode const * huFindNodesWithAnnotationKeyN(huTrove const * trove, char const * key, int keyLen, int * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (trove == hu_nullTrove || key == NULL || keyLen < 0)
+    if (trove == hu_nullTrove || key == NULL || keyLen < 0 || cursor == NULL || * cursor < 0)
        { return hu_nullNode; }
 #endif
 
-    int beg = 0;
-    if (startWith)
-        { beg = startWith->nodeIdx + 1; }
-    for (int i = beg; i < huGetNumNodes(trove); ++i)
+    int numNodes = huGetNumNodes(trove);
+    for (; * cursor < numNodes; ++ * cursor)
     {
-        huNode const * node = huGetNodeByIndex(trove, i);
+        huNode const * node = huGetNodeByIndex(trove, * cursor);
         bool hasOne = huHasAnnotationWithKeyN(node, key, keyLen);
         if (hasOne)
-            { return node; }
-    }
-
-    return hu_nullNode;
-}
-
-
-// User must free(retval.buffer);
-huNode const * huFindNodesWithAnnotationValueZ(huTrove const * trove, char const * value, huNode const * startWith)
-{
-#ifdef HUMON_CHECK_PARAMS
-    if (value == NULL)
-       { return hu_nullNode; }
-#endif
-
-    return huFindNodesWithAnnotationValueN(trove, value, strlen(value), startWith);
-}
-
-
-// User must free(retval.buffer);
-huNode const * huFindNodesWithAnnotationValueN(huTrove const * trove, char const * value, int valueLen, huNode const * startWith)
-{
-#ifdef HUMON_CHECK_PARAMS
-    if (trove == hu_nullTrove || value == NULL || valueLen < 0)
-       { return hu_nullNode; }
-#endif
-
-    int beg = 0;
-    if (startWith)
-        { beg = startWith->nodeIdx + 1; }
-    for (int i = beg; i < huGetNumNodes(trove); ++i)
-    {
-        huNode const * node = huGetNodeByIndex(trove, i);
-        int na = huGetNumAnnotationsWithValueN(node, value, valueLen);
-        if (na > 0)
-           { return node; }
-    }
-
-    return hu_nullNode;
-}
-
-
-// User must free(retval.buffer);
-huNode const * huFindNodesWithAnnotationKeyValueZZ(huTrove const * trove, char const * key, char const * value, huNode const * startWith)
-{
-#ifdef HUMON_CHECK_PARAMS
-    if (key == NULL || value == NULL)
-       { return hu_nullNode; }
-#endif
-
-    return huFindNodesWithAnnotationKeyValueNN(trove, key, strlen(key), value, strlen(value), startWith);
-}
-
-
-// User must free(retval.buffer);
-huNode const * huFindNodesWithAnnotationKeyValueNZ(huTrove const * trove, char const * key, int keyLen, char const * value, huNode const * startWith)
-{
-#ifdef HUMON_CHECK_PARAMS
-    if (key == NULL || keyLen < 0 || value == NULL)
-       { return hu_nullNode; }
-#endif
-
-    return huFindNodesWithAnnotationKeyValueNN(trove, key, keyLen, value, strlen(value), startWith);
-}
-
-
-// User must free(retval.buffer);
-huNode const * huFindNodesWithAnnotationKeyValueZN(huTrove const * trove, char const * key, char const * value, int valueLen, huNode const * startWith)
-{
-#ifdef HUMON_CHECK_PARAMS
-    if (key == NULL || value == NULL || valueLen < 0)
-       { return hu_nullNode; }
-#endif
-
-    return huFindNodesWithAnnotationKeyValueNN(trove, key, strlen(key), value, valueLen, startWith);
-}
-
-
-// User must free(retval.buffer);
-huNode const * huFindNodesWithAnnotationKeyValueNN(huTrove const * trove, char const * key, int keyLen, char const * value, int valueLen, huNode const * startWith)
-{
-#ifdef HUMON_CHECK_PARAMS
-    if (trove == hu_nullTrove || key == NULL || keyLen < 0 || value == NULL || valueLen < 0)
-       { return hu_nullNode; }
-#endif
-
-    int beg = 0;
-    if (startWith)
-        { beg = startWith->nodeIdx + 1; }
-    for (int i = beg; i < huGetNumNodes(trove); ++i)
-    {
-        huNode const * node = huGetNodeByIndex(trove, i);
-        huToken const * anno = huGetAnnotationWithKeyN(node, key, keyLen);
-        if (anno != hu_nullToken)
         {
-            if (anno->str.size == valueLen &&
-                strncmp(anno->str.ptr, value, valueLen) == 0)
-                { return node; }
+            * cursor += 1;
+            return node;
         }
     }
 
@@ -759,38 +656,126 @@ huNode const * huFindNodesWithAnnotationKeyValueNN(huTrove const * trove, char c
 }
 
 
-huNode const * huFindNodesByCommentContainingZ(huTrove const * trove, char const * containedText, huNode const * startWith)
+huNode const * huFindNodesWithAnnotationValueZ(huTrove const * trove, char const * value, int * cursor)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (value == NULL)
+       { return hu_nullNode; }
+#endif
+
+    return huFindNodesWithAnnotationValueN(trove, value, strlen(value), cursor);
+}
+
+
+huNode const * huFindNodesWithAnnotationValueN(huTrove const * trove, char const * value, int valueLen, int * cursor)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == hu_nullTrove || value == NULL || valueLen < 0 || cursor == NULL || * cursor < 0)
+       { return hu_nullNode; }
+#endif
+
+    int numNodes = huGetNumNodes(trove);
+    for (; * cursor < numNodes; ++ * cursor)
+    {
+        huNode const * node = huGetNodeByIndex(trove, * cursor);
+        int na = huGetNumAnnotationsWithValueN(node, value, valueLen);
+        if (na > 0)
+        {
+            * cursor += 1;
+            return node;
+        }
+    }
+
+    return hu_nullNode;
+}
+
+
+huNode const * huFindNodesWithAnnotationKeyValueZZ(huTrove const * trove, char const * key, char const * value, int * cursor)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (key == NULL || value == NULL)
+       { return hu_nullNode; }
+#endif
+
+    return huFindNodesWithAnnotationKeyValueNN(trove, key, strlen(key), value, strlen(value), cursor);
+}
+
+
+huNode const * huFindNodesWithAnnotationKeyValueNZ(huTrove const * trove, char const * key, int keyLen, char const * value, int * cursor)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (key == NULL || keyLen < 0 || value == NULL)
+       { return hu_nullNode; }
+#endif
+
+    return huFindNodesWithAnnotationKeyValueNN(trove, key, keyLen, value, strlen(value), cursor);
+}
+
+
+huNode const * huFindNodesWithAnnotationKeyValueZN(huTrove const * trove, char const * key, char const * value, int valueLen, int * cursor)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (key == NULL || value == NULL || valueLen < 0)
+       { return hu_nullNode; }
+#endif
+
+    return huFindNodesWithAnnotationKeyValueNN(trove, key, strlen(key), value, valueLen, cursor);
+}
+
+
+huNode const * huFindNodesWithAnnotationKeyValueNN(huTrove const * trove, char const * key, int keyLen, char const * value, int valueLen, int * cursor)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == hu_nullTrove || key == NULL || keyLen < 0 || value == NULL || valueLen < 0 || cursor == NULL || * cursor < 0)
+       { return hu_nullNode; }
+#endif
+
+    int numNodes = huGetNumNodes(trove);
+    for (; * cursor < numNodes; ++ * cursor)
+    {
+        huNode const * node = huGetNodeByIndex(trove, * cursor);
+        huToken const * anno = huGetAnnotationWithKeyN(node, key, keyLen);
+        if (anno != hu_nullToken)
+        {
+            if (anno->str.size == valueLen &&
+                strncmp(anno->str.ptr, value, valueLen) == 0)
+            {
+                * cursor += 1;
+                return node;
+            }
+        }
+    }
+
+    return hu_nullNode;
+}
+
+
+huNode const * huFindNodesByCommentContainingZ(huTrove const * trove, char const * containedText, int * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (containedText == NULL)
        { return hu_nullNode; }
 #endif
 
-    return huFindNodesByCommentContainingN(trove, containedText, strlen(containedText), startWith);
+    return huFindNodesByCommentContainingN(trove, containedText, strlen(containedText), cursor);
 }
 
 
-// User must free(retval.buffer);
-huNode const * huFindNodesByCommentContainingN(huTrove const * trove, char const * containedText, int containedTextLen, huNode const * startWith)
+huNode const * huFindNodesByCommentContainingN(huTrove const * trove, char const * containedText, int containedTextLen, int * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (trove == hu_nullTrove || containedText == NULL || containedTextLen < 0)
+    if (trove == hu_nullTrove || containedText == NULL || containedTextLen < 0 || cursor == NULL || * cursor < 0)
        { return hu_nullNode; }
 #endif
 
-    int beg = 0;
-    if (startWith)
-        { beg = startWith->nodeIdx + 1; }
-    for (int i = beg; i < huGetNumNodes(trove); ++i)
+    int numNodes = huGetNumNodes(trove);
+    for (; * cursor < numNodes; ++ * cursor)
     {
-        huNode const * node = huGetNodeByIndex(trove, i);
-
-        int na = huGetNumComments(node);
-        for (int j = 0; j < na; ++j)
+        huNode const * node = huGetNodeByIndex(trove, * cursor);
+        if (huHasCommentsContainingN(node, containedText, containedTextLen))
         {
-            huToken const * comm = huGetComment(node, j);
-            if (stringInString(comm->str.ptr, comm->str.size, containedText, containedTextLen))
-                { return node; }
+            * cursor += 1;
+            return node;
         }
     }
 
@@ -801,11 +786,6 @@ huNode const * huFindNodesByCommentContainingN(huTrove const * trove, char const
 huNode * allocNewNode(huTrove * trove, int nodeKind, huToken const * firstToken)
 {
     int num = 1;
-
-    // TODO: Remove this debug hook
-    int foo = getVectorSize(& trove->nodes);
-    if (foo > 15)
-        { num = 1; }
 
     huNode * newNode = growVector(& trove->nodes, & num);
     if (num == 0)
@@ -819,7 +799,7 @@ huNode * allocNewNode(huTrove * trove, int nodeKind, huToken const * firstToken)
     newNode->lastToken = firstToken;
 
 #ifdef HUMON_CAVEPERSON_DEBUGGING
-     printf ("%snode: nodeIdx: %d    firstToken: %d    %s%s\n",
+    printf ("%snode: nodeIdx: %d    firstToken: %d    %s%s\n",
         lightCyan, newNodeIdx, (int)(firstToken - (huToken *) trove->tokens.buffer), 
         huNodeKindToString(nodeKind), off);
 #endif
@@ -916,7 +896,7 @@ huStringView huGetTroveTokenStream(huTrove const * trove)
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
 
 
-int huTroveToString(huTrove const * trove, char * dest, int * destLength, huStoreParams * storeParams)
+int huSerializeTrove(huTrove const * trove, char * dest, int * destLength, huSerializeOptions * SerializeOptions)
 {
     if (dest == NULL && destLength != NULL)
         { * destLength = 0; }
@@ -924,30 +904,30 @@ int huTroveToString(huTrove const * trove, char * dest, int * destLength, huStor
 #ifdef HUMON_CHECK_PARAMS
     if (trove == hu_nullTrove || destLength == NULL)
         { return HU_ERROR_BADPARAMETER; }
-    if (storeParams &&
-        (storeParams->WhitespaceFormat < 0 || storeParams->WhitespaceFormat >= 3 || 
-         storeParams->indentSize < 0 || 
-         (storeParams->usingColors && storeParams->colorTable == NULL) ||
-         storeParams->newline.ptr == NULL || storeParams->newline.size < 0))
+    if (SerializeOptions &&
+        (SerializeOptions->WhitespaceFormat < 0 || SerializeOptions->WhitespaceFormat >= 3 || 
+         SerializeOptions->indentSize < 0 || 
+         (SerializeOptions->usingColors && SerializeOptions->colorTable == NULL) ||
+         SerializeOptions->newline.ptr == NULL || SerializeOptions->newline.size < 0))
         { return HU_ERROR_BADPARAMETER; }
 #endif
 
-    huStoreParams localStoreParams;
-    if (storeParams == NULL)
+    huSerializeOptions localSerializeOptions;
+    if (SerializeOptions == NULL)
     {
-        huInitStoreParamsN(& localStoreParams, HU_WHITESPACEFORMAT_PRETTY, 4, false, false, NULL, true, "\n", 1, false );
-        storeParams = & localStoreParams;
+        huInitSerializeOptionsN(& localSerializeOptions, HU_WHITESPACEFORMAT_PRETTY, 4, false, false, NULL, true, "\n", 1, false );
+        SerializeOptions = & localSerializeOptions;
     }
 
-    if (storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_XERO)
+    if (SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_CLONED)
     {
         if (dest == NULL)
-            { * destLength = trove->dataStringSize + storeParams->printBom * 3; }
+            { * destLength = trove->dataStringSize + SerializeOptions->printBom * 3; }
         else
         {
             char * destWithBom = dest;
             int bomLen = 0;
-            if (storeParams->printBom)
+            if (SerializeOptions->printBom)
             {
                 char utf8bom[] = { 0xef, 0xbb, 0xbf };
                 memcpy(dest, utf8bom, 3);
@@ -957,11 +937,11 @@ int huTroveToString(huTrove const * trove, char * dest, int * destLength, huStor
             memcpy(destWithBom, trove->dataString, * destLength - bomLen);
         }
     }
-    else if (storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY ||
-             storeParams->WhitespaceFormat == HU_WHITESPACEFORMAT_MINIMAL)
+    else if (SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY ||
+             SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_MINIMAL)
     {
         // newline must be > 0; some things need a newline like // comments
-        if (storeParams->newline.size < 1)
+        if (SerializeOptions->newline.size < 1)
             { return HU_ERROR_BADPARAMETER; }
 
         huVector str;
@@ -974,7 +954,7 @@ int huTroveToString(huTrove const * trove, char * dest, int * destLength, huStor
             initVectorPreallocated(& str, dest, sizeof(char), * destLength);
         }
 
-        troveToPrettyString(trove, & str, storeParams);
+        troveToPrettyString(trove, & str, SerializeOptions);
         if (dest == NULL)
             { * destLength = str.numElements; }
     }
@@ -984,26 +964,26 @@ int huTroveToString(huTrove const * trove, char * dest, int * destLength, huStor
 
 #pragma GCC diagnostic pop
 
-int huTroveToFileZ(huTrove const * trove, char const * path, int * destLength, huStoreParams * storeParams)
+int huSerializeTroveToFileZ(huTrove const * trove, char const * path, int * destLength, huSerializeOptions * SerializeOptions)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (path == NULL)
         { return HU_ERROR_BADPARAMETER; }
 #endif
 
-    return huTroveToFileN(trove, path, strlen(path), destLength, storeParams);
+    return huSerializeTroveToFileN(trove, path, strlen(path), destLength, SerializeOptions);
 }
 
-int huTroveToFileN(huTrove const * trove, char const * path, int pathLen, int * destLength, huStoreParams * storeParams)
+int huSerializeTroveToFileN(huTrove const * trove, char const * path, int pathLen, int * destLength, huSerializeOptions * SerializeOptions)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == hu_nullTrove || path == NULL)
         { return HU_ERROR_BADPARAMETER; }
-    if (storeParams &&
-        (storeParams->WhitespaceFormat < 0 || storeParams->WhitespaceFormat >= 3 || 
-         storeParams->indentSize < 0 || 
-         (storeParams->usingColors && storeParams->colorTable == NULL) ||
-         storeParams->newline.ptr == NULL || storeParams->newline.size < 0))
+    if (SerializeOptions &&
+        (SerializeOptions->WhitespaceFormat < 0 || SerializeOptions->WhitespaceFormat >= 3 || 
+         SerializeOptions->indentSize < 0 || 
+         (SerializeOptions->usingColors && SerializeOptions->colorTable == NULL) ||
+         SerializeOptions->newline.ptr == NULL || SerializeOptions->newline.size < 0))
         { return HU_ERROR_BADPARAMETER; }
 #endif
 
@@ -1011,7 +991,7 @@ int huTroveToFileN(huTrove const * trove, char const * path, int pathLen, int * 
         { * destLength = 0; }
 
     int strLength = 0;
-    int error = huTroveToString(trove, NULL, & strLength, storeParams);
+    int error = huSerializeTrove(trove, NULL, & strLength, SerializeOptions);
     if (error != HU_ERROR_NOERROR)
         { return error; }
 
@@ -1019,7 +999,7 @@ int huTroveToFileN(huTrove const * trove, char const * path, int pathLen, int * 
     if (str == NULL)
         { return HU_ERROR_OUTOFMEMORY; }
 
-    error = huTroveToString(trove, str, & strLength, storeParams);
+    error = huSerializeTrove(trove, str, & strLength, SerializeOptions);
     if (error != HU_ERROR_NOERROR)
         { free(str); return error; }
 

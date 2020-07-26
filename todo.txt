@@ -1,9 +1,11 @@
 DONE THIS CHECKIN:
-Some API renaming, moving a few things around again, and again, and again.
+Added a few APIs to round out comment search.
+Changed iteration algorithm in a few problem functions.
+Some name changes.
+Added a few tests.
 
 TODO:
 P1 search for TODOs
-huGetAnnotationWithValueN, others have bad algorithm
 P1 doxygen
 P2 vcpkg
 P2 string sizes should be size_t?

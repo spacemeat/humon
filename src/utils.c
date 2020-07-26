@@ -66,7 +66,7 @@ char const * huWhitespaceFormatToString(int rhs)
 {
     switch(rhs)
     {
-    case HU_WHITESPACEFORMAT_XERO: return "xero";
+    case HU_WHITESPACEFORMAT_CLONED: return "cloned";
     case HU_WHITESPACEFORMAT_MINIMAL: return "minimal";
     case HU_WHITESPACEFORMAT_PRETTY: return "pretty";
     default: return "!!unknown!!";
@@ -108,7 +108,7 @@ bool isMachineBigEndian()
 }
 
 
-void huInitLoadParams(huLoadParams * params, int encoding, bool strictUnicode, int tabSize)
+void huInitDeserializeOptions(huDeserializeOptions * params, int encoding, bool strictUnicode, int tabSize)
 {
     params->encoding = encoding;
     params->allowOutOfRangeCodePoints = ! strictUnicode;
@@ -117,16 +117,16 @@ void huInitLoadParams(huLoadParams * params, int encoding, bool strictUnicode, i
 }
 
 
-void huInitStoreParamsZ(huStoreParams * params, int WhitespaceFormat, int indentSize, 
+void huInitSerializeOptionsZ(huSerializeOptions * params, int WhitespaceFormat, int indentSize, 
     bool indentWithTabs, bool usingColors, huStringView const * colorTable,  bool printComments, 
     char const * newline, bool printBom)
 {
-    huInitStoreParamsN(params, WhitespaceFormat, indentSize, indentWithTabs, usingColors, colorTable, 
+    huInitSerializeOptionsN(params, WhitespaceFormat, indentSize, indentWithTabs, usingColors, colorTable, 
         printComments, newline, strlen(newline), printBom);
 }
 
 
-void huInitStoreParamsN(huStoreParams * params, int WhitespaceFormat, int indentSize, 
+void huInitSerializeOptionsN(huSerializeOptions * params, int WhitespaceFormat, int indentSize, 
     bool indentWithTabs, bool usingColors, huStringView const * colorTable,  bool printComments, 
     char const * newline, int newlineSize, bool printBom)
 {

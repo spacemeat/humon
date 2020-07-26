@@ -98,13 +98,13 @@ extern "C"
     void recordParseError(huTrove * trove, int errorCode, huToken const * pCur);
 
     /// Attempt to determine the Unicode encoding of a string in memory.
-    int swagEncodingFromString(huStringView const * data, size_t * numBomChars, huLoadParams * loadParams);
+    int swagEncodingFromString(huStringView const * data, size_t * numBomChars, huDeserializeOptions * DeserializeOptions);
     /// Attempt to determine the Unicode encoding of a file.
-    int swagEncodingFromFile(FILE * fp, int fileSize, size_t * numBomChars, huLoadParams * loadParams);
+    int swagEncodingFromFile(FILE * fp, int fileSize, size_t * numBomChars, huDeserializeOptions * DeserializeOptions);
     /// Transcode a string in memory from its native encoding to a UTF-8 memory buffer.
-    int transcodeToUtf8FromString(char * dest, size_t * numBytesEncoded, huStringView const * src, huLoadParams * loadParams);
+    int transcodeToUtf8FromString(char * dest, size_t * numBytesEncoded, huStringView const * src, huDeserializeOptions * DeserializeOptions);
     /// Transcode a file from its native encoding to a UTF-8 memory buffer.
-    int transcodeToUtf8FromFile(char * dest, size_t * numBytesEncoded, FILE * fp, int srcLen, huLoadParams * loadParams);
+    int transcodeToUtf8FromFile(char * dest, size_t * numBytesEncoded, FILE * fp, int srcLen, huDeserializeOptions * DeserializeOptions);
 
     /// Extracts the tokens from a token stream.
     void tokenizeTrove(huTrove * trove);
@@ -121,7 +121,7 @@ extern "C"
         huTrove const * trove;
         huVector * str;
 
-        huStoreParams * storeParams;
+        huSerializeOptions * SerializeOptions;
 
         int currentDepth;
         bool lastPrintWasNewline;
@@ -133,7 +133,7 @@ extern "C"
     /// This appends a string to a PrintTracker.
     void appendString(PrintTracker * printer, char const * addend, int size);
     /// This prints a trove to a whitespace-formatted string.
-    void troveToPrettyString(huTrove const * trove, huVector * str, huStoreParams * storeParams);
+    void troveToPrettyString(huTrove const * trove, huVector * str, huSerializeOptions * SerializeOptions);
 
 #ifdef __cplusplus
 } // extern "C"

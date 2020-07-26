@@ -14,7 +14,7 @@ void printUsage()
 {
     cout << R"(Usage:
  hux <args>
-  -px print xero
+  -px print cloned
   -pm print minimal
   -pp print pretty  [default]
 
@@ -127,7 +127,7 @@ int main(int argc, char ** argv)
             else if (argMatches(arg, "-pp"))
                 { format = WhitespaceFormat::pretty; }
             else if (argMatches(arg, "-px"))
-                { format = WhitespaceFormat::xero; }
+                { format = WhitespaceFormat::cloned; }
             else if (argMatches(arg, "-pm"))
                 { format = WhitespaceFormat::minimal; }
             else if (argStartsWith(arg, "-p"))
@@ -252,9 +252,9 @@ int main(int argc, char ** argv)
 
     switch(format)
     {
-    case WhitespaceFormat::xero:
+    case WhitespaceFormat::cloned:
         {
-            auto ret = trove.toXeroString(printBom);
+            auto ret = trove.toClonedString(printBom);
             if (auto str = get_if<std::string>(& ret))
                 { output = std::move(* str); }
             else
