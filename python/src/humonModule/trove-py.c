@@ -61,10 +61,33 @@ static bool checkYourSelf(TroveObject * self)
     return true;
 }
 
-static PyObject * Trove_getNumTokens(TroveObject * self, PyObject * Py_UNUSED(ignored))
+static PyObject * Trove_get_numTokens(TroveObject * self, PyObject * Py_UNUSED(ignored))
     { return checkYourSelf(self)
         ? PyLong_FromLong(huGetNumTokens(self->trovePtr))
         : NULL; }
+
+static PyObject * Trove_get_numNodes(TroveObject * self, PyObject * Py_UNUSED(ignored))
+    { return checkYourSelf(self)
+        ? PyLong_FromLong(huGetNumNodes(self->trovePtr))
+        : NULL; }
+
+
+static PyObject * Trove_get_rootNode(TroveObject * self, PyObject * Py_UNUSED(ignored))
+{
+    if (! checkYourSelf(self))
+        { return NULL; }
+
+    huNode const * node = huGetRootNode(self->trovePtr);
+    if (node == NULL)
+        { return NULL; }
+
+    PyObject * nodeObj = makeNode(self, node);
+    if (nodeObj == NULL)
+        { return NULL; }
+    
+    return nodeObj;
+}
+
 
 static PyObject * Trove_getToken(TroveObject * self, PyObject * args)
 {
@@ -88,26 +111,6 @@ static PyObject * Trove_getToken(TroveObject * self, PyObject * args)
     return tokenObj;
 }
 
-static PyObject * Trove_getNumNodes(TroveObject * self, PyObject * Py_UNUSED(ignored))
-    { return checkYourSelf(self)
-        ? PyLong_FromLong(huGetNumNodes(self->trovePtr))
-        : NULL; }
-
-static PyObject * Trove_getRootNode(TroveObject * self, PyObject * Py_UNUSED(ignored))
-{
-    if (! checkYourSelf(self))
-        { return NULL; }
-
-    huNode const * node = huGetRootNode(self->trovePtr);
-    if (node == NULL)
-        { return NULL; }
-
-    PyObject * nodeObj = makeNode(self, node);
-    if (nodeObj == NULL)
-        { return NULL; }
-    
-    return nodeObj;
-}
 
 static PyObject * Trove_getNodeByIndex(TroveObject * self, PyObject * args)
 {
@@ -134,13 +137,28 @@ static PyMemberDef Trove_members[] =
     { NULL }
 };
 
+static PyGetSetDef Trove_getsetters[] = 
+{
+    { "numTokens",              (getter) Trove_get_numTokens, (setter) NULL, "The trove tracking this node." },
+    { "numNodes",               (getter) Trove_get_numNodes, (setter) NULL, "The index of this node in its trove's tracking array." },
+    { "rootNode",               (getter) Trove_get_rootNode, (setter) NULL, "The kind of node this is." },
+    { "numErrors",              (getter) Trove_get_numErrors, (setter) NULL, "The number of errors encountered when loading a trove." },
+    { "numTroveAnnotations",    (getter) Trove_get_numTroveAnnotations, (setter) NULL, "The number of annotations associated to a trove." },
+    { "numTroveComments",       (getter) Trove_get_numTroveComments, (setter) NULL, "The number of comments associated to a trove." },
+    { "tokenStream",            (getter) Trove_get_tokenStream, (setter) NULL, "The entire text of a trove, including all nodes and all comments and annotations." },
+    { NULL }
+};
+
 static PyMethodDef Trove_methods[] = 
 {
-    { "getNumTokens", (PyCFunction) Trove_getNumTokens, METH_NOARGS, "Return the number of tokens in a trove." },
     { "getToken", (PyCFunction) Trove_getToken, METH_VARARGS, "Return a token from a trove by index." },
-    { "getNumNodes", (PyCFunction) Trove_getNumNodes, METH_NOARGS, "Return the number of tokens in a trove." },
-    { "getRootNode", (PyCFunction) Trove_getRootNode, METH_NOARGS, "Return a token from a trove by index." },
     { "getNodeByIndex", (PyCFunction) Trove_getNodeByIndex, METH_VARARGS, "Return a token from a trove by index." },
+    { "getNodeByAddress", (PyCFunction) Trove_getNodeByAddress, METH_VARARGS, "Return a token from a trove by index." },
+    { "getError", (PyCFunction) Trove_getError, METH_VARARGS, "Return an error from a trove by index." },
+    { "getTroveAnnotations", (PyCFunction) Trove_getTroveAnnotations, METH_VARARGS | METH_KEYWORDS, "Return aannotations from a trove." },
+    { "getTroveComment", (PyCFunction) Trove_getTroveComment, METH_VARARGS | METH_KEYWORDS, "Return a comment from a trove by index." },
+    { "findNodesWithAnnotations", (PyCFunction) Trove_findNodesWithAnnotations, METH_VARARGS | METH_KEYWORDS, "Returns a list of all nodes in a trove with a specific annotation key, value, or both." },
+    { "findNodesByCommentContaining", (PyCFunction) Trove_findNodesByCommentContaining, METH_VARARGS, "Returns a list of all nodes in a trove with an associated comment containing the given text." },
     { NULL }
 };
 
@@ -156,6 +174,7 @@ PyTypeObject TroveType =
     .tp_init = (initproc) Trove_init,
     .tp_dealloc = (destructor) Trove_dealloc,
     .tp_members = Trove_members,
+    .tp_getset = Trove_getsetters,
     .tp_methods = Trove_methods
 };
 

@@ -118,6 +118,11 @@ static PyObject * Node_get_parentNodeIdx(NodeObject * self, void * closure)
         ? PyLong_FromLong(self->nodePtr->lastToken)
         : NULL; }
 
+static PyObject * Node_get_parent(NodeObject * self, PyObject * Py_UNUSED(ignored))
+    { return checkYourSelf(self)
+        ? makeNode(self->trove, huGetParent(self->nodePtr))
+        : NULL; }
+
 static PyObject * Node_get_childOrdinal(NodeObject * self, void * closure)
     { return checkYourSelf(self)
         ? PyLong_FromLong(self->nodePtr->childOrdinal)
@@ -162,8 +167,22 @@ static PyObject * Node_get_hasKey(NodeObject * self, void * closure)
         : NULL; }
 
 static PyObject * Node_get_tokenStream(NodeObject * self, void * closure)
+{
+    if (! checkYourSelf(self))
+        { return NULL; }
+
+    huStringView str = huGetTokenStream(self->nodePtr);
+    return PyUnicode_FromStringAndSize(str.ptr, str.size);
+}
+
+static PyObject * Node_get_numAnnotations(NodeObject * self, void * closure)
     { return checkYourSelf(self)
-        ? PyBool_FromLong(huHasKey(self->nodePtr))
+        ? PyLong_FromLong(huGetNumAnnotations(self->nodePtr))
+        : NULL; }
+
+static PyObject * Node_get_numComments(NodeObject * self, void * closure)
+    { return checkYourSelf(self)
+        ? PyLong_FromLong(huGetNumComments(self->nodePtr))
         : NULL; }
 
 
@@ -185,6 +204,154 @@ static PyObject * Node_str(NodeObject * self, PyObject * Py_UNUSED(ignored))
 }
 
 
+static PyObject * Node_getChild(NodeObject * self, PyObject * args)
+{
+    if (! checkYourSelf(self))
+        { return NULL; }
+
+    PyObject * arg = NULL;
+    if (!PyArg_ParseTuple(args, "O", & arg))
+        { return NULL; }
+    
+    huNode const * node = NULL;
+
+    // Theoretically, pass int or string to getChild().
+    if (PyLong_Check(arg))
+    {
+        int idx = PyLong_AsLong(arg);
+        if (idx >= 0)
+            { node = huGetChildByIndex(self->nodePtr, idx); }
+    }
+    else if (PyUnicode_Check(arg))
+    {
+        char * buf = NULL;
+        int bufLen = 0;
+        if (PyBytes_AsStringAndSize(arg, & buf, & bufLen) == 0)
+        {
+            if (bufLen > 0 && buf)
+                { node = huGetChildByKeyN(self->nodePtr, buf, bufLen); }
+        }
+    }
+
+    PyObject * nodeObj = makeNode(self, node);
+    if (nodeObj == NULL)
+        { return NULL; }
+    
+    return nodeObj;
+}
+
+
+static PyObject * Node_getRelative(NodeObject * self, PyObject * args)
+{
+    if (! checkYourSelf(self))
+        { return NULL; }
+
+    char const * arg = NULL;
+    int argLen = 0;
+    if (!PyArg_ParseTuple(args, "s#", & arg, & argLen))
+        { return NULL; }
+    
+    huNode const * node = huGetRelativeN(self->nodePtr, arg, argLen);
+    PyObject * nodeObj = makeNode(self, node);
+    if (nodeObj == NULL)
+        { return NULL; }
+    
+    return nodeObj;
+}
+
+
+static PyObject * Node_getAnnotations(NodeObject * self, PyObject * args, PyObject * kwargs)
+{
+    if (! checkYourSelf(self))
+        { return NULL; }
+
+    static char * keywords[] = { "key", "value", NULL };
+
+    char const * key = NULL;
+    int keyLen = 0;
+    char const * value = NULL;
+    int valueLen = 0;
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|s#s#", & key, & keyLen, & value, & valueLen))
+        { return NULL; }
+
+    if (key && ! value)
+    {
+        // look up by key, return one token
+        huToken const * tok = huGetAnnotationWithKeyN(self->nodePtr, key, keyLen);
+        return makeToken(tok);
+    }
+    else if (! key && value)
+    {
+        // look up by value, return n tokens
+        PyObject * list = Py_BuildValue("[]");
+        int len = 0;
+        huToken const * tok = NULL;
+        do
+        {
+            tok = huGetAnnotationWithValueN(self->nodePtr, value, valueLen, len);
+            if (tok)
+            {
+                PyList_SetItem(list, (Py_ssize_t) len, makeToken(tok));
+                len += 1;
+            }
+        } while (tok != NULL);
+
+        return list;        
+    }
+    else if (key && value)
+    {
+        // look up by key, return whether key->value (bool)
+        huToken const * tok = huGetAnnotationWithKeyN(self->nodePtr, key, keyLen);
+        return PyBool_FromLong(strncmp(tok->str.ptr, value, min(tok->str.size, valueLen)) == 0);
+    }
+
+    return NULL;
+}
+
+
+static PyObject * Node_getComment(NodeObject * self, PyObject * args)
+{
+    if (! checkYourSelf(self))
+        { return NULL; }
+
+    int idx = -1;
+
+    if (! PyArg_ParseTuple(args, "i", & idx))
+        { return NULL; }
+
+    if (idx < 0)
+        { return NULL; }
+
+    return makeToken(huGetComment(self->nodePtr, idx));
+}
+
+
+static PyObject * Node_getCommentsContaining(NodeObject * self, PyObject * args, PyObject * kwargs)
+{
+    if (! checkYourSelf(self))
+        { return NULL; }
+
+    char * str = NULL;
+    int strLen = 0;
+    if (! PyArg_ParseTuple(args, "s#", & str, & strLen))
+        { return NULL; }
+
+    PyObject * list = Py_BuildValue("[]");
+    int len = 0;
+    huToken const * tok = NULL;
+    do
+    {
+        tok = huGetCommentsContainingN(self->nodePtr, str, strLen, len);
+        if (tok)
+        {
+            PyList_SetItem(list, (Py_ssize_t) len, makeToken(tok));
+            len += 1;
+        }
+    } while (tok != NULL);
+
+    return list;
+}
+
 static PyMemberDef Node_members[] = 
 {
     { NULL }
@@ -192,35 +359,36 @@ static PyMemberDef Node_members[] =
 
 static PyGetSetDef Node_getsetters[] = 
 {
-    { "trove", (getter) Node_get_trove, (setter) NULL, "The trove tracking this node." },
-    { "nodeIdx", (getter) Node_get_nodeIdx, (setter) NULL, "The index of this node in its trove's tracking array." },
-    { "kind", (getter) Node_get_kind, (setter) NULL, "The kind of node this is." },
-    { "firstToken", (getter) Node_get_firstToken, (setter) NULL, "The first token which contributes to this node, including any annotation and comment tokens." },
-    { "keyToken", (getter) Node_get_keyToken, (setter) NULL, "The key token if the node is inside a dict." },
-    { "valueToken", (getter) Node_get_valueToken, (setter) NULL, "The first token of this node's actual value; for a container, it points to the opening brac(e|ket)." },
+    { "trove",          (getter) Node_get_trove, (setter) NULL, "The trove tracking this node." },
+    { "nodeIdx",        (getter) Node_get_nodeIdx, (setter) NULL, "The index of this node in its trove's tracking array." },
+    { "kind",           (getter) Node_get_kind, (setter) NULL, "The kind of node this is." },
+    { "firstToken",     (getter) Node_get_firstToken, (setter) NULL, "The first token which contributes to this node, including any annotation and comment tokens." },
+    { "keyToken",       (getter) Node_get_keyToken, (setter) NULL, "The key token if the node is inside a dict." },
+    { "valueToken",     (getter) Node_get_valueToken, (setter) NULL, "The first token of this node's actual value; for a container, it points to the opening brac(e|ket)." },
     { "lastValueToken", (getter) Node_get_lastValueToken, (setter) NULL, "The last token of this node's actual value; for a container, it points to the closing brac(e|ket)." },
-    { "lastToken", (getter) Node_get_lastToken, (setter) NULL, "The last token of this node, including any annotation and comment tokens." },
-    { "parentNodeIdx", (getter) Node_get_parentNodeIdx, (setter) NULL, "The parent node's index, or -1 if this node is the root." },
-    { "childOrdinal", (getter) Node_get_childOrdinal, (setter) NULL, "The index of this node vis a vis its sibling nodes (starting at 0)." },
-    { "numChildren", (getter) Node_get_numChildren, (setter) NULL, "The number of children a node has." },
-    { "firstChild", (getter) Node_get_firstChild, (setter) NULL, "The first child of node (index 0)." },
-    { "nextSibling", (getter) Node_get_nextSibling, (setter) NULL, "The next sibling in the child index order of a node." },
-    { "address", (getter) Node_get_address, (setter) NULL, "The full address of a node." },
-    { "hasKey", (getter) Node_get_hasKey, (setter) NULL, "Returns whether a node has a key token tracked. (If it's a member of a dict.)" },
-    { "nestedValue", (getter) Node_get_substring, (setter) NULL, "The entire nested text of a node, including child nodes and associated comments and annotations." },
+    { "lastToken",      (getter) Node_get_lastToken, (setter) NULL, "The last token of this node, including any annotation and comment tokens." },
+    { "parentNodeIdx",  (getter) Node_get_parentNodeIdx, (setter) NULL, "The parent node's index, or -1 if this node is the root." },
+    { "parent",         (getter) Node_get_parent, (setter) NULL, "The node's parent." },
+    { "childOrdinal",   (getter) Node_get_childOrdinal, (setter) NULL, "The index of this node vis a vis its sibling nodes (starting at 0)." },
+    { "numChildren",    (getter) Node_get_numChildren, (setter) NULL, "The number of children a node has." },
+    { "firstChild",     (getter) Node_get_firstChild, (setter) NULL, "The first child of node (index 0)." },
+    { "nextSibling",    (getter) Node_get_nextSibling, (setter) NULL, "The next sibling in the child index order of a node." },
+    { "address",        (getter) Node_get_address, (setter) NULL, "The full address of a node." },
+    { "hasKey",         (getter) Node_get_hasKey, (setter) NULL, "Returns whether a node has a key token tracked. (If it's a member of a dict.)" },
+    { "nestedValue",    (getter) Node_get_tokenStream, (setter) NULL, "The entire nested text of a node, including child nodes and associated comments and annotations." },
     { "numAnnotations", (getter) Node_get_numAnnotations, (setter) NULL, "Return the number of annotations associated to a node." },
-    { "numComments", (getter) Node_get_numComments, (setter) NULL, "Return the number of comments associated to a node." },
+    { "numComments",    (getter) Node_get_numComments, (setter) NULL, "Return the number of comments associated to a node." },
     { NULL }
 };
 
 static PyMethodDef Node_methods[] = 
 {
-    { "str", (PyCFunction) Node_str, METH_NOARGS, "The node string." },
-    { "getParent", (PyCFunction) Node_getParent, METH_NOARGS, "Get a node's parent." },
-    { "getChild", (PyCFunction) Node_getChild, METH_VARARGS | METH_KEYWORDS, "Get a node's parent." },
-    { "getRelative", (PyCFunction) Node_str, METH_VARARGS, "Get a node by relative address." },
-    { "getAnnotations", (PyCFunction) Node_str, METH_VARARGS | METH_KEYWORDS, "Get a node's annotations." },
-    { "getComments", (PyCFunction) Node_str, METH_VARARGS | METH_KEYWORDS, "Get a node's comments." },
+    { "str",                    (PyCFunction) Node_str,                     METH_NOARGS,                    "The node string." },
+    { "getChild",               (PyCFunction) Node_getChild,                METH_VARARGS | METH_KEYWORDS,   "Get a node's parent." },
+    { "getRelative",            (PyCFunction) Node_getRelative,             METH_VARARGS,                   "Get a node by relative address." },
+    { "getAnnotations",         (PyCFunction) Node_getAnnotations,          METH_VARARGS | METH_KEYWORDS,   "Get a node's annotations." },
+    { "getComment",             (PyCFunction) Node_getComment,              METH_VARARGS,                   "Get a node's comment by index." },
+    { "getCommentsContaining",  (PyCFunction) Node_getCommentsContaining,   METH_VARARGS,                   "Get a node's comments which contain the specified substring." },
     { NULL }
 };
 
