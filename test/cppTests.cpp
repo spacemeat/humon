@@ -130,22 +130,22 @@ TEST(cppSugar, sugar)
 
 TEST(cppSugar, annos)
 {
-    LONGS_EQUAL(3, m.trove.numAnnotations());
-    LONGS_EQUAL(true, m.trove.hasAnnotation("tx"));
-    LONGS_EQUAL(true, m.trove.hasAnnotation("ta"));
-    LONGS_EQUAL(true, m.trove.hasAnnotation("tb"));
-    LONGS_EQUAL(false, m.trove.hasAnnotation("foo"));
-    LONGS_EQUAL(2, m.trove.numAnnotationsWithValue("ta"));
-    LONGS_EQUAL(1, m.trove.numAnnotationsWithValue("tb"));
+    LONGS_EQUAL(3, m.trove.numTroveAnnotations());
+    LONGS_EQUAL(true, m.trove.hasTroveAnnotation("tx"));
+    LONGS_EQUAL(true, m.trove.hasTroveAnnotation("ta"));
+    LONGS_EQUAL(true, m.trove.hasTroveAnnotation("tb"));
+    LONGS_EQUAL(false, m.trove.hasTroveAnnotation("foo"));
+    LONGS_EQUAL(2, m.trove.numTroveAnnotationsWithValue("ta"));
+    LONGS_EQUAL(1, m.trove.numTroveAnnotationsWithValue("tb"));
 
-    auto tas = m.trove.annotationsWithValue("ta");
+    auto tas = m.trove.troveAnnotationsWithValue("ta");
     LONGS_EQUAL(2, tas.size());
     LONGS_EQUAL(2, tas[0].str().size());
     MEMCMP_EQUAL("tx", tas[0].str().data(), 2);
     LONGS_EQUAL(2, tas[1].str().size());
     MEMCMP_EQUAL("ta", tas[1].str().data(), 2);
     
-    tas = m.trove.annotationsWithValue("tb");
+    tas = m.trove.troveAnnotationsWithValue("tb");
     LONGS_EQUAL(1, tas.size());
     LONGS_EQUAL(2, tas[0].str().size());
     MEMCMP_EQUAL("tb", tas[0].str().data(), 2);
@@ -196,7 +196,7 @@ TEST(cppSugar, annos)
 
 TEST(cppSugar, comments)
 {
-    auto tcs = m.trove.allComments();
+    auto tcs = m.trove.allTroveComments();
     LONGS_EQUAL(2, tcs.size());
     auto str = "// This is a trove comment."sv;
     LONGS_EQUAL(str.size(), std::get<0>(tcs[0]).str().size());

@@ -70,7 +70,7 @@ int const bomSizes[] = { sizeof(utf8_bom), sizeof(utf16be_bom), sizeof(utf16le_b
 
 typedef struct ReadState_tag
 {
-    huLoadParams * loadParams;
+    huDeserializeOptions * DeserializeOptions;
     bool maybe;
     uint32_t partialCodePoint;
     int bytesRemaining;
@@ -83,13 +83,13 @@ typedef struct ReadState_tag
 } ReadState;
 
 
-static void initReaders(ReadState readers[], huLoadParams * loadParams)
+static void initReaders(ReadState readers[], huDeserializeOptions * DeserializeOptions)
 {
     bool machineIsBigEndian = isMachineBigEndian();
 
     readers[HU_ENCODING_UTF8] = (ReadState)
     {
-        .loadParams = loadParams,
+        .DeserializeOptions = DeserializeOptions,
         .partialCodePoint = 0,
         .bytesRemaining = 0,
         .maybe = true,
@@ -103,7 +103,7 @@ static void initReaders(ReadState readers[], huLoadParams * loadParams)
 
     readers[HU_ENCODING_UTF16_BE] = (ReadState)
     {
-        .loadParams = loadParams,
+        .DeserializeOptions = DeserializeOptions,
         .partialCodePoint = 0,
         .bytesRemaining = 0,
         .maybe = true,
@@ -117,7 +117,7 @@ static void initReaders(ReadState readers[], huLoadParams * loadParams)
 
     readers[HU_ENCODING_UTF16_LE] = (ReadState)
     {
-        .loadParams = loadParams,
+        .DeserializeOptions = DeserializeOptions,
         .partialCodePoint = 0,
         .bytesRemaining = 0,
         .maybe = true,
@@ -131,7 +131,7 @@ static void initReaders(ReadState readers[], huLoadParams * loadParams)
 
     readers[HU_ENCODING_UTF32_BE] = (ReadState)
     {
-        .loadParams = loadParams,
+        .DeserializeOptions = DeserializeOptions,
         .partialCodePoint = 0,
         .bytesRemaining = 0,
         .maybe = true,
@@ -145,7 +145,7 @@ static void initReaders(ReadState readers[], huLoadParams * loadParams)
 
     readers[HU_ENCODING_UTF32_LE] = (ReadState)
     {
-        .loadParams = loadParams,
+        .DeserializeOptions = DeserializeOptions,
         .partialCodePoint = 0,
         .bytesRemaining = 0,
         .maybe = true,
@@ -203,7 +203,7 @@ static void scanUtf8(uint8_t codeUnit, ReadState * rs)
             { rs->numNuls += 1; }
         else if (rs->partialCodePoint < 128)
             { rs->numAsciiRangeCodePoints += 1; }
-        else if (rs->loadParams->allowOutOfRangeCodePoints == false &&
+        else if (rs->DeserializeOptions->allowOutOfRangeCodePoints == false &&
                  (rs->partialCodePoint > 0x10ffff ||
                   (rs->partialCodePoint >= 0xd800 && 
                    rs->partialCodePoint < 0xe000)))
@@ -225,7 +225,7 @@ static void scanUtf16(uint16_t codeUnit, ReadState * rs)
             foundValidCodeUnit = true;
         }
         // Non-surrogate; may have to accept it for Windows filenames.             
-        else if (rs->loadParams->allowUtf16UnmatchedSurrogates == false)
+        else if (rs->DeserializeOptions->allowUtf16UnmatchedSurrogates == false)
             { rs->maybe = false; }
     }
 
@@ -246,7 +246,7 @@ static void scanUtf16(uint16_t codeUnit, ReadState * rs)
             foundValidCodeUnit = true;
         }
             // low surrogate; invalid UTF16
-        else if (rs->loadParams->allowUtf16UnmatchedSurrogates)
+        else if (rs->DeserializeOptions->allowUtf16UnmatchedSurrogates)
         { // TODO: Not do the surrogate math on unmatched surrogates
             rs->partialCodePoint += (codeUnit - 0xdc00) + 0x10000;
             rs->bytesRemaining = 0;
@@ -274,7 +274,7 @@ static void scanUtf32(uint32_t codeUnit, ReadState * rs)
     // we'll remove the second predicate here.
     if ((codeUnit < 0xd800) ||
         (codeUnit > 0xe000 && codeUnit < 0x110000) ||
-        rs->loadParams->allowOutOfRangeCodePoints)
+        rs->DeserializeOptions->allowOutOfRangeCodePoints)
     {
         rs->partialCodePoint = codeUnit;
         rs->numCodePoints += 1;
@@ -415,14 +415,14 @@ static ReadState * chooseFromAmbiguousEncodings(ReadState readers[], int numVali
         }
         if (readers[HU_ENCODING_UTF16_BE].maybe &&
             readers[HU_ENCODING_UTF16_BE].bytesRemaining &&
-            readers[HU_ENCODING_UTF16_BE].loadParams->allowUtf16UnmatchedSurrogates == false) 
+            readers[HU_ENCODING_UTF16_BE].DeserializeOptions->allowUtf16UnmatchedSurrogates == false) 
         {
             readers[HU_ENCODING_UTF16_BE].maybe = false;
             numValidEncodings -= 1;
         }
         if (readers[HU_ENCODING_UTF16_LE].maybe &&
             readers[HU_ENCODING_UTF16_LE].bytesRemaining &&
-            readers[HU_ENCODING_UTF16_BE].loadParams->allowUtf16UnmatchedSurrogates == false)
+            readers[HU_ENCODING_UTF16_BE].DeserializeOptions->allowUtf16UnmatchedSurrogates == false)
         {
             readers[HU_ENCODING_UTF16_LE].maybe = false;
             numValidEncodings -= 1;
@@ -497,7 +497,7 @@ static int getEncodingFromBom(huStringView const * data, size_t * numBomChars, b
 }
 
 
-int swagEncodingFromString(huStringView const * data, size_t * numBomChars, huLoadParams * loadParams)
+int swagEncodingFromString(huStringView const * data, size_t * numBomChars, huDeserializeOptions * DeserializeOptions)
 {
     int bomEncoding = getEncodingFromBom(data, numBomChars, isMachineBigEndian());
 
@@ -517,7 +517,7 @@ int swagEncodingFromString(huStringView const * data, size_t * numBomChars, huLo
     ReadState * selectedEncoding = NULL;
     ReadState readers[HU_ENCODING_UNKNOWN];
 
-    initReaders(readers, loadParams);
+    initReaders(readers, DeserializeOptions);
 
     char const * block = data->ptr;
     int blockSize = min(data->size, BLOCKSIZE);
@@ -554,7 +554,7 @@ int swagEncodingFromString(huStringView const * data, size_t * numBomChars, huLo
 
 /*  PRE: fp is opened in binary mode, and is pointing to the beginning of the data.
 */
-int swagEncodingFromFile(FILE * fp, int fileSize, size_t * numBomChars, huLoadParams * loadParams)
+int swagEncodingFromFile(FILE * fp, int fileSize, size_t * numBomChars, huDeserializeOptions * DeserializeOptions)
 {
     int const BLOCKSIZE = 64;
 
@@ -562,7 +562,7 @@ int swagEncodingFromFile(FILE * fp, int fileSize, size_t * numBomChars, huLoadPa
     ReadState * selectedEncoding = NULL;
     ReadState readers[HU_ENCODING_UNKNOWN];
 
-    initReaders(readers, loadParams);
+    initReaders(readers, DeserializeOptions);
 
     char buf[BLOCKSIZE];
     char * block = buf;
@@ -837,7 +837,7 @@ static size_t transcodeToUtf8FromBlock_utf32le(char * dest, char const * block, 
 
 static size_t transcodeToUtf8FromBlock(char * dest, char const * block, int blockSize, ReadState * reader)
 {
-    switch(reader->loadParams->encoding)
+    switch(reader->DeserializeOptions->encoding)
     {
     case HU_ENCODING_UTF8:
         return transcodeToUtf8FromBlock_utf8(dest, block, blockSize, reader);
@@ -859,17 +859,17 @@ static size_t transcodeToUtf8FromBlock(char * dest, char const * block, int bloc
     PRE: srcEncoding is not HU_ENCODING_UNKNOWN
     Sets *numBytesEncoded and returns a HU_ERROR_*.
 */
-int transcodeToUtf8FromString(char * dest, size_t * numBytesEncoded, huStringView const * src, huLoadParams * loadParams)
+int transcodeToUtf8FromString(char * dest, size_t * numBytesEncoded, huStringView const * src, huDeserializeOptions * DeserializeOptions)
 {
-    if (loadParams->encoding == HU_ENCODING_UNKNOWN)
+    if (DeserializeOptions->encoding == HU_ENCODING_UNKNOWN)
         { return 0; }
     
     // faster codepath for UTF8->UTF8 transcoding
     // This path doesn't check for invalid or overlong UTF8 sequences. It just
     // slams memory. You can separately specify strictUnicode for output for
     // huTroveTo* functions. Humon won't be fooled by overlong imposters.
-    if (loadParams->encoding == HU_ENCODING_UTF8 && 
-        loadParams->allowOutOfRangeCodePoints == true)
+    if (DeserializeOptions->encoding == HU_ENCODING_UTF8 && 
+        DeserializeOptions->allowOutOfRangeCodePoints == true)
     {
         // skip the BOM if there is one
         if (memcmp(src, utf8_bom, sizeof(utf8_bom)) == 0)
@@ -883,7 +883,7 @@ int transcodeToUtf8FromString(char * dest, size_t * numBytesEncoded, huStringVie
         int const BLOCKSIZE = HUMON_FILE_BLOCK_SIZE;
 
         ReadState reader;
-        reader.loadParams = loadParams;
+        reader.DeserializeOptions = DeserializeOptions;
         reader.maybe = true;
         reader.partialCodePoint = 0;
         reader.bytesRemaining = 0;
@@ -901,8 +901,8 @@ int transcodeToUtf8FromString(char * dest, size_t * numBytesEncoded, huStringVie
         int bytesRead = 0;
 
         // skip the BOM if there is one
-        char const * bom = bomDefs[loadParams->encoding];
-        int bomLen = bomSizes[loadParams->encoding];
+        char const * bom = bomDefs[DeserializeOptions->encoding];
+        int bomLen = bomSizes[DeserializeOptions->encoding];
         if (bomLen > 0 && memcmp(src->ptr, bom, bomLen) == 0)
         {
             block += bomLen;
@@ -933,24 +933,24 @@ int transcodeToUtf8FromString(char * dest, size_t * numBytesEncoded, huStringVie
 }
 
 
-int transcodeToUtf8FromFile(char * dest, size_t * numBytesEncoded, FILE * fp, int srcLen, huLoadParams * loadParams)
+int transcodeToUtf8FromFile(char * dest, size_t * numBytesEncoded, FILE * fp, int srcLen, huDeserializeOptions * DeserializeOptions)
 {
-    if (loadParams->encoding == HU_ENCODING_UNKNOWN)
+    if (DeserializeOptions->encoding == HU_ENCODING_UNKNOWN)
         { return 0; }
     
     // faster codepath for UTF8->UTF8 transcoding
     // This path doesn't check for invalid or overlong UTF8 sequences. It just
     // slams memory. You can separately specify strictUnicode for output for
     // huTroveTo* functions. Humon won't be fooled by overlong imposters.
-    if (loadParams->encoding == HU_ENCODING_UTF8 && 
-        loadParams->allowOutOfRangeCodePoints == true)
+    if (DeserializeOptions->encoding == HU_ENCODING_UTF8 && 
+        DeserializeOptions->allowOutOfRangeCodePoints == true)
         { return fread(dest, 1, srcLen, fp); }
     else
     {
         int const BLOCKSIZE = HUMON_FILE_BLOCK_SIZE;
 
         ReadState reader;
-        reader.loadParams = loadParams;
+        reader.DeserializeOptions = DeserializeOptions;
         reader.maybe = true;
         reader.partialCodePoint = 0;
         reader.bytesRemaining = 0;
@@ -976,8 +976,8 @@ int transcodeToUtf8FromFile(char * dest, size_t * numBytesEncoded, FILE * fp, in
         bytesRead += blockSize;
 
         // skip the BOM if there is one
-        char const * bom = bomDefs[loadParams->encoding];
-        int bomLen = bomSizes[loadParams->encoding];
+        char const * bom = bomDefs[DeserializeOptions->encoding];
+        int bomLen = bomSizes[DeserializeOptions->encoding];
         if (bomLen > 0 && memcmp(block, bom, bomLen) == 0)
         {
             block += bomLen;

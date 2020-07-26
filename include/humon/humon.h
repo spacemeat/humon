@@ -55,7 +55,7 @@ extern "C"
     /// Specifies the style of whitespacing in Humon text.
     enum huWhitespaceFormat
     {
-        HU_WHITESPACEFORMAT_XERO,       ///< Byte-for-byte copy of the original.
+        HU_WHITESPACEFORMAT_CLONED,     ///< Byte-for-byte copy of the original.
         HU_WHITESPACEFORMAT_MINIMAL,    ///< Reduces as much whitespace as possible.
         HU_WHITESPACEFORMAT_PRETTY      ///< Formats the text in a standard, human-friendly way.
     };
@@ -194,25 +194,25 @@ extern "C"
     typedef struct huError_tag
     {
         int errorCode;                  ///< A huErrorCode value.
-        huToken const * token;     ///< The token that seems to be erroneous.
+        huToken const * token;          ///< The token that seems to be erroneous.
         int line;                       ///< Location info for tokenizer errors.
         int col;                        ///< Location info for tokenizer errors.
     } huError;
 
     /// Encapsulates a selection of parameters to control how Humon interprets the input for loading.
-    typedef struct huLoadParams_tag
+    typedef struct huDeserializeOptions_tag
     {
         int encoding;
         bool allowOutOfRangeCodePoints;
         bool allowUtf16UnmatchedSurrogates;
         int tabSize;
-    } huLoadParams;
+    } huDeserializeOptions;
 
-    /// Fill in a huLoadParams struct quickly.
-    void huInitLoadParams(huLoadParams * params, int encoding, bool strictUnicode, int tabSize);
+    /// Fill in a huDeserializeOptions struct quickly.
+    void huInitDeserializeOptions(huDeserializeOptions * params, int encoding, bool strictUnicode, int tabSize);
 
     /// Encapsulates a selection of parameters to control the serialization of a trove.
-    typedef struct huStoreParams_tag
+    typedef struct huSerializeOptions_tag
     {
         int WhitespaceFormat;
         int indentSize;
@@ -222,15 +222,15 @@ extern "C"
         bool printComments;
         huStringView newline;
         bool printBom;
-    } huStoreParams;
+    } huSerializeOptions;
 
     typedef struct huTrove_tag huTrove;
 
-    /// Fill in a huStoreParams struct quickly.
-    void huInitStoreParamsZ(huStoreParams * params, int WhitespaceFormat, int indentSize, bool indentWithTabs, 
+    /// Fill in a huSerializeOptions struct quickly.
+    void huInitSerializeOptionsZ(huSerializeOptions * params, int WhitespaceFormat, int indentSize, bool indentWithTabs, 
         bool usingColors, huStringView const * colorTable,  bool printComments, char const * newline, bool printBom);
-    /// Fill in a huStoreParams struct quickly.
-    void huInitStoreParamsN(huStoreParams * params, int WhitespaceFormat, int indentSize, bool indentWithTabs, 
+    /// Fill in a huSerializeOptions struct quickly.
+    void huInitSerializeOptionsN(huSerializeOptions * params, int WhitespaceFormat, int indentSize, bool indentWithTabs, 
         bool usingColors, huStringView const * colorTable,  bool printComments, char const * newline, int newlineSize, bool printBom);
 
     /// Encodes a Humon data node.
@@ -305,18 +305,26 @@ extern "C"
     /// Returns the number of annotations associated to a node with a specific value.
     int huGetNumAnnotationsWithValueN(huNode const * node, char const * value, int valueLen);
     /// Returns the key token of an annotation associated to a node, with the specified value and index.
-    huToken const * huGetAnnotationWithValueZ(huNode const * node, char const * value, int annotationIdx);
+    huToken const * huGetAnnotationWithValueZ(huNode const * node, char const * value, int * cursor);
     /// Returns the key token of an annotation associated to a node, with the specified value and index.
-    huToken const * huGetAnnotationWithValueN(huNode const * node, char const * value, int valueLen, int annotationIdx);
+    huToken const * huGetAnnotationWithValueN(huNode const * node, char const * value, int valueLen, int * cursor);
 
     /// Returns the number of comments associated to a node.
     int huGetNumComments(huNode const * node);
     /// Returns a comment token associated to a node, by index.
     huToken const * huGetComment(huNode const * node, int commentIdx);
-    /// Returns all comment tokens associated to a node which contain the specified substring.
-    huToken const * huGetCommentsContainingZ(huNode const * node, char const * containedText, huToken const * startWith);
-    /// Returns all comment tokens associated to a node which contain the specified substring.
-    huToken const * huGetCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen, huToken const * startWith);
+    /// Returns whether any comment tokens associated to a node contain the specified substring.
+    bool huHasCommentsContainingZ(huNode const * node, char const * containedText);
+    /// Returns whether any comment tokens associated to a node contain the specified substring.
+    bool huHasCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen);
+    /// Returns the number of comment tokens associated to a node what contain the specified substring.
+    int huGetNumCommentsContainingZ(huNode const * node, char const * containedText);
+    /// Returns the number of comment tokens associated to a node what contain the specified substring.
+    int huGetNumCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen);
+    /// Returns each comment token associated to a node which contain the specified substring.
+    huToken const * huGetCommentsContainingZ(huNode const * node, char const * containedText, int * cursor);
+    /// Returns each comment token associated to a node which contain the specified substring.
+    huToken const * huGetCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen, int * cursor);
 
 
     /// Encodes a Humon data trove.
@@ -339,13 +347,13 @@ extern "C"
     } huTrove;
 
     /// Creates a trove from a NULL-terminated string of Humon text.
-    int huMakeTroveFromStringZ(huTrove const ** trove, char const * data, huLoadParams * loadParams, int errorResponse);
+    int huDeserializeTroveZ(huTrove const ** trove, char const * data, huDeserializeOptions * DeserializeOptions, int errorResponse);
     /// Creates a trove from a string view of Humon text.
-    int huMakeTroveFromStringN(huTrove const ** trove, char const * data, int dataLen, huLoadParams * loadParams, int errorResponse);
+    int huDeserializeTroveN(huTrove const ** trove, char const * data, int dataLen, huDeserializeOptions * DeserializeOptions, int errorResponse);
     /// Creates a trove from a file.
-    int huMakeTroveFromFileZ(huTrove const ** trove, char const * path, huLoadParams * loadParams, int errorResponse);
+    int huDeserializeTroveFromFileZ(huTrove const ** trove, char const * path, huDeserializeOptions * DeserializeOptions, int errorResponse);
     /// Creates a trove from a file.
-    int huMakeTroveFromFileN(huTrove const ** trove, char const * path, int pathLen, huLoadParams * loadParams, int errorResponse);
+    int huDeserializeTroveFromFileN(huTrove const ** trove, char const * path, int pathLen, huDeserializeOptions * DeserializeOptions, int errorResponse);
 
     /// Reclaims all memory owned by a trove.
     void huDestroyTrove(huTrove const * trove);
@@ -391,9 +399,9 @@ extern "C"
     /// Returns the number of annotations associated to a trove with a specific value.
     int huGetNumTroveAnnotationsWithValueN(huTrove const * trove, char const * value, int valueLen);
     /// Returns an annoation object associated to a trove, by value and index.
-    huToken const * huGetTroveAnnotationWithValueZ(huTrove const * trove, char const * value, int annotationIdx);
+    huToken const * huGetTroveAnnotationWithValueZ(huTrove const * trove, char const * value, int * cursor);
     /// Returns an annoation object associated to a trove, by value and index.
-    huToken const * huGetTroveAnnotationWithValueN(huTrove const * trove, char const * value, int valueLen, int annotationIdx);
+    huToken const * huGetTroveAnnotationWithValueN(huTrove const * trove, char const * value, int valueLen, int * cursor);
 
     /// Returns the number of comments associated to a trove.
     int huGetNumTroveComments(huTrove const * trove);
@@ -401,37 +409,37 @@ extern "C"
     huToken const * huGetTroveComment(huTrove const * trove, int commentIdx);
 
     /// Returns a collection of all nodes in a trove with a specific annotation key.
-    huNode const * huFindNodesWithAnnotationKeyZ(huTrove const * trove, char const * key, huNode const * startWith);
+    huNode const * huFindNodesWithAnnotationKeyZ(huTrove const * trove, char const * key, int * cursor);
     /// Returns a collection of all nodes in a trove with a specific annotation key.
-    huNode const * huFindNodesWithAnnotationKeyN(huTrove const * trove, char const * key, int keyLen, huNode const * startWith);
+    huNode const * huFindNodesWithAnnotationKeyN(huTrove const * trove, char const * key, int keyLen, int * cursor);
     /// Returns a collection of all nodes in a trove with a specific annotation value.
-    huNode const * huFindNodesWithAnnotationValueZ(huTrove const * trove, char const * value, huNode const * startWith);
+    huNode const * huFindNodesWithAnnotationValueZ(huTrove const * trove, char const * value, int * cursor);
     /// Returns a collection of all nodes in a trove with a specific annotation value.
-    huNode const * huFindNodesWithAnnotationValueN(huTrove const * trove, char const * value, int valueLen, huNode const * startWith);
+    huNode const * huFindNodesWithAnnotationValueN(huTrove const * trove, char const * value, int valueLen, int * cursor);
     /// Returns a collection of all nodes in a trove with a specific annotation key and value.
-    huNode const * huFindNodesWithAnnotationKeyValueZZ(huTrove const * trove, char const * key, char const * value, huNode const * startWith);
+    huNode const * huFindNodesWithAnnotationKeyValueZZ(huTrove const * trove, char const * key, char const * value, int * cursor);
     /// Returns a collection of all nodes in a trove with a specific annotation key and value.
-    huNode const * huFindNodesWithAnnotationKeyValueNZ(huTrove const * trove, char const * key, int keyLen, char const * value, huNode const * startWith);
+    huNode const * huFindNodesWithAnnotationKeyValueNZ(huTrove const * trove, char const * key, int keyLen, char const * value, int * cursor);
     /// Returns a collection of all nodes in a trove with a specific annotation key and value.
-    huNode const * huFindNodesWithAnnotationKeyValueZN(huTrove const * trove, char const * key, char const * value, int valueLen, huNode const * startWith);
+    huNode const * huFindNodesWithAnnotationKeyValueZN(huTrove const * trove, char const * key, char const * value, int valueLen, int * cursor);
     /// Returns a collection of all nodes in a trove with a specific annotation key and value.
-    huNode const * huFindNodesWithAnnotationKeyValueNN(huTrove const * trove, char const * key, int keyLen, char const * value, int valueLen, huNode const * startWith);
+    huNode const * huFindNodesWithAnnotationKeyValueNN(huTrove const * trove, char const * key, int keyLen, char const * value, int valueLen, int * cursor);
 
     /// Returns a collection of all nodes in a trove with a comment which contains specific text.
-    huNode const * huFindNodesByCommentContainingZ(huTrove const * trove, char const * containedText, huNode const * startWith);
+    huNode const * huFindNodesByCommentContainingZ(huTrove const * trove, char const * containedText, int * cursor);
     /// Returns a collection of all nodes in a trove with a comment which contains specific text.
-    huNode const * huFindNodesByCommentContainingN(huTrove const * trove, char const * containedText, int containedTextLen, huNode const * startWith);
+    huNode const * huFindNodesByCommentContainingN(huTrove const * trove, char const * containedText, int containedTextLen, int * cursor);
 
     /// Returns the entire text of a trove, including all nodes and all comments and annotations.
     huStringView huGetTroveTokenStream(huTrove const * trove);
 
     /// Serializes a trove to text.
-    int huTroveToString(huTrove const * trove, char * dest, int * destLength, huStoreParams * storeParams);
+    int huSerializeTrove(huTrove const * trove, char * dest, int * destLength, huSerializeOptions * SerializeOptions);
 
     /// Serializes a trove to file.
-    int huTroveToFileZ(huTrove const * trove, char const * path, int * destLength, huStoreParams * storeParams);
+    int huSerializeTroveToFileZ(huTrove const * trove, char const * path, int * destLength, huSerializeOptions * SerializeOptions);
     /// Serializes a trove to file.
-    int huTroveToFileN(huTrove const * trove, char const * path, int pathLen, int * destLength, huStoreParams * storeParams);
+    int huSerializeTroveToFileN(huTrove const * trove, char const * path, int pathLen, int * destLength, huSerializeOptions * SerializeOptions);
 
     /// Fills an array of HU_COLORCODE_NUMCOLORS huStringViews with ANSI terminal color codes for printing to console.
     void huFillAnsiColorTable(huStringView table[]);

@@ -39,7 +39,7 @@ R"(// This is a trove comment.
 
     void setup()
     {
-        error = huMakeTroveFromStringN(& trove, ts.data(), ts.size(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
+        error = huDeserializeTroveN(& trove, ts.data(), ts.size(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
         root = huGetRootNode(trove);
         a = huGetChildByIndex(root, 0);
         bp = huGetChildByIndex(root, 1);
@@ -89,7 +89,7 @@ R"(// This is a trove comment.
 
     void setup()
     {
-        error = huMakeTroveFromStringN(& trove, ts.data(), ts.size(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
+        error = huDeserializeTroveN(& trove, ts.data(), ts.size(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
         root = huGetRootNode(trove);
         a = huGetChildByIndex(root, 0);
         bp = huGetChildByIndex(root, 1);
@@ -140,7 +140,7 @@ R"(// This is a trove comment.
 
     void setup()
     {
-        error = huMakeTroveFromStringN(& trove, ts.data(), ts.size(), NULL, HU_ERRORRESPONSE_MUM);
+        error = huDeserializeTroveN(& trove, ts.data(), ts.size(), NULL, HU_ERRORRESPONSE_MUM);
         root = huGetRootNode(trove);
         a = huGetChildByIndex(root, 0);
         bp = huGetChildByIndex(root, 1);
@@ -206,7 +206,7 @@ R"({
 
     void setup()
     {
-        error = huMakeTroveFromStringN(& trove, ts.data(), ts.size(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
+        error = huDeserializeTroveN(& trove, ts.data(), ts.size(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
         root = huGetRootNode(trove);
         a = huGetChildByIndex(root, 0);
         b = huGetChildByIndex(root, 1);
@@ -256,7 +256,7 @@ R"({
 
     void setup()
     {
-        error = huMakeTroveFromStringN(& trove, ts.data(), ts.size(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
+        error = huDeserializeTroveN(& trove, ts.data(), ts.size(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
         root = huGetRootNode(trove);
         aaa = huGetChildByIndex(root, 0);
         ccc = huGetChildByIndex(root, 1);

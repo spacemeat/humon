@@ -267,25 +267,24 @@ int main()
                                                             cout << "hasNumBits: " << hasNumBits << "\n";
         auto annoValue = node.annotation("numBits"sv);      // get annotation by key
                                                             cout << "annoValue: " << annoValue << "\n";
-        // many annotationss in a single node might have the same value; scum through them all
-        int num32Bit = node.numAnnotationsWithValue("32"sv);
-                                                            cout << "num32Bit: " << num32Bit << "\n";
-        for (int i = 0; i < num32Bit; ++i)
+        // many annotations in a single node might have the same value; run through them all
+        for (auto & annoKey: node.annotationsWithValue("32"sv))
         {
-            auto annoKey = node.annotationWithValue("32"sv, i);
+            //...
                                                             cout << "annoKey: " << annoKey << "\n";
         }
 
         auto all32BitTypeNodes = trove.findNodesWithAnnotationKeyValue("numBits"sv, "32"sv);
         for (auto & node : all32BitTypeNodes)
         {
+            //...
                                                             cout << "node: " << node.address() << "\n";
         }
 
         auto tokStr = trove.toPrettyString();
 
         // Output the exact token stream used to build the trove. Fast.
-        tokStr = trove.toXeroString();
+        tokStr = trove.toClonedString();
 
         // Output the trove with minimal whitespace for most efficient storage/transmission. 
         // The parameter directs Humon to strip comments from the stream.
@@ -311,10 +310,10 @@ int main()
         auto desRes = hu::Trove::fromFile("samples/sampleFiles/hudo.hu"sv);
         if (auto trove = std::get_if<hu::Trove>(& desRes))
         {
-            if (trove->annotation("app") != "hudo"sv)
+            if (trove->troveAnnotation("app") != "hudo"sv)
                 { throw runtime_error("File is not a hudo file."); }
 
-            auto versionString = trove->annotation("hudo-version");
+            auto versionString = trove->troveAnnotation("hudo-version");
             auto version = V3 { versionString.str() };
             if      (version < V3 { 0, 1, 0 }) { std::cout << "Using version 0.0.x\n"; /*...*/ }
             else if (version < V3 { 0, 2, 0 }) { std::cout << "Using version 0.1.x\n"; /*...*/ }

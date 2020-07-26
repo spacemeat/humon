@@ -79,7 +79,7 @@ Using the APIs is straightforward. To get the image's (x, y) extents above, we m
     #include <Humon.h>
     ...
         huTrove const * trove = NULL;
-        int error = huMakeTroveFromFileZ(& trove, "samples/sampleFiles/materials.hu", NULL,
+        int error = huDeserializeTroveFromFileZ(& trove, "samples/sampleFiles/materials.hu", NULL,
             HU_ERRORRESPONSE_STDERRANSICOLOR);
         if (error == HU_ERROR_NOERROR && huGetNumErrors(trove) == 0)
         {
@@ -317,7 +317,7 @@ Humon respects all whitespace characters that Unicode specifies, and supports al
 
 There are performance implications for using `hu::Encoding::unknown`, especially if there is no BOM in the token stream. Humon has to examine bytes until it can determine the encoding, and then start over with a transcode operation. If you do know your encoding, do specify it.
 
-Some encodings (aliases or overlong encodings in some UTF-n formats) can cause unsecure behavior in some applications. You can be strict about checking for encoding legality. The checks are specified in a `hu::LoadParams` structure passed to `hu::fromString` or `hu::fromFile` or `hu::fromStream`, and are on by default. When checking legality, overlong sequences are converted to canonical forms, and code points outside legal ranges cause an error.
+Some encodings (aliases or overlong encodings in some UTF-n formats) can cause unsecure behavior in some applications. You can be strict about checking for encoding legality. The checks are specified in a `hu::DeserializeOptions` structure passed to `hu::fromString` or `hu::fromFile` or `hu::fromStream`, and are on by default. When checking legality, overlong sequences are converted to canonical forms, and code points outside legal ranges cause an error.
 
     auto desRes = hu::Trove::fromFile("samples/sampleFiles/materials.hu"sv, 
         { hu::Encoding::utf8, false });     // UTF-8, and disable Unicode checks
@@ -591,12 +591,10 @@ Annotations are described in detail below. They're essentially per-node metadata
     // get annotation by key
     auto annoValue = node.annotation("numBits"sv);
 
-    // many annotations might have the same value; scum through them all
-    int num32Bit = node.numAnnotationsWithValue("32"sv);
-    for (int i = 0; i < num32Bit; ++i)
+    // many annotations in a single node might have the same value; run through them all
+    for (auto & annoKey: node.annotationsWithValue("32"sv))
     {
-        auto annoKey = node.annotationWithValue("32"sv, i);
-        ...
+        //...
 
 Trove objects can have annotations too, separate from any node annotations, and feature similar APIs. There are also APIs for searching all a trove's nodes for annotations by key, value, or both; these return collections of `hu::Node`s.
 
@@ -606,7 +604,7 @@ Trove objects can have annotations too, separate from any node annotations, and 
 Similar APIs also exist for nodes and troves that search comment content and return associated nodes. See the API spec for these.
 
 There are APIs for serializing a trove back to memory or a stream. There are three whitespace formatting options to serialize Humon objects:
-1. **Xerographic**: A direct copy of the original token stream is produced, including all comments and commas and whitespace. Just a brainless memory slam.
+1. **Clonedgraphic**: A direct copy of the original token stream is produced, including all comments and commas and whitespace. Just a brainless memory slam.
 1. **Minimal**: This reduces whitespace to at most one character each to pare down length. Humon does as much as it can, but if you choose to preserve comments in the minified output, you may notice that not all newlines get replaced. This is because the next read operation on the resultant token stream must replicate the comment associations from the original, and that requires some comments to be on their own line. Also, C++-style `//comment`s end in a newline, and the token after must be on its own line, so those newlines are also preserved.
 1. **Pretty**: This produces a clean, indented, eminently readable string.
 
@@ -617,7 +615,7 @@ You can generate a Humon token stream from a `hu::Trove` like so:
 This will generate an uncolored, well-formatted token stream, or an error code. These are returned as a `std::variant<std::string, hu::ErrorCode>`. There are options to make it suit your needs:
 
     // Output the exact token stream used to build the trove. Fast.
-    tokStr = trove.toXeroString();
+    tokStr = trove.toClonedString();
 
     // Output the trove with minimal whitespace for most efficient storage/transmission. 
     // The first parameter is a null color table.
@@ -778,10 +776,10 @@ If no nodes appear before an annotation, it applies to the trove. A great way to
     desRes = hu::Trove::fromFile("samples/sampleFiles/hudo.hu"sv);
     if (auto trove = std::get_if<hu::Trove>(& desRes))
     {
-        if (trove->annotation("app") != "hudo"sv)
+        if (trove->troveAnnotation("app") != "hudo"sv)
             { throw runtime_error("File is not a hudo file."); }
 
-        auto versionString = trove->annotation("hudo-version");
+        auto versionString = trove->troveAnnotation("hudo-version");
         auto version = V3 { versionString.str() };
         if      (version < V3 { 0, 1, 0 }) { std::cout << "Using version 0.0.x\n"; /*...*/ }
         else if (version < V3 { 0, 2, 0 }) { std::cout << "Using version 0.1.x\n"; /*...*/ }

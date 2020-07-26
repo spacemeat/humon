@@ -151,7 +151,6 @@ static void eatAddressWord(huScanner * scanner, int * len, int * col)
     bool eating = true;
     while (eating)
     {
-        //analyzeWhitespace(scanner);
         if (scanner->curCursor->isEof)
             { eating = false; }
         else if (scanner->curCursor->isNewline || scanner->curCursor->isSpace)
@@ -184,7 +183,6 @@ static void eatQuotedAddressWord(huScanner * scanner, char quoteChar, int * len,
     bool eating = true;
     while (eating)
     {
-        //analyzeWhitespace(scanner);
         if (scanner->curCursor->isEof)
             { eating = false; }
         else if (scanner->curCursor->isNewline)
@@ -504,7 +502,7 @@ void huGetAddress(huNode const * node, char * dest, int * destLen)
     PrintTracker printer = {
         .trove = NULL,
         .str = & str,
-        .storeParams = NULL,
+        .SerializeOptions = NULL,
         .currentDepth = 0,
         .lastPrintWasNewline = false
     };
@@ -667,35 +665,32 @@ int huGetNumAnnotationsWithValueN(huNode const * node, char const * value, int v
 }
 
 
-huToken const * huGetAnnotationWithValueZ(huNode const * node, char const * value, int annotationIdx)
+huToken const * huGetAnnotationWithValueZ(huNode const * node, char const * value, int * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (value == NULL)
         { return hu_nullToken; }
 #endif
 
-    return huGetAnnotationWithValueN(node, value, strlen(value), annotationIdx);
+    return huGetAnnotationWithValueN(node, value, strlen(value), cursor);
 }
 
 
-huToken const * huGetAnnotationWithValueN(huNode const * node, char const * value, int valueLen, int annotationIdx)
+huToken const * huGetAnnotationWithValueN(huNode const * node, char const * value, int valueLen, int * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (node == hu_nullNode || value == NULL || valueLen < 0 || annotationIdx < 0)
+    if (node == hu_nullNode || value == NULL || valueLen < 0 || cursor == NULL || * cursor < 0)
         { return hu_nullToken; }
 #endif
 
-    int matches = 0;
-    for (int i = 0; i < node->annotations.numElements; ++i)
-    { 
-        huAnnotation const * anno = (huAnnotation *) node->annotations.buffer + i;
+    for (; * cursor < node->annotations.numElements; ++ * cursor)
+    {
+        huAnnotation const * anno = (huAnnotation *) node->annotations.buffer + * cursor;
         if (valueLen == anno->value->str.size &&
             strncmp(anno->value->str.ptr, value, valueLen) == 0)
         {
-            if (matches == annotationIdx)
-                { return anno->key; }
-
-            matches += 1;
+            * cursor += 1;
+            return anno->key;
         }
     }
 
@@ -728,39 +723,95 @@ huToken const * huGetComment(huNode const * node, int commentIdx)
 }
 
 
-huToken const * huGetCommentsContainingZ(huNode const * node, char const * containedText, huToken const * startWith)
+bool huHasCommentsContainingZ(huNode const * node, char const * containedText)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (containedText == NULL)
         { return hu_nullToken; }
 #endif
 
-    return huGetCommentsContainingN(node, containedText, strlen(containedText), startWith);
+    return huHasCommentsContainingN(node, containedText, strlen(containedText));
 }
 
 
-huToken const * huGetCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen, huToken const * startWith)
+bool huHasCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (node == hu_nullNode || containedText == NULL || containedTextLen < 0)
+        { return 0; }
+#endif
+
+    for (int idx = 0; idx < node->comments.numElements; ++ idx)
+    {
+        huToken const * comm = huGetComment(node, idx);
+        if (stringInString(comm->str.ptr, comm->str.size, 
+                containedText, containedTextLen))
+            { return true; }
+    }
+
+    return false;
+}
+
+
+int huGetNumCommentsContainingZ(huNode const * node, char const * containedText)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (containedText == NULL)
+        { return 0; }
+#endif
+
+    return huGetNumCommentsContainingN(node, containedText, strlen(containedText));
+}
+
+
+int huGetNumCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (node == hu_nullNode || containedText == NULL || containedTextLen < 0)
+        { return 0; }
+#endif
+
+    int matches = 0;
+    for (int idx = 0; idx < node->comments.numElements; ++ idx)
+    {
+        huToken const * comm = huGetComment(node, idx);
+        if (stringInString(comm->str.ptr, comm->str.size, 
+                containedText, containedTextLen))
+            { matches += 1; }
+    }
+
+    return matches;
+}
+
+
+huToken const * huGetCommentsContainingZ(huNode const * node, char const * containedText, int * cursor)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (containedText == NULL)
         { return hu_nullToken; }
 #endif
 
-    bool foundLast = startWith == NULL;
+    return huGetCommentsContainingN(node, containedText, strlen(containedText), cursor);
+}
 
-    int na = huGetNumComments(node);
-    for (int i = 0; i < na; ++i)
+
+huToken const * huGetCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen, int * cursor)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (node == hu_nullNode || containedText == NULL || containedTextLen < 0 || cursor == NULL || * cursor < 0)
+        { return hu_nullToken; }
+#endif
+
+    for (; * cursor < node->comments.numElements; ++ * cursor)
     {
-        huToken const * comm = huGetComment(node, i);
-        if (foundLast && stringInString(comm->str.ptr, comm->str.size, 
+        huToken const * comm = huGetComment(node, * cursor);
+        if (stringInString(comm->str.ptr, comm->str.size, 
                 containedText, containedTextLen))
-            { return comm; }
-
-        if (foundLast == false && comm == startWith)
-            { foundLast = true; }
+        {
+            * cursor += 1;
+            return comm;
+        }
     }
 
     return hu_nullToken;
 }
-
-
