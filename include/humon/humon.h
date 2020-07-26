@@ -363,9 +363,9 @@ extern "C"
     huNode const * huGetNodeByIndex(huTrove const * trove, int nodeIdx);
 
     /// Returns a node by its full address.
-    huNode const * huGetNodeByFullAddressZ(huTrove const * trove, char const * address);
+    huNode const * huGetNodeByAddressZ(huTrove const * trove, char const * address);
     /// Returns a node by its full address.
-    huNode const * huGetNodeByFullAddressN(huTrove const * trove, char const * address, int addressLen);
+    huNode const * huGetNodeByAddressN(huTrove const * trove, char const * address, int addressLen);
 
     /// Returns the number of errors encountered when loading a trove.
     int huGetNumErrors(huTrove const * trove);
@@ -398,7 +398,7 @@ extern "C"
     /// Returns the number of comments associated to a trove.
     int huGetNumTroveComments(huTrove const * trove);
     /// Returns a comment associated to a trove by index.
-    huToken const * huGetTroveComment(huTrove const * trove, int errorIdx);
+    huToken const * huGetTroveComment(huTrove const * trove, int commentIdx);
 
     /// Returns a collection of all nodes in a trove with a specific annotation key.
     huNode const * huFindNodesWithAnnotationKeyZ(huTrove const * trove, char const * key, huNode const * startWith);

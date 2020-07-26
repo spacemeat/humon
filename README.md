@@ -83,7 +83,7 @@ Using the APIs is straightforward. To get the image's (x, y) extents above, we m
             HU_ERRORRESPONSE_STDERRANSICOLOR);
         if (error == HU_ERROR_NOERROR && huGetNumErrors(trove) == 0)
         {
-            huNode const * extentsNode = huGetNodeByFullAddressZ(trove, "/assets/brick-diffuse/importData/extents");
+            huNode const * extentsNode = huGetNodeByAddressZ(trove, "/assets/brick-diffuse/importData/extents");
             huNode const * valueNode = huGetChildByIndex(extentsNode, 0);
             huStringView const * sExt = valueNode ? & valueNode->valueToken->str : NULL;
             int extX = sExt ? strntol(sExt->ptr, sExt->size, NULL, 10) : 0;

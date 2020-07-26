@@ -377,18 +377,18 @@ huNode const * huGetNodeByIndex(huTrove const * trove, int nodeIdx)
 }
 
 
-huNode const * huGetNodeByFullAddressZ(huTrove const * trove, char const * address)
+huNode const * huGetNodeByAddressZ(huTrove const * trove, char const * address)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (address == NULL)
         { return hu_nullNode; }
 #endif
 
-    return huGetNodeByFullAddressN(trove, address, strlen(address));
+    return huGetNodeByAddressN(trove, address, strlen(address));
 }
 
 
-huNode const * huGetNodeByFullAddressN(huTrove const * trove, char const * address, int addressLen)
+huNode const * huGetNodeByAddressN(huTrove const * trove, char const * address, int addressLen)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == hu_nullTrove || address == NULL || addressLen < 0)
