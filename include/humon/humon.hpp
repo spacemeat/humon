@@ -891,12 +891,12 @@ namespace hu
             { return Token(capi::huGetToken(ctrove, idx)); }
         int numNodes() const HUMON_NOEXCEPT       ///< Returns the number of nodes in the trove.
             { return capi::huGetNumNodes(ctrove); }
-        Node nodeByIndex(int idx) const HUMON_NOEXCEPT   ///< Returns a Node by index.
-            { return Node(capi::huGetNodeByIndex(ctrove, idx)); }
         bool hasRoot() const HUMON_NOEXCEPT       ///< Returns whether the trove has a root node.
             { return numNodes() > 0; }
         Node root() const HUMON_NOEXCEPT          ///< Returns the root node of the trove.
             { return capi::huGetRootNode(ctrove); }
+        Node nodeByIndex(int idx) const HUMON_NOEXCEPT   ///< Returns a Node by index.
+            { return Node(capi::huGetNodeByIndex(ctrove, idx)); }
         /// Gets a node in the trove by its address.
         /** Given a `/`-separated sequence of dict keys or indices, this function returns
          * a node in this trove which can be found by tracing nodes from the root. The address
@@ -904,7 +904,7 @@ namespace hu
          * \return Returns the {node and hu::ErrorCode::NoError} or {null node and 
          * the appropriate hu::ErrorCode}, */
         Node nodeByAddress(std::string_view address) const HUMON_NOEXCEPT
-            { return Node(capi::huGetNodeByFullAddressN(ctrove, address.data(), address.size())); }
+            { return Node(capi::huGetNodeByAddressN(ctrove, address.data(), address.size())); }
         /// Returns the number of errors encountered when tokenizing and parsing the Humon.
         int numErrors() const HUMON_NOEXCEPT
             { return ctrove ? capi::huGetNumErrors(ctrove) : 0; }

@@ -1,8 +1,9 @@
 DONE THIS CHECKIN:
-Some API renaming, moving a few things around again.
+Some API renaming, moving a few things around again, and again, and again.
 
 TODO:
 P1 search for TODOs
+huGetAnnotationWithValueN, others have bad algorithm
 P1 doxygen
 P2 vcpkg
 P2 string sizes should be size_t?

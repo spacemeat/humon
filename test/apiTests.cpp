@@ -1809,7 +1809,7 @@ TEST(huGetAddress, funky)
     auto exp = "/\"/\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
-    POINTERS_EQUAL(a.a, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    POINTERS_EQUAL(a.a, huGetNodeByAddressN(a.trove, s, addressLen));
     delete [] s;
 
     addressLen = 0;
@@ -1820,7 +1820,7 @@ TEST(huGetAddress, funky)
     exp = "/\"a/b\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
-    POINTERS_EQUAL(a.b, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    POINTERS_EQUAL(a.b, huGetNodeByAddressN(a.trove, s, addressLen));
     delete [] s;
 
     addressLen = 0;
@@ -1831,7 +1831,7 @@ TEST(huGetAddress, funky)
     exp = "/\"/b\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
-    POINTERS_EQUAL(a.c, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    POINTERS_EQUAL(a.c, huGetNodeByAddressN(a.trove, s, addressLen));
     delete [] s;
 
     addressLen = 0;
@@ -1842,7 +1842,7 @@ TEST(huGetAddress, funky)
     exp = "/\"a/\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
-    POINTERS_EQUAL(a.d, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    POINTERS_EQUAL(a.d, huGetNodeByAddressN(a.trove, s, addressLen));
     delete [] s;
 
     addressLen = 0;
@@ -1853,7 +1853,7 @@ TEST(huGetAddress, funky)
     exp = "/\"/\\\"foo\\\"\"";      //        /"/\"foo\"
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
-    POINTERS_EQUAL(a.e, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    POINTERS_EQUAL(a.e, huGetNodeByAddressN(a.trove, s, addressLen));
     delete [] s;
 
     addressLen = 0;
@@ -1864,7 +1864,7 @@ TEST(huGetAddress, funky)
     exp = "/\"/\\\"foo'bar'\\\"\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
-    POINTERS_EQUAL(a.f, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    POINTERS_EQUAL(a.f, huGetNodeByAddressN(a.trove, s, addressLen));
     delete [] s;
 
     addressLen = 0;
@@ -1875,7 +1875,7 @@ TEST(huGetAddress, funky)
     exp = "/\"/\\\"foo'bar`baz`'\\\"\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
-    POINTERS_EQUAL(a.g, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    POINTERS_EQUAL(a.g, huGetNodeByAddressN(a.trove, s, addressLen));
     delete [] s;
 
     addressLen = 0;
@@ -1886,7 +1886,7 @@ TEST(huGetAddress, funky)
     exp = "/\"/'foo`bar\\\"baz\\\"`'\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
-    POINTERS_EQUAL(a.h, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    POINTERS_EQUAL(a.h, huGetNodeByAddressN(a.trove, s, addressLen));
     delete [] s;
 
     addressLen = 0;
@@ -1897,7 +1897,7 @@ TEST(huGetAddress, funky)
     exp = "/\"/`foo\\\"bar'baz'\\\"`\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
-    POINTERS_EQUAL(a.i, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    POINTERS_EQUAL(a.i, huGetNodeByAddressN(a.trove, s, addressLen));
     delete [] s;
 
     addressLen = 0;
@@ -1908,7 +1908,7 @@ TEST(huGetAddress, funky)
     exp = "/\"a\\\"foo\\\"/\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
-    POINTERS_EQUAL(a.j, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    POINTERS_EQUAL(a.j, huGetNodeByAddressN(a.trove, s, addressLen));
     delete [] s;
 
     addressLen = 0;
@@ -1919,7 +1919,7 @@ TEST(huGetAddress, funky)
     exp = "/\"a\\\"foo'bar'\\\"/\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
-    POINTERS_EQUAL(a.k, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    POINTERS_EQUAL(a.k, huGetNodeByAddressN(a.trove, s, addressLen));
     delete [] s;
 
     addressLen = 0;
@@ -1930,7 +1930,7 @@ TEST(huGetAddress, funky)
     exp = "/\"a\\\"foo'bar`baz`'\\\"/\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
-    POINTERS_EQUAL(a.l, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    POINTERS_EQUAL(a.l, huGetNodeByAddressN(a.trove, s, addressLen));
     delete [] s;
 
     addressLen = 0;
@@ -1941,7 +1941,7 @@ TEST(huGetAddress, funky)
     exp = "/\"a'foo`bar\\\"baz\\\"`'/\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
-    POINTERS_EQUAL(a.m, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    POINTERS_EQUAL(a.m, huGetNodeByAddressN(a.trove, s, addressLen));
     delete [] s;
 
     addressLen = 0;
@@ -1952,7 +1952,7 @@ TEST(huGetAddress, funky)
     exp = "/\"a`foo\\\"bar'baz'\\\"`/\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
-    POINTERS_EQUAL(a.n, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    POINTERS_EQUAL(a.n, huGetNodeByAddressN(a.trove, s, addressLen));
     delete [] s;
 
     addressLen = 0;
@@ -1963,7 +1963,7 @@ TEST(huGetAddress, funky)
     exp = "/\"0\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
-    POINTERS_EQUAL(a.o, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    POINTERS_EQUAL(a.o, huGetNodeByAddressN(a.trove, s, addressLen));
     delete [] s;
 
     addressLen = 0;
@@ -1974,7 +1974,7 @@ TEST(huGetAddress, funky)
     exp = "/01m";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
-    POINTERS_EQUAL(a.p, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    POINTERS_EQUAL(a.p, huGetNodeByAddressN(a.trove, s, addressLen));
     delete [] s;
 
     addressLen = 0;
@@ -1985,7 +1985,7 @@ TEST(huGetAddress, funky)
     exp = "/\"/\\\"0123456789012345678901234567890123456789\\\"\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
-    POINTERS_EQUAL(a.q, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    POINTERS_EQUAL(a.q, huGetNodeByAddressN(a.trove, s, addressLen));
     delete [] s;
 
     addressLen = 0;
@@ -1996,7 +1996,7 @@ TEST(huGetAddress, funky)
     exp = "/\"a\\\"0123456789012345678901234567890123456789\\\"/\"";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
-    POINTERS_EQUAL(a.r, huGetNodeByFullAddressN(a.trove, s, addressLen));
+    POINTERS_EQUAL(a.r, huGetNodeByAddressN(a.trove, s, addressLen));
     delete [] s;
 }
 
@@ -2826,7 +2826,7 @@ TEST(huGetTroveComment, pathological)
 }
 
 
-TEST_GROUP(huGetNodeByFullAddress)
+TEST_GROUP(huGetNodeByAddress)
 {
     htd_listOfLists l;
     htd_dictOfDicts d;
@@ -2844,61 +2844,61 @@ TEST_GROUP(huGetNodeByFullAddress)
     }
 };
 
-TEST(huGetNodeByFullAddress, lists)
+TEST(huGetNodeByAddress, lists)
 {
-    POINTERS_EQUAL_TEXT(l.root, huGetNodeByFullAddressZ(l.trove, "/"), "l gnbfa '/' == root");
-    POINTERS_EQUAL_TEXT(l.a, huGetNodeByFullAddressZ(l.trove, "/0"), "l gnbfa '/0' == a");
-    POINTERS_EQUAL_TEXT(l.bp, huGetNodeByFullAddressZ(l.trove, "/1"), "l gnbfa '/1' == bp");
-    POINTERS_EQUAL_TEXT(l.b, huGetNodeByFullAddressZ(l.trove, "/1/0"), "l gnbfa '/1/0'== b");
-    POINTERS_EQUAL_TEXT(l.cpp, huGetNodeByFullAddressZ(l.trove, "/2"), "l gnbfa '/2'== cpp");
-    POINTERS_EQUAL_TEXT(l.cp, huGetNodeByFullAddressZ(l.trove, "/2/0"), "l gnbfa '/2/0'== cp");
-    POINTERS_EQUAL_TEXT(l.c, huGetNodeByFullAddressZ(l.trove, "/2/0/0"), "l gnbfa '/2/0/0'== c");
+    POINTERS_EQUAL_TEXT(l.root, huGetNodeByAddressZ(l.trove, "/"), "l gnbfa '/' == root");
+    POINTERS_EQUAL_TEXT(l.a, huGetNodeByAddressZ(l.trove, "/0"), "l gnbfa '/0' == a");
+    POINTERS_EQUAL_TEXT(l.bp, huGetNodeByAddressZ(l.trove, "/1"), "l gnbfa '/1' == bp");
+    POINTERS_EQUAL_TEXT(l.b, huGetNodeByAddressZ(l.trove, "/1/0"), "l gnbfa '/1/0'== b");
+    POINTERS_EQUAL_TEXT(l.cpp, huGetNodeByAddressZ(l.trove, "/2"), "l gnbfa '/2'== cpp");
+    POINTERS_EQUAL_TEXT(l.cp, huGetNodeByAddressZ(l.trove, "/2/0"), "l gnbfa '/2/0'== cp");
+    POINTERS_EQUAL_TEXT(l.c, huGetNodeByAddressZ(l.trove, "/2/0/0"), "l gnbfa '/2/0/0'== c");
 
-    POINTERS_EQUAL_TEXT(l.c, huGetNodeByFullAddressZ(l.trove, "/0/../2/0/0"), "l gnbfa '/0/../2/0/0'== c");
-    POINTERS_EQUAL_TEXT(l.c, huGetNodeByFullAddressZ(l.trove, "/0/../1/0/../../2/0/0"), "l gnbfa '/0/../1/0/../../2/0/0'== c");
-    POINTERS_EQUAL_TEXT(l.c, huGetNodeByFullAddressZ(l.trove, " / 0 / .. / 2 / 0 / 0 "), "l gnbfa ' / 0 / .. / 2 / 0 / 0 '== c");
-    POINTERS_EQUAL_TEXT(l.c, huGetNodeByFullAddressZ(l.trove, " / 0 / .. / 1 / 0 / .. / .. / 2 / 0 / 0 "), "l gnbfa ' / 0 / .. / 1 / 0 / .. / .. / 2 / 0 / 0 '== c");
+    POINTERS_EQUAL_TEXT(l.c, huGetNodeByAddressZ(l.trove, "/0/../2/0/0"), "l gnbfa '/0/../2/0/0'== c");
+    POINTERS_EQUAL_TEXT(l.c, huGetNodeByAddressZ(l.trove, "/0/../1/0/../../2/0/0"), "l gnbfa '/0/../1/0/../../2/0/0'== c");
+    POINTERS_EQUAL_TEXT(l.c, huGetNodeByAddressZ(l.trove, " / 0 / .. / 2 / 0 / 0 "), "l gnbfa ' / 0 / .. / 2 / 0 / 0 '== c");
+    POINTERS_EQUAL_TEXT(l.c, huGetNodeByAddressZ(l.trove, " / 0 / .. / 1 / 0 / .. / .. / 2 / 0 / 0 "), "l gnbfa ' / 0 / .. / 1 / 0 / .. / .. / 2 / 0 / 0 '== c");
 }
 
-TEST(huGetNodeByFullAddress, dicts)
+TEST(huGetNodeByAddress, dicts)
 {
-    POINTERS_EQUAL_TEXT(d.root, huGetNodeByFullAddressZ(d.trove, "/"), "d gnbfa '/' == a");
-    POINTERS_EQUAL_TEXT(d.a, huGetNodeByFullAddressZ(d.trove, "/0"), "d gnbfa '/0'== a");
-    POINTERS_EQUAL_TEXT(d.bp, huGetNodeByFullAddressZ(d.trove, "/1"), "d gnbfa '/1'== bp");
-    POINTERS_EQUAL_TEXT(d.b, huGetNodeByFullAddressZ(d.trove, "/1/0"), "d gnbfa '/1/0'== b");
-    POINTERS_EQUAL_TEXT(d.cpp, huGetNodeByFullAddressZ(d.trove, "/2"), "d gnbfa '/2'== cpp");
-    POINTERS_EQUAL_TEXT(d.cp, huGetNodeByFullAddressZ(d.trove, "/2/0"), "d gnbfa '/2/0'== cp");
-    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, "/2/0/0"), "d gnbfa '/2/0/0'== c");
+    POINTERS_EQUAL_TEXT(d.root, huGetNodeByAddressZ(d.trove, "/"), "d gnbfa '/' == a");
+    POINTERS_EQUAL_TEXT(d.a, huGetNodeByAddressZ(d.trove, "/0"), "d gnbfa '/0'== a");
+    POINTERS_EQUAL_TEXT(d.bp, huGetNodeByAddressZ(d.trove, "/1"), "d gnbfa '/1'== bp");
+    POINTERS_EQUAL_TEXT(d.b, huGetNodeByAddressZ(d.trove, "/1/0"), "d gnbfa '/1/0'== b");
+    POINTERS_EQUAL_TEXT(d.cpp, huGetNodeByAddressZ(d.trove, "/2"), "d gnbfa '/2'== cpp");
+    POINTERS_EQUAL_TEXT(d.cp, huGetNodeByAddressZ(d.trove, "/2/0"), "d gnbfa '/2/0'== cp");
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByAddressZ(d.trove, "/2/0/0"), "d gnbfa '/2/0/0'== c");
 
-    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, "/0/../2/0/0"), "d gnbfa '/0/../2/0/0'== c");
-    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, "/0/../1/0/../../2/0/0"), "d gnbfa '/0/../1/0/../../2/0/0'== c");
-    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, " / 0 / .. / 2 / 0 / 0 "), "d gnbfa ' / 0 / .. / 2 / 0 / 0 '== c");
-    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, " / 0 / .. / 1 / 0 / .. / .. / 2 / 0 / 0 "), "d gnbfa ' / 0 / .. / 1 / 0 / .. / .. / 2 / 0 / 0 '== c");
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByAddressZ(d.trove, "/0/../2/0/0"), "d gnbfa '/0/../2/0/0'== c");
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByAddressZ(d.trove, "/0/../1/0/../../2/0/0"), "d gnbfa '/0/../1/0/../../2/0/0'== c");
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByAddressZ(d.trove, " / 0 / .. / 2 / 0 / 0 "), "d gnbfa ' / 0 / .. / 2 / 0 / 0 '== c");
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByAddressZ(d.trove, " / 0 / .. / 1 / 0 / .. / .. / 2 / 0 / 0 "), "d gnbfa ' / 0 / .. / 1 / 0 / .. / .. / 2 / 0 / 0 '== c");
 
-    POINTERS_EQUAL_TEXT(d.root, huGetNodeByFullAddressZ(d.trove, "/"), "d gnbfa '/' == a");
-    POINTERS_EQUAL_TEXT(d.a, huGetNodeByFullAddressZ(d.trove, "/ak"), "d gnbfa '/ak'== a");
-    POINTERS_EQUAL_TEXT(d.bp, huGetNodeByFullAddressZ(d.trove, "/bk"), "d gnbfa '/bk'== bp");
-    POINTERS_EQUAL_TEXT(d.b, huGetNodeByFullAddressZ(d.trove, "/bk/bk"), "d gnbfa '/bk/bk'== b");
-    POINTERS_EQUAL_TEXT(d.cpp, huGetNodeByFullAddressZ(d.trove, "/ck"), "d gnbfa '/ck'== cpp");
-    POINTERS_EQUAL_TEXT(d.cp, huGetNodeByFullAddressZ(d.trove, "/ck/ck"), "d gnbfa '/ck/ck'== cp");
-    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, "/ck/ck/ck"), "d gnbfa '/ck/ck/ck'== c");
+    POINTERS_EQUAL_TEXT(d.root, huGetNodeByAddressZ(d.trove, "/"), "d gnbfa '/' == a");
+    POINTERS_EQUAL_TEXT(d.a, huGetNodeByAddressZ(d.trove, "/ak"), "d gnbfa '/ak'== a");
+    POINTERS_EQUAL_TEXT(d.bp, huGetNodeByAddressZ(d.trove, "/bk"), "d gnbfa '/bk'== bp");
+    POINTERS_EQUAL_TEXT(d.b, huGetNodeByAddressZ(d.trove, "/bk/bk"), "d gnbfa '/bk/bk'== b");
+    POINTERS_EQUAL_TEXT(d.cpp, huGetNodeByAddressZ(d.trove, "/ck"), "d gnbfa '/ck'== cpp");
+    POINTERS_EQUAL_TEXT(d.cp, huGetNodeByAddressZ(d.trove, "/ck/ck"), "d gnbfa '/ck/ck'== cp");
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByAddressZ(d.trove, "/ck/ck/ck"), "d gnbfa '/ck/ck/ck'== c");
 
-    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, "/ak/../ck/ck/ck"), "d gnbfa '/ak/../ck/ck/ck'== c");
-    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, "/ak/../bk/bk/../../ck/ck/ck"), "d gnbfa '/ak/../bk/bk/../../ck/ck/ck'== c");
-    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, " / ak / .. / ck / ck / ck "), "d gnbfa ' / ak / .. / ck / ck / ck '== c");
-    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, " / ak / .. / bk / bk / .. / .. / ck / ck / ck "), "d gnbfa ' / ak / .. / bk / bk / .. / .. / ck / ck / ck '== c");
-    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, "/ak/../`ck`/'ck'/\"ck\""), "d gnbfa '/ak/../`ck`/'ck'/\"ck\"'== c");
-    POINTERS_EQUAL_TEXT(d.c, huGetNodeByFullAddressZ(d.trove, " / ak / .. / `ck` / 'ck' / \"ck\" "), "d gnbfa ' / ak / .. / `ck` / 'ck' / \"ck\" '== c");
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByAddressZ(d.trove, "/ak/../ck/ck/ck"), "d gnbfa '/ak/../ck/ck/ck'== c");
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByAddressZ(d.trove, "/ak/../bk/bk/../../ck/ck/ck"), "d gnbfa '/ak/../bk/bk/../../ck/ck/ck'== c");
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByAddressZ(d.trove, " / ak / .. / ck / ck / ck "), "d gnbfa ' / ak / .. / ck / ck / ck '== c");
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByAddressZ(d.trove, " / ak / .. / bk / bk / .. / .. / ck / ck / ck "), "d gnbfa ' / ak / .. / bk / bk / .. / .. / ck / ck / ck '== c");
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByAddressZ(d.trove, "/ak/../`ck`/'ck'/\"ck\""), "d gnbfa '/ak/../`ck`/'ck'/\"ck\"'== c");
+    POINTERS_EQUAL_TEXT(d.c, huGetNodeByAddressZ(d.trove, " / ak / .. / `ck` / 'ck' / \"ck\" "), "d gnbfa ' / ak / .. / `ck` / 'ck' / \"ck\" '== c");
 }
 
-TEST(huGetNodeByFullAddress, pathological)
+TEST(huGetNodeByAddress, pathological)
 {
-    POINTERS_EQUAL_TEXT(hu_nullNode, huGetNodeByFullAddressZ(NULL, "/"), "NULL gnbfa '/' == null");
-    POINTERS_EQUAL_TEXT(hu_nullNode, huGetNodeByFullAddressZ(hu_nullTrove, "/"), "null gnbfa '/' == c");
-    POINTERS_EQUAL_TEXT(hu_nullNode, huGetNodeByFullAddressZ(l.trove, "/.."), "l gnbfa '/..' == null");
-    POINTERS_EQUAL_TEXT(hu_nullNode, huGetNodeByFullAddressZ(l.trove, ".."), "l gnbfa '..' == null");
-    POINTERS_EQUAL_TEXT(hu_nullNode, huGetNodeByFullAddressZ(l.trove, "0"), "l gnbfa '0' == null");
-    POINTERS_EQUAL_TEXT(hu_nullNode, huGetNodeByFullAddressZ(l.trove, "//"), "l gnbfa '//' == null");
+    POINTERS_EQUAL_TEXT(hu_nullNode, huGetNodeByAddressZ(NULL, "/"), "NULL gnbfa '/' == null");
+    POINTERS_EQUAL_TEXT(hu_nullNode, huGetNodeByAddressZ(hu_nullTrove, "/"), "null gnbfa '/' == c");
+    POINTERS_EQUAL_TEXT(hu_nullNode, huGetNodeByAddressZ(l.trove, "/.."), "l gnbfa '/..' == null");
+    POINTERS_EQUAL_TEXT(hu_nullNode, huGetNodeByAddressZ(l.trove, ".."), "l gnbfa '..' == null");
+    POINTERS_EQUAL_TEXT(hu_nullNode, huGetNodeByAddressZ(l.trove, "0"), "l gnbfa '0' == null");
+    POINTERS_EQUAL_TEXT(hu_nullNode, huGetNodeByAddressZ(l.trove, "//"), "l gnbfa '//' == null");
 }
 
 
