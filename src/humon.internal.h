@@ -60,6 +60,7 @@ extern "C"
         bool isSpace;               // set if space-like whitespace
         bool isTab;                 // set if tab-like whitespace
         bool isNewline;             // set if newline-like whitespace
+        bool isError;               // set if encoding was erroneous
     } huCursor;
 
     typedef struct huScanner_tag

@@ -37,6 +37,22 @@ int huDeserializeTroveZ(huTrove const ** trovePtr, char const * data, huDeserial
 }
 
 
+static void printError(int errorResponse, char const * msg)
+{
+    // Depending on errorResponse, output something
+    FILE * stream = stdout;
+    if (errorResponse == HU_ERRORRESPONSE_STDERR || 
+        errorResponse == HU_ERRORRESPONSE_STDERRANSICOLOR)
+        { stream = stderr; }
+    if (errorResponse == HU_ERRORRESPONSE_STDOUT || 
+        errorResponse == HU_ERRORRESPONSE_STDERR)
+        { fprintf(stream, "%s\n", msg); }
+    else if (errorResponse == HU_ERRORRESPONSE_STDOUTANSICOLOR || 
+             errorResponse == HU_ERRORRESPONSE_STDERRANSICOLOR)
+        { fprintf(stream, "%sError%s: %s\n", ansi_lightRed, ansi_off, msg); }
+}
+
+
 int huDeserializeTroveN(huTrove const ** trovePtr, char const * data, int dataLen, huDeserializeOptions * DeserializeOptions, int errorResponse)
 {
     if (trovePtr)
@@ -70,7 +86,7 @@ int huDeserializeTroveN(huTrove const ** trovePtr, char const * data, int dataLe
         DeserializeOptions->encoding = swagEncodingFromString(& inputDataView, & numEncBytes, DeserializeOptions);
         if (DeserializeOptions->encoding == HU_ENCODING_UNKNOWN)
         {
-            // TODO: Depending on errorResponse, output something
+            printError(errorResponse, "Error: Could not determine Unicode encoding.");
             return HU_ERROR_BADENCODING;
         }
     }
@@ -78,13 +94,12 @@ int huDeserializeTroveN(huTrove const ** trovePtr, char const * data, int dataLe
     huTrove * trove = malloc(sizeof(huTrove));
     if (trove == hu_nullTrove)
     {
-        // TODO: Depending on errorResponse, output something
+        printError(errorResponse, "Error: Out of memory.");
         return HU_ERROR_OUTOFMEMORY;
     }
         
     initTrove(trove, DeserializeOptions, errorResponse);
 
-    // TODO: Padding with 4 nulls for now; let's see if we actually need to.
     // We're guaranteed that UTF8 strings will be no longer than the transcoded UTF* 
     // equivalent, as long as we reject unpaired surrogates. MS filenames
     // can contain unpaired surrogates, and Humon will accept them if strictUnicode
@@ -93,11 +108,11 @@ int huDeserializeTroveN(huTrove const ** trovePtr, char const * data, int dataLe
     int sizeFactor = DeserializeOptions->allowUtf16UnmatchedSurrogates == false && 
                        (DeserializeOptions->encoding == HU_ENCODING_UTF16_BE ||
                         DeserializeOptions->encoding == HU_ENCODING_UTF16_LE) ? 2 : 1;
-    char * newData = malloc(dataLen * sizeFactor + 4);
+    char * newData = malloc(dataLen * sizeFactor + 4);  // padding with 4 bytes of null at the end.
     if (newData == NULL)
     {
         free(trove);
-        // TODO: Depending on errorResponse, output something
+        printError(errorResponse, "Error: Out of memory.");
         return HU_ERROR_OUTOFMEMORY;
     }
 
@@ -107,6 +122,7 @@ int huDeserializeTroveN(huTrove const ** trovePtr, char const * data, int dataLe
     {
         free(newData);
         free(trove);
+        printError(errorResponse, "Error: Transcoding failed.");
         return error;
     }
 
@@ -171,14 +187,14 @@ int huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const * path, in
     FILE * fp = fopen(path, "rb");
     if (fp == NULL)
     {
-        // TODO: Depending on errorResponse, output something
+        printError(errorResponse, "Error: Could not open file for reading.");
         return HU_ERROR_BADFILE;
     }
 
     if (fseek(fp, 0, SEEK_END) != 0)
     {
         fclose(fp);
-        // TODO: Depending on errorResponse, output something
+        printError(errorResponse, "Error: Could not read file.");
         return HU_ERROR_BADFILE;
     }
 
@@ -186,7 +202,7 @@ int huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const * path, in
     if (dataLen == -1L)
     {
         fclose(fp);
-        // TODO: Depending on errorResponse, output something
+        printError(errorResponse, "Error: Could not read file.");
         return HU_ERROR_BADFILE;
     }
 
@@ -199,7 +215,7 @@ int huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const * path, in
         if (DeserializeOptions->encoding == HU_ENCODING_UNKNOWN)
         {
             fclose(fp);
-            // TODO: Depending on errorResponse, output something
+            printError(errorResponse, "Could not determine Unicode encoding.");
             return HU_ERROR_BADENCODING;
         }
     
@@ -210,13 +226,12 @@ int huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const * path, in
     if (trove == hu_nullTrove)
     {
         fclose(fp);
-        // TODO: Depending on errorResponse, output something
+        printError(errorResponse, "Error: Out of memory.");
         return HU_ERROR_OUTOFMEMORY;
     }
 
     initTrove(trove, DeserializeOptions, errorResponse);
 
-    // TODO: Padding with 4 nulls for now; let's see if we actually need to.
     // We're guaranteed that UTF8 strings will be no longer than the transcoded UTF* 
     // equivalent, as long as we reject unpaired surrogates. MS filenames
     // can contain unpaired surrogates, and Humon will accept them if strictUnicode
@@ -225,11 +240,11 @@ int huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const * path, in
     int sizeFactor = DeserializeOptions->allowUtf16UnmatchedSurrogates == false &&
                        (DeserializeOptions->encoding == HU_ENCODING_UTF16_BE ||
                         DeserializeOptions->encoding == HU_ENCODING_UTF16_LE) ? 2 : 1;
-    char * newData = malloc(dataLen * sizeFactor + 4);
+    char * newData = malloc(dataLen * sizeFactor + 4); // padding with 4 bytes of null at the end
     if (newData == NULL)
     {
         fclose(fp);
-        // TODO: Depending on errorResponse, output something
+        printError(errorResponse, "Error: Out of memory.");
         return HU_ERROR_OUTOFMEMORY;
     }
 
@@ -239,7 +254,7 @@ int huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const * path, in
     if (error != HU_ERROR_NOERROR)
     {
         free(newData);
-        // TODO: Depending on errorResponse, output something
+        printError(errorResponse, "Error: Transcoding failed.");
         return error;
     }
 

@@ -40,6 +40,9 @@ static void analyzeCharacter(huScanner * scanner)
     else
     {
         cursor->charLength = 0; // Error! Yaaaaaay!
+        cursor->codePoint = 0;
+        cursor->isError = true;
+        recordTokenizeError(scanner->trove, HU_ERROR_BADENCODING, 0, 0);
     }
 }
 
@@ -102,6 +105,7 @@ void nextCharacter(huScanner * scanner)
     scanner->nextCursor->isSpace = false;
     scanner->nextCursor->isTab = false;
     scanner->nextCursor->isNewline = false;
+    scanner->nextCursor->isError = false;
 
     analyzeCharacter(scanner);
     analyzeWhitespace(scanner);
@@ -124,7 +128,8 @@ void initScanner(huScanner * scanner, huTrove * trove, char const * str, int str
                 .isEof = false,
                 .isSpace = false,
                 .isTab = false,
-                .isNewline = false
+                .isNewline = false,
+                .isError =false
             },
             {
                 .character = str,
@@ -133,7 +138,8 @@ void initScanner(huScanner * scanner, huTrove * trove, char const * str, int str
                 .isEof = false,
                 .isSpace = false,
                 .isTab = false,
-                .isNewline = false
+                .isNewline = false,
+                .isError =false
             }
         }
     };
@@ -144,9 +150,12 @@ void initScanner(huScanner * scanner, huTrove * trove, char const * str, int str
     if (memcmp(str, bom, 3) == 0)
         { scanner->nextCursor->character += 3; }
 
-    analyzeCharacter(scanner); // TODO: react to 0 length (error)
-    analyzeWhitespace(scanner);
-    nextCharacter(scanner);
+    analyzeCharacter(scanner);
+    if (scanner->curCursor->isError == false)
+    {
+        analyzeWhitespace(scanner);
+        nextCharacter(scanner);
+    }
 }
 
 
@@ -155,8 +164,11 @@ void eatWs(huScanner * scanner, int tabSize, int * line, int * col)
     bool eating = true;
     while (eating)
     {
-//        analyzeWhitespace(scanner);
-        if (scanner->curCursor->isSpace)
+        if (scanner->curCursor->isError)
+        {
+            eating = false;
+        }
+        else if (scanner->curCursor->isSpace)
         {
             * col += 1;
             nextCharacter(scanner);
@@ -191,8 +203,9 @@ static void eatDoubleSlashComment(huScanner * scanner, int tabSize, int * len, i
     bool eating = true;
     while (eating)
     {
-//        analyzeWhitespace(scanner);
-        if (scanner->curCursor->isNewline == false && scanner->curCursor->isEof == false)
+        if (scanner->curCursor->isNewline == false && 
+            scanner->curCursor->isError == false &&
+            scanner->curCursor->isEof == false)
         {
             * len += scanner->curCursor->charLength;
             if (scanner->curCursor->isTab)
@@ -224,8 +237,11 @@ static void eatCStyleComment(huScanner * scanner, int tabSize, int * len, int * 
     bool eating = true;
     while (eating)
     {
-        //analyzeWhitespace(scanner);
-        if (scanner->curCursor->isEof == true)
+        if (scanner->curCursor->isError)
+        {
+            eating = false;
+        }
+        else if (scanner->curCursor->isEof == true)
         {
             eating = false;
             recordTokenizeError(scanner->trove, HU_ERROR_UNFINISHEDCSTYLECOMMENT, 
@@ -276,11 +292,11 @@ static void eatWord(huScanner * scanner, int * len, int * line, int * col)
     bool eating = true;
     while (eating)
     {
-        //analyzeWhitespace(scanner);
         if (scanner->curCursor->isEof ||
             scanner->curCursor->isSpace ||
             scanner->curCursor->isTab ||
-            scanner->curCursor->isNewline)
+            scanner->curCursor->isNewline ||
+            scanner->curCursor->isError)
             { eating = false; }
 
         else if (scanner->curCursor->codePoint == '\\')
@@ -343,8 +359,11 @@ static void eatQuotedWord(huScanner * scanner, int tabSize, int * len, int * lin
     bool eating = true;
     while (eating)
     {
-        //analyzeWhitespace(scanner);
-        if (scanner->curCursor->isEof)
+        if (scanner->curCursor->isError)
+        {
+            eating = false;
+        }
+        else if (scanner->curCursor->isEof)
         {
           eating = false;
           recordTokenizeError(scanner->trove, HU_ERROR_UNFINISHEDQUOTE, 
@@ -392,7 +411,6 @@ static void eatQuotedWord(huScanner * scanner, int tabSize, int * len, int * lin
 }
 
 
-
 void tokenizeTrove(huTrove * trove)
 {
     resetVector(& trove->tokens);
@@ -407,7 +425,7 @@ void tokenizeTrove(huTrove * trove)
     bool scanning = true;
 
     // lexi scan
-    while (scanning)
+    while (scanning && scanner.curCursor->isError == false)
     {
         eatWs(& scanner, trove->inputTabSize, & line, & col);
         int len = 0;
