@@ -224,8 +224,17 @@ static void scanUtf16(uint16_t codeUnit, ReadState * rs)
             rs->bytesRemaining = 0;
             foundValidCodeUnit = true;
         }
-        // Non-surrogate; may have to accept it for Windows filenames.             
-        else if (rs->DeserializeOptions->allowUtf16UnmatchedSurrogates == false)
+        // Non-surrogate; may have to accept it for Windows filenames.
+        else if (rs->DeserializeOptions->allowUtf16UnmatchedSurrogates)
+        {
+            // undo high surrogate math from the previous code unit and add that code point
+            rs->partialCodePoint = rs->partialCodePoint / 0x400 + 0xd800;
+            rs->numCodePoints += 1;
+            // reset for analysis of this code unit as a first unit
+            rs->bytesRemaining = 0;
+            foundValidCodeUnit = false;
+        }
+        else
             { rs->maybe = false; }
     }
 
@@ -247,8 +256,8 @@ static void scanUtf16(uint16_t codeUnit, ReadState * rs)
         }
             // low surrogate; invalid UTF16
         else if (rs->DeserializeOptions->allowUtf16UnmatchedSurrogates)
-        { // TODO: Not do the surrogate math on unmatched surrogates
-            rs->partialCodePoint += (codeUnit - 0xdc00) + 0x10000;
+        {
+            rs->partialCodePoint += codeUnit;
             rs->bytesRemaining = 0;
             foundValidCodeUnit = true;
         }

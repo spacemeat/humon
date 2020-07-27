@@ -200,7 +200,8 @@ static void eatQuotedAddressWord(huScanner * scanner, char quoteChar, int * len,
                 eating = false;
             }
             else if (scanner->curCursor->codePoint == '\\' && 
-                     scanner->nextCursor->codePoint == (uint32_t) quoteChar)  // TODO: ensure not running off the end
+                     scanner->nextCursor->isEof == false &&
+                     scanner->nextCursor->codePoint == (uint32_t) quoteChar)
             {
                 * col += 1;
                 * len += 1;

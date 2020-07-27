@@ -50,8 +50,6 @@ TEST(makers, fromString)
     CHECK_TEXT(child.value() == "woo"sv, "load3");
 }
 
-// TODO: tests for fromFile and fromStream
-
 TEST_GROUP(cppSugar)
 {
     htd_cppValues t;
