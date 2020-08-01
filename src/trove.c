@@ -3,18 +3,18 @@
 #include "humon.internal.h"
 
 
-void initTrove(huTrove * trove, huDeserializeOptions * DeserializeOptions, int errorResponse)
+void initTrove(huTrove * trove, huDeserializeOptions * deserializeOptions, int errorResponse)
 {
     trove->dataString = NULL;
     trove->dataStringSize = 0;
-    trove->encoding = DeserializeOptions->encoding;
+    trove->encoding = deserializeOptions->encoding;
 
     initGrowableVector(& trove->tokens, sizeof(huToken));
     initGrowableVector(& trove->nodes, sizeof(huNode));
     initGrowableVector(& trove->errors, sizeof(huError));
 
     trove->errorResponse = errorResponse;
-    trove->inputTabSize = DeserializeOptions->tabSize;
+    trove->inputTabSize = deserializeOptions->tabSize;
 
     initGrowableVector(& trove->annotations, sizeof(huAnnotation));
     initGrowableVector(& trove->comments, sizeof(huComment));
@@ -23,7 +23,7 @@ void initTrove(huTrove * trove, huDeserializeOptions * DeserializeOptions, int e
 }
 
 
-int huDeserializeTroveZ(huTrove const ** trovePtr, char const * data, huDeserializeOptions * DeserializeOptions, int errorResponse)
+int huDeserializeTroveZ(huTrove const ** trovePtr, char const * data, huDeserializeOptions * deserializeOptions, int errorResponse)
 {
     if (trovePtr)
         { * trovePtr = hu_nullTrove; }
@@ -33,7 +33,7 @@ int huDeserializeTroveZ(huTrove const ** trovePtr, char const * data, huDeserial
         { return HU_ERROR_BADPARAMETER; }
 #endif
 
-    return huDeserializeTroveN(trovePtr, data, strlen(data), DeserializeOptions, errorResponse);
+    return huDeserializeTroveN(trovePtr, data, strlen(data), deserializeOptions, errorResponse);
 }
 
 
@@ -53,7 +53,7 @@ static void printError(int errorResponse, char const * msg)
 }
 
 
-int huDeserializeTroveN(huTrove const ** trovePtr, char const * data, int dataLen, huDeserializeOptions * DeserializeOptions, int errorResponse)
+int huDeserializeTroveN(huTrove const ** trovePtr, char const * data, int dataLen, huDeserializeOptions * deserializeOptions, int errorResponse)
 {
     if (trovePtr)
         { * trovePtr = hu_nullTrove; }
@@ -61,10 +61,10 @@ int huDeserializeTroveN(huTrove const ** trovePtr, char const * data, int dataLe
 #ifdef HUMON_CHECK_PARAMS
     if (trovePtr == NULL || data == NULL || dataLen < 0)
         { return HU_ERROR_BADPARAMETER; }
-    if (DeserializeOptions &&
-        (DeserializeOptions->encoding < 0 ||
-         DeserializeOptions->encoding > HU_ENCODING_UNKNOWN ||
-         DeserializeOptions->tabSize < 0))
+    if (deserializeOptions &&
+        (deserializeOptions->encoding < 0 ||
+         deserializeOptions->encoding > HU_ENCODING_UNKNOWN ||
+         deserializeOptions->tabSize < 0))
         { return HU_ERROR_BADPARAMETER; }
     if (errorResponse < 0 ||
         errorResponse >= HU_ERRORRESPONSE_NUMRESPONSES)
@@ -72,19 +72,19 @@ int huDeserializeTroveN(huTrove const ** trovePtr, char const * data, int dataLe
 #endif
 
     huDeserializeOptions localDeserializeOptions;
-    if (DeserializeOptions == NULL)
+    if (deserializeOptions == NULL)
     {
         huInitDeserializeOptions(& localDeserializeOptions, HU_ENCODING_UTF8, true, 4);
-        DeserializeOptions = & localDeserializeOptions;
+        deserializeOptions = & localDeserializeOptions;
     }
 
     huStringView inputDataView = { data, dataLen };
 
-    if (DeserializeOptions->encoding == HU_ENCODING_UNKNOWN)
+    if (deserializeOptions->encoding == HU_ENCODING_UNKNOWN)
     {
         size_t numEncBytes = 0;    // not useful here
-        DeserializeOptions->encoding = swagEncodingFromString(& inputDataView, & numEncBytes, DeserializeOptions);
-        if (DeserializeOptions->encoding == HU_ENCODING_UNKNOWN)
+        deserializeOptions->encoding = swagEncodingFromString(& inputDataView, & numEncBytes, deserializeOptions);
+        if (deserializeOptions->encoding == HU_ENCODING_UNKNOWN)
         {
             printError(errorResponse, "Error: Could not determine Unicode encoding.");
             return HU_ERROR_BADENCODING;
@@ -98,16 +98,16 @@ int huDeserializeTroveN(huTrove const ** trovePtr, char const * data, int dataLe
         return HU_ERROR_OUTOFMEMORY;
     }
         
-    initTrove(trove, DeserializeOptions, errorResponse);
+    initTrove(trove, deserializeOptions, errorResponse);
 
     // We're guaranteed that UTF8 strings will be no longer than the transcoded UTF* 
     // equivalent, as long as we reject unpaired surrogates. MS filenames
     // can contain unpaired surrogates, and Humon will accept them if strictUnicode
     // is clear. At that point, a UTF8 string can be longer than its UTF16, so we
     // have to double the size.
-    int sizeFactor = DeserializeOptions->allowUtf16UnmatchedSurrogates == false && 
-                       (DeserializeOptions->encoding == HU_ENCODING_UTF16_BE ||
-                        DeserializeOptions->encoding == HU_ENCODING_UTF16_LE) ? 2 : 1;
+    int sizeFactor = deserializeOptions->allowUtf16UnmatchedSurrogates == false && 
+                       (deserializeOptions->encoding == HU_ENCODING_UTF16_BE ||
+                        deserializeOptions->encoding == HU_ENCODING_UTF16_LE) ? 2 : 1;
     char * newData = malloc(dataLen * sizeFactor + 4);  // padding with 4 bytes of null at the end.
     if (newData == NULL)
     {
@@ -117,7 +117,7 @@ int huDeserializeTroveN(huTrove const ** trovePtr, char const * data, int dataLe
     }
 
     size_t transcodedLen = 0;
-    int error = transcodeToUtf8FromString(newData, & transcodedLen, & inputDataView, DeserializeOptions);
+    int error = transcodeToUtf8FromString(newData, & transcodedLen, & inputDataView, deserializeOptions);
     if (error != HU_ERROR_NOERROR)
     {
         free(newData);
@@ -145,7 +145,7 @@ int huDeserializeTroveN(huTrove const ** trovePtr, char const * data, int dataLe
 }
 
 
-int huDeserializeTroveFromFileZ(huTrove const ** trovePtr, char const * path, huDeserializeOptions * DeserializeOptions, int errorResponse)
+int huDeserializeTroveFromFileZ(huTrove const ** trovePtr, char const * path, huDeserializeOptions * deserializeOptions, int errorResponse)
 {
     if (trovePtr != NULL)
         { * trovePtr = hu_nullTrove; }
@@ -155,11 +155,11 @@ int huDeserializeTroveFromFileZ(huTrove const ** trovePtr, char const * path, hu
         { return HU_ERROR_BADPARAMETER; }
 #endif
 
-    return huDeserializeTroveFromFileN(trovePtr, path, strlen(path), DeserializeOptions, errorResponse);
+    return huDeserializeTroveFromFileN(trovePtr, path, strlen(path), deserializeOptions, errorResponse);
 }
 
 
-int huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const * path, int pathLen, huDeserializeOptions * DeserializeOptions, int errorResponse)
+int huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const * path, int pathLen, huDeserializeOptions * deserializeOptions, int errorResponse)
 {
     if (trovePtr != NULL)
         { * trovePtr = hu_nullTrove; }
@@ -167,10 +167,10 @@ int huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const * path, in
 #ifdef HUMON_CHECK_PARAMS
     if (path == NULL || pathLen < 1)
         { return HU_ERROR_BADPARAMETER; }
-    if (DeserializeOptions &&
-        (DeserializeOptions->encoding < 0 ||
-         DeserializeOptions->encoding > HU_ENCODING_UNKNOWN ||
-         DeserializeOptions->tabSize < 0))
+    if (deserializeOptions &&
+        (deserializeOptions->encoding < 0 ||
+         deserializeOptions->encoding > HU_ENCODING_UNKNOWN ||
+         deserializeOptions->tabSize < 0))
         { return HU_ERROR_BADPARAMETER; }
     if (errorResponse < 0 ||
         errorResponse >= HU_ERRORRESPONSE_NUMRESPONSES)
@@ -178,10 +178,10 @@ int huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const * path, in
 #endif
 
     huDeserializeOptions localDeserializeOptions;
-    if (DeserializeOptions == NULL)
+    if (deserializeOptions == NULL)
     {
         huInitDeserializeOptions(& localDeserializeOptions, HU_ENCODING_UNKNOWN, true, 4);
-        DeserializeOptions = & localDeserializeOptions;
+        deserializeOptions = & localDeserializeOptions;
     }
 
     FILE * fp = fopen(path, "rb");
@@ -208,11 +208,11 @@ int huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const * path, in
 
     rewind(fp);
 
-    if (DeserializeOptions->encoding == HU_ENCODING_UNKNOWN)
+    if (deserializeOptions->encoding == HU_ENCODING_UNKNOWN)
     {
         size_t numEncBytes = 0;    // not useful here
-        DeserializeOptions->encoding = swagEncodingFromFile(fp, dataLen, & numEncBytes, DeserializeOptions);
-        if (DeserializeOptions->encoding == HU_ENCODING_UNKNOWN)
+        deserializeOptions->encoding = swagEncodingFromFile(fp, dataLen, & numEncBytes, deserializeOptions);
+        if (deserializeOptions->encoding == HU_ENCODING_UNKNOWN)
         {
             fclose(fp);
             printError(errorResponse, "Could not determine Unicode encoding.");
@@ -230,16 +230,16 @@ int huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const * path, in
         return HU_ERROR_OUTOFMEMORY;
     }
 
-    initTrove(trove, DeserializeOptions, errorResponse);
+    initTrove(trove, deserializeOptions, errorResponse);
 
     // We're guaranteed that UTF8 strings will be no longer than the transcoded UTF* 
     // equivalent, as long as we reject unpaired surrogates. MS filenames
     // can contain unpaired surrogates, and Humon will accept them if strictUnicode
     // is clear. At that point, a UTF8 string can be longer than its UTF16, so we
     // have to double the size.
-    int sizeFactor = DeserializeOptions->allowUtf16UnmatchedSurrogates == false &&
-                       (DeserializeOptions->encoding == HU_ENCODING_UTF16_BE ||
-                        DeserializeOptions->encoding == HU_ENCODING_UTF16_LE) ? 2 : 1;
+    int sizeFactor = deserializeOptions->allowUtf16UnmatchedSurrogates == false &&
+                       (deserializeOptions->encoding == HU_ENCODING_UTF16_BE ||
+                        deserializeOptions->encoding == HU_ENCODING_UTF16_LE) ? 2 : 1;
     char * newData = malloc(dataLen * sizeFactor + 4); // padding with 4 bytes of null at the end
     if (newData == NULL)
     {
@@ -249,7 +249,7 @@ int huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const * path, in
     }
 
     size_t transcodedLen = 0;
-    int error = transcodeToUtf8FromFile(newData, & transcodedLen, fp, dataLen, DeserializeOptions);
+    int error = transcodeToUtf8FromFile(newData, & transcodedLen, fp, dataLen, deserializeOptions);
     fclose(fp);
     if (error != HU_ERROR_NOERROR)
     {
