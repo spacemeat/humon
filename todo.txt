@@ -1,11 +1,12 @@
 DONE THIS CHECKIN:
-Addressed TODOs
-UTF-16 optionally falls back to UCS-2 behavior now.
-Now responding to error state in UTF-n scanning.
-Now printing loading errors when appropriate.
+
 
 TODO:
 P1 doxygen
+P1 Visual Studio
+P1 Clang
+P1 talk about using nodeIndex instead of address for static humon
+P1 ensure hux cmdline doesn't say 'xero'
 P2 vcpkg
 P2 string sizes should be size_t?
 P1-2 linting
