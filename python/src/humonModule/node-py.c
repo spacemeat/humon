@@ -11,13 +11,15 @@ typedef struct
 
 static void Node_dealloc(NodeObject * self)
 {
+    printf("Node dealloc\n");
+    Py_DECREF(self->trove);
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
 static PyObject * Node_new(PyTypeObject * type, PyObject * args, PyObject * kwds)
 {
-    NodeObject * self;
-    self = (NodeObject *) type->tp_alloc(type, 0);
+    printf("Node new\n");
+    NodeObject * self = (NodeObject *) type->tp_alloc(type, 0);
     if (self != NULL)
     {
         self->trove = NULL;
@@ -29,15 +31,17 @@ static PyObject * Node_new(PyTypeObject * type, PyObject * args, PyObject * kwds
 
 static int Node_init(NodeObject * self, PyObject * args, PyObject * kwds)
 {
-    // TODO: Py_ADDREF / Py_DECREF on args, self?
+    printf("Node init\n");
     PyObject * trove = NULL;
     PyObject * capsule = NULL;
     if (! PyArg_ParseTuple(args, "OO", & trove, & capsule))
         { return -1; }
-    
-    // TODO: check type of arg0 to be a Trove
+
+    if (trove == NULL || capsule == NULL)
+        { return -1; }
+
     PyTypeObject * type = Py_TYPE(trove);
-    if (strcmp(type->tp_name, "humon.Trove") != 0)
+    if (type != & TroveType)
     {
         PyErr_SetString(PyExc_ValueError, "Argument 1 must be a humon.Trove.");
         return -1;
@@ -49,8 +53,13 @@ static int Node_init(NodeObject * self, PyObject * args, PyObject * kwds)
         return -1;
     }
 
+    PyObject * oldTrove = self->trove;
     Py_INCREF(trove);
     self->trove = trove;
+    if (oldTrove != NULL)
+    {
+        Py_DECREF(oldTrove);
+    }
 
     // node will never be NULL
     huNode const * node = PyCapsule_GetPointer(capsule, NULL);
@@ -60,6 +69,7 @@ static int Node_init(NodeObject * self, PyObject * args, PyObject * kwds)
 
     return 0;
 }
+
 
 static bool checkYourSelf(NodeObject * self)
 {
@@ -73,9 +83,16 @@ static bool checkYourSelf(NodeObject * self)
 }
 
 
+static PyObject * IncRefOf(PyObject * obj)
+{
+    Py_INCREF(obj);
+    return obj;
+}
+
+
 static PyObject * Node_get_trove(NodeObject * self, void * closure)
     { return checkYourSelf(self)
-        ? self->trove
+        ? IncRefOf(self->trove)
         : NULL; }
 
 static PyObject * Node_get_nodeIdx(NodeObject * self, void * closure)
@@ -115,12 +132,12 @@ static PyObject * Node_get_lastToken(NodeObject * self, void * closure)
 
 static PyObject * Node_get_parentNodeIdx(NodeObject * self, void * closure)
     { return checkYourSelf(self)
-        ? PyLong_FromLong(self->nodePtr->lastToken)
+        ? PyLong_FromLong(self->nodePtr->parentNodeIdx)
         : NULL; }
 
 static PyObject * Node_get_parent(NodeObject * self, PyObject * Py_UNUSED(ignored))
     { return checkYourSelf(self)
-        ? makeNode(self->trove, huGetParent(self->nodePtr))
+        ? makeNode((PyObject *) self->trove, huGetParent(self->nodePtr))
         : NULL; }
 
 static PyObject * Node_get_childOrdinal(NodeObject * self, void * closure)
@@ -135,36 +152,41 @@ static PyObject * Node_get_numChildren(NodeObject * self, void * closure)
 
 static PyObject * Node_get_firstChild(NodeObject * self, void * closure)
     { return checkYourSelf(self)
-        ? makeNode(self->trove, huGetFirstChild(self->nodePtr))
+        ? makeNode((PyObject *) self->trove, huGetFirstChild(self->nodePtr))
         : NULL; }
 
 static PyObject * Node_get_nextSibling(NodeObject * self, void * closure)
     { return checkYourSelf(self)
-        ? makeNode(self->trove, huGetNextSibling(self->nodePtr))
+        ? makeNode((PyObject *) self->trove, huGetNextSibling(self->nodePtr))
         : NULL; }
+
 
 static PyObject * Node_get_address(NodeObject * self, void * closure)
 {
     if (! checkYourSelf(self))
         { return NULL; }
 
-    int * strLen = 0;
+    int strLen = 0;
     char * str = NULL;
     huGetAddress(self->nodePtr, str, & strLen);
-    str = malloc(strLen);
+    str = malloc(strLen + 1);
     if (str == NULL)
         { return NULL; }
     huGetAddress(self->nodePtr, str, & strLen);
-    PyObject * pystr = PyUnicode_FromStringAndSize(str, strLen);
+    str[strLen] = '\0';
+//    PyObject * pystr = PyUnicode_FromStringAndSize(str, strLen);
+    PyObject * pystr = Py_BuildValue("s#", str, strLen);
     free(str);
 
     return pystr;
 }
 
+
 static PyObject * Node_get_hasKey(NodeObject * self, void * closure)
     { return checkYourSelf(self)
         ? PyBool_FromLong(huHasKey(self->nodePtr))
         : NULL; }
+
 
 static PyObject * Node_get_tokenStream(NodeObject * self, void * closure)
 {
@@ -172,8 +194,9 @@ static PyObject * Node_get_tokenStream(NodeObject * self, void * closure)
         { return NULL; }
 
     huStringView str = huGetTokenStream(self->nodePtr);
-    return PyUnicode_FromStringAndSize(str.ptr, str.size);
+    return Py_BuildValue("s#", str.ptr, str.size);
 }
+
 
 static PyObject * Node_get_numAnnotations(NodeObject * self, void * closure)
     { return checkYourSelf(self)
@@ -184,24 +207,6 @@ static PyObject * Node_get_numComments(NodeObject * self, void * closure)
     { return checkYourSelf(self)
         ? PyLong_FromLong(huGetNumComments(self->nodePtr))
         : NULL; }
-
-
-static PyObject * Node_str(NodeObject * self, PyObject * Py_UNUSED(ignored))
-{
-    if (! checkYourSelf(self))
-        { return NULL; }
-
-    if (self->nodePtr->kind == HU_NODEKIND_VALUE)
-    {
-        return PyUnicode_FromStringAndSize(
-            self->nodePtr->valueToken->str.ptr, 
-            self->nodePtr->valueToken->str.size);
-    }
-    else
-    {
-        return PyUnicode_FromStringAndSize("", 0);
-    }
-}
 
 
 static PyObject * Node_getChild(NodeObject * self, PyObject * args)
@@ -224,18 +229,19 @@ static PyObject * Node_getChild(NodeObject * self, PyObject * args)
     }
     else if (PyUnicode_Check(arg))
     {
-        char * buf = NULL;
-        int bufLen = 0;
-        if (PyBytes_AsStringAndSize(arg, & buf, & bufLen) == 0)
+        char const * buf = NULL;
+        Py_ssize_t bufLen = 0;
+        buf = PyUnicode_AsUTF8AndSize(arg, & bufLen);
+        if (buf)
         {
-            if (bufLen > 0 && buf)
+            if (bufLen > 0)
                 { node = huGetChildByKeyN(self->nodePtr, buf, bufLen); }
         }
     }
 
-    PyObject * nodeObj = makeNode(self, node);
-    if (nodeObj == NULL)
-        { return NULL; }
+    PyObject * nodeObj = makeNode((PyObject *) self->trove, node);
+
+    Py_DECREF(arg);
     
     return nodeObj;
 }
@@ -252,7 +258,7 @@ static PyObject * Node_getRelative(NodeObject * self, PyObject * args)
         { return NULL; }
     
     huNode const * node = huGetRelativeN(self->nodePtr, arg, argLen);
-    PyObject * nodeObj = makeNode(self, node);
+    PyObject * nodeObj = makeNode((PyObject *) self->trove, node);
     if (nodeObj == NULL)
         { return NULL; }
     
@@ -267,11 +273,11 @@ static PyObject * Node_getAnnotations(NodeObject * self, PyObject * args, PyObje
 
     static char * keywords[] = { "key", "value", NULL };
 
-    char const * key = NULL;
+    char * key = NULL;
     int keyLen = 0;
-    char const * value = NULL;
+    char * value = NULL;
     int valueLen = 0;
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|s#s#", & key, & keyLen, & value, & valueLen))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|s#s#", keywords, & key, & keyLen, & value, & valueLen))
         { return NULL; }
 
     if (key && ! value)
@@ -284,15 +290,16 @@ static PyObject * Node_getAnnotations(NodeObject * self, PyObject * args, PyObje
     {
         // look up by value, return n tokens
         PyObject * list = Py_BuildValue("[]");
-        int len = 0;
+        int cursor = 0;
         huToken const * tok = NULL;
         do
         {
-            tok = huGetAnnotationWithValueN(self->nodePtr, value, valueLen, len);
+            tok = huGetAnnotationWithValueN(self->nodePtr, value, valueLen, & cursor);
             if (tok)
             {
-                PyList_SetItem(list, (Py_ssize_t) len, makeToken(tok));
-                len += 1;
+                PyObject * pytok = makeToken(tok);
+                PyList_Append(list, pytok);
+                Py_DECREF(pytok);
             }
         } while (tok != NULL);
 
@@ -320,7 +327,10 @@ static PyObject * Node_getComment(NodeObject * self, PyObject * args)
         { return NULL; }
 
     if (idx < 0)
-        { return NULL; }
+    {
+        PyErr_SetString(PyExc_ValueError, "index argument must be >= 0");
+        return NULL;
+    }
 
     return makeToken(huGetComment(self->nodePtr, idx));
 }
@@ -337,20 +347,59 @@ static PyObject * Node_getCommentsContaining(NodeObject * self, PyObject * args,
         { return NULL; }
 
     PyObject * list = Py_BuildValue("[]");
-    int len = 0;
+    int cursor = 0;
     huToken const * tok = NULL;
     do
     {
-        tok = huGetCommentsContainingN(self->nodePtr, str, strLen, len);
+        tok = huGetCommentsContainingN(self->nodePtr, str, strLen, & cursor);
         if (tok)
         {
-            PyList_SetItem(list, (Py_ssize_t) len, makeToken(tok));
-            len += 1;
+            PyObject * pytok = makeToken(tok);
+            PyList_Append(list, pytok);
+            Py_DECREF(pytok);
         }
     } while (tok != NULL);
 
     return list;
 }
+
+
+static PyObject * Node_repr(NodeObject * self)
+{
+    if (! checkYourSelf(self))
+        { return NULL; }
+
+    return Py_BuildValue("s",
+        huNodeKindToString(self->nodePtr->kind));
+
+//    return PyUnicode_FromFormat("Node: kind: %s",
+//        huNodeKindToString(self->nodePtr->kind));
+}
+
+
+static PyObject * Node_str(NodeObject * self)
+{
+    if (! checkYourSelf(self))
+        { return NULL; }
+
+    if (self->nodePtr->kind == HU_NODEKIND_VALUE)
+    {
+        return Py_BuildValue("s#",
+            self->nodePtr->valueToken->str.ptr, 
+            self->nodePtr->valueToken->str.size);
+//        return PyUnicode_FromStringAndSize(
+//            self->nodePtr->valueToken->str.ptr, 
+//            self->nodePtr->valueToken->str.size);
+    }
+    else
+    {
+        PyObject * str = Py_BuildValue("s", "no value here");
+        return str;
+//        return PyUnicode_New(0, 127);
+//        PyUnicode_FromStringAndSize("", 0);
+    }
+}
+
 
 static PyMemberDef Node_members[] = 
 {
@@ -383,7 +432,6 @@ static PyGetSetDef Node_getsetters[] =
 
 static PyMethodDef Node_methods[] = 
 {
-    { "str",                    (PyCFunction) Node_str,                     METH_NOARGS,                    "The node string." },
     { "getChild",               (PyCFunction) Node_getChild,                METH_VARARGS | METH_KEYWORDS,   "Get a node's parent." },
     { "getRelative",            (PyCFunction) Node_getRelative,             METH_VARARGS,                   "Get a node by relative address." },
     { "getAnnotations",         (PyCFunction) Node_getAnnotations,          METH_VARARGS | METH_KEYWORDS,   "Get a node's annotations." },
@@ -392,10 +440,11 @@ static PyMethodDef Node_methods[] =
     { NULL }
 };
 
+// TODO: Should this be static and wrapped up in one file?
 PyTypeObject NodeType =
 {
     PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "humon.Node",
+    .tp_name = "humon.humon.Node",
     .tp_doc = "Encodes a Humon data node.",
     .tp_basicsize = sizeof(NodeObject),
     .tp_itemsize = 0,
@@ -405,7 +454,9 @@ PyTypeObject NodeType =
     .tp_dealloc = (destructor) Node_dealloc,
     .tp_members = Node_members,
     .tp_getset = Node_getsetters,
-    .tp_methods = Node_methods
+    .tp_methods = Node_methods,
+    .tp_repr = (reprfunc) Node_repr,
+    .tp_str = (reprfunc) Node_str
 };
 
 
@@ -418,7 +469,6 @@ int RegisterNodeType(PyObject * module)
     if (PyModule_AddObject(module, "Node", (PyObject *) & NodeType) < 0)
     {
         Py_DECREF(& NodeType);
-        Py_DECREF(module);
         return -1;
     }
 
@@ -426,7 +476,7 @@ int RegisterNodeType(PyObject * module)
 }
 
 
-static PyObject * makeNode(PyObject * trove, huNode const * nodePtr)
+PyObject * makeNode(PyObject * trove, huNode const * nodePtr)
 {
     PyObject * nodeObj = NULL;
 
@@ -435,16 +485,17 @@ static PyObject * makeNode(PyObject * trove, huNode const * nodePtr)
         PyObject * capsule = PyCapsule_New((void *) nodePtr, NULL, NULL);
         if (capsule != NULL)
         {
-            PyObject * newArgs = Py_BuildValue("(OO)", trove, capsule);
-            if (newArgs != NULL)
-            {
-                nodeObj = PyObject_CallObject((PyObject *) & NodeType, newArgs);
-                Py_DECREF(newArgs);
-            }
-        
+            nodeObj = PyObject_CallFunction((PyObject *) & NodeType, "(OO)", trove, capsule);
+            if (nodeObj == NULL && ! PyErr_Occurred())
+                { PyErr_SetString(PyExc_RuntimeError, "Could not create Node"); }
+
             Py_DECREF(capsule);
         }
+        else
+            { PyErr_SetString(PyExc_RuntimeError, "Could not make new capsule"); }
     }
+    else
+        { PyErr_SetString(PyExc_ValueError, "Attempt to make a null Token"); }
 
     return nodeObj;
 }

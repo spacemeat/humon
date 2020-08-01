@@ -14,6 +14,10 @@ enum VectorElementTypeEnum
 };
 
 
+int min(int a, int b);
+int max(int a, int b);
+
+
 extern PyTypeObject TokenType;
 extern PyTypeObject NodeType;
 extern PyTypeObject TroveType;

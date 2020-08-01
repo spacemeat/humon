@@ -3,25 +3,27 @@
 
 PyObject * getEnumValue(char const * enumName, int value)
 {
+    PyObject * inst = NULL;
+
     PyObject * enums = PyImport_AddModule("humon.enums");
-    if (enums == NULL) {
-        PyErr_SetString(PyExc_ValueError, "Could not find module");
-        return NULL;
-    }
+    if (enums != NULL)
+    {
+        PyObject * enumType = PyObject_GetAttrString(enums, enumName);
+        if (enumType != NULL)
+        {
+            inst = PyObject_CallFunction(enumType, "(i)", value);
+            if (inst == NULL)
+                { PyErr_SetString(PyExc_ValueError, "Could not find enum value "); }
 
-    PyObject * enumType = PyObject_GetAttrString(enums, enumName);
-    if (enumType == NULL) {
-        PyErr_SetString(PyExc_ValueError, "Could not find enum");
-        return NULL;
-    }
+            Py_DECREF(enumType);
+        }
+        else
+            { PyErr_SetString(PyExc_ValueError, "Could not find enum"); }
 
-    PyObject * inst = PyObject_CallFunction(enumType, "(i)", value);
-    if (inst == NULL) {
-        PyErr_SetString(PyExc_ValueError, "Could not find enum value");
-        Py_DECREF(enumType);
-        return NULL;
+        Py_DECREF(enums);
     }
+    else
+        { PyErr_SetString(PyExc_ValueError, "Could not find module"); }
 
-    Py_DECREF(enumType);
     return inst;
 }

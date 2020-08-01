@@ -77,7 +77,7 @@ def buildLib (target, srcList, incDirs, debug):
 def buildPythonLib (target ,srcList, incDirc, debug):
     global objDir
 
-    target=f"lib{target}{'-rd' if debug else '-r'}.a"
+    target=f"lib{target}{'-py'}.a"
 
     print (f"{dk_yellow_fg}Building static relocatable library {lt_yellow_fg}{target}{all_off}")
     
@@ -166,7 +166,7 @@ if __name__ == "__main__":
     ]
     buildLib("humon", src, incDirs, True)
     buildLib("humon", src, incDirs, False)
-    buildPythonLib("humon", src, incDirs, False)
+    buildPythonLib("humon", src, incDirs, True)
     buildSo("humon", src, incDirs, True)
     buildSo("humon", src, incDirs, False)
 
