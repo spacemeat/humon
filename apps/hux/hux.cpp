@@ -14,7 +14,7 @@ void printUsage()
 {
     cout << R"(Usage:
  hux <args>
-  -px print cloned
+  -pc print cloned
   -pm print minimal
   -pp print pretty  [default]
 
@@ -39,7 +39,7 @@ Returns 0 on successful operation.
 Returns 1 on bad command line arguments.
 Returns 2 on bad / erroneous input.
 
-If -px is specified, the output is a byte-for-byte clone of the original token
+If -pc is specified, the output is a byte-for-byte clone of the original token
 stream. As such, the -m, -t, and -c arguments have no effect on the output.
 
 If -pm is specified, the output is minimized. As such, the -t argument has no 
@@ -126,7 +126,7 @@ int main(int argc, char ** argv)
                 }
             else if (argMatches(arg, "-pp"))
                 { format = WhitespaceFormat::pretty; }
-            else if (argMatches(arg, "-px"))
+            else if (argMatches(arg, "-pc"))
                 { format = WhitespaceFormat::cloned; }
             else if (argMatches(arg, "-pm"))
                 { format = WhitespaceFormat::minimal; }
