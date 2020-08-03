@@ -871,7 +871,7 @@ static size_t transcodeToUtf8FromBlock(char * dest, char const * block, int bloc
 int transcodeToUtf8FromString(char * dest, size_t * numBytesEncoded, huStringView const * src, huDeserializeOptions * DeserializeOptions)
 {
     if (DeserializeOptions->encoding == HU_ENCODING_UNKNOWN)
-        { return 0; }
+        { return HU_ERROR_BADPARAMETER; }
     
     // faster codepath for UTF8->UTF8 transcoding
     // This path doesn't check for invalid or overlong UTF8 sequences. It just
@@ -885,7 +885,8 @@ int transcodeToUtf8FromString(char * dest, size_t * numBytesEncoded, huStringVie
             { memcpy(dest, src->ptr + sizeof(utf8_bom), src->size - sizeof(utf8_bom)); }
         else
             { memcpy(dest, src->ptr, src->size); }
-        return src->size;
+        * numBytesEncoded = src->size;
+        return HU_ERROR_NOERROR;
     }
     else
     {
