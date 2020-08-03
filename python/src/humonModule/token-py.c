@@ -10,13 +10,21 @@ typedef struct
 
 static void Token_dealloc(TokenObject * self)
 {
-    printf("Token dealloc\n");
+    if (self->tokenPtr == NULL)
+        { printf("%sToken dealloc - <null>%s\n", ansi_darkBlue, ansi_off); }
+    else
+    {
+        printf("%sToken dealloc - %.*s%s\n", ansi_darkBlue, 
+            self->tokenPtr->str.size, self->tokenPtr->str.ptr, ansi_off);
+    }
+    
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
+
 static PyObject * Token_new(PyTypeObject * type, PyObject * args, PyObject * kwds)
 {
-    printf("Token new\n");
+    printf("%sToken new%s\n", ansi_darkBlue, ansi_off);
     TokenObject * self;
     self = (TokenObject *) type->tp_alloc(type, 0);
     if (self != NULL)
@@ -27,26 +35,37 @@ static PyObject * Token_new(PyTypeObject * type, PyObject * args, PyObject * kwd
     return (PyObject *) self;
 }
 
+
 static int Token_init(TokenObject * self, PyObject * args, PyObject * kwds)
 {
-    printf("Token init\n");
-    // TODO: Py_ADDREF / Py_DECREF on args, self?
+    printf("%sToken init%s\n", ansi_darkMagenta, ansi_off);
     PyObject * capsule = NULL;
     if (! PyArg_ParseTuple(args, "O", & capsule))
         { return -1; }
-    
-    if (! PyCapsule_CheckExact(capsule))
+
+    if (capsule == NULL)
+        { return -1; }
+
+    Py_INCREF(capsule);
+    if (PyCapsule_CheckExact(capsule))
     {
-        PyErr_SetString(PyExc_ValueError, "Arg must be an encapsulated pointer.");
-        return -1;
+        // token will never be NULL; a capsule can't own a NULL. I'm sure there's a reason.
+        huToken const * token = PyCapsule_GetPointer(capsule, NULL);
+        self->tokenPtr = token;
     }
+    else if (capsule == Py_None)
+    {
+        // so pass None to get a nullish token.
+        self->tokenPtr = NULL;
+    }
+    else
+        { PyErr_SetString(PyExc_ValueError, "Arg must be an encapsulated pointer, or None."); }
 
-    // token will never be NULL; a capsule can't own a NULL. I'm sure there's a reason.
-    huToken const * token = PyCapsule_GetPointer(capsule, NULL);
-    self->tokenPtr = token;
+    Py_DECREF(capsule);
 
-    return 0;
+    return PyErr_Occurred() ? -1 : 0;
 }
+
 
 static bool checkYourSelf(TokenObject * self)
 {
@@ -59,10 +78,26 @@ static bool checkYourSelf(TokenObject * self)
     return true;
 }
 
+
+static PyObject * Token_get_isNullish(TokenObject * self, void * closure)
+{
+    PyObject * res = Py_False;
+    if (self->tokenPtr)
+        { res = Py_True; }
+    Py_INCREF(res);
+    return res;
+}
+
+
 static PyObject * Token_get_kind(TokenObject * self, void * closure)
-    { return checkYourSelf(self)
-        ? getEnumValue("TokenKind", self->tokenPtr->kind)
-        : NULL; }
+{
+    int kind = HU_TOKENKIND_NULL;
+    if (self->tokenPtr)
+        { kind = self->tokenPtr->kind; }
+
+    return getEnumValue("TokenKind", kind);
+}
+
 
 static PyObject * Token_get_line(TokenObject * self, void * closure)
     { return checkYourSelf(self)
@@ -87,37 +122,61 @@ static PyObject * Token_get_endCol(TokenObject * self, void * closure)
 
 static PyObject * Token_repr(TokenObject * self)
 {
-    if (! checkYourSelf(self))
-        { return NULL; }
+    PyObject * kind = Token_get_kind(self, NULL);
+    PyObject * str = PyObject_Str((PyObject *) self);
 
-//    PyObject * str = PyUnicode_FromStringAndSize(
-//        self->tokenPtr->str.ptr, 
-//        self->tokenPtr->str.size);
-//    PyObject * str = Py_BuildValue("s#",
-//        self->tokenPtr->str.ptr, 
-//        self->tokenPtr->str.size);
+    PyObject * retstr = PyUnicode_FromFormat(
+        "Token: kind: %S; value: %S", kind, str);
 
-    return Py_BuildValue("s",
-        huNodeKindToString(self->tokenPtr->kind));
+    Py_DECREF(str);
+    Py_DECREF(kind);
 
-
-//    return PyUnicode_FromFormat("Token: kind: %s; value: %S",
-//        huNodeKindToString(self->tokenPtr->kind), str);
+    return retstr;
 }
 
 
 static PyObject * Token_str(TokenObject * self)
 {
-    if (! checkYourSelf(self))
-        { return NULL; }
+    if (self->tokenPtr)
+        { return PyUnicode_FromStringAndSize(self->tokenPtr->str.ptr, self->tokenPtr->str.size); }
+    else
+        { return PyUnicode_FromString("<null>"); }
+}
 
-    return Py_BuildValue("s#",
-        self->tokenPtr->str.ptr, 
-        self->tokenPtr->str.size);
 
-//    return checkYourSelf(self)
-//        ? PyUnicode_FromStringAndSize(self->tokenPtr->str.ptr, self->tokenPtr->str.size)
-//        : NULL;
+static PyObject * Token_richCompare(PyObject * self, PyObject * other, int op)
+{
+    PyObject * result = NULL;
+
+    if (other == NULL)
+        { result = Py_NotImplemented; }
+    else if (op == Py_EQ)
+    {
+        if (((TokenObject *) self)->tokenPtr == ((TokenObject *) other)->tokenPtr ||
+            (((TokenObject *) self)->tokenPtr == NULL && other == Py_None))
+            { result = Py_True; }
+        else
+            { result = Py_False; }
+    }
+    else if (op == Py_NE)
+    {
+        if (((TokenObject *) self)->tokenPtr != ((TokenObject *) other)->tokenPtr ||
+            (((TokenObject *) self)->tokenPtr == NULL && other == Py_None))
+            { result = Py_True; }
+        else
+            { result = Py_False; }
+    }
+    else
+        { result = Py_NotImplemented; }
+    
+    Py_XINCREF(result);
+    return result;
+}
+
+
+static int Token_bool(PyObject * self)
+{
+    return ((TokenObject *) self)->tokenPtr != NULL;
 }
 
 
@@ -126,9 +185,11 @@ static PyMemberDef Token_members[] =
     { NULL }
 };
 
+
 static PyGetSetDef Token_getsetters[] = 
 {
-    { "kind", (getter) Token_get_kind, (setter) NULL, "The kind of token this is." },
+    { "isNullish", (getter) Token_get_isNullish, (setter) NULL, "Whether the token is nullish.", NULL },
+    { "kind", (getter) Token_get_kind, (setter) NULL, "The kind of token this is.", NULL},
     { "line", (getter) Token_get_line, (setter) NULL, "The line number in the file where the token begins.", NULL},
     { "col", (getter) Token_get_col, (setter) NULL, "The column number in the file where the token begins.", NULL},
     { "endLine", (getter) Token_get_endLine, (setter) NULL, "The line number in the file where the token ends.", NULL},
@@ -136,10 +197,18 @@ static PyGetSetDef Token_getsetters[] =
     { NULL }
 };
 
+
 static PyMethodDef Token_methods[] = 
 {
     { NULL }
 };
+
+
+static PyNumberMethods numberMethods = 
+{
+    .nb_bool = (inquiry) Token_bool
+};
+
 
 PyTypeObject TokenType =
 {
@@ -156,7 +225,9 @@ PyTypeObject TokenType =
     .tp_getset = Token_getsetters,
     .tp_methods = Token_methods,
     .tp_repr = (reprfunc) Token_repr,
-    .tp_str = (reprfunc) Token_str
+    .tp_str = (reprfunc) Token_str,
+    .tp_richcompare = (richcmpfunc) Token_richCompare,
+    .tp_as_number = & numberMethods
 };
 
 
@@ -178,24 +249,28 @@ int RegisterTokenType(PyObject * module)
 
 PyObject * makeToken(huToken const * tokenPtr)
 {
-    PyObject * tokenObj = NULL;
+    Py_INCREF(& TokenType);
 
-    if (tokenPtr != NULL)
+    PyObject * capsule = NULL;
+    if (tokenPtr == NULL)
     {
-        PyObject * capsule = PyCapsule_New((void *) tokenPtr, NULL, NULL);
-        if (capsule != NULL)
-        {
-            tokenObj = PyObject_CallFunction((PyObject *) & TokenType, "(O)", capsule);
-            if (tokenObj == NULL && ! PyErr_Occurred())
-                { PyErr_SetString(PyExc_RuntimeError, "Could not create Token"); }
-
-            Py_DECREF(capsule);
-        }
-        else
-            { PyErr_SetString(PyExc_RuntimeError, "Could not make new capsule"); }
+        capsule = Py_None;
+        Py_INCREF(capsule);
     }
     else
-        { PyErr_SetString(PyExc_ValueError, "Attempt to make a null Token"); }
+        { capsule = PyCapsule_New((void *) tokenPtr, NULL, NULL); }
+
+    PyObject * tokenObj = NULL;
+    if (capsule != NULL)
+    {
+        tokenObj = PyObject_CallFunction((PyObject *) & TokenType, "(O)", capsule);
+        if (tokenObj == NULL && ! PyErr_Occurred())
+            { PyErr_SetString(PyExc_RuntimeError, "Could not create Token"); }
+
+        Py_DECREF(capsule);
+    }
+
+    Py_DECREF(& TokenType);
     
     return tokenObj;
 }

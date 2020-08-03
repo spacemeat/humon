@@ -8,6 +8,7 @@ PyObject * getEnumValue(char const * enumName, int value)
     PyObject * enums = PyImport_AddModule("humon.enums");
     if (enums != NULL)
     {
+        Py_INCREF(enums);
         PyObject * enumType = PyObject_GetAttrString(enums, enumName);
         if (enumType != NULL)
         {

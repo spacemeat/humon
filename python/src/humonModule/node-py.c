@@ -11,14 +11,32 @@ typedef struct
 
 static void Node_dealloc(NodeObject * self)
 {
-    printf("Node dealloc\n");
+    if (self->nodePtr == NULL)
+        { printf("%sNode dealloc - <null>%s\n", ansi_darkBlue, ansi_off); }
+    else
+    {
+        int strLen = 0;
+        char * str = NULL;
+        huGetAddress(self->nodePtr, str, & strLen);
+        str = malloc(strLen + 1);
+        if (str != NULL)
+        {
+            huGetAddress(self->nodePtr, str, & strLen);
+            str[strLen] = '\0';
+
+            printf("%sNode dealloc - %s%s\n", ansi_darkBlue, str, ansi_off);
+        }
+        else
+            { printf("%sNode dealloc - malloc BAD%s\n", ansi_darkBlue, ansi_off); }
+    }
     Py_DECREF(self->trove);
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
+
 static PyObject * Node_new(PyTypeObject * type, PyObject * args, PyObject * kwds)
 {
-    printf("Node new\n");
+    printf("%sNode new%s\n", ansi_darkBlue, ansi_off);
     NodeObject * self = (NodeObject *) type->tp_alloc(type, 0);
     if (self != NULL)
     {
@@ -29,45 +47,45 @@ static PyObject * Node_new(PyTypeObject * type, PyObject * args, PyObject * kwds
     return (PyObject *) self;
 }
 
+
 static int Node_init(NodeObject * self, PyObject * args, PyObject * kwds)
 {
-    printf("Node init\n");
+    printf("%sNode init%s\n", ansi_darkMagenta, ansi_off);
     PyObject * trove = NULL;
     PyObject * capsule = NULL;
-    if (! PyArg_ParseTuple(args, "OO", & trove, & capsule))
+    if (! PyArg_ParseTuple(args, "O!O", & TroveType, & trove, & capsule))
         { return -1; }
 
     if (trove == NULL || capsule == NULL)
         { return -1; }
-
-    PyTypeObject * type = Py_TYPE(trove);
-    if (type != & TroveType)
-    {
-        PyErr_SetString(PyExc_ValueError, "Argument 1 must be a humon.Trove.");
-        return -1;
-    }
     
-    if (! PyCapsule_CheckExact(capsule))
+    Py_INCREF(trove);
+    Py_INCREF(capsule);
+    
+    if (PyCapsule_CheckExact(capsule))
     {
-        PyErr_SetString(PyExc_ValueError, "Argument 2 must be an encapsulated pointer.");
-        return -1;
+        // node will never be NULL
+        huNode const * node = PyCapsule_GetPointer(capsule, NULL);
+        self->nodePtr = node;
     }
+    else if (capsule == Py_None)
+    {
+        // so pass None to get a nullish token.
+        self->nodePtr = NULL;
+    }
+    else
+        { PyErr_SetString(PyExc_TypeError, "Argument 2 must be an encapsulated pointer."); }
+
+    Py_DECREF(capsule);
 
     PyObject * oldTrove = self->trove;
-    Py_INCREF(trove);
     self->trove = trove;
     if (oldTrove != NULL)
     {
         Py_DECREF(oldTrove);
     }
 
-    // node will never be NULL
-    huNode const * node = PyCapsule_GetPointer(capsule, NULL);
-    self->nodePtr = node;
-
-    Py_DECREF(capsule);
-
-    return 0;
+    return PyErr_Occurred() ? -1 : 0;
 }
 
 
@@ -90,6 +108,16 @@ static PyObject * IncRefOf(PyObject * obj)
 }
 
 
+static PyObject * Node_get_isNullish(NodeObject * self, void * closure)
+{
+    PyObject * res = Py_False;
+    if (self->nodePtr == NULL)
+        { res = Py_True; }
+    Py_INCREF(res);
+    return res;
+}
+
+
 static PyObject * Node_get_trove(NodeObject * self, void * closure)
     { return checkYourSelf(self)
         ? IncRefOf(self->trove)
@@ -100,10 +128,16 @@ static PyObject * Node_get_nodeIdx(NodeObject * self, void * closure)
         ? PyLong_FromLong(self->nodePtr->nodeIdx)
         : NULL; }
 
+
 static PyObject * Node_get_kind(NodeObject * self, void * closure)
-    { return checkYourSelf(self)
-        ? getEnumValue("NodeKind", self->nodePtr->kind)
-        : NULL; }
+{
+    int kind = HU_NODEKIND_NULL;
+    if (self->nodePtr)
+        { kind = self->nodePtr->kind; }
+
+    return getEnumValue("NodeKind", kind);
+}
+
 
 static PyObject * Node_get_firstToken(NodeObject * self, void * closure)
     { return checkYourSelf(self)
@@ -290,6 +324,9 @@ static PyObject * Node_getAnnotations(NodeObject * self, PyObject * args, PyObje
     {
         // look up by value, return n tokens
         PyObject * list = Py_BuildValue("[]");
+        if (list == NULL)
+            { return NULL; }
+
         int cursor = 0;
         huToken const * tok = NULL;
         do
@@ -298,12 +335,24 @@ static PyObject * Node_getAnnotations(NodeObject * self, PyObject * args, PyObje
             if (tok)
             {
                 PyObject * pytok = makeToken(tok);
-                PyList_Append(list, pytok);
-                Py_DECREF(pytok);
+                if (pytok == NULL)
+                    { break; }
+
+                if (PyList_Append(list, pytok) < 0)
+                {
+                    Py_DECREF(pytok);
+                    break;
+                }
             }
         } while (tok != NULL);
 
-        return list;        
+        if (PyErr_Occurred())
+        {
+            Py_DECREF(list);
+            return NULL;
+        }
+
+        return list;
     }
     else if (key && value)
     {
@@ -312,6 +361,7 @@ static PyObject * Node_getAnnotations(NodeObject * self, PyObject * args, PyObje
         return PyBool_FromLong(strncmp(tok->str.ptr, value, min(tok->str.size, valueLen)) == 0);
     }
 
+    PyErr_SetString(PyExc_ValueError, "'key' and/or 'value' arguments required");
     return NULL;
 }
 
@@ -356,7 +406,6 @@ static PyObject * Node_getCommentsContaining(NodeObject * self, PyObject * args,
         {
             PyObject * pytok = makeToken(tok);
             PyList_Append(list, pytok);
-            Py_DECREF(pytok);
         }
     } while (tok != NULL);
 
@@ -366,38 +415,80 @@ static PyObject * Node_getCommentsContaining(NodeObject * self, PyObject * args,
 
 static PyObject * Node_repr(NodeObject * self)
 {
-    if (! checkYourSelf(self))
-        { return NULL; }
+    PyObject * kind = Node_get_kind(self, NULL);
+    PyObject * str = PyObject_Str((PyObject *) self);
+    PyObject * retstr = NULL;
 
-    return Py_BuildValue("s",
-        huNodeKindToString(self->nodePtr->kind));
+    if (self->nodePtr)
+    {
+        retstr = PyUnicode_FromFormat(
+            "Node: kind: %S; value: %S", kind, str);
+    }
+    else
+    {
+        retstr = PyUnicode_FromFormat(
+            "Node: kind: %S", kind);
+    }
 
-//    return PyUnicode_FromFormat("Node: kind: %s",
-//        huNodeKindToString(self->nodePtr->kind));
+    Py_DECREF(str);
+    Py_DECREF(kind);
+
+    return retstr;
 }
 
 
 static PyObject * Node_str(NodeObject * self)
 {
-    if (! checkYourSelf(self))
-        { return NULL; }
-
-    if (self->nodePtr->kind == HU_NODEKIND_VALUE)
+    if (self->nodePtr == NULL)
     {
-        return Py_BuildValue("s#",
+        return PyUnicode_FromString("<null>");
+    }
+    else if (self->nodePtr->kind == HU_NODEKIND_VALUE)
+    {
+        return PyUnicode_FromStringAndSize(
             self->nodePtr->valueToken->str.ptr, 
             self->nodePtr->valueToken->str.size);
-//        return PyUnicode_FromStringAndSize(
-//            self->nodePtr->valueToken->str.ptr, 
-//            self->nodePtr->valueToken->str.size);
     }
     else
     {
-        PyObject * str = Py_BuildValue("s", "no value here");
-        return str;
-//        return PyUnicode_New(0, 127);
-//        PyUnicode_FromStringAndSize("", 0);
+        return PyUnicode_FromStringAndSize("", 0);
     }
+}
+
+
+static PyObject * Node_richCompare(PyObject * self, PyObject * other, int op)
+{
+    PyObject * result = NULL;
+
+    if (other == NULL)
+        { result = Py_NotImplemented; }
+    else if (op == Py_EQ)
+    {
+        if (((NodeObject *) self)->nodePtr == ((NodeObject *) other)->nodePtr ||
+            (((NodeObject *) self)->nodePtr == NULL && other == Py_None))
+            { result = Py_True; }
+        else
+            { result = Py_False; }
+    }
+    else if (op == Py_NE)
+    {
+        if (((NodeObject *) self)->nodePtr != ((NodeObject *) other)->nodePtr ||
+            (((NodeObject *) self)->nodePtr != NULL && other == Py_None))
+            { result = Py_True; }
+        else
+            { result = Py_False; }
+    }
+    else
+        { result = Py_NotImplemented; }
+    
+    Py_XINCREF(result);
+    return result;
+}
+
+
+static int Node_bool(PyObject * self)
+{
+    return ((NodeObject *) self)->nodePtr != NULL;
 }
 
 
@@ -406,29 +497,32 @@ static PyMemberDef Node_members[] =
     { NULL }
 };
 
+
 static PyGetSetDef Node_getsetters[] = 
 {
-    { "trove",          (getter) Node_get_trove, (setter) NULL, "The trove tracking this node." },
-    { "nodeIdx",        (getter) Node_get_nodeIdx, (setter) NULL, "The index of this node in its trove's tracking array." },
-    { "kind",           (getter) Node_get_kind, (setter) NULL, "The kind of node this is." },
-    { "firstToken",     (getter) Node_get_firstToken, (setter) NULL, "The first token which contributes to this node, including any annotation and comment tokens." },
-    { "keyToken",       (getter) Node_get_keyToken, (setter) NULL, "The key token if the node is inside a dict." },
-    { "valueToken",     (getter) Node_get_valueToken, (setter) NULL, "The first token of this node's actual value; for a container, it points to the opening brac(e|ket)." },
-    { "lastValueToken", (getter) Node_get_lastValueToken, (setter) NULL, "The last token of this node's actual value; for a container, it points to the closing brac(e|ket)." },
-    { "lastToken",      (getter) Node_get_lastToken, (setter) NULL, "The last token of this node, including any annotation and comment tokens." },
-    { "parentNodeIdx",  (getter) Node_get_parentNodeIdx, (setter) NULL, "The parent node's index, or -1 if this node is the root." },
-    { "parent",         (getter) Node_get_parent, (setter) NULL, "The node's parent." },
-    { "childOrdinal",   (getter) Node_get_childOrdinal, (setter) NULL, "The index of this node vis a vis its sibling nodes (starting at 0)." },
-    { "numChildren",    (getter) Node_get_numChildren, (setter) NULL, "The number of children a node has." },
-    { "firstChild",     (getter) Node_get_firstChild, (setter) NULL, "The first child of node (index 0)." },
-    { "nextSibling",    (getter) Node_get_nextSibling, (setter) NULL, "The next sibling in the child index order of a node." },
-    { "address",        (getter) Node_get_address, (setter) NULL, "The full address of a node." },
-    { "hasKey",         (getter) Node_get_hasKey, (setter) NULL, "Returns whether a node has a key token tracked. (If it's a member of a dict.)" },
-    { "nestedValue",    (getter) Node_get_tokenStream, (setter) NULL, "The entire nested text of a node, including child nodes and associated comments and annotations." },
-    { "numAnnotations", (getter) Node_get_numAnnotations, (setter) NULL, "Return the number of annotations associated to a node." },
-    { "numComments",    (getter) Node_get_numComments, (setter) NULL, "Return the number of comments associated to a node." },
+    { "isNullish",      (getter) Node_get_isNullish, (setter) NULL, "Whether the node is nullish.", NULL },
+    { "trove",          (getter) Node_get_trove, (setter) NULL, "The trove tracking this node.", NULL },
+    { "nodeIdx",        (getter) Node_get_nodeIdx, (setter) NULL, "The index of this node in its trove's tracking array.", NULL },
+    { "kind",           (getter) Node_get_kind, (setter) NULL, "The kind of node this is.", NULL },
+    { "firstToken",     (getter) Node_get_firstToken, (setter) NULL, "The first token which contributes to this node, including any annotation and comment tokens.", NULL },
+    { "keyToken",       (getter) Node_get_keyToken, (setter) NULL, "The key token if the node is inside a dict.", NULL },
+    { "valueToken",     (getter) Node_get_valueToken, (setter) NULL, "The first token of this node's actual value; for a container, it points to the opening brac(e|ket).", NULL },
+    { "lastValueToken", (getter) Node_get_lastValueToken, (setter) NULL, "The last token of this node's actual value; for a container, it points to the closing brac(e|ket).", NULL },
+    { "lastToken",      (getter) Node_get_lastToken, (setter) NULL, "The last token of this node, including any annotation and comment tokens.", NULL },
+    { "parentNodeIdx",  (getter) Node_get_parentNodeIdx, (setter) NULL, "The parent node's index, or -1 if this node is the root.", NULL },
+    { "parent",         (getter) Node_get_parent, (setter) NULL, "The node's parent.", NULL },
+    { "childOrdinal",   (getter) Node_get_childOrdinal, (setter) NULL, "The index of this node vis a vis its sibling nodes (starting at 0).", NULL },
+    { "numChildren",    (getter) Node_get_numChildren, (setter) NULL, "The number of children a node has.", NULL },
+    { "firstChild",     (getter) Node_get_firstChild, (setter) NULL, "The first child of node (index 0).", NULL },
+    { "nextSibling",    (getter) Node_get_nextSibling, (setter) NULL, "The next sibling in the child index order of a node.", NULL },
+    { "address",        (getter) Node_get_address, (setter) NULL, "The full address of a node.", NULL },
+    { "hasKey",         (getter) Node_get_hasKey, (setter) NULL, "Returns whether a node has a key token tracked. (If it's a member of a dict.)", NULL },
+    { "tokenStream",    (getter) Node_get_tokenStream, (setter) NULL, "The entire nested text of a node, including child nodes and associated comments and annotations.", NULL },
+    { "numAnnotations", (getter) Node_get_numAnnotations, (setter) NULL, "Return the number of annotations associated to a node.", NULL },
+    { "numComments",    (getter) Node_get_numComments, (setter) NULL, "Return the number of comments associated to a node.", NULL },
     { NULL }
 };
+
 
 static PyMethodDef Node_methods[] = 
 {
@@ -440,7 +534,13 @@ static PyMethodDef Node_methods[] =
     { NULL }
 };
 
-// TODO: Should this be static and wrapped up in one file?
+
+static PyNumberMethods numberMethods = 
+{
+    .nb_bool = (inquiry) Node_bool
+};
+
+
 PyTypeObject NodeType =
 {
     PyVarObject_HEAD_INIT(NULL, 0)
@@ -456,7 +556,9 @@ PyTypeObject NodeType =
     .tp_getset = Node_getsetters,
     .tp_methods = Node_methods,
     .tp_repr = (reprfunc) Node_repr,
-    .tp_str = (reprfunc) Node_str
+    .tp_str = (reprfunc) Node_str,
+    .tp_richcompare = (richcmpfunc) Node_richCompare,
+    .tp_as_number = & numberMethods
 };
 
 
@@ -478,24 +580,27 @@ int RegisterNodeType(PyObject * module)
 
 PyObject * makeNode(PyObject * trove, huNode const * nodePtr)
 {
-    PyObject * nodeObj = NULL;
-
-    if (nodePtr != NULL)
-    {        
-        PyObject * capsule = PyCapsule_New((void *) nodePtr, NULL, NULL);
-        if (capsule != NULL)
-        {
-            nodeObj = PyObject_CallFunction((PyObject *) & NodeType, "(OO)", trove, capsule);
-            if (nodeObj == NULL && ! PyErr_Occurred())
-                { PyErr_SetString(PyExc_RuntimeError, "Could not create Node"); }
-
-            Py_DECREF(capsule);
-        }
-        else
-            { PyErr_SetString(PyExc_RuntimeError, "Could not make new capsule"); }
+    Py_INCREF(& NodeType);
+    PyObject * capsule = NULL;
+    if (nodePtr == NULL)
+    {
+        capsule = Py_None;
+        Py_INCREF(capsule);
     }
     else
-        { PyErr_SetString(PyExc_ValueError, "Attempt to make a null Token"); }
+        { capsule = PyCapsule_New((void *) nodePtr, NULL, NULL); }
+
+    PyObject * nodeObj = NULL;
+    if (capsule != NULL)
+    {
+        nodeObj = PyObject_CallFunction((PyObject *) & NodeType, "(OO)", trove, capsule);
+        if (nodeObj == NULL && ! PyErr_Occurred())
+            { PyErr_SetString(PyExc_RuntimeError, "Could not create Node"); }
+
+        Py_DECREF(capsule);
+    }
+
+    Py_INCREF(& NodeType);
 
     return nodeObj;
 }

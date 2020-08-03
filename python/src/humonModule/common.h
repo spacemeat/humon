@@ -2,7 +2,7 @@
 #include <Python.h>
 #include <structmember.h>
 #include "humon.h"
-
+#include "ansiColors.h"
 
 enum VectorElementTypeEnum
 {
