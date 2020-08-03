@@ -1,12 +1,15 @@
 DONE THIS CHECKIN:
-
+Fix fast transcode.
 
 TODO:
 P1 doxygen
 P1 Visual Studio
 P1 Clang
 P1 talk about using nodeIndex instead of address for static humon
+P1 talk about huGetAnno* works with &cursor (don't use it as an index)
 P1 ensure hux cmdline doesn't say 'xero'
+P1 test for fast loading
+P1 No unexpected EOF error if there were other errors?
 P2 vcpkg
 P2 string sizes should be size_t?
 P1-2 linting
