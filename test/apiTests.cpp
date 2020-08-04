@@ -2293,31 +2293,31 @@ TEST(huDeserializeTroveFromFile, pathological)
 
     trove = (huTrove const *) 4;
     params.encoding = -1;
-    error = huDeserializeTroveFromFileZ(& trove, "../test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_MUM);
+    error = huDeserializeTroveFromFileZ(& trove, "test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile encoding=-1 == NULL");
 
     trove = (huTrove const *) 4;
     params.encoding = HU_ENCODING_UNKNOWN + 1;
-    error = huDeserializeTroveFromFileZ(& trove, "../test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_MUM);
+    error = huDeserializeTroveFromFileZ(& trove, "test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile encoding=unk+1 == NULL");
 
     trove = (huTrove const *) 4;
     params.encoding = HU_ENCODING_UTF8;
     params.tabSize = -1;
-    error = huDeserializeTroveFromFileZ(& trove, "../test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_MUM);
+    error = huDeserializeTroveFromFileZ(& trove, "test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile tabSize=-1 == NULL");
 
     trove = (huTrove const *) 4;
     params.tabSize = 4;
-    error = huDeserializeTroveFromFileZ(& trove, "../test/testFiles/utf8.hu", & params, -1);
+    error = huDeserializeTroveFromFileZ(& trove, "test/testFiles/utf8.hu", & params, -1);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile errorResponse=-1 == NULL");
 
     trove = (huTrove const *) 4;
-    error = huDeserializeTroveFromFileZ(& trove, "../test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_NUMRESPONSES);
+    error = huDeserializeTroveFromFileZ(& trove, "test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_NUMRESPONSES);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(hu_nullTrove, trove, "fromFile errorResponse=high == NULL");
 }
@@ -3692,10 +3692,10 @@ static std::tuple<std::string, int> getFile(std::string_view path, int Whitespac
 
 
 std::string testFiles_TokenStream[] = {
-    "../test/testFiles/comments.hu",
-    "../test/testFiles/commentsCstyle.hu",
-    "../test/testFiles/quothTheHumon.hu",
-    "../test/testFiles/utf8.hu",
+    "test/testFiles/comments.hu",
+    "test/testFiles/commentsCstyle.hu",
+    "test/testFiles/quothTheHumon.hu",
+    "test/testFiles/utf8.hu",
 };
 
 TEST_GROUP(huGetTroveTokenStream)
@@ -3725,19 +3725,19 @@ TEST(huGetTroveTokenStream, correctness)
 
 
 std::string testFiles_Serialize[] = {
-    "../test/testFiles/comments.hu",
-    "../test/testFiles/commentsCstyle.hu",
-    "../test/testFiles/quothTheHumon.hu",
-    "../test/testFiles/utf8.hu",
-    "../test/testFiles/utf8bom.hu",
-    "../test/testFiles/utf16be.hu",
-    "../test/testFiles/utf16bebom.hu",
-    "../test/testFiles/utf16le.hu",
-    "../test/testFiles/utf16lebom.hu",
-    "../test/testFiles/utf32be.hu",
-    "../test/testFiles/utf32bebom.hu",
-    "../test/testFiles/utf32le.hu",
-    "../test/testFiles/utf32lebom.hu"
+    "test/testFiles/comments.hu",
+    "test/testFiles/commentsCstyle.hu",
+    "test/testFiles/quothTheHumon.hu",
+    "test/testFiles/utf8.hu",
+    "test/testFiles/utf8bom.hu",
+    "test/testFiles/utf16be.hu",
+    "test/testFiles/utf16bebom.hu",
+    "test/testFiles/utf16le.hu",
+    "test/testFiles/utf16lebom.hu",
+    "test/testFiles/utf32be.hu",
+    "test/testFiles/utf32bebom.hu",
+    "test/testFiles/utf32le.hu",
+    "test/testFiles/utf32lebom.hu"
 };
 
 TEST_GROUP(huSerializeTrove)

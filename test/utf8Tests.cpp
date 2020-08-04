@@ -11,10 +11,19 @@ using namespace std::literals;
 TEST_GROUP(utf8)
 {
     hu::Trove trove;
+    bool die = false;
 
     void setup()
     {
-        trove = move(get<hu::Trove>(hu::Trove::fromFile("../test/testFiles/utf8.hu")));
+        die = false;
+        try
+        {
+            trove = move(get<hu::Trove>(hu::Trove::fromFile("test/testFiles/utf8.hu", {hu::Encoding::utf8, false})));
+        }
+        catch (...)
+        {
+            die = true;
+        }
     }
 
     void teardown()
@@ -24,6 +33,7 @@ TEST_GROUP(utf8)
 
 TEST(utf8, lengthOfIt)
 {
+    CHECK_TEXT(die != true, "Didn't make the trove.");
     auto root = trove.root();
     LONGS_EQUAL_TEXT((int) hu::NodeKind::dict, (int) root.kind(), "root kind");
     LONGS_EQUAL_TEXT(10, root.numChildren(), "root numChildren");
@@ -38,6 +48,7 @@ TEST(utf8, lengthOfIt)
 
 TEST(utf8, keys)
 {
+    CHECK_TEXT(die != true, "Didn't make the trove.");
     auto root = trove.root();
     auto ch = root / "Я";
     STRNCMP_EQUAL("two", ch.value().str().data(), strlen("two"));

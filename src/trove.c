@@ -46,7 +46,7 @@ static void printError(int errorResponse, char const * msg)
         { stream = stderr; }
     if (errorResponse == HU_ERRORRESPONSE_STDOUT || 
         errorResponse == HU_ERRORRESPONSE_STDERR)
-        { fprintf(stream, "%s\n", msg); }
+        { fprintf(stream, "Error: %s\n", msg); }
     else if (errorResponse == HU_ERRORRESPONSE_STDOUTANSICOLOR || 
              errorResponse == HU_ERRORRESPONSE_STDERRANSICOLOR)
         { fprintf(stream, "%sError%s: %s\n", ansi_lightRed, ansi_off, msg); }
@@ -112,7 +112,7 @@ int huDeserializeTroveN(huTrove const ** trovePtr, char const * data, int dataLe
     if (newData == NULL)
     {
         free(trove);
-        printError(errorResponse, "Error: Out of memory.");
+        printError(errorResponse, "Out of memory.");
         return HU_ERROR_OUTOFMEMORY;
     }
 
@@ -122,7 +122,7 @@ int huDeserializeTroveN(huTrove const ** trovePtr, char const * data, int dataLe
     {
         free(newData);
         free(trove);
-        printError(errorResponse, "Error: Transcoding failed.");
+        printError(errorResponse, "Transcoding failed.");
         return error;
     }
 
@@ -187,14 +187,14 @@ int huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const * path, in
     FILE * fp = fopen(path, "rb");
     if (fp == NULL)
     {
-        printError(errorResponse, "Error: Could not open file for reading.");
+        printError(errorResponse, "Could not open file for reading.");
         return HU_ERROR_BADFILE;
     }
 
     if (fseek(fp, 0, SEEK_END) != 0)
     {
         fclose(fp);
-        printError(errorResponse, "Error: Could not read file.");
+        printError(errorResponse, "Could not read file.");
         return HU_ERROR_BADFILE;
     }
 
@@ -202,7 +202,7 @@ int huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const * path, in
     if (dataLen == -1L)
     {
         fclose(fp);
-        printError(errorResponse, "Error: Could not read file.");
+        printError(errorResponse, "Could not read file.");
         return HU_ERROR_BADFILE;
     }
 
@@ -226,7 +226,7 @@ int huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const * path, in
     if (trove == hu_nullTrove)
     {
         fclose(fp);
-        printError(errorResponse, "Error: Out of memory.");
+        printError(errorResponse, "Out of memory.");
         return HU_ERROR_OUTOFMEMORY;
     }
 
@@ -244,7 +244,7 @@ int huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const * path, in
     if (newData == NULL)
     {
         fclose(fp);
-        printError(errorResponse, "Error: Out of memory.");
+        printError(errorResponse, "Out of memory.");
         return HU_ERROR_OUTOFMEMORY;
     }
 
@@ -254,7 +254,7 @@ int huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const * path, in
     if (error != HU_ERROR_NOERROR)
     {
         free(newData);
-        printError(errorResponse, "Error: Transcoding failed.");
+        printError(errorResponse, "Transcoding failed.");
         return error;
     }
 
@@ -859,6 +859,11 @@ void recordTokenizeError(huTrove * trove, int errorCode, int line, int col)
 
 void recordParseError(huTrove * trove, int errorCode, huToken const * pCur)
 {
+    // Let's not worry about unexptected EOF if we've encountered other errors.
+//    if (errorCode == HU_ERROR_UNEXPECTEDEOF &&
+//        huGetNumErrors(trove) > 0)
+//        { return; }
+
     int num = 1;
     huError * error = growVector(& trove->errors, & num);
     if (num)

@@ -786,12 +786,12 @@ namespace hu
          * be a null trove, but rather will be loaded with no nodes, and errors marking 
          * tokens. */
         [[nodiscard]] static DeserializeResult fromString(std::string_view data,
-            DeserializeOptions DeserializeOptions = { Encoding::utf8 }, 
+            DeserializeOptions deserializeOptions = { Encoding::utf8 }, 
             ErrorResponse errorRespose = ErrorResponse::stderrAnsiColor) HUMON_NOEXCEPT
         {
             capi::huTrove const * trove = capi::hu_nullTrove;
             int error = capi::huDeserializeTroveN(& trove, data.data(), data.size(), 
-                & DeserializeOptions.cparams, static_cast<int>(errorRespose));
+                & deserializeOptions.cparams, static_cast<int>(errorRespose));
 
             if (error != capi::HU_ERROR_NOERROR &&
                 error != capi::HU_ERROR_TROVEHASERRORS)
@@ -807,12 +807,12 @@ namespace hu
          * be a null trove, but rather will be loaded with no nodes, and errors marking 
          * tokens. */
         [[nodiscard]] static DeserializeResult fromString(char const * data, int dataLen, 
-            DeserializeOptions DeserializeOptions = { Encoding::utf8 }, 
+            DeserializeOptions deserializeOptions = { Encoding::utf8 }, 
             ErrorResponse errorRespose = ErrorResponse::stderrAnsiColor) HUMON_NOEXCEPT
         {
             capi::huTrove const * trove = capi::hu_nullTrove;
             int error = capi::huDeserializeTroveN(& trove, data, dataLen, 
-                & DeserializeOptions.cparams, static_cast<int>(errorRespose));
+                & deserializeOptions.cparams, static_cast<int>(errorRespose));
             if (error != capi::HU_ERROR_NOERROR &&
                 error != capi::HU_ERROR_TROVEHASERRORS)
                 { return static_cast<ErrorCode>(error); }
@@ -827,12 +827,12 @@ namespace hu
          * be a null trove, but rather will be loaded with no nodes, and errors marking 
          * tokens. */
         [[nodiscard]] static DeserializeResult fromFile(std::string_view path,
-            DeserializeOptions DeserializeOptions = { Encoding::unknown }, 
+            DeserializeOptions deserializeOptions = { Encoding::unknown }, 
             ErrorResponse errorRespose = ErrorResponse::stderrAnsiColor) HUMON_NOEXCEPT
         {
             capi::huTrove const * trove = capi::hu_nullTrove;
             int error = capi::huDeserializeTroveFromFileN(& trove, path.data(), path.size(), 
-                & DeserializeOptions.cparams, static_cast<int>(errorRespose));
+                & deserializeOptions.cparams, static_cast<int>(errorRespose));
             if (error != capi::HU_ERROR_NOERROR &&
                 error != capi::HU_ERROR_TROVEHASERRORS)
                 { return static_cast<ErrorCode>(error); }
@@ -849,14 +849,14 @@ namespace hu
          * 
          * \maxNumBytes: If 0, `fromIstream` reads the stream until EOF is encountered.*/
         [[nodiscard]] static DeserializeResult fromIstream(std::istream & in, 
-            DeserializeOptions DeserializeOptions = { Encoding::unknown }, size_t maxNumBytes = 0, 
+            DeserializeOptions deserializeOptions = { Encoding::unknown }, size_t maxNumBytes = 0, 
             ErrorResponse errorResponse = ErrorResponse::stderrAnsiColor) HUMON_NOEXCEPT
         {
             if (maxNumBytes == 0)
             {
                 std::stringstream buffer;
                 buffer << in.rdbuf();
-                return fromString(buffer.str(), DeserializeOptions, errorResponse);
+                return fromString(buffer.str(), deserializeOptions, errorResponse);
             }
             else
             {
@@ -864,7 +864,7 @@ namespace hu
                 buffer.reserve(maxNumBytes + 1);
                 in.read(buffer.data(), maxNumBytes);
                 buffer[maxNumBytes] = '\0'; // TODO: Necessary?
-                return fromString(buffer.data(), DeserializeOptions, errorResponse);
+                return fromString(buffer.data(), deserializeOptions, errorResponse);
             }
         }
     

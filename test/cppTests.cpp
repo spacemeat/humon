@@ -50,6 +50,17 @@ TEST(makers, fromString)
     CHECK_TEXT(child.value() == "woo"sv, "load3");
 }
 
+TEST(makers, fromStringFast)
+{
+    hu::Trove trove = std::move(std::get<hu::Trove>(hu::Trove::fromString(humon, {hu::Encoding::utf8, false, 2})));
+    auto root = trove.root();
+    CHECK_TEXT(root.kind() == hu::NodeKind::list, "load0");
+    CHECK_TEXT(root.numChildren() == 1, "load1");
+    auto child = root.child(0);
+    CHECK_TEXT(child.kind() == hu::NodeKind::value, "load2");
+    CHECK_TEXT(child.value() == "woo"sv, "load3");
+}
+
 TEST_GROUP(cppSugar)
 {
     htd_cppValues t;

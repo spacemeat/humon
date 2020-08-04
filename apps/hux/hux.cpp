@@ -21,8 +21,8 @@ void printUsage()
   -my do print comments  [default]
   -mn do not print comments
  
-  -i <indentSize> use indentSize spaces for indentation  [default=4]
-  -it use \t for indentation
+  -n <indentSize> use indentSize spaces for indentation  [default=4]
+  -nt use \t for indentation
 
   -cn do not use colors  [default]
   -ca use ansi colors
@@ -40,9 +40,9 @@ Returns 1 on bad command line arguments.
 Returns 2 on bad / erroneous input.
 
 If -pc is specified, the output is a byte-for-byte clone of the original token
-stream. As such, the -m, -t, and -c arguments have no effect on the output.
+stream. As such, the -m, -n, and -c arguments have no effect on the output.
 
-If -pm is specified, the output is minimized. As such, the -t argument has no 
+If -pm is specified, the output is minimized. As such, the -n argument has no 
 effect on the output.
 
 If -pp is specified, the output is pretty. Marvel at its beauty.
@@ -79,6 +79,14 @@ enum class ExpectedArgument
 };
 
 
+enum class InputType
+{
+    cmdLine,
+    stdIn,
+    file
+};
+
+
 bool argMatches(char const * arg, char const * spec)
 {
     int argLen = strlen(arg);
@@ -97,7 +105,9 @@ bool argStartsWith(char const * arg, char const * spec)
 
 int main(int argc, char ** argv)
 {
-    bool loadFromStdin = false;
+//    bool loadFromStdin = false;
+//    bool loadFromCmdline = false;
+    InputType inputType = InputType::stdIn;
     string inputFile;
     string outputFile;
 
@@ -109,8 +119,9 @@ int main(int argc, char ** argv)
     bool printBom = false;
 
     ExpectedArgument expectedArg = ExpectedArgument::cmdSwitch;
-   
-    for (int i = 1; i < argc; ++i)
+
+    int i = 1;
+    for (; i < argc; ++i)
     {
         char * arg = argv[i];
         int argLen = strlen(arg);
@@ -146,16 +157,16 @@ int main(int argc, char ** argv)
                 return 1;
             }
 
-            else if (argMatches(arg, "-it"))
+            else if (argMatches(arg, "-nt"))
                 { indentWithTabs = true; }
-            else if (argMatches(arg, "-i"))
+            else if (argMatches(arg, "-n"))
                 { expectedArg = ExpectedArgument::indentSize; }
-            else if (argStartsWith(arg, "-i"))
+            else if (argStartsWith(arg, "-n"))
             {
                 if(auto [p, ec] = std::from_chars(arg + 2, arg + argLen, indentSize, 10);
                     ec != std::errc())
                 {
-                    cerr << "Invalid indent size argument for -i.\n";
+                    cerr << "Invalid indent size argument for -n.\n";
                     return 1;
                 }
                 indentWithTabs = false;
@@ -181,14 +192,16 @@ int main(int argc, char ** argv)
             else if (argStartsWith(arg, "-o"))
                 { outputFile = arg + 2; }
 
+            else if (argMatches(arg, "-i"))
+                { inputType = InputType::stdIn; }
             else if (argMatches(arg, "--"))
-                { loadFromStdin = true; }
+                { inputType = InputType::cmdLine; }
 
             else if (argStartsWith(arg, "-"))
                 { cerr << "Invalid switch " << arg << ".\n"; return 1; }
             else
             {
-                loadFromStdin = false;
+                inputType = InputType::file;
                 inputFile = arg;
             }
             break;
@@ -206,25 +219,55 @@ int main(int argc, char ** argv)
             expectedArg = ExpectedArgument::cmdSwitch;
             break;
         }
+
+        if (inputType == InputType::cmdLine)
+            { break; }
     }
 
-    if (inputFile.size() == 0)
-        { loadFromStdin = true; }
+    DeserializeResult desRes;
+
+    switch(inputType)
+    {
+    case InputType::stdIn:
+        {
+            desRes = Trove::fromIstream(cin, {}, 0, ErrorResponse::mum);
+        }
+        break;
+    case InputType::cmdLine:
+        {
+            std::ostringstream oss;
+            if (inputType == InputType::cmdLine)
+            {
+                for (++i; i < argc; ++i)
+                {
+                    oss << argv[i];
+                    if (i < argc - 1)
+                        { oss << " " ;}
+                }
+            }
+            desRes = Trove::fromString(oss.str(), {Encoding::unknown}, ErrorResponse::mum);
+        }
+        break;
+    case InputType::file:
+        {
+            desRes = Trove::fromFile(inputFile, {}, ErrorResponse::mum);
+        }
+        break;
+    }
 
     // set up us the input
-    DeserializeResult desRes;
-    if (loadFromStdin)
-    {
-        desRes = getInput(cin);
-    }
-    else
-    {
-        auto in = ifstream (inputFile);
-        if (in.is_open() == false)
-            { cerr << "Could not open file " << inputFile << " for input.\n"; return 1; }
+    // if (loadFromStdin)
+    // {
+    //     desRes = getInput(cin);
+    // }
+    // else
+    // {
+    //     auto in = ifstream (inputFile);
+    //     if (in.is_open() == false)
+    //         { cerr << "Could not open file " << inputFile << " for input.\n"; return 1; }
 
-        desRes = getInput(in);
-    }
+    //     desRes = getInput(in);
+    // }
 
     if (auto error = get_if<ErrorCode>(& desRes))
     {
@@ -245,7 +288,7 @@ int main(int argc, char ** argv)
 
     std::optional<ColorTable> colorTable;
     if (usingColors == UsingColors::ansi)
-        { colorTable.emplace(std::move(getAnsiColorTable())); }
+        { colorTable.emplace(getAnsiColorTable()); }
 
     std::string output;
     ErrorCode error = ErrorCode::noError;

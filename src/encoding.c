@@ -946,7 +946,7 @@ int transcodeToUtf8FromString(char * dest, size_t * numBytesEncoded, huStringVie
 int transcodeToUtf8FromFile(char * dest, size_t * numBytesEncoded, FILE * fp, int srcLen, huDeserializeOptions * DeserializeOptions)
 {
     if (DeserializeOptions->encoding == HU_ENCODING_UNKNOWN)
-        { return 0; }
+        { return HU_ERROR_BADPARAMETER; }
     
     // faster codepath for UTF8->UTF8 transcoding
     // This path doesn't check for invalid or overlong UTF8 sequences. It just
@@ -954,7 +954,10 @@ int transcodeToUtf8FromFile(char * dest, size_t * numBytesEncoded, FILE * fp, in
     // huTroveTo* functions. Humon won't be fooled by overlong imposters.
     if (DeserializeOptions->encoding == HU_ENCODING_UTF8 && 
         DeserializeOptions->allowOutOfRangeCodePoints == true)
-        { return fread(dest, 1, srcLen, fp); }
+    {
+        * numBytesEncoded = fread(dest, 1, srcLen, fp);
+        return HU_ERROR_NOERROR;
+    }
     else
     {
         int const BLOCKSIZE = HUMON_FILE_BLOCK_SIZE;

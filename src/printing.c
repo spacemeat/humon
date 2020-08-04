@@ -20,6 +20,15 @@ void appendString(PrintTracker * printer, char const * addend, int size)
 }
 
 
+static void appendColor(PrintTracker * printer, int colorCode)
+{
+    if (printer->SerializeOptions->usingColors == false)
+        { return; }
+    huStringView const * color = printer->SerializeOptions->colorTable + colorCode;
+    appendToVector(printer->str, color->ptr, color->size);
+}
+
+
 static void appendWs(PrintTracker * printer, int numChars)
 {
     if (printer->SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_MINIMAL)
@@ -80,15 +89,6 @@ static void appendNewline(PrintTracker * printer)
     printer->lastPrintWasNewline = true;
     printer->lastPrintWasUnquotedWord = false;
     printer->lastPrintWasWhitespace = true;
-}
-
-
-static void appendColor(PrintTracker * printer, int colorCode)
-{
-    if (printer->SerializeOptions->usingColors == false)
-        { return; }
-    huStringView const * color = printer->SerializeOptions->colorTable + colorCode;
-    appendString(printer, color->ptr, color->size);
 }
 
 
@@ -359,7 +359,7 @@ void troveToPrettyString(huTrove const * trove, huVector * str, huSerializeOptio
         .str = str,
         .SerializeOptions = SerializeOptions,
         .currentDepth = 0,
-        .lastPrintWasNewline = false,
+        .lastPrintWasNewline = true,
         .lastPrintWasIndent = false,
         .lastPrintWasUnquotedWord = false,
         .lastPrintWasWhitespace = false
