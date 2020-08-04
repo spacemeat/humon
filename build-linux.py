@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import sys
 import os
 import os.path
 import subprocess
@@ -204,7 +205,8 @@ if __name__ == "__main__":
     ]
 
     tool = "gcc"
-    #tool = "clang"
+    if 'clang' in sys.argv:
+        tool = "clang"
 
     if not os.path.exists(buildDir):
         os.mkdir(buildDir)
@@ -237,7 +239,7 @@ if __name__ == "__main__":
         "test/wakkaTests.cpp"
     ]
     buildExe("humon-test-d", src, ["include/humon"], [binDir], ["humon-d", "CppUTest", "CppUTestExt"], True, False, tool)
-    buildExe("humon-test-r", src, ["include/humon"], [binDir], ["humon-d", "CppUTest", "CppUTestExt"], False, False, tool)
+    buildExe("humon-test-r", src, ["include/humon"], [binDir], ["humon", "CppUTest", "CppUTestExt"], False, False, tool)
 
     src = ["apps/readmeSrc/usage.c"]
     buildExe("readmeSrc-c", src, ["include/humon"], [binDir], ["humon-d"], True, True, tool)

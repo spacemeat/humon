@@ -1,9 +1,6 @@
 DONE THIS CHECKIN:
-talk about huGetAnno* works with &cursor (don't use it as an index)
-tests for fast loading
-hux command line improvements
-minor pretty printing tweak
-clang build (against gnu libstdc++)
+rename build.py to build-linux.py
+Set 'clang' as an argument of build-linux.py
 
 TODO:
 P1 doxygen
