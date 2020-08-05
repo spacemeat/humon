@@ -184,9 +184,8 @@ int huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const * path, in
         deserializeOptions = & localDeserializeOptions;
     }
 
-	FILE * fp = NULL;
-	errno_t err = fopen_s(&fp, path, "rb");
-	if (err != 0 || fp == NULL)
+	FILE * fp = openFile(path, "rb");
+	if (fp == NULL)
 	{
         printError(errorResponse, "Could not open file for reading.");
         return HU_ERROR_BADFILE;
@@ -1024,10 +1023,9 @@ int huSerializeTroveToFileN(huTrove const * trove, char const * path, int pathLe
     if (error != HU_ERROR_NOERROR)
         { free(str); return error; }
 
-	FILE * fp = NULL;
-	errno_t err = fopen_s(&fp, path, "w");
-	if (err != 0 || fp == NULL)
-	{ free(str); return HU_ERROR_BADFILE; }
+	FILE * fp = openFile(path, "w");
+	if (fp == NULL)
+	    { free(str); return HU_ERROR_BADFILE; }
 
     int writeLength = (int)fwrite(str, sizeof(char), strLength, fp);
     free(str);

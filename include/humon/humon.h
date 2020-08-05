@@ -12,6 +12,8 @@
 #else // static lib
 #define HUMON_PUBLIC
 #endif
+#else
+#define HUMON_PUBLIC
 #endif
 
 

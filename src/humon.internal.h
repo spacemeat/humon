@@ -45,6 +45,8 @@ extern "C"
     int min(int a, int b);
     int max(int a, int b);
 
+    FILE * openFile(char const * path, char const * mode);
+
     /// Returns whether a string is contained in another string.
     bool stringInString(char const * haystack, int haystackLen, char const * needle, int needleLen);
 

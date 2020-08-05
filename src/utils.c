@@ -2,6 +2,18 @@
 #include "humon.internal.h"
 
 
+FILE * openFile(char const * path, char const * mode)
+{
+    FILE * fp = NULL;
+#ifdef _MSC_VER
+    errno_t err = fopen_s(& fp, path, mode);
+#else
+    fp = fopen(path, mode);
+#endif
+    return fp;
+}
+
+
 bool stringInString(char const * haystack, int haystackLen, char const * needle, int needleLen)
 {
     // I'm unconcerned about O(m*n).
