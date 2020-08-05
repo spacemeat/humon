@@ -1,6 +1,5 @@
 DONE THIS CHECKIN:
-rename build.py to build-linux.py
-Set 'clang' as an argument of build-linux.py
+Excised (finally) the hu_null* stored NULL values, and replaced with C macros. Why can I not just use NULL? I scream, for even I cannot say.
 
 TODO:
 P1 doxygen

@@ -139,8 +139,3 @@ void huInitSerializeOptionsN(huSerializeOptions * params, int WhitespaceFormat, 
     params->newline = (huStringView) { newline, newlineSize };
     params->printBom = printBom;
 }
-
-
-huToken const * hu_nullToken = NULL;
-huNode const * hu_nullNode = NULL;
-huTrove const * hu_nullTrove = NULL;

@@ -40,7 +40,7 @@ char const * parseStateToString(int rhs)
 
 void ensureContains(huTrove * trove, huNode * node, huToken const * token)
 {
-    if (node == hu_nullNode)
+    if (node == HU_NULLNODE)
     {
         if (token > trove->lastAnnoToken)
             { trove->lastAnnoToken = token; }
@@ -173,7 +173,7 @@ void addChildNode(huTrove * trove, huNode * node, huNode * child)
     if (node->kind == HU_NODEKIND_DICT)
     {
         huStringView const * key = & child->keyToken->str;
-        if (huGetChildByKeyN(node, key->ptr, key->size) != hu_nullNode)
+        if (huGetChildByKeyN(node, key->ptr, key->size) != HU_NULLNODE)
             { recordParseError(trove, HU_ERROR_NONUNIQUEKEY, child->keyToken); }
     }
 

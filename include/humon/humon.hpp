@@ -471,7 +471,7 @@ namespace hu
     class Node
     {
     public:
-        Node() HUMON_NOEXCEPT : cnode(capi::hu_nullNode) { }
+        Node() HUMON_NOEXCEPT : cnode(HU_NULLNODE) { }
         Node(capi::huNode const * cnode) HUMON_NOEXCEPT : cnode(cnode) { }
         /// Return whether two Node objects refer to the same node.
         friend bool operator == (Node const & lhs, Node const & rhs) HUMON_NOEXCEPT
@@ -494,13 +494,13 @@ namespace hu
             { check(); return static_cast<NodeKind>(
                 isValid() ? cnode->kind : capi::HU_NODEKIND_NULL); }
         Token firstToken() const HUMON_NOEXCEPT           ///< Returns the first token which contributes to this node, including any annotation and comment tokens.
-            { check(); return Token(isValid() ? cnode->firstToken : capi::hu_nullToken); }
+            { check(); return Token(isValid() ? cnode->firstToken : HU_NULLTOKEN); }
         Token firstValueToken() const HUMON_NOEXCEPT      ///< Returns the first token of this node's actual value; for a container, it points to the opening brac(e|ket).
-            { check(); return Token(isValid() ? cnode->valueToken : capi::hu_nullToken); }
+            { check(); return Token(isValid() ? cnode->valueToken : HU_NULLTOKEN); }
         Token lastValueToken() const HUMON_NOEXCEPT       ///< Returns the last token of this node's actual value; for a container, it points to the closing brac(e|ket).
-            { check(); return Token(isValid() ? cnode->lastValueToken : capi::hu_nullToken); }
+            { check(); return Token(isValid() ? cnode->lastValueToken : HU_NULLTOKEN); }
         Token lastToken() const HUMON_NOEXCEPT            ///< Returns the last token of this node, including any annotation and comment tokens.
-            { check(); return Token(isValid() ? cnode->lastToken :  capi::hu_nullToken); }
+            { check(); return Token(isValid() ? cnode->lastToken :  HU_NULLTOKEN); }
         Node parent() const HUMON_NOEXCEPT                ///< Returns the parent node of this node, or the null node if this is the root.
             { check(); return Node(capi::huGetParent(cnode)); }
         int childOrdinal() const HUMON_NOEXCEPT           ///< Returns the index of this node vis a vis its sibling nodes (starting at 0).
@@ -528,9 +528,9 @@ namespace hu
         bool hasKey() const HUMON_NOEXCEPT                ///< Returns whether this node has a key. (If it's in a dict.)
             { check(); return capi::huHasKey(cnode); }
         Token key() const HUMON_NOEXCEPT                  ///< Returns the key token, or the null token if this is not in a dict.
-            { check(); return Token(isValid() ? cnode->keyToken : capi::hu_nullToken); }
+            { check(); return Token(isValid() ? cnode->keyToken : HU_NULLTOKEN); }
         Token value() const HUMON_NOEXCEPT                ///< Returns the first value token that encodes this node.
-            { check(); return Token(isValid() ? cnode->valueToken : capi::hu_nullToken); }
+            { check(); return Token(isValid() ? cnode->valueToken : HU_NULLTOKEN); }
         int numAnnotations() const HUMON_NOEXCEPT         ///< Returns the number of annotations associated to this node.
             { check(); return capi::huGetNumAnnotations(cnode); }
 
@@ -542,7 +542,7 @@ namespace hu
             check();
             auto canno = capi::huGetAnnotation(cnode, idx);
             if (canno == nullptr)
-                return { Token(capi::hu_nullToken), Token(capi::hu_nullToken) };
+                return { Token(HU_NULLTOKEN), Token(HU_NULLTOKEN) };
             return { Token(canno->key), Token(canno->value) };
         }
 
@@ -590,13 +590,13 @@ namespace hu
             check();
             std::vector<Token> vec;
             int cursor = 0;
-            capi::huToken const * tok = capi::hu_nullToken;
+            capi::huToken const * tok = HU_NULLTOKEN;
             do
             {
                 tok = capi::huGetAnnotationWithValueN(cnode, value.data(), value.size(), & cursor);
                 if (tok)
                     { vec.push_back(tok); }
-            } while (tok != capi::hu_nullToken);
+            } while (tok != HU_NULLTOKEN);
             
             return vec;
         }
@@ -639,7 +639,7 @@ namespace hu
                 comm = capi::huGetCommentsContainingN(cnode, containedString.data(), containedString.size(), & cursor);
                 if (comm)
                     { vec.emplace_back(comm); }
-            } while (comm != capi::hu_nullToken);
+            } while (comm != HU_NULLTOKEN);
 
             return vec;
         }
@@ -682,7 +682,7 @@ namespace hu
 #endif
                 return Node(ch);
             }
-            return Node(capi::hu_nullNode);
+            return Node(HU_NULLNODE);
         }
 
         /// Returns the child of this node by key.
@@ -698,7 +698,7 @@ namespace hu
 #endif
                 return Node(ch);
             }
-            return Node(capi::hu_nullNode);
+            return Node(HU_NULLNODE);
         }
 
         /// Return the parent of this node.
@@ -713,7 +713,7 @@ namespace hu
 #endif
                 return parent();
             }
-            return Node(capi::hu_nullNode);
+            return Node(HU_NULLNODE);
         }
 
         /// Returns the converted value of this value node.
@@ -789,7 +789,7 @@ namespace hu
             DeserializeOptions deserializeOptions = { Encoding::utf8 }, 
             ErrorResponse errorRespose = ErrorResponse::stderrAnsiColor) HUMON_NOEXCEPT
         {
-            capi::huTrove const * trove = capi::hu_nullTrove;
+            capi::huTrove const * trove = HU_NULLTROVE;
             int error = capi::huDeserializeTroveN(& trove, data.data(), data.size(), 
                 & deserializeOptions.cparams, static_cast<int>(errorRespose));
 
@@ -810,7 +810,7 @@ namespace hu
             DeserializeOptions deserializeOptions = { Encoding::utf8 }, 
             ErrorResponse errorRespose = ErrorResponse::stderrAnsiColor) HUMON_NOEXCEPT
         {
-            capi::huTrove const * trove = capi::hu_nullTrove;
+            capi::huTrove const * trove = HU_NULLTROVE;
             int error = capi::huDeserializeTroveN(& trove, data, dataLen, 
                 & deserializeOptions.cparams, static_cast<int>(errorRespose));
             if (error != capi::HU_ERROR_NOERROR &&
@@ -830,7 +830,7 @@ namespace hu
             DeserializeOptions deserializeOptions = { Encoding::unknown }, 
             ErrorResponse errorRespose = ErrorResponse::stderrAnsiColor) HUMON_NOEXCEPT
         {
-            capi::huTrove const * trove = capi::hu_nullTrove;
+            capi::huTrove const * trove = HU_NULLTROVE;
             int error = capi::huDeserializeTroveFromFileN(& trove, path.data(), path.size(), 
                 & deserializeOptions.cparams, static_cast<int>(errorRespose));
             if (error != capi::HU_ERROR_NOERROR &&
@@ -878,14 +878,14 @@ namespace hu
     public:
         Trove(Trove && rhs) HUMON_NOEXCEPT
         {
-            ctrove = capi::hu_nullTrove;
+            ctrove = HU_NULLTROVE;
             std::swap(ctrove, rhs.ctrove);
         }
 
         /// Destruct a Trove.
         ~Trove()
         {
-            if (ctrove && ctrove != capi::hu_nullTrove)
+            if (ctrove && ctrove != HU_NULLTROVE)
                 { capi::huDestroyTrove(ctrove); }
         }
 
@@ -897,7 +897,7 @@ namespace hu
             if (ctrove)
             {
                 capi::huDestroyTrove(ctrove);
-                ctrove = capi::hu_nullTrove;
+                ctrove = HU_NULLTROVE;
             }
             std::swap(ctrove, rhs.ctrove);
             return * this;
@@ -910,7 +910,7 @@ namespace hu
         // C++20: <=> when it's available.
 
         bool isValid() const HUMON_NOEXCEPT       ///< Returns whether the trove is null (not valid).
-            { return ctrove != capi::hu_nullTrove && numErrors() == 0; }
+            { return ctrove != HU_NULLTROVE && numErrors() == 0; }
         bool isNull() const HUMON_NOEXCEPT        ///< Returns whether the trove is null (not valid).
             { return ctrove == nullptr; }
         operator bool () const HUMON_NOEXCEPT     ///< Returns whether the trove is valid (not null).
@@ -999,13 +999,13 @@ namespace hu
             check();
             std::vector<Token> vec;
             int cursor = 0;
-            capi::huToken const * tok = capi::hu_nullToken;
+            capi::huToken const * tok = HU_NULLTOKEN;
             do
             {
                 tok = capi::huGetTroveAnnotationWithValueN(ctrove, value.data(), value.size(), & cursor);
                 if (tok)
                     { vec.push_back(tok); }
-            } while (tok != capi::hu_nullToken);
+            } while (tok != HU_NULLTOKEN);
             
             return vec;
         }
@@ -1038,13 +1038,13 @@ namespace hu
         {
             std::vector<Node> vec;
             int cursor = 0;
-            capi::huNode const * node = capi::hu_nullNode;
+            capi::huNode const * node = HU_NULLNODE;
             do
             {
                 node = capi::huFindNodesWithAnnotationKeyN(ctrove, key.data(), key.size(), & cursor);
                 if (node)
                     { vec.emplace_back(node); }
-            } while(node != capi::hu_nullNode);
+            } while(node != HU_NULLNODE);
             return vec;
         }
 
@@ -1054,13 +1054,13 @@ namespace hu
         {
             std::vector<Node> vec;
             int cursor = 0;
-            capi::huNode const * node = capi::hu_nullNode;
+            capi::huNode const * node = HU_NULLNODE;
             do
             {
                 node = capi::huFindNodesWithAnnotationValueN(ctrove, value.data(), value.size(), & cursor);
                 if (node)
                     { vec.emplace_back(node); }
-            } while(node != capi::hu_nullNode);
+            } while(node != HU_NULLNODE);
             return vec;
         }
 
@@ -1070,13 +1070,13 @@ namespace hu
         {
             std::vector<Node> vec;
             int cursor = 0;
-            capi::huNode const * node = capi::hu_nullNode;
+            capi::huNode const * node = HU_NULLNODE;
             do
             {
                 node = capi::huFindNodesWithAnnotationKeyValueNN(ctrove, key.data(), key.size(), value.data(), value.size(), & cursor);
                 if (node)
                     { vec.emplace_back(node); }
-            } while(node != capi::hu_nullNode);
+            } while(node != HU_NULLNODE);
             return vec;
         }
 
@@ -1086,13 +1086,13 @@ namespace hu
         {
             std::vector<Node> vec;
             int cursor = 0;
-            capi::huNode const * node = capi::hu_nullNode;
+            capi::huNode const * node = HU_NULLNODE;
             do
             {
                 node = capi::huFindNodesByCommentContainingN(ctrove, containedText.data(), containedText.size(), & cursor);
                 if (node)
                     { vec.emplace_back(Node(node)); }
-            } while(node != capi::hu_nullNode);
+            } while(node != HU_NULLNODE);
             return vec;
         }
 
@@ -1206,7 +1206,7 @@ namespace hu
                 { throw std::runtime_error("Illegal path entry"); }
 #endif
             if (ch == nullptr)
-                { return Node(capi::hu_nullNode); }
+                { return Node(HU_NULLNODE); }
             ch = capi::huGetChildByIndex(ch, idx);
 #ifdef HUMON_USE_NODE_PATH_EXCEPTIONS
             if (ch == nullptr)
@@ -1223,7 +1223,7 @@ namespace hu
                 { throw std::runtime_error("Illegal path entry"); }
 #endif
             if (ch == nullptr)
-                { return Node(capi::hu_nullNode); }
+                { return Node(HU_NULLNODE); }
             ch = capi::huGetChildByKeyN(ch, key.data(), key.size());
 #ifdef HUMON_USE_NODE_PATH_EXCEPTIONS
             if (ch == nullptr)

@@ -410,7 +410,7 @@ And, if you intend to actually use the data (probably, right?), it may be even b
 
 Above, `foosStuff` will be a nullish* object if any part of the path doesn't actually exist in the Humon source. It's all in one succinct line of code, though this is harder to debug; if the path is invalid, it may be hard to check which part of the path fell off of reality. So use this compact query style with caution.
 
-> *nullish* objects are `hu::Trove`, `hu::Node`, or `hu::Token` objects that manage a null pointer. `hu_nullTrove`, `hu_nullNode`, and `hu_nullToken` are aliases to `NULL`. Operations on these objects will return other nullish objects, or `nullptr` as appropriate.
+> *nullish* objects are `hu::Trove`, `hu::Node`, or `hu::Token` objects that manage a null pointer. `HU_NULLTROVE`, `HU_NULLNODE`, and `HU_NULLTOKEN` are aliases to `NULL`. Operations on these objects will return other nullish objects, or `nullptr` as appropriate.
 
 Up to now, we've mostly been using `operator /` to get nodes. But there's a string-based addressing method as well. Every node has a unique address based on the progression of keys and indices used to get to it from the trove or another node. You can get a node's address easily enough:
 

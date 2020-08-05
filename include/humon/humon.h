@@ -8,6 +8,10 @@ extern "C"
 {
 #endif
 
+    #define HU_NULLTOKEN    (NULL)
+    #define HU_NULLNODE     (NULL)
+    #define HU_NULLTROVE    (NULL)
+
     /// Specifies the supported Unicode encodings.
     enum huEncoding
     {
@@ -481,7 +485,6 @@ extern "C"
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
     huNode const * huFindNodesWithAnnotationKeyValueNN(huTrove const * trove, char const * key, int keyLen, char const * value, int valueLen, int * cursor);
-
     /// Returns a collection of all nodes in a trove with a comment which contains specific text.
     /** Call this function continually to iterate over all the comments. For `cursor`, be sure 
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls 
@@ -513,10 +516,6 @@ extern "C"
 
     /// Fills an array of HU_COLORCODE_NUMCOLORS huStringViews with ANSI terminal color codes for printing to console.
     void huFillAnsiColorTable(huStringView table[]);
-
-    extern huToken const * hu_nullToken;
-    extern huNode const * hu_nullNode;
-    extern huTrove const * hu_nullTrove;
 
 #ifdef __cplusplus
 } // extern "C"

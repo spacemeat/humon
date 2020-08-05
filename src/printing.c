@@ -259,7 +259,7 @@ static void printNode(PrintTracker * printer, huNode const * node)
     huNode const * parentNode = huGetParent(node);
 
     // print key if we have one
-    if (parentNode != hu_nullNode && parentNode->kind == HU_NODEKIND_DICT)
+    if (parentNode != HU_NULLNODE && parentNode->kind == HU_NODEKIND_DICT)
     {
         appendColoredToken(printer, node->keyToken, HU_COLORCODE_KEY);
         appendColoredString(printer, ":", 1, HU_COLORCODE_PUNCKEYVALUESEP);
