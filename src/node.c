@@ -79,7 +79,7 @@ huNode const * huGetChildByKeyZ(huNode const * node, char const * key)
         { return HU_NULLNODE; }
 #endif
 
-    return huGetChildByKeyN(node, key, strlen(key));
+    return huGetChildByKeyN(node, key, (int) strlen(key));
 }
 
 
@@ -228,7 +228,7 @@ huNode const * huGetRelativeZ(huNode const * node, char const * address)
         { return HU_NULLNODE; }
 #endif
 
-    return huGetRelativeN(node, address, strlen(address));
+    return huGetRelativeN(node, address, (int) strlen(address));
 }
 
 
@@ -361,27 +361,27 @@ huNode const * huGetRelativeN(huNode const * node, char const * address, int add
 // This is kinda fugly. But for most cases (x < 1000) it's probably fine.
 static int log10i(unsigned int x)
 {
-         if (x < 1 * 10) { return 0; }
-    else if (x < 1 * 100) { return 1; }
-    else if (x < 1 * 1000) { return 2; }
-    else if (x < 1 * 1000 * 10) { return 3; }
-    else if (sizeof(int) == 2) { return 4; }
-    else if (x < 1 * 1000 * 100) { return 4; }
-    else if (x < 1 * 1000 * 1000) { return 5; }
-    else if (x < 1 * 1000 * 1000 * 10) { return 6; }
-    else if (x < 1 * 1000 * 1000 * 100) { return 7; }
-    else if (x < 1 * 1000 * 1000 * 1000) { return 8; }
-    else if (sizeof(int) == 4) { return 9; }
-    else if (x < 1L * 1000 * 1000 * 1000 * 10) { return 9; }
-    else if (x < 1L * 1000 * 1000 * 1000 * 100) { return 10; }
-    else if (x < 1L * 1000 * 1000 * 1000 * 1000) { return 11; }
-    else if (x < 1L * 1000 * 1000 * 1000 * 1000 * 10) { return 12; }
-    else if (x < 1L * 1000 * 1000 * 1000 * 1000 * 100) { return 13; }
-    else if (x < 1L * 1000 * 1000 * 1000 * 1000 * 1000) { return 14; }
-    else if (x < 1L * 1000 * 1000 * 1000 * 1000 * 1000 * 10) { return 15; }
-    else if (x < 1L * 1000 * 1000 * 1000 * 1000 * 1000 * 100) { return 16; }
-    else if (x < 1L * 1000 * 1000 * 1000 * 1000 * 1000 * 1000) { return 17; }
-    else { return 18; }
+		 if (x < (int16_t)1 * 10) { return 0; }
+	else if (x < (int16_t)1 * 100) { return 1; }
+	else if (x < (int16_t)1 * 1000) { return 2; }
+	else if (x < (int16_t)1 * 1000 * 10) { return 3; }
+	else if (sizeof(int) == 2) { return 4; }
+	else if (x < (int32_t)1 * 1000 * 100) { return 4; }
+	else if (x < (int32_t)1 * 1000 * 1000) { return 5; }
+	else if (x < (int32_t)1 * 1000 * 1000 * 10) { return 6; }
+	else if (x < (int32_t)1 * 1000 * 1000 * 100) { return 7; }
+	else if (x < (int32_t)1 * 1000 * 1000 * 1000) { return 8; }
+	else if (sizeof(int) == 4) { return 9; }
+	else if (x < (int64_t)1 * 1000 * 1000 * 1000 * 10) { return 9; }
+	else if (x < (int64_t)1 * 1000 * 1000 * 1000 * 100) { return 10; }
+	else if (x < (int64_t)1 * 1000 * 1000 * 1000 * 1000) { return 11; }
+	else if (x < (int64_t)1 * 1000 * 1000 * 1000 * 1000 * 10) { return 12; }
+	else if (x < (int64_t)1 * 1000 * 1000 * 1000 * 1000 * 100) { return 13; }
+	else if (x < (int64_t)1 * 1000 * 1000 * 1000 * 1000 * 1000) { return 14; }
+	else if (x < (int64_t)1 * 1000 * 1000 * 1000 * 1000 * 1000 * 10) { return 15; }
+	else if (x < (int64_t)1 * 1000 * 1000 * 1000 * 1000 * 1000 * 100) { return 16; }
+	else if (x < (int64_t)1 * 1000 * 1000 * 1000 * 1000 * 1000 * 1000) { return 17; }
+	else { return 18; }
 }
 
 
@@ -441,12 +441,12 @@ static void getNodeAddressRec(huNode const * node, PrintTracker * printer)
                 {
                     if (* sp == '"')
                     {
-                        appendString(printer, blockBegin, sp - blockBegin);
+                        appendString(printer, blockBegin, (int)(sp - blockBegin));
                         appendString(printer, "\\\"", 2);
                         blockBegin = sp + 1;
                     }
                 }
-                appendString(printer, blockBegin, key->ptr + key->size - blockBegin);
+                appendString(printer, blockBegin, (int)(key->ptr + key->size - blockBegin));
                 appendString(printer, "\"", 1);
                 return;
             }
@@ -544,7 +544,7 @@ huStringView huGetTokenStream(huNode const * node)
         { end += 1; }
     
     str.ptr = start;
-    str.size = end - start;
+    str.size = (int)(end - start);
     
     return str;
 }
@@ -582,7 +582,7 @@ bool huHasAnnotationWithKeyZ(huNode const * node, char const * key)
         { return false; }
 #endif
 
-    return huHasAnnotationWithKeyN(node, key, strlen(key));
+    return huHasAnnotationWithKeyN(node, key, (int) strlen(key));
 }
 
 
@@ -612,7 +612,7 @@ huToken const * huGetAnnotationWithKeyZ(huNode const * node, char const * key)
         { return HU_NULLTOKEN; }
 #endif
 
-    return huGetAnnotationWithKeyN(node, key, strlen(key));
+    return huGetAnnotationWithKeyN(node, key, (int) strlen(key));
 }
 
 
@@ -642,7 +642,7 @@ int huGetNumAnnotationsWithValueZ(huNode const * node, char const * value)
         { return 0; }
 #endif
 
-    return huGetNumAnnotationsWithValueN(node, value, strlen(value));
+    return huGetNumAnnotationsWithValueN(node, value, (int) strlen(value));
 }
 
 
@@ -673,7 +673,7 @@ huToken const * huGetAnnotationWithValueZ(huNode const * node, char const * valu
         { return HU_NULLTOKEN; }
 #endif
 
-    return huGetAnnotationWithValueN(node, value, strlen(value), cursor);
+    return huGetAnnotationWithValueN(node, value, (int) strlen(value), cursor);
 }
 
 
@@ -728,10 +728,10 @@ bool huHasCommentsContainingZ(huNode const * node, char const * containedText)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (containedText == NULL)
-        { return HU_NULLTOKEN; }
+        { return false; }
 #endif
 
-    return huHasCommentsContainingN(node, containedText, strlen(containedText));
+    return huHasCommentsContainingN(node, containedText, (int) strlen(containedText));
 }
 
 
@@ -739,7 +739,7 @@ bool huHasCommentsContainingN(huNode const * node, char const * containedText, i
 {
 #ifdef HUMON_CHECK_PARAMS
     if (node == HU_NULLNODE || containedText == NULL || containedTextLen < 0)
-        { return 0; }
+        { return false; }
 #endif
 
     for (int idx = 0; idx < node->comments.numElements; ++ idx)
@@ -761,7 +761,7 @@ int huGetNumCommentsContainingZ(huNode const * node, char const * containedText)
         { return 0; }
 #endif
 
-    return huGetNumCommentsContainingN(node, containedText, strlen(containedText));
+    return huGetNumCommentsContainingN(node, containedText, (int) strlen(containedText));
 }
 
 
@@ -792,7 +792,7 @@ huToken const * huGetCommentsContainingZ(huNode const * node, char const * conta
         { return HU_NULLTOKEN; }
 #endif
 
-    return huGetCommentsContainingN(node, containedText, strlen(containedText), cursor);
+    return huGetCommentsContainingN(node, containedText, (int) strlen(containedText), cursor);
 }
 
 

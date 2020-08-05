@@ -122,7 +122,7 @@ void huInitSerializeOptionsZ(huSerializeOptions * params, int WhitespaceFormat, 
     char const * newline, bool printBom)
 {
     huInitSerializeOptionsN(params, WhitespaceFormat, indentSize, indentWithTabs, usingColors, colorTable, 
-        printComments, newline, strlen(newline), printBom);
+        printComments, newline, (int)strlen(newline), printBom);
 }
 
 

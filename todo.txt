@@ -1,9 +1,8 @@
 DONE THIS CHECKIN:
-Excised (finally) the hu_null* stored NULL values, and replaced with C macros. Why can I not just use NULL? I scream, for even I cannot say.
+Visual Studio 2017 support.
 
 TODO:
 P1 doxygen
-P1 Visual Studio
 P2 Improved error state transitions
 P2 vcpkg
 P2 string sizes should be size_t?

@@ -33,7 +33,7 @@ int huDeserializeTroveZ(huTrove const ** trovePtr, char const * data, huDeserial
         { return HU_ERROR_BADPARAMETER; }
 #endif
 
-    return huDeserializeTroveN(trovePtr, data, strlen(data), deserializeOptions, errorResponse);
+    return huDeserializeTroveN(trovePtr, data, (int) strlen(data), deserializeOptions, errorResponse);
 }
 
 
@@ -133,7 +133,7 @@ int huDeserializeTroveN(huTrove const ** trovePtr, char const * data, int dataLe
     newData[transcodedLen + 3] = '\0';
 
     trove->dataString = newData;
-    trove->dataStringSize = transcodedLen;
+    trove->dataStringSize = (int) transcodedLen;
 
     // Errors here are recorded in the trove object.
     tokenizeTrove(trove);
@@ -155,7 +155,7 @@ int huDeserializeTroveFromFileZ(huTrove const ** trovePtr, char const * path, hu
         { return HU_ERROR_BADPARAMETER; }
 #endif
 
-    return huDeserializeTroveFromFileN(trovePtr, path, strlen(path), deserializeOptions, errorResponse);
+    return huDeserializeTroveFromFileN(trovePtr, path, (int)strlen(path), deserializeOptions, errorResponse);
 }
 
 
@@ -184,9 +184,10 @@ int huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const * path, in
         deserializeOptions = & localDeserializeOptions;
     }
 
-    FILE * fp = fopen(path, "rb");
-    if (fp == NULL)
-    {
+	FILE * fp = NULL;
+	errno_t err = fopen_s(&fp, path, "rb");
+	if (err != 0 || fp == NULL)
+	{
         printError(errorResponse, "Could not open file for reading.");
         return HU_ERROR_BADFILE;
     }
@@ -265,7 +266,7 @@ int huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const * path, in
     newData[transcodedLen + 3] = '\0';
 
     trove->dataString = newData;
-    trove->dataStringSize = transcodedLen;
+    trove->dataStringSize = (int)transcodedLen;
 
     tokenizeTrove(trove);
     parseTrove(trove);
@@ -399,7 +400,7 @@ huNode const * huGetNodeByAddressZ(huTrove const * trove, char const * address)
         { return HU_NULLNODE; }
 #endif
 
-    return huGetNodeByAddressN(trove, address, strlen(address));
+    return huGetNodeByAddressN(trove, address, (int)strlen(address));
 }
 
 
@@ -494,7 +495,7 @@ bool huTroveHasAnnotationWithKeyZ(huTrove const * trove, char const * key)
         { return false; }
 #endif
 
-    return huTroveHasAnnotationWithKeyN(trove, key, strlen(key));
+    return huTroveHasAnnotationWithKeyN(trove, key, (int)strlen(key));
 }
 
 
@@ -524,7 +525,7 @@ huToken const * huGetTroveAnnotationWithKeyZ(huTrove const * trove, char const *
         { return HU_NULLTOKEN; }
 #endif
 
-    return huGetTroveAnnotationWithKeyN(trove, key, strlen(key));
+    return huGetTroveAnnotationWithKeyN(trove, key, (int)strlen(key));
 }
 
 
@@ -554,7 +555,7 @@ int huGetNumTroveAnnotationsWithValueZ(huTrove const * trove, char const * value
         { return 0; }
 #endif
 
-    return huGetNumTroveAnnotationsWithValueN(trove, value, strlen(value));
+    return huGetNumTroveAnnotationsWithValueN(trove, value, (int)strlen(value));
 }
 
 
@@ -585,7 +586,7 @@ huToken const * huGetTroveAnnotationWithValueZ(huTrove const * trove, char const
         { return HU_NULLTOKEN; }
 #endif
 
-    return huGetTroveAnnotationWithValueN(trove, value, strlen(value), cursor);
+    return huGetTroveAnnotationWithValueN(trove, value, (int)strlen(value), cursor);
 }
 
 
@@ -644,7 +645,7 @@ huNode const * huFindNodesWithAnnotationKeyZ(huTrove const * trove, char const *
        { return HU_NULLNODE; }
 #endif
 
-    return huFindNodesWithAnnotationKeyN(trove, key, strlen(key), cursor);
+    return huFindNodesWithAnnotationKeyN(trove, key, (int)strlen(key), cursor);
 }
 
 
@@ -678,7 +679,7 @@ huNode const * huFindNodesWithAnnotationValueZ(huTrove const * trove, char const
        { return HU_NULLNODE; }
 #endif
 
-    return huFindNodesWithAnnotationValueN(trove, value, strlen(value), cursor);
+    return huFindNodesWithAnnotationValueN(trove, value, (int)strlen(value), cursor);
 }
 
 
@@ -712,7 +713,7 @@ huNode const * huFindNodesWithAnnotationKeyValueZZ(huTrove const * trove, char c
        { return HU_NULLNODE; }
 #endif
 
-    return huFindNodesWithAnnotationKeyValueNN(trove, key, strlen(key), value, strlen(value), cursor);
+    return huFindNodesWithAnnotationKeyValueNN(trove, key, (int)strlen(key), value, (int)strlen(value), cursor);
 }
 
 
@@ -723,7 +724,7 @@ huNode const * huFindNodesWithAnnotationKeyValueNZ(huTrove const * trove, char c
        { return HU_NULLNODE; }
 #endif
 
-    return huFindNodesWithAnnotationKeyValueNN(trove, key, keyLen, value, strlen(value), cursor);
+    return huFindNodesWithAnnotationKeyValueNN(trove, key, keyLen, value, (int)strlen(value), cursor);
 }
 
 
@@ -734,7 +735,7 @@ huNode const * huFindNodesWithAnnotationKeyValueZN(huTrove const * trove, char c
        { return HU_NULLNODE; }
 #endif
 
-    return huFindNodesWithAnnotationKeyValueNN(trove, key, strlen(key), value, valueLen, cursor);
+    return huFindNodesWithAnnotationKeyValueNN(trove, key, (int)strlen(key), value, valueLen, cursor);
 }
 
 
@@ -772,7 +773,7 @@ huNode const * huFindNodesByCommentContainingZ(huTrove const * trove, char const
        { return HU_NULLNODE; }
 #endif
 
-    return huFindNodesByCommentContainingN(trove, containedText, strlen(containedText), cursor);
+    return huFindNodesByCommentContainingN(trove, containedText, (int)strlen(containedText), cursor);
 }
 
 
@@ -807,7 +808,7 @@ huNode * allocNewNode(huTrove * trove, int nodeKind, huToken const * firstToken)
         { return (huNode *) HU_NULLNODE; }
 
     initNode(newNode, trove);
-    int newNodeIdx = newNode - (huNode *) trove->nodes.buffer;
+    int newNodeIdx = (int)(newNode - (huNode *) trove->nodes.buffer);
     newNode->nodeIdx = newNodeIdx;
     newNode->kind = nodeKind;
     newNode->firstToken = firstToken;
@@ -991,7 +992,7 @@ int huSerializeTroveToFileZ(huTrove const * trove, char const * path, int * dest
         { return HU_ERROR_BADPARAMETER; }
 #endif
 
-    return huSerializeTroveToFileN(trove, path, strlen(path), destLength, SerializeOptions);
+    return huSerializeTroveToFileN(trove, path, (int)strlen(path), destLength, SerializeOptions);
 }
 
 int huSerializeTroveToFileN(huTrove const * trove, char const * path, int pathLen, int * destLength, huSerializeOptions * SerializeOptions)
@@ -1023,11 +1024,12 @@ int huSerializeTroveToFileN(huTrove const * trove, char const * path, int pathLe
     if (error != HU_ERROR_NOERROR)
         { free(str); return error; }
 
-    FILE * fp = fopen(path, "w");
-    if (fp == NULL)
-        { free(str); return HU_ERROR_BADFILE; }
+	FILE * fp = NULL;
+	errno_t err = fopen_s(&fp, path, "w");
+	if (err != 0 || fp == NULL)
+	{ free(str); return HU_ERROR_BADFILE; }
 
-    int writeLength = fwrite(str, sizeof(char), strLength, fp);
+    int writeLength = (int)fwrite(str, sizeof(char), strLength, fp);
     free(str);
     if (writeLength != strLength)
         { return HU_ERROR_BADFILE; }

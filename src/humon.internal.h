@@ -5,11 +5,27 @@
 #include "ansiColors.h"
 
 
-// The following are options you can set before #include <humon.h>
+// Even <stdlib.h> defines these macros in Visual Studio 2017 unless you 
+// switch off language extensions, in which case the compiler uses C89.
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
+
+// The following are switches that can be set when building Humon. They
+// are not referenced in public headers, so they don't need to be set by
+// a project that uses the Humon library.
+
+/// Sets the allocation block size for swagging an endocing.
+#ifndef HUMON_SWAG_BLOCKSIZE
+#define HUMON_SWAG_BLOCKSIZE		(64)	// checks a cache line at a time
+#endif
 
 /// Sets the stack-allocated block size for reading from file.
-#ifndef HUMON_FILE_BLOCK_SIZE
-#define HUMON_FILE_BLOCK_SIZE       (1 << 16)
+#ifndef HUMON_FILE_BLOCKSIZE
+#define HUMON_FILE_BLOCKSIZE        (1 << 16)
 #endif
 
 /// Option to skip parameter checks for faster invocations.

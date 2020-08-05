@@ -3,6 +3,18 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+
+#ifdef _MSC_VER
+#ifdef HUMON_BUILDING_DLL
+#define HUMON_PUBLIC __declspec(dllexport)
+#elif HUMON_USING_DLL
+#define HUMON_PUBLIC __declspec(dllimport)
+#else // static lib
+#define HUMON_PUBLIC
+#endif
+#endif
+
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -24,7 +36,7 @@ extern "C"
     };
 
     /// Returns a string representation of a huTokenKind.
-    char const * huEncodingToString(int rhs);
+	HUMON_PUBLIC char const * huEncodingToString(int rhs);
 
     /// Specifies the kind of data represented by a particular huToken.
     enum huTokenKind
@@ -42,7 +54,7 @@ extern "C"
     };
 
     /// Returns a string representation of a huTokenKind.
-    char const * huTokenKindToString(int rhs);
+	HUMON_PUBLIC char const * huTokenKindToString(int rhs);
 
     /// Specifies the kind of node represented by a particular huNode.
     enum huNodeKind
@@ -54,7 +66,7 @@ extern "C"
     };
 
     /// Returns a string representation of a huNodeKind.
-    char const * huNodeKindToString(int rhs);
+	HUMON_PUBLIC char const * huNodeKindToString(int rhs);
 
     /// Specifies the style of whitespacing in Humon text.
     enum huWhitespaceFormat
@@ -65,7 +77,7 @@ extern "C"
     };
 
     /// Returns a string representation of a huWhitespaceFormat.
-   char const * huWhitespaceFormatToString(int rhs);
+	HUMON_PUBLIC char const * huWhitespaceFormatToString(int rhs);
 
     /// Specifies a tokenizing or parsing error code, or lookup error.
     enum huErrorCode
@@ -87,7 +99,7 @@ extern "C"
     };
 
     /// Returns a string representation of a huErrorCode.
-    char const * huOutputErrorToString(int rhs);
+	HUMON_PUBLIC char const * huOutputErrorToString(int rhs);
 
     /// Specifies how a trove responds to errors.
     enum huErrorResponse
@@ -135,7 +147,7 @@ extern "C"
      * elements. Several Humon functions return huVectors, which 
      * own allocated heap memory to represent an array of
      * arbitrary-sized objects. No functions take them as 
-     * parameters, and there is no public functions that
+     * parameters, and there is no HUMON_PUBLIC functions that
      * initialize a huVector. The huVector object always owns
      * its memory buffer, so when one goes out of scope, the
      * user should free() the buffer pointer.
@@ -213,7 +225,7 @@ extern "C"
     } huDeserializeOptions;
 
     /// Fill in a huDeserializeOptions struct quickly.
-    void huInitDeserializeOptions(huDeserializeOptions * params, int encoding, bool strictUnicode, int tabSize);
+	HUMON_PUBLIC void huInitDeserializeOptions(huDeserializeOptions * params, int encoding, bool strictUnicode, int tabSize);
 
     /// Encapsulates a selection of parameters to control the serialization of a trove.
     typedef struct huSerializeOptions_tag
@@ -231,10 +243,10 @@ extern "C"
     struct huTrove_tag;
 
     /// Fill in a huSerializeOptions struct quickly.
-    void huInitSerializeOptionsZ(huSerializeOptions * params, int WhitespaceFormat, int indentSize, bool indentWithTabs, 
+	HUMON_PUBLIC void huInitSerializeOptionsZ(huSerializeOptions * params, int WhitespaceFormat, int indentSize, bool indentWithTabs,
         bool usingColors, huStringView const * colorTable,  bool printComments, char const * newline, bool printBom);
     /// Fill in a huSerializeOptions struct quickly.
-    void huInitSerializeOptionsN(huSerializeOptions * params, int WhitespaceFormat, int indentSize, bool indentWithTabs, 
+	HUMON_PUBLIC void huInitSerializeOptionsN(huSerializeOptions * params, int WhitespaceFormat, int indentSize, bool indentWithTabs,
         bool usingColors, huStringView const * colorTable,  bool printComments, char const * newline, int newlineSize, bool printBom);
 
     /// Encodes a Humon data node.
@@ -262,91 +274,91 @@ extern "C"
     } huNode;
 
     /// Gets a pointer to a node's parent.
-    huNode const * huGetParent(huNode const * node);
+	HUMON_PUBLIC huNode const * huGetParent(huNode const * node);
     /// Gets the number of children a node has.
-    int huGetNumChildren(huNode const * node);
+	HUMON_PUBLIC int huGetNumChildren(huNode const * node);
     /// Gets a child of a node by child index.
-    huNode const * huGetChildByIndex(huNode const * node, int childOrdinal);
+	HUMON_PUBLIC huNode const * huGetChildByIndex(huNode const * node, int childOrdinal);
     /// Gets a child of a node by key.
-    huNode const * huGetChildByKeyZ(huNode const * node, char const * key);
+	HUMON_PUBLIC huNode const * huGetChildByKeyZ(huNode const * node, char const * key);
     /// Gets a child of a node by key.
-    huNode const * huGetChildByKeyN(huNode const * node, char const * key, int keyLen);
+	HUMON_PUBLIC huNode const * huGetChildByKeyN(huNode const * node, char const * key, int keyLen);
     /// Gets the first child of node (index 0).
-    huNode const * huGetFirstChild(huNode const * node);
+	HUMON_PUBLIC huNode const * huGetFirstChild(huNode const * node);
     /// Returns the next sibling in the child index order of a node.
-    huNode const * huGetNextSibling(huNode const * node);
+	HUMON_PUBLIC huNode const * huGetNextSibling(huNode const * node);
 
     /// Looks up a node by relative address to a node.    
-    huNode const * huGetRelativeZ(huNode const * node, char const * address);
+	HUMON_PUBLIC huNode const * huGetRelativeZ(huNode const * node, char const * address);
     /// Looks up a node by relative address to a node.    
-    huNode const * huGetRelativeN(huNode const * node, char const * address, int addressLen);
+	HUMON_PUBLIC huNode const * huGetRelativeN(huNode const * node, char const * address, int addressLen);
 
     /// Gets the full address of a node, or the length of that address.
-    void huGetAddress(huNode const * node, char * address, int * addressLen);
+	HUMON_PUBLIC void huGetAddress(huNode const * node, char * address, int * addressLen);
 
     /// Returns whether a node has a key token tracked. (If it's a member of a dict.)
-    bool huHasKey(huNode const * node);
+	HUMON_PUBLIC bool huHasKey(huNode const * node);
 
     /// Returns the entire nested text of a node, including child nodes and associated comments and annotations.
-    huStringView huGetTokenStream(huNode const * node);
+	HUMON_PUBLIC huStringView huGetTokenStream(huNode const * node);
 
     /// Returns the number of annotations associated to a node.
-    int huGetNumAnnotations(huNode const * node);
+	HUMON_PUBLIC int huGetNumAnnotations(huNode const * node);
     /// Returns an annotation object associated to a node, by index.
-    huAnnotation const * huGetAnnotation(huNode const * node, int annotationIdx);
+	HUMON_PUBLIC huAnnotation const * huGetAnnotation(huNode const * node, int annotationIdx);
 
     /// Returns whether there is an annotation associated to a node with a specific key.
-    bool huHasAnnotationWithKeyZ(huNode const * node, char const * key);
+	HUMON_PUBLIC bool huHasAnnotationWithKeyZ(huNode const * node, char const * key);
     /// Returns whether there is an annotation associated to a node with a specific key.
-    bool huHasAnnotationWithKeyN(huNode const * node, char const * key, int keyLen);
+	HUMON_PUBLIC bool huHasAnnotationWithKeyN(huNode const * node, char const * key, int keyLen);
     /// Returns the value token of an annoation object associated to a node, with the specified key.
-    huToken const * huGetAnnotationWithKeyZ(huNode const * node, char const * key);
+	HUMON_PUBLIC huToken const * huGetAnnotationWithKeyZ(huNode const * node, char const * key);
     /// Returns the value token of an annoation object associated to a node, with the specified key.
-    huToken const * huGetAnnotationWithKeyN(huNode const * node, char const * key, int keyLen);
+	HUMON_PUBLIC huToken const * huGetAnnotationWithKeyN(huNode const * node, char const * key, int keyLen);
 
     /// Returns the number of annotations associated to a node with a specific value.
-    int huGetNumAnnotationsWithValueZ(huNode const * node, char const * value);
+	HUMON_PUBLIC int huGetNumAnnotationsWithValueZ(huNode const * node, char const * value);
     /// Returns the number of annotations associated to a node with a specific value.
-    int huGetNumAnnotationsWithValueN(huNode const * node, char const * value, int valueLen);
+	HUMON_PUBLIC int huGetNumAnnotationsWithValueN(huNode const * node, char const * value, int valueLen);
     /// Returns the key token of an annotation associated to a node, with the specified value and index.
     /** Call this function continually to iterate over all the annotations. For `cursor`, be sure 
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls 
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-    huToken const * huGetAnnotationWithValueZ(huNode const * node, char const * value, int * cursor);
+	HUMON_PUBLIC huToken const * huGetAnnotationWithValueZ(huNode const * node, char const * value, int * cursor);
     /// Returns the key token of an annotation associated to a node, with the specified value and index.
     /** Call this function continually to iterate over all the annotations. For `cursor`, be sure 
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls 
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-    huToken const * huGetAnnotationWithValueN(huNode const * node, char const * value, int valueLen, int * cursor);
+	HUMON_PUBLIC huToken const * huGetAnnotationWithValueN(huNode const * node, char const * value, int valueLen, int * cursor);
 
     /// Returns the number of comments associated to a node.
-    int huGetNumComments(huNode const * node);
+	HUMON_PUBLIC int huGetNumComments(huNode const * node);
     /// Returns a comment token associated to a node, by index.
-    huToken const * huGetComment(huNode const * node, int commentIdx);
+	HUMON_PUBLIC huToken const * huGetComment(huNode const * node, int commentIdx);
     /// Returns whether any comment tokens associated to a node contain the specified substring.
-    bool huHasCommentsContainingZ(huNode const * node, char const * containedText);
+	HUMON_PUBLIC bool huHasCommentsContainingZ(huNode const * node, char const * containedText);
     /// Returns whether any comment tokens associated to a node contain the specified substring.
-    bool huHasCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen);
+	HUMON_PUBLIC bool huHasCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen);
     /// Returns the number of comment tokens associated to a node what contain the specified substring.
-    int huGetNumCommentsContainingZ(huNode const * node, char const * containedText);
+	HUMON_PUBLIC int huGetNumCommentsContainingZ(huNode const * node, char const * containedText);
     /// Returns the number of comment tokens associated to a node what contain the specified substring.
-    int huGetNumCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen);
+	HUMON_PUBLIC int huGetNumCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen);
     
     /// Returns each comment token associated to a node which contain the specified substring.
     /** Call this function continually to iterate over all the comments. For `cursor`, be sure 
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls 
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-    huToken const * huGetCommentsContainingZ(huNode const * node, char const * containedText, int * cursor);
+	HUMON_PUBLIC huToken const * huGetCommentsContainingZ(huNode const * node, char const * containedText, int * cursor);
     
     /// Returns each comment token associated to a node which contain the specified substring.
     /** Call this function continually to iterate over all the comments. For `cursor`, be sure 
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls 
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-    huToken const * huGetCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen, int * cursor);
+	HUMON_PUBLIC huToken const * huGetCommentsContainingN(huNode const * node, char const * containedText, int containedTextLen, int * cursor);
 
     /// Encodes a Humon data trove.
     /** A trove stores all the tokens and nodes in a loaded Humon file. It is your main access
@@ -368,154 +380,154 @@ extern "C"
     } huTrove;
 
     /// Creates a trove from a NULL-terminated string of Humon text.
-    int huDeserializeTroveZ(huTrove const ** trove, char const * data, huDeserializeOptions * DeserializeOptions, int errorResponse);
+	HUMON_PUBLIC int huDeserializeTroveZ(huTrove const ** trove, char const * data, huDeserializeOptions * DeserializeOptions, int errorResponse);
     /// Creates a trove from a string view of Humon text.
-    int huDeserializeTroveN(huTrove const ** trove, char const * data, int dataLen, huDeserializeOptions * DeserializeOptions, int errorResponse);
+	HUMON_PUBLIC int huDeserializeTroveN(huTrove const ** trove, char const * data, int dataLen, huDeserializeOptions * DeserializeOptions, int errorResponse);
     /// Creates a trove from a file.
-    int huDeserializeTroveFromFileZ(huTrove const ** trove, char const * path, huDeserializeOptions * DeserializeOptions, int errorResponse);
+	HUMON_PUBLIC int huDeserializeTroveFromFileZ(huTrove const ** trove, char const * path, huDeserializeOptions * DeserializeOptions, int errorResponse);
     /// Creates a trove from a file.
-    int huDeserializeTroveFromFileN(huTrove const ** trove, char const * path, int pathLen, huDeserializeOptions * DeserializeOptions, int errorResponse);
+	HUMON_PUBLIC int huDeserializeTroveFromFileN(huTrove const ** trove, char const * path, int pathLen, huDeserializeOptions * DeserializeOptions, int errorResponse);
 
     /// Reclaims all memory owned by a trove.
-    void huDestroyTrove(huTrove const * trove);
+	HUMON_PUBLIC void huDestroyTrove(huTrove const * trove);
 
     /// Returns the number of tokens in a trove.
-    int huGetNumTokens(huTrove const * trove);
+	HUMON_PUBLIC int huGetNumTokens(huTrove const * trove);
     /// Returns a token from a trove by index.
-    huToken const * huGetToken(huTrove const * trove, int tokenIdx);
+	HUMON_PUBLIC huToken const * huGetToken(huTrove const * trove, int tokenIdx);
 
     /// Returns the number of nodes in a trove.
-    int huGetNumNodes(huTrove const * trove);
+	HUMON_PUBLIC int huGetNumNodes(huTrove const * trove);
     /// Returns the root node of a trove, if any.
-    huNode const * huGetRootNode(huTrove const * trove);
+	HUMON_PUBLIC huNode const * huGetRootNode(huTrove const * trove);
     /// Returns a node from a trove by index.
-    huNode const * huGetNodeByIndex(huTrove const * trove, int nodeIdx);
+	HUMON_PUBLIC huNode const * huGetNodeByIndex(huTrove const * trove, int nodeIdx);
 
     /// Returns a node by its full address.
-    huNode const * huGetNodeByAddressZ(huTrove const * trove, char const * address);
+	HUMON_PUBLIC huNode const * huGetNodeByAddressZ(huTrove const * trove, char const * address);
     /// Returns a node by its full address.
-    huNode const * huGetNodeByAddressN(huTrove const * trove, char const * address, int addressLen);
+	HUMON_PUBLIC huNode const * huGetNodeByAddressN(huTrove const * trove, char const * address, int addressLen);
 
     /// Returns the number of errors encountered when loading a trove.
-    int huGetNumErrors(huTrove const * trove);
+	HUMON_PUBLIC int huGetNumErrors(huTrove const * trove);
     /// Returns an error from a trove by index.
-    huError const * huGetError(huTrove const * trove, int errorIdx);
+	HUMON_PUBLIC huError const * huGetError(huTrove const * trove, int errorIdx);
 
     /// Returns the number of annotations associated to a trove.
-    int huGetNumTroveAnnotations(huTrove const * trove);
+	HUMON_PUBLIC int huGetNumTroveAnnotations(huTrove const * trove);
     /// Returns an annotation from a trove by index.
-    huAnnotation const * huGetTroveAnnotation(huTrove const * trove, int annotationIdx);
+	HUMON_PUBLIC huAnnotation const * huGetTroveAnnotation(huTrove const * trove, int annotationIdx);
 
     /// Returns whether any annotations are associated to a trove with a specific key.
-    bool huTroveHasAnnotationWithKeyZ(huTrove const * trove, char const * key);
+	HUMON_PUBLIC bool huTroveHasAnnotationWithKeyZ(huTrove const * trove, char const * key);
     /// Returns whether any annotations are associated to a trove with a specific key.
-    bool huTroveHasAnnotationWithKeyN(huTrove const * trove, char const * key, int keyLen);
+	HUMON_PUBLIC bool huTroveHasAnnotationWithKeyN(huTrove const * trove, char const * key, int keyLen);
     /// Returns an annoation object associated to a trove, by key and index.
-    huToken const * huGetTroveAnnotationWithKeyZ(huTrove const * trove, char const * key);
+	HUMON_PUBLIC huToken const * huGetTroveAnnotationWithKeyZ(huTrove const * trove, char const * key);
     /// Returns an annoation object associated to a trove, by key and index.
-    huToken const * huGetTroveAnnotationWithKeyN(huTrove const * trove, char const * key, int keyLen);
+	HUMON_PUBLIC huToken const * huGetTroveAnnotationWithKeyN(huTrove const * trove, char const * key, int keyLen);
 
     /// Returns the number of annotations associated to a trove with a specific value.
-    int huGetNumTroveAnnotationsWithValueZ(huTrove const * trove, char const * value);
+	HUMON_PUBLIC int huGetNumTroveAnnotationsWithValueZ(huTrove const * trove, char const * value);
     /// Returns the number of annotations associated to a trove with a specific value.
-    int huGetNumTroveAnnotationsWithValueN(huTrove const * trove, char const * value, int valueLen);
+	HUMON_PUBLIC int huGetNumTroveAnnotationsWithValueN(huTrove const * trove, char const * value, int valueLen);
     /// Returns an annoation object associated to a trove, by value and index.
     /** Call this function continually to iterate over all the annotations. For `cursor`, be sure 
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls 
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-    huToken const * huGetTroveAnnotationWithValueZ(huTrove const * trove, char const * value, int * cursor);
+	HUMON_PUBLIC huToken const * huGetTroveAnnotationWithValueZ(huTrove const * trove, char const * value, int * cursor);
     /// Returns an annoation object associated to a trove, by value and index.
     /** Call this function continually to iterate over all the annotations. For `cursor`, be sure 
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls 
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-    huToken const * huGetTroveAnnotationWithValueN(huTrove const * trove, char const * value, int valueLen, int * cursor);
+	HUMON_PUBLIC huToken const * huGetTroveAnnotationWithValueN(huTrove const * trove, char const * value, int valueLen, int * cursor);
 
     /// Returns the number of comments associated to a trove.
-    int huGetNumTroveComments(huTrove const * trove);
+	HUMON_PUBLIC int huGetNumTroveComments(huTrove const * trove);
     /// Returns a comment associated to a trove by index.
-    huToken const * huGetTroveComment(huTrove const * trove, int commentIdx);
+	HUMON_PUBLIC huToken const * huGetTroveComment(huTrove const * trove, int commentIdx);
 
     /// Returns a collection of all nodes in a trove with a specific annotation key.
     /** Call this function continually to iterate over all the annotations. For `cursor`, be sure 
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls 
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-    huNode const * huFindNodesWithAnnotationKeyZ(huTrove const * trove, char const * key, int * cursor);
+	HUMON_PUBLIC huNode const * huFindNodesWithAnnotationKeyZ(huTrove const * trove, char const * key, int * cursor);
     /// Returns a collection of all nodes in a trove with a specific annotation key.
     /** Call this function continually to iterate over all the annotations. For `cursor`, be sure 
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls 
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-    huNode const * huFindNodesWithAnnotationKeyN(huTrove const * trove, char const * key, int keyLen, int * cursor);
+	HUMON_PUBLIC huNode const * huFindNodesWithAnnotationKeyN(huTrove const * trove, char const * key, int keyLen, int * cursor);
     /// Returns a collection of all nodes in a trove with a specific annotation value.
     /** Call this function continually to iterate over all the annotations. For `cursor`, be sure 
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls 
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-    huNode const * huFindNodesWithAnnotationValueZ(huTrove const * trove, char const * value, int * cursor);
+	HUMON_PUBLIC huNode const * huFindNodesWithAnnotationValueZ(huTrove const * trove, char const * value, int * cursor);
     /// Returns a collection of all nodes in a trove with a specific annotation value.
     /** Call this function continually to iterate over all the annotations. For `cursor`, be sure 
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls 
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-    huNode const * huFindNodesWithAnnotationValueN(huTrove const * trove, char const * value, int valueLen, int * cursor);
+	HUMON_PUBLIC huNode const * huFindNodesWithAnnotationValueN(huTrove const * trove, char const * value, int valueLen, int * cursor);
     /// Returns a collection of all nodes in a trove with a specific annotation key and value.
     /** Call this function continually to iterate over all the annotations. For `cursor`, be sure 
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls 
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-    huNode const * huFindNodesWithAnnotationKeyValueZZ(huTrove const * trove, char const * key, char const * value, int * cursor);
+	HUMON_PUBLIC huNode const * huFindNodesWithAnnotationKeyValueZZ(huTrove const * trove, char const * key, char const * value, int * cursor);
     /// Returns a collection of all nodes in a trove with a specific annotation key and value.
     /** Call this function continually to iterate over all the annotations. For `cursor`, be sure 
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls 
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-    huNode const * huFindNodesWithAnnotationKeyValueNZ(huTrove const * trove, char const * key, int keyLen, char const * value, int * cursor);
+	HUMON_PUBLIC huNode const * huFindNodesWithAnnotationKeyValueNZ(huTrove const * trove, char const * key, int keyLen, char const * value, int * cursor);
     /// Returns a collection of all nodes in a trove with a specific annotation key and value.
     /** Call this function continually to iterate over all the annotations. For `cursor`, be sure 
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls 
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-    huNode const * huFindNodesWithAnnotationKeyValueZN(huTrove const * trove, char const * key, char const * value, int valueLen, int * cursor);
+	HUMON_PUBLIC huNode const * huFindNodesWithAnnotationKeyValueZN(huTrove const * trove, char const * key, char const * value, int valueLen, int * cursor);
     /// Returns a collection of all nodes in a trove with a specific annotation key and value.
     /** Call this function continually to iterate over all the annotations. For `cursor`, be sure 
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls 
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-    huNode const * huFindNodesWithAnnotationKeyValueNN(huTrove const * trove, char const * key, int keyLen, char const * value, int valueLen, int * cursor);
+	HUMON_PUBLIC huNode const * huFindNodesWithAnnotationKeyValueNN(huTrove const * trove, char const * key, int keyLen, char const * value, int valueLen, int * cursor);
     /// Returns a collection of all nodes in a trove with a comment which contains specific text.
     /** Call this function continually to iterate over all the comments. For `cursor`, be sure 
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls 
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-    huNode const * huFindNodesByCommentContainingZ(huTrove const * trove, char const * containedText, int * cursor);
+	HUMON_PUBLIC huNode const * huFindNodesByCommentContainingZ(huTrove const * trove, char const * containedText, int * cursor);
     /// Returns a collection of all nodes in a trove with a comment which contains specific text.
     /** Call this function continually to iterate over all the comments. For `cursor`, be sure 
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls 
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-    huNode const * huFindNodesByCommentContainingN(huTrove const * trove, char const * containedText, int containedTextLen, int * cursor);
+	HUMON_PUBLIC huNode const * huFindNodesByCommentContainingN(huTrove const * trove, char const * containedText, int containedTextLen, int * cursor);
 
     /// Returns the entire token stream of a trove (its text), including all nodes and all comments and annotations.
     /** This function returns the stored text as a view. It does not allocate or copy memory, 
      * and cannot format the string.*/
-    huStringView huGetTroveTokenStream(huTrove const * trove);
+	HUMON_PUBLIC huStringView huGetTroveTokenStream(huTrove const * trove);
 
     /// Serializes a trove to text.
     /** This function makes a new copy of the token steram, optionally with formatting options.*/
-    int huSerializeTrove(huTrove const * trove, char * dest, int * destLength, huSerializeOptions * SerializeOptions);
+	HUMON_PUBLIC int huSerializeTrove(huTrove const * trove, char * dest, int * destLength, huSerializeOptions * SerializeOptions);
 
     /// Serializes a trove to file.
     /** This function stores a new copy of the token steram to file, optionally with formatting options.*/
-    int huSerializeTroveToFileZ(huTrove const * trove, char const * path, int * destLength, huSerializeOptions * SerializeOptions);
+	HUMON_PUBLIC int huSerializeTroveToFileZ(huTrove const * trove, char const * path, int * destLength, huSerializeOptions * SerializeOptions);
     /// Serializes a trove to file.
     /** This function stores a new copy of the token steram to file, optionally with formatting options.*/
-    int huSerializeTroveToFileN(huTrove const * trove, char const * path, int pathLen, int * destLength, huSerializeOptions * SerializeOptions);
+	HUMON_PUBLIC int huSerializeTroveToFileN(huTrove const * trove, char const * path, int pathLen, int * destLength, huSerializeOptions * SerializeOptions);
 
     /// Fills an array of HU_COLORCODE_NUMCOLORS huStringViews with ANSI terminal color codes for printing to console.
-    void huFillAnsiColorTable(huStringView table[]);
+	HUMON_PUBLIC void huFillAnsiColorTable(huStringView table[]);
 
 #ifdef __cplusplus
 } // extern "C"

@@ -36,6 +36,10 @@
 mmap_address.bin
 .vscode/*
 
+# VS
+.vs/*
+*.vcxproj.user
+
 # Project-specific
 build/
 python/build/
