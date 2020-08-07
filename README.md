@@ -108,17 +108,27 @@ or in C++:
 ### Installation
 If you're just using Humon files with some application you've installed, you don't need to do anything. However, the project contains a directory called `vscode/humon-lang` which contains a TextMate colorizer for VS Code. You can copy the `humon-lang` directory into your `~/.vscode/extensions` directory, and VS Code will make files with a ".hu" extension a bit more colorful.
 
-Building Humon is easy enough. Starting from the Humon project directory:
+Building Humon in Linux is easy enough, but you need to have Python3 installed. Starting from the Humon project directory, you can build the binaries with gcc:
 
-    ~/src/humon$ mkdir build && cd build
-    ~/src/humon/build$ cmake ..
-    ~/src/humon/build$ make
-    ~/src/humon/build$ make docs-c
-    ~/src/humon/build$ make docs-cpp
+    ~/src/humon$ ./build-linux.py
 
-The binary artifacts are produced in `humon/build/src`. Currently, you can just copy the built `humon/build/src/libhumon-d.a` and the headers from `humon/include`. Eventually the CMake project will be more pro.
+or, if you want to use clang:
 
-Alternatively, there's a python3 build script, which places the artifacts at `humon/build/bin`. It doesn't use CMake, but has only been tested on Ubuntu. When running the tests produced, be sure to run from the build directory:
+    ~/src/humon$ ./build-linux.py clang
+
+> Currently the clang build uses gcc's standard library. A better build experience is in the works, but in the meantime it's trivial to modify the `build-linux.py` script to use whatever library you have.
+
+In Windows, you can open the root-level `humon.sln` file, and build the targets you like.
+
+For all builds, the binary artifacts are produced in `{humon directory}/build/bin`. Currently, you can just copy the built binaries and the headers from `{humon directory}/include/humon`. The following are built:
+
+* libhumon.a                - optimized static library for Linux
+* libhumon-d.a              - debug static library for Linux
+* libhumon.so.ver.si.on     - optimized shared library for Linux
+* libhumon-d.so.ver.si.on   - debug shared library for Linux
+* ... Windows build files too
+
+In Linux systems, the tests are built along with the libraries. 
 
     ~/src/humon/build$ bin/humon-test-d
 

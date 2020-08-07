@@ -1,8 +1,9 @@
 DONE THIS CHECKIN:
-Visual Studio 2017 support.
+Add .gitattributes to disallow CRLF conversion on the test files.
 
 TODO:
 P1 doxygen
+P1 finish README install desc
 P2 Improved error state transitions
 P2 vcpkg
 P2 string sizes should be size_t?
