@@ -145,8 +145,8 @@ namespace hu
     enum class ErrorResponse
     {
         mum = capi::HU_ERRORRESPONSE_MUM,
-        stdout = capi::HU_ERRORRESPONSE_STDOUT,
-        stderr = capi::HU_ERRORRESPONSE_STDERR,
+        toStdout = capi::HU_ERRORRESPONSE_STDOUT,
+        toStderr = capi::HU_ERRORRESPONSE_STDERR,
         stdoutAnsiColor = capi::HU_ERRORRESPONSE_STDOUTANSICOLOR,
         stderrAnsiColor = capi::HU_ERRORRESPONSE_STDERRANSICOLOR,
         numResponses = capi::HU_ERRORRESPONSE_NUMRESPONSES
@@ -336,7 +336,7 @@ namespace hu
             std::string_view newline = "\n", bool printBom = false) HUMON_NOEXCEPT
         {
             capi::huInitSerializeOptionsN(& cparams, static_cast<int>(WhitespaceFormat), indentSize, indentWithTabs,
-                false, capiColorTable, printComments, newline.data(), newline.size(), printBom);
+                false, capiColorTable, printComments, newline.data(), (int) newline.size(), printBom);
             setColorTable(colors);
         }
 
@@ -356,7 +356,7 @@ namespace hu
                 for (size_t i = 0; i < capi::HU_COLORCODE_NUMCOLORS; ++i)
                 {
                     capiColorTable[i].ptr = sv[i].data();
-                    capiColorTable[i].size = sv[i].size();
+                    capiColorTable[i].size = (int) sv[i].size();
                 }
                 cparams.usingColors = true;
             }
@@ -367,7 +367,7 @@ namespace hu
         /// Set whether to print comment tokens in the output.
         void setPrintComments(bool shallWe) HUMON_NOEXCEPT { cparams.printComments = shallWe; }
         /// Set the character string to use for a newline.
-        void setNewline(std::string_view newline) HUMON_NOEXCEPT { cparams.newline.ptr = newline.data(); cparams.newline.size = newline.size(); }
+        void setNewline(std::string_view newline) HUMON_NOEXCEPT { cparams.newline.ptr = newline.data(); cparams.newline.size = (int) newline.size(); }
 
         /// Get the whitespace formatting.
         WhitespaceFormat whitespaceFormat() const HUMON_NOEXCEPT { return static_cast<WhitespaceFormat>(cparams.WhitespaceFormat); }
@@ -514,7 +514,7 @@ namespace hu
         Node child(IntType idx) const HUMON_NOEXCEPT      ///< Returns the child node, by child index.
             { check(); return capi::huGetChildByIndex(cnode, idx); }
         Node child(std::string_view key) const HUMON_NOEXCEPT  ///< Returns the child node, by key (if this is a dict).
-            { check(); return capi::huGetChildByKeyN(cnode, key.data(), key.size()); }
+            { check(); return capi::huGetChildByKeyN(cnode, key.data(), (int) key.size()); }
         Node firstChild() const HUMON_NOEXCEPT            ///< Returns the first child node of this node.
             { check(); return child(0); }
         Node nextSibling() const HUMON_NOEXCEPT        ///< Returns the node ordinally after this one in the parent's children, or the null node if it's the last.
@@ -524,7 +524,7 @@ namespace hu
          * through the hierarchy. A key or index between the slashes indicates the child node to
          * access. */
         Node nodeByAddress(std::string_view relativeAddress) const HUMON_NOEXCEPT
-            { check(); return capi::huGetRelativeN(cnode, relativeAddress.data(), relativeAddress.size()); }
+            { check(); return capi::huGetRelativeN(cnode, relativeAddress.data(), (int) relativeAddress.size()); }
         bool hasKey() const HUMON_NOEXCEPT                ///< Returns whether this node has a key. (If it's in a dict.)
             { check(); return capi::huHasKey(cnode); }
         Token key() const HUMON_NOEXCEPT                  ///< Returns the key token, or the null token if this is not in a dict.
@@ -565,13 +565,13 @@ namespace hu
          * rare. This function returns the number of annotations associated to this node with
          * the specified key. */
         bool hasAnnotation(std::string_view key) const HUMON_NOEXCEPT
-            { check(); return capi::huHasAnnotationWithKeyN(cnode, key.data(), key.size()); }
+            { check(); return capi::huHasAnnotationWithKeyN(cnode, key.data(), (int)key.size()); }
 
         /// Returns a Token referencing the value of the annotation accessed by key.
         Token const annotation(std::string_view key) const HUMON_NOEXCEPT 
         { 
             check();
-            auto canno = capi::huGetAnnotationWithKeyN(cnode, key.data(), key.size());
+            auto canno = capi::huGetAnnotationWithKeyN(cnode, key.data(), (int)key.size());
             return Token(canno);
         }
 
@@ -580,7 +580,7 @@ namespace hu
          * value. This function returns the number of annotations associated to this node with
          * the specified value. */
         int numAnnotationsWithValue(std::string_view value) const HUMON_NOEXCEPT
-            { check(); return capi::huGetNumAnnotationsWithValueN(cnode, value.data(), value.size()); }
+            { check(); return capi::huGetNumAnnotationsWithValueN(cnode, value.data(), (int)value.size()); }
         
         /// Returns a new collection of all this node's annotations with the specified value.
         /** Creates a new vector of Tokens, each referencing the key of an annotation that 
@@ -593,7 +593,7 @@ namespace hu
             capi::huToken const * tok = HU_NULLTOKEN;
             do
             {
-                tok = capi::huGetAnnotationWithValueN(cnode, value.data(), value.size(), & cursor);
+                tok = capi::huGetAnnotationWithValueN(cnode, value.data(), (int)value.size(), & cursor);
                 if (tok)
                     { vec.push_back(tok); }
             } while (tok != HU_NULLTOKEN);
@@ -624,7 +624,7 @@ namespace hu
         bool hasCommentsContaining(std::string_view containedString) const HUMON_NOEXCEPT
         {
             check();
-            return capi::huHasCommentsContainingN(cnode, containedString.data(), containedString.size());
+            return capi::huHasCommentsContainingN(cnode, containedString.data(), (int)containedString.size());
         }
 
         /// Returns a new collection of all comments associated to this node containing the specified substring.
@@ -636,7 +636,7 @@ namespace hu
             capi::huToken const * comm = NULL;
             do
             {
-                comm = capi::huGetCommentsContainingN(cnode, containedString.data(), containedString.size(), & cursor);
+                comm = capi::huGetCommentsContainingN(cnode, containedString.data(), (int)containedString.size(), & cursor);
                 if (comm)
                     { vec.emplace_back(comm); }
             } while (comm != HU_NULLTOKEN);
@@ -691,7 +691,7 @@ namespace hu
             check();
             if (isValid())
             {
-                auto ch = capi::huGetChildByKeyN(cnode, key.data(), key.size());
+                auto ch = capi::huGetChildByKeyN(cnode, key.data(), (int)key.size());
 #ifdef HUMON_USE_NODE_PATH_EXCEPTIONS
                 if (ch == nullptr)
                     { throw std::runtime_error("Illegal path entry"); }
@@ -790,7 +790,7 @@ namespace hu
             ErrorResponse errorRespose = ErrorResponse::stderrAnsiColor) HUMON_NOEXCEPT
         {
             capi::huTrove const * trove = HU_NULLTROVE;
-            int error = capi::huDeserializeTroveN(& trove, data.data(), data.size(), 
+            int error = capi::huDeserializeTroveN(& trove, data.data(), (int) data.size(), 
                 & deserializeOptions.cparams, static_cast<int>(errorRespose));
 
             if (error != capi::HU_ERROR_NOERROR &&
@@ -831,7 +831,7 @@ namespace hu
             ErrorResponse errorRespose = ErrorResponse::stderrAnsiColor) HUMON_NOEXCEPT
         {
             capi::huTrove const * trove = HU_NULLTROVE;
-            int error = capi::huDeserializeTroveFromFileN(& trove, path.data(), path.size(), 
+            int error = capi::huDeserializeTroveFromFileN(& trove, path.data(), (int) path.size(), 
                 & deserializeOptions.cparams, static_cast<int>(errorRespose));
             if (error != capi::HU_ERROR_NOERROR &&
                 error != capi::HU_ERROR_TROVEHASERRORS)
@@ -934,7 +934,7 @@ namespace hu
          * \return Returns the {node and hu::ErrorCode::NoError} or {null node and 
          * the appropriate hu::ErrorCode}, */
         Node nodeByAddress(std::string_view address) const HUMON_NOEXCEPT
-            { return Node(capi::huGetNodeByAddressN(ctrove, address.data(), address.size())); }
+            { return Node(capi::huGetNodeByAddressN(ctrove, address.data(), (int)address.size())); }
         /// Returns the number of errors encountered when tokenizing and parsing the Humon.
         int numErrors() const HUMON_NOEXCEPT
             { return ctrove ? capi::huGetNumErrors(ctrove) : 0; }
@@ -982,15 +982,15 @@ namespace hu
         /// Return the number of trove annotations associated to this trove (not to any node) with 
         /// the specified key.
         bool hasTroveAnnotation(std::string_view key) const HUMON_NOEXCEPT
-            { return capi::huTroveHasAnnotationWithKeyN(ctrove, key.data(), key.size()); }
+            { return capi::huTroveHasAnnotationWithKeyN(ctrove, key.data(), (int)key.size()); }
         /// Returns the value of the `idx`th annotation associated to this trove (not to any node)
         /// with the specified key.
         Token troveAnnotation(std::string_view key) const HUMON_NOEXCEPT 
-            { return capi::huGetTroveAnnotationWithKeyN(ctrove, key.data(), key.size()); }
+            { return capi::huGetTroveAnnotationWithKeyN(ctrove, key.data(), (int)key.size()); }
         /// Return the number of trove annotations associated to this trove (not to any node) with 
         /// the specified value.
         int numTroveAnnotationsWithValue(std::string_view value) const HUMON_NOEXCEPT
-            { return capi::huGetNumTroveAnnotationsWithValueN(ctrove, value.data(), value.size()); }
+            { return capi::huGetNumTroveAnnotationsWithValueN(ctrove, value.data(), (int)value.size()); }
 
         /// Returns a new collection of all the keys of annotations associated to this trove (not 
         /// to any node) with the specified value.
@@ -1002,7 +1002,7 @@ namespace hu
             capi::huToken const * tok = HU_NULLTOKEN;
             do
             {
-                tok = capi::huGetTroveAnnotationWithValueN(ctrove, value.data(), value.size(), & cursor);
+                tok = capi::huGetTroveAnnotationWithValueN(ctrove, value.data(), (int)value.size(), & cursor);
                 if (tok)
                     { vec.push_back(tok); }
             } while (tok != HU_NULLTOKEN);
@@ -1041,7 +1041,7 @@ namespace hu
             capi::huNode const * node = HU_NULLNODE;
             do
             {
-                node = capi::huFindNodesWithAnnotationKeyN(ctrove, key.data(), key.size(), & cursor);
+                node = capi::huFindNodesWithAnnotationKeyN(ctrove, key.data(), (int)key.size(), & cursor);
                 if (node)
                     { vec.emplace_back(node); }
             } while(node != HU_NULLNODE);
@@ -1057,7 +1057,7 @@ namespace hu
             capi::huNode const * node = HU_NULLNODE;
             do
             {
-                node = capi::huFindNodesWithAnnotationValueN(ctrove, value.data(), value.size(), & cursor);
+                node = capi::huFindNodesWithAnnotationValueN(ctrove, value.data(), (int)value.size(), & cursor);
                 if (node)
                     { vec.emplace_back(node); }
             } while(node != HU_NULLNODE);
@@ -1073,7 +1073,7 @@ namespace hu
             capi::huNode const * node = HU_NULLNODE;
             do
             {
-                node = capi::huFindNodesWithAnnotationKeyValueNN(ctrove, key.data(), key.size(), value.data(), value.size(), & cursor);
+                node = capi::huFindNodesWithAnnotationKeyValueNN(ctrove, key.data(), (int)key.size(), value.data(), (int)value.size(), & cursor);
                 if (node)
                     { vec.emplace_back(node); }
             } while(node != HU_NULLNODE);
@@ -1089,7 +1089,7 @@ namespace hu
             capi::huNode const * node = HU_NULLNODE;
             do
             {
-                node = capi::huFindNodesByCommentContainingN(ctrove, containedText.data(), containedText.size(), & cursor);
+                node = capi::huFindNodesByCommentContainingN(ctrove, containedText.data(), (int)containedText.size(), & cursor);
                 if (node)
                     { vec.emplace_back(Node(node)); }
             } while(node != HU_NULLNODE);
@@ -1177,7 +1177,7 @@ namespace hu
         [[nodiscard]] std::variant<int, ErrorCode> toFile(std::string_view path, SerializeOptions & SerializeOptions) const HUMON_NOEXCEPT
         {
             int outputLength = 0;
-            int error = capi::huSerializeTroveToFileN(ctrove, path.data(), path.size(), & outputLength, & SerializeOptions.cparams);
+            int error = capi::huSerializeTroveToFileN(ctrove, path.data(), (int)path.size(), & outputLength, & SerializeOptions.cparams);
             if (error != capi::HU_ERROR_NOERROR)
                 { return error; }
 
@@ -1224,7 +1224,7 @@ namespace hu
 #endif
             if (ch == nullptr)
                 { return Node(HU_NULLNODE); }
-            ch = capi::huGetChildByKeyN(ch, key.data(), key.size());
+            ch = capi::huGetChildByKeyN(ch, key.data(), (int)key.size());
 #ifdef HUMON_USE_NODE_PATH_EXCEPTIONS
             if (ch == nullptr)
                 { throw std::runtime_error("Illegal path entry"); }

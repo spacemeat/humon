@@ -4,15 +4,15 @@
 #include <stdio.h>
 
 
-#ifdef _MSC_VER
-#ifdef HUMON_BUILDING_DLL
+#ifdef _MSC_VER				//	if we're on Windows
+#ifdef HUMON_BUILDING_DLL	//		if we're building the DLL
 #define HUMON_PUBLIC __declspec(dllexport)
-#elif HUMON_USING_DLL
+#elif HUMON_USING_DLL		//		else if we're building an application with the DLL's import lib
 #define HUMON_PUBLIC __declspec(dllimport)
-#else // static lib
+#else						//		else we're building an application with the static lib
 #define HUMON_PUBLIC
 #endif
-#else
+#else						//	else we're on unix-like, using the static lib or .so
 #define HUMON_PUBLIC
 #endif
 

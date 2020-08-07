@@ -1,6 +1,10 @@
 #include <string.h>
 #include <string_view>
+#ifdef _MSC_VER
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
 #include "humon.h"
 #include <CppUTest/TestHarness.h>
 #include "testData.h"
@@ -3534,90 +3538,90 @@ TEST(huFindNodesByCommentContaining, normal)
     int cursor = 0;
     auto exp = "This is a "sv;
     huNode const * node = NULL;
-    node = huFindNodesByCommentContainingN(l.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(l.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(l.a, node, "l fnbcc This is a 0 == a");
-    node = huFindNodesByCommentContainingN(l.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(l.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(l.bp, node, "l fnbcc This is a 1 == bp");
-    node = huFindNodesByCommentContainingN(l.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(l.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(l.cpp, node, "l fnbcc This is a 2 == cpp");
-    node = huFindNodesByCommentContainingN(l.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(l.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(HU_NULLNODE, node, "l fnbcc This is a 3 == null");
 
     cursor = 0;
     exp = "aaaa"sv;
-    node = huFindNodesByCommentContainingN(l.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(l.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(l.a, node, "l fnbcc aaaa 0 == a");
-    node = huFindNodesByCommentContainingN(l.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(l.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(HU_NULLNODE, node, "l fnbcc aaaa 1 == null");
 
     cursor = 0;
     exp = "cp"sv;
-    node = huFindNodesByCommentContainingN(l.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(l.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(l.cpp, node, "l fnbcc cp 0 == cpp");
-    node = huFindNodesByCommentContainingN(l.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(l.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(l.cp, node, "l fnbcc cp 1 == cp");
-    node = huFindNodesByCommentContainingN(l.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(l.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(HU_NULLNODE, node, "l fnbcc cp 2 == null");
 
     cursor = 0;
     exp = ""sv;
-    node = huFindNodesByCommentContainingN(l.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(l.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(l.a, node, "l fnbcc '' 0 == a");
-    node = huFindNodesByCommentContainingN(l.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(l.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(l.bp, node, "l fnbcc '' 1 == bp");
-    node = huFindNodesByCommentContainingN(l.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(l.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(l.b, node, "l fnbcc '' 2 == b");
-    node = huFindNodesByCommentContainingN(l.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(l.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(l.cpp, node, "l fnbcc '' 3 == cpp");
-    node = huFindNodesByCommentContainingN(l.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(l.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(l.cp, node, "l fnbcc '' 4 == cp");
-    node = huFindNodesByCommentContainingN(l.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(l.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(l.c, node, "l fnbcc '' 5 == c");
-    node = huFindNodesByCommentContainingN(l.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(l.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(HU_NULLNODE, node, "l fnbcc '' 6 == null");
 
     cursor = 0;
     exp = "This is a "sv;
-    node = huFindNodesByCommentContainingN(d.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(d.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(d.a, node, "d fnbcc This is a 0 == a");
-    node = huFindNodesByCommentContainingN(d.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(d.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(d.bp, node, "d fnbcc This is a 1 == bp");
-    node = huFindNodesByCommentContainingN(d.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(d.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(d.cpp, node, "d fnbcc This is a 2 == cpp");
-    node = huFindNodesByCommentContainingN(d.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(d.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(HU_NULLNODE, node, "d fnbcc This is a 3 == null");
 
     cursor = 0;
     exp = "aaaa"sv;
-    node = huFindNodesByCommentContainingN(d.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(d.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(d.a, node, "d fnbcc aaaa 0 == a");
-    node = huFindNodesByCommentContainingN(d.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(d.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(HU_NULLNODE, node, "d fnbcc aaaa 1 == null");
 
     cursor = 0;
     exp = "cp"sv;
-    node = huFindNodesByCommentContainingN(d.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(d.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(d.cpp, node, "d fnbcc cp 1 == cpp");
-    node = huFindNodesByCommentContainingN(d.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(d.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(d.cp, node, "d fnbcc cp 0 == cp");
-    node = huFindNodesByCommentContainingN(d.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(d.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(HU_NULLNODE, node, "d fnbcc cp 2 == null");
 
     cursor = 0;
     exp = ""sv;
-    node = huFindNodesByCommentContainingN(d.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(d.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(d.a, node, "d fnbcc '' 0 == a");
-    node = huFindNodesByCommentContainingN(d.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(d.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(d.bp, node, "d fnbcc '' 1 == bp");
-    node = huFindNodesByCommentContainingN(d.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(d.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(d.b, node, "d fnbcc '' 2 == b");
-    node = huFindNodesByCommentContainingN(d.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(d.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(d.cpp, node, "d fnbcc '' 3 == cpp");
-    node = huFindNodesByCommentContainingN(d.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(d.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(d.cp, node, "d fnbcc '' 4 == cp");
-    node = huFindNodesByCommentContainingN(d.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(d.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(d.c, node, "d fnbcc '' 5 == c");
-    node = huFindNodesByCommentContainingN(d.trove, exp.data(), exp.size(), & cursor);
+    node = huFindNodesByCommentContainingN(d.trove, exp.data(), (int) exp.size(), & cursor);
     POINTERS_EQUAL_TEXT(HU_NULLNODE, node, "d fnbcc '' 6 == null");
 }
 
@@ -3669,11 +3673,24 @@ static std::string makeFileName(std::string_view path, int WhitespaceFormat, boo
     return consPath;        
 }
 
+
+
+FILE * openFile(char const * path, char const * mode)
+{
+	FILE * fp = NULL;
+#ifdef _MSC_VER
+	errno_t err = fopen_s(&fp, path, mode);
+#else
+	fp = fopen(path, mode);
+#endif
+	return fp;
+}
+
 static std::tuple<std::string, int> getFile(std::string_view path)
 {
     std::string str;
     int fileSize = 0;
-    FILE * fp = fopen(path.data(), "rb");
+    FILE * fp = openFile(path.data(), "rb");
     fseek(fp, 0L, SEEK_END);
     str.resize(fileSize = ftell(fp));
     rewind(fp);
@@ -3715,7 +3732,7 @@ TEST(huGetTroveTokenStream, correctness)
     {
         auto [src, sz] = getFile(testFile);
         huTrove const * trove;
-        int err = huDeserializeTroveFromFileN(& trove, testFile.data(), testFile.size(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
+        int err = huDeserializeTroveFromFileN(& trove, testFile.data(), (int) testFile.size(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
         LONGS_EQUAL(HU_ERROR_NOERROR, err);
         auto sv = huGetTroveTokenStream(trove);
         LONGS_EQUAL(sz, sv.size);
@@ -3760,7 +3777,7 @@ TEST_GROUP(huSerializeTrove)
     std::string troveToString(std::string_view srcFile, int format, bool useColors, bool printComments, bool printBom)
     {
         huTrove const * tc = nullptr;
-        int error = huDeserializeTroveFromFileN(& tc, srcFile.data(), srcFile.size(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
+        int error = huDeserializeTroveFromFileN(& tc, srcFile.data(), (int) srcFile.size(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
         if (error != HU_ERROR_NOERROR)
             { return "<could not make trove>"; }
 
@@ -3807,6 +3824,10 @@ TEST(huSerializeTrove, correctness)
                         auto ttos = troveToString(testFile,
                             WhitespaceFormat, useColors, printComments, printBom);
                         std::string consPath = makeFileName(testFile, WhitespaceFormat, useColors, printComments, printBom);
+						
+						if (file.size() != ttos.size())
+							{ bool debugBreak = true; }
+
                         LONGS_EQUAL_TEXT(file.size(), ttos.size(), consPath.data());
                         MEMCMP_EQUAL_TEXT(file.data(), ttos.data(), file.size(), consPath.data());
                     }
@@ -3882,13 +3903,23 @@ TEST_GROUP(huSerializeTroveToFile)
     }
 };
 
+
+int haveAccess(char const * path)
+{
+#ifdef _MSC_VER
+	return _access(path, 06);
+#else
+	return access(path, R_OK | W_OK);
+#endif
+}
+
 // Just doing patho tests -- this is heavily function-tested elsewhere.
 TEST(huSerializeTroveToFile, pathological)
 {
     auto validFile = "src/test/testFiles/testout.hu";
 
     // Remove this file if it exists.
-    int acc = access(validFile, F_OK);
+	int acc = haveAccess(validFile);
     if (acc != -1)
         { remove(validFile); }
 
@@ -3900,7 +3931,7 @@ TEST(huSerializeTroveToFile, pathological)
 
     error = huSerializeTroveToFileZ(NULL, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "NULL->file sz == 0");
-    acc = access(validFile, F_OK);
+    acc = haveAccess(validFile);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
@@ -3923,7 +3954,7 @@ TEST(huSerializeTroveToFile, pathological)
     huInitSerializeOptionsZ(& params, 3, 4, false, false, NULL, false, "\n", false);
     error = huSerializeTroveToFileZ(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
-    acc = access(validFile, F_OK);
+    acc = haveAccess(validFile);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
@@ -3931,7 +3962,7 @@ TEST(huSerializeTroveToFile, pathological)
     huInitSerializeOptionsZ(& params, -1, 4, false, false, NULL, false, "\n", false);
     error = huSerializeTroveToFileZ(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
-    acc = access(validFile, F_OK);
+    acc = haveAccess(validFile);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
@@ -3939,7 +3970,7 @@ TEST(huSerializeTroveToFile, pathological)
     huInitSerializeOptionsZ(& params, HU_WHITESPACEFORMAT_CLONED, -1, false, false, NULL, false, "\n", false);
     error = huSerializeTroveToFileZ(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
-    acc = access(validFile, F_OK);
+    acc = haveAccess(validFile);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
@@ -3947,7 +3978,7 @@ TEST(huSerializeTroveToFile, pathological)
     huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, false, NULL, false, NULL, 1, false);
     error = huSerializeTroveToFileZ(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
-    acc = access(validFile, F_OK);
+    acc = haveAccess(validFile);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
@@ -3955,7 +3986,7 @@ TEST(huSerializeTroveToFile, pathological)
     huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, true, NULL, false, "\n", 1, false);
     error = huSerializeTroveToFileZ(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
-    acc = access(validFile, F_OK);
+    acc = haveAccess(validFile);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
@@ -3963,7 +3994,7 @@ TEST(huSerializeTroveToFile, pathological)
     huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_PRETTY, 4, false, false, NULL, false, "\n", 0, false);
     error = huSerializeTroveToFileZ(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
-    acc = access(validFile, F_OK);
+    acc = haveAccess(validFile);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
@@ -3971,7 +4002,7 @@ TEST(huSerializeTroveToFile, pathological)
     huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, false, NULL, false, "\n", -1, false);
     error = huSerializeTroveToFileZ(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
-    acc = access(validFile, F_OK);
+    acc = haveAccess(validFile);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }

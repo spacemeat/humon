@@ -39,6 +39,7 @@ mmap_address.bin
 # VS
 .vs/*
 *.vcxproj.user
+*.vcxproj.filters
 
 # Project-specific
 build/

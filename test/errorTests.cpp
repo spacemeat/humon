@@ -3,7 +3,10 @@
 #include <sstream>
 #include <string.h>
 #include <string_view>
+#ifdef _MSC_VER
+#else
 #include <unistd.h>
+#endif
 #include <iostream>
 #include "humon.hpp"
 #include <CppUTest/TestHarness.h>

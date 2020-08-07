@@ -1,6 +1,9 @@
 #include <string.h>
 #include <string_view>
+#ifdef _MSC_VER
+#else
 #include <unistd.h>
+#endif
 #include "../src/humon.internal.h"
 #include <CppUTest/TestHarness.h>
 #include "testData.h"
@@ -58,7 +61,7 @@ TEST(huVectorTests, initVectorForCounting)
 TEST(huVectorTests, initVectorPreallocated)
 {
     huVector v;
-    int numElements = 100;
+    int const numElements = 100;
     char buf[numElements];
     initVectorPreallocated(&v, buf, 1, numElements);
 

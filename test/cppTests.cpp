@@ -4,7 +4,10 @@
 #include <string.h>
 #include <string_view>
 #include <iostream>
+#ifdef _MSC_VER
+#else
 #include <unistd.h>
+#endif
 #include "humon.hpp"
 #include <CppUTest/TestHarness.h>
 #include "testDataCpp.h"

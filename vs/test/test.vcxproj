@@ -19,55 +19,53 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\ansiColors.c" />
-    <ClCompile Include="..\..\src\encoding.c" />
-    <ClCompile Include="..\..\src\node.c" />
-    <ClCompile Include="..\..\src\parse.c" />
-    <ClCompile Include="..\..\src\printing.c" />
-    <ClCompile Include="..\..\src\tokenize.c" />
-    <ClCompile Include="..\..\src\trove.c" />
-    <ClCompile Include="..\..\src\utils.c" />
-    <ClCompile Include="..\..\src\vector.c" />
-    <ClCompile Include="dllmain.c" />
+    <ClCompile Include="..\..\test\apiTests.cpp" />
+    <ClCompile Include="..\..\test\commentTests.cpp" />
+    <ClCompile Include="..\..\test\cppTests.cpp" />
+    <ClCompile Include="..\..\test\dataTests.cpp" />
+    <ClCompile Include="..\..\test\errorTests.cpp" />
+    <ClCompile Include="..\..\test\testMain.cpp" />
+    <ClCompile Include="..\..\test\utf8Tests.cpp" />
+    <ClCompile Include="..\..\test\vectorTests.cpp" />
+    <ClCompile Include="..\..\test\wakkaTests.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\humon\ansiColors.h" />
-    <ClInclude Include="..\..\include\humon\humon.h" />
-    <ClInclude Include="..\..\src\humon.internal.h" />
+    <ClInclude Include="..\..\test\testData.h" />
+    <ClInclude Include="..\..\test\testDataCpp.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{71314987-A8AD-4A66-A376-1DCD3A636CF2}</ProjectGuid>
+    <ProjectGuid>{C051D8BB-3EF3-4282-8A6C-9223E530C7D5}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>lib</RootNamespace>
+    <RootNamespace>test</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>NotSet</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>NotSet</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>NotSet</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>NotSet</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -87,149 +85,113 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)build\bin\dll\</OutDir>
-    <IntDir>$(SolutionDir)build\obj\dll.$(Platform).$(Configuration)\</IntDir>
-    <TargetName>humon-win32-shared-d</TargetName>
-    <TargetExt>.dll</TargetExt>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <TargetName>humon-win64-shared-d</TargetName>
-    <TargetExt>.dll</TargetExt>
-    <OutDir>$(SolutionDir)build\bin\dll\</OutDir>
-    <IntDir>$(SolutionDir)build\obj\dll.$(Platform).$(Configuration)\</IntDir>
+    <TargetName>humon-test.$(Platform).$(Configuration)</TargetName>
+    <OutDir>$(SolutionDir)build\bin\</OutDir>
+    <IntDir>$(SolutionDir)build\obj\test.$(Platform).$(Configuration)\</IntDir>
+    <LibraryPath>C:\Users\space\src\cpputest\lib;C:\Users\space\src\humon\build\bin;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <TargetName>humon-test.$(Platform).$(Configuration)</TargetName>
+    <IntDir>$(SolutionDir)build\obj\test.$(Platform).$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)build\bin\</OutDir>
+    <LibraryPath>C:\Users\space\src\cpputest\lib\;C:\Users\space\src\humon\build\bin;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)build\bin\dll\</OutDir>
-    <IntDir>$(SolutionDir)build\obj\dll.$(Platform).$(Configuration)\</IntDir>
-    <TargetName>humon-win32-shared</TargetName>
-    <TargetExt>.dll</TargetExt>
+    <TargetName>humon-test.$(Platform).$(Configuration)</TargetName>
+    <IntDir>$(SolutionDir)build\obj\test.$(Platform).$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)build\bin\</OutDir>
+    <LibraryPath>C:\Users\space\src\cpputest\lib;C:\Users\space\src\humon\build\bin;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <TargetName>humon-win64-shared</TargetName>
-    <TargetExt>.dll</TargetExt>
-    <OutDir>$(SolutionDir)build\bin\dll\</OutDir>
-    <IntDir>$(SolutionDir)build\obj\dll.$(Platform).$(Configuration)\</IntDir>
+    <TargetName>humon-test.$(Platform).$(Configuration)</TargetName>
+    <IntDir>$(SolutionDir)build\obj\test.$(Platform).$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)build\bin\</OutDir>
+    <LibraryPath>C:\Users\space\src\cpputest\lib;C:\Users\space\src\humon\build\bin;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>HUMON_BUILDING_DLL;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeaderFile>
-      </PrecompiledHeaderFile>
-      <ExceptionHandling>false</ExceptionHandling>
-      <LanguageStandard>
-      </LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)include\humon;$(SolutionDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <UndefinePreprocessorDefinitions>
-      </UndefinePreprocessorDefinitions>
-      <CompileAs>Default</CompileAs>
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-      <DisableSpecificWarnings>4068;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-    </ClCompile>
-    <Link>
-      <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-    <PostBuildEvent>
-      <Command>copy $(OutDir)$(TargetName).dll $(SolutionDir)build\bin
-copy $(OutDir)$(TargetName).lib $(SolutionDir)build\bin
-</Command>
-    </PostBuildEvent>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>HUMON_BUILDING_DLL;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeaderFile>
-      </PrecompiledHeaderFile>
-      <ExceptionHandling>false</ExceptionHandling>
-      <LanguageStandard>
-      </LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)include\humon;$(SolutionDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <UndefinePreprocessorDefinitions>
-      </UndefinePreprocessorDefinitions>
-      <CompileAs>Default</CompileAs>
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-      <DisableSpecificWarnings>4068;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>C:\Users\space\src\cpputest\include;C:\Users\space\src\humon\include\humon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>humon-win32-d.lib;Winmm.lib;CppUTestd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>copy $(OutDir)$(TargetName).dll $(SolutionDir)build\bin
-copy $(OutDir)$(TargetName).lib $(SolutionDir)build\bin
-</Command>
-    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\space\src\cpputest\include;C:\Users\space\src\humon\include\humon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>humon-win32-d.lib;Winmm.lib;CppUTestd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>HUMON_BUILDING_DLL;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeaderFile>
-      </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)include\humon;$(SolutionDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <ExceptionHandling>false</ExceptionHandling>
-      <DisableSpecificWarnings>4068;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>C:\Users\space\src\cpputest\include;C:\Users\space\src\humon\include\humon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>humon-win32-d.lib;Winmm.lib;CppUTestd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>copy $(OutDir)$(TargetName).dll $(SolutionDir)build\bin
-copy $(OutDir)$(TargetName).lib $(SolutionDir)build\bin
-</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>HUMON_BUILDING_DLL;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeaderFile>
-      </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)include\humon;$(SolutionDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <ExceptionHandling>false</ExceptionHandling>
-      <DisableSpecificWarnings>4068;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>C:\Users\space\src\cpputest\include;C:\Users\space\src\humon\include\humon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>humon-win32-d.lib;Winmm.lib;CppUTestd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>copy $(OutDir)$(TargetName).dll $(SolutionDir)build\bin
-copy $(OutDir)$(TargetName).lib $(SolutionDir)build\bin
-</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
