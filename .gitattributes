@@ -1,2 +1,2 @@
 * text=auto
-test/testFiles/*.hu -text
+*.hu -text
