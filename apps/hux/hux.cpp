@@ -2,7 +2,6 @@
 #include <cstring>
 #include <charconv>
 #include <optional>
-#include <fmt/core.h>
 
 #include "humon.hpp"
 
