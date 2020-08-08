@@ -3825,9 +3825,6 @@ TEST(huSerializeTrove, correctness)
                             WhitespaceFormat, useColors, printComments, printBom);
                         std::string consPath = makeFileName(testFile, WhitespaceFormat, useColors, printComments, printBom);
 						
-						if (file.size() != ttos.size())
-							{ bool debugBreak = true; }
-
                         LONGS_EQUAL_TEXT(file.size(), ttos.size(), consPath.data());
                         MEMCMP_EQUAL_TEXT(file.data(), ttos.data(), file.size(), consPath.data());
                     }

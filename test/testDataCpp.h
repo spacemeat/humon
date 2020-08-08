@@ -194,7 +194,7 @@ R"({@ dup: foo @ dup: bar
 struct htd_wakka
 {
     std::string_view ts = 
-R"({
+u8R"({
     \key: \val
     k\ey: v\al
     key\ : val\  k\"ey: v\"al
