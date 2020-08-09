@@ -88,16 +88,16 @@ enum class InputType
 
 bool argMatches(char const * arg, char const * spec)
 {
-    int argLen = strlen(arg);
-    int specLen = strlen(spec);
+    int argLen = (int)strlen(arg);
+    int specLen = (int)strlen(spec);
     return argLen == specLen && memcmp(arg, spec, specLen) == 0;
 }
 
 
 bool argStartsWith(char const * arg, char const * spec)
 {
-    int argLen = strlen(arg);
-    int specLen = strlen(spec);
+    int argLen = (int)strlen(arg);
+    int specLen = (int)strlen(spec);
     return argLen >= specLen && memcmp(arg, spec, specLen) == 0;
 }
 
@@ -123,7 +123,7 @@ int main(int argc, char ** argv)
     for (; i < argc; ++i)
     {
         char * arg = argv[i];
-        int argLen = strlen(arg);
+        int argLen = (int) strlen(arg);
 
         switch (expectedArg)
         {
