@@ -118,19 +118,51 @@ or, if you want to use clang:
 
 > Currently the clang build uses gcc's standard library. A better build experience is in the works, but in the meantime it's trivial to modify the `build-linux.py` script to use whatever library you have.
 
-In Windows, you can open the root-level `humon.sln` file, and build the targets you like.
+In Windows, you can open the root-level `humon.sln` file in Visual Studio 2017+, and build the targets you like.
 
-For all builds, the binary artifacts are produced in `{humon directory}/build/bin`. Currently, you can just copy the built binaries and the headers from `{humon directory}/include/humon`. The following are built:
+For all builds, the binary artifacts are produced in `{humon directory}/build/bin`. Currently, you can just copy the built binaries and the headers from `{humon directory}/include/humon` for use in your projects.
 
-* libhumon.a                - optimized static library for Linux
-* libhumon-d.a              - debug static library for Linux
-* libhumon.so.ver.si.on     - optimized shared library for Linux
-* libhumon-d.so.ver.si.on   - debug shared library for Linux
-* ... Windows build files too
+The following are built in Linux:
 
-In Linux systems, the tests are built along with the libraries. 
+* libhumon.a                    - optimized static library for Linux
+* libhumon-d.a                  - debug static library for Linux
+* libhumon.so.ver.si.on         - optimized shared library for Linux
+* libhumon-d.so.ver.si.on       - debug shared library for Linux
+* humon-test-d                  - test binary, debug version
+* humon-test-r                  - test binary, optimized version
+* hux                           - a command-line tool for translating and validating Humon
+* readmeSrc-c                   - a small sample with example code from the README.md
+* readmeSrc-cpp                 - a less small sample with example code from the README.md
 
-    ~/src/humon/build$ bin/humon-test-d
+These files are built in Windows:
+* humon-win32.lib               - optimized static library for 32-bit Windows
+* humon-win32-d.lib             - debug static library for 32-bit Windows
+* humon-win32-shared.dll        - optimized DLL for 32-bit Windows
+* humon-win32-shared.lib        - import library for the 32-bit optimized DLL
+* humon-win32-shared-d.dll      - debug DLL for 32-bit Windows
+* humon-win32-shared-d.lib      - import library for the 32-bit debug DLL
+* humon-win32-shared-d.pdb      - PDB for the 32-bit debug DLL
+* humon-win64.lib               - optimized static library for 64-bit Windows
+* humon-win64-d.lib             - debug static library for 64-bit Windows
+* humon-win64-shared.dll        - optimized DLL for 64-bit Windows
+* humon-win64-shared.lib        - import library for the 64-bit optimized DLL
+* humon-win64-shared-d.dll      - debug DLL for 64-bit Windows
+* humon-win64-shared-d.lib      - import library for the 64-bit debug DLL
+* humon-win64-shared-d.pdb      - PDB for the 64-bit debug DLL
+* humon-test.Win32.Debug.exe    - test binary
+* humon-test.Win32.Debug.pdb    - PDB for test binary
+* hux.exe                       - a command-line tool for translating and validating Humon
+* hux.pdb                       - PDB for hux.exe
+
+The tests are built along with the libraries. Run them from the project root:
+
+    ~/src/humon$ build/bin/humon-test-d
+
+or
+
+    PS C:\Users\you\src\humon> build\bin\humon-test.Win32.Debug.exe
+
+or run the test project directly from Visual Studio.
 
 ### Humon version
 Humon uses three values in its language/API versioning scheme: `major.minor.revision` For changes that do not affect the API, the revision is incremented. For changes that only add to the API but do not break builds or behaviors, the minor value is incremented. For breaking changes, the major value is incremented. The version will generally refer to the API version; the Humon format is considered stable. (Though of course, it's only Humon, and may not know of its own imperfections yet.)
