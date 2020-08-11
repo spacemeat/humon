@@ -198,6 +198,8 @@ I mean, JSON wasn't designed for these things. It was made to communicate betwee
 
 So there's YAML. It basically does what I want but its syntax is complex, and has spatial requirements that I feel are binding. Just more syntax to manage, and it's harder to modify its structure quickly by hand. Humon is more fluid and flexible, and that allows for quick changes in a text editor.
 
+So there's TOML, which comes pretty close. It still has some structural requirements that I feel are unnecessary.
+
 So, this project proposes Humon as a replacement for those tasks that JSON is performing but shouldn't, and YAML might be performing if it was more accessible. Specifically, those spaces where humans interact with structured text data, and those places where we could be, but are inhibited by inconvenience or a rigid format like .ini.
 
 ### Some terms
@@ -205,7 +207,7 @@ So, this project proposes Humon as a replacement for those tasks that JSON is pe
 
 *trove*: A tokenized and parsed, in-memory representation of Humon data which stems from a single root node, and against which Humon APIs are programmed.
 
-*token stream*: The text of a Humon file or in-memory text string. I use this language to refer to Humon text content like in a file, rather than tokenized or parsed Humon data in a trove.
+*token stream*: The text of a Humon file or in-memory text string. I use this language to refer to Humon text content like in a file, as opposed to tokenized or parsed Humon data in a trove.
 
 *token*: A word or sequence of words in a Humon token stream, which are meaningful to Humon and you at a granular level. `{` is a token, as is a value like `"foo"`, as is a whole comment like `/* I am just an utterance. */`. (Comments are considered single tokens for parsing purposes.) Every token is owned either by a single node, or (in special cases) by the trove itself. A token array is maintained by the trove, and provides content and position information (row, column) for each token, if that sort of thing is interesting to you.
 
@@ -259,12 +261,12 @@ There is no assumption made about the kind of the root node. If the first non-co
 Any kind of node can occupy any entry in any list. Lists don't have to contain nodes of a single kind; mix and match as you see fit.
 
 **Dicts are enclosed in {curly braces}.**
-Each dict entry must be a key:node pair. The node can be of any kind. Each key in a dict must be a string, and unique within the dict. There is no delimiting syntax between key:node pairs; just whitespace (maybe including commas) if needed for disambiguation.
+Each dict entry must be a key:node pair. The node can be of any kind. Each key in a dict must be a string, and unique within the dict. There is no delimiting syntax between key:node pairs; just whitespace (maybe including commas if you like) if needed for disambiguation.
 
 **Values are strings.**
 A value is a contiguous non-punctuation, non-whitespace string of Unicode code points, or a quoted string of Unicode code points.
 
-For non-quoted values, the first whitespace or punctuation character encountered ends the string, and begins a new token. This obviously includes newlines. Quotes that are encountered *within* the string (but not the beginning) are included with it, and are not matched against any other quotes later in the string. So, `value"with'quotes` is tokenized as one whole token string. Backslashes can be used to escape punctuation characters or whitespace within an unquoted string. So, `value\ with\[\ crazy\ stuff \]` is tokenized as one whole token string. Backslashes do not escape newlines though; for that, use a quoted string.
+For non-quoted values, the first unescaped whitespace or punctuation character encountered ends the string, and begins a new token. This obviously includes newlines. Quotes that are encountered *within* the string (but not the beginning) are included with it, and are not matched against any other quotes later in the string. So, `value"with'quotes` is tokenized as one whole token string. Backslashes can be used to escape punctuation characters or whitespace within an unquoted string. So, `value\ with\[\ crazy\ stuff \]` is tokenized as one whole token string. Backslashes do not escape newlines though; for that, use a quoted string.
 
 You can use any quote character (`'`, `"`, `` ` ``) to begin a string. It doesn't matter which you use; they all work the same way. A quoted string value starts after the quote, and ends just before the next corresponding, *unescaped* quote. The string can contain backslash-escaped quotes, like in most programming languages, and treats other kinds of quotes as normal token characters:
 
@@ -292,14 +294,14 @@ They can be numbers of course, but that's just a string to Humon. The rules for 
     }
 
 **Whitespace is ignored.**
-The tokenizer ignores whitespace that isn't contained in a quoted string. Whitespace characters are not captured by tokens. All Unicode whitespace code points are recognized as whitespace.
+The tokenizer ignores whitespace that isn't escaped or contained in a quoted string. Whitespace characters are not captured by tokens. All Unicode whitespace code points are recognized as whitespace.
 
 **Commas are whitespace.**
-Commas are ignored by the tokenizer as whitespace. They are completely optional. The following Humon objects are identical:
+Commas are regarded by the tokenizer as whitespace. They are completely optional. The following Humon objects are identical:
 
     [resistors caps ICs diodes MOSFETs]
     [resistors,caps,ICs,diodes,MOSFETs]
-    [resistors, caps, ICs, diodes, MOSFETs]     // foo
+    [resistors, caps, ICs, diodes, MOSFETs]     // [1]
     [
         resistors
         caps
@@ -328,10 +330,10 @@ Commas are ignored by the tokenizer as whitespace. They are completely optional.
                  diodes 
                MOSFETs,,,,,,, ],,,
 
-I find myself sometimes using commas when placing list or dict elements on one line, as on line `foo` above, and not using them elsewise. In other words, what comes natural to my typing is legal Humon, and requires no grammarizing. I like designing structure without worrying about the punctuation; indeed, this little nit was one of the main motivations behind Humon's development.
+I find myself sometimes using commas when placing list or dict elements on one line, as on line `[1]` above, and not using them elsewise. In other words, what comes natural to my typing is legal Humon, and requires no grammarizing. I like designing structure without worrying about the punctuation; indeed, this little nit was one of the main motivations behind Humon's development.
 
 **Comments have no meaning.**
-Humon doesn't know or care about your comments. Humon commentary is just noise. But because they have meaning to humans, they are not discarded; see below.
+Any Unicode code points can be in any comments. Humon doesn't require your comments to contain any particular information. Because they have meaning to humans, they are not discarded by the parser; see below.
 
 **Annotations are their own thing, and exist out of band.**
 Annotations are the only sort of special syntax-y feature of Humon. The first working versions of the format didn't include them, but as I used Humon in those early days, I found that I wanted a convenient shorthand that sort of *jumped out of the structure* to provide context data, or specify certain rare conditions. Something formal and machineable, but that also didn't force modifications to the structure in place and were never strictly necessary. I settled on annotations.
@@ -343,7 +345,7 @@ Every node can have any number of annotations, which appear *after or within* th
         sulaco @ { movie-ref: aliens, movie-director: cameron }
     ] @ { exhaustive: probablyNot }
 
-Annotation values must be strings; an annotation can't be a collection. That way lies some madness.
+Annotation values must be strings; an annotation value can't be a collection. That way lies some madness.
 
 Like dict entries, annotation keys must be unique among annotations associated to a particular node. Different nodes in a trove can have annotations with identical keys though.
 
@@ -381,6 +383,8 @@ While Humon can read all the normal UTF-n formats, `Trove::toString`, `Trove::to
 ## The C-family programming interfaces
 There are API specs for the C and C++ interfaces. The C API is fully featured but obtuse, as C APIs tend to be. The C++ API mainly wraps the C API, but also provides some nice features for more C++ish fun-time things. Since you'll usually be using the C++ API, we'll mainly discuss that.
 
+### Getting a trove
+
 Start with `#include <humon.hpp>`. The interface is contained in a namespace, `hu`. The C API is itself contained in a nested namespace, `hu::capi`, but you generally won't reference it yourself.
 
 (Note: To use the C API, `#include <humon.h>` instead. Obviously there is no namespace there, because it's a pure C99 header.)
@@ -396,6 +400,8 @@ These each return a `std::variant<hu::Trove, hu::ErrorCode>` object. Once you ha
 
 The `hu::Trove` class is move-constructable and move-assignable. When it is destroyed, it will destroy the underlying trove data.
 
+### Getting nodes
+
 There are several ways to access a node. To get the root node, which is always at node index 0:
 
     auto & trove = std::get<hu::Trove>(desResFromRam);
@@ -406,7 +412,7 @@ There are several ways to access a node. To get the root node, which is always a
     // or
     rootNode = trove.nodeByIndex(0);
 
-These each return a `hu::Node` object. 
+These each return a `hu::Node` object that represents the root node. 
 
 To get a node deeper in the tree:
 
@@ -436,7 +442,7 @@ It's more efficient to store a reference to a node than to look it up successive
     auto fooNode = rootNode / "foo";
     hasFoosStuff = rootNode / "foo" % 1;
 
-Humon APIs don't throw, but rather return nullish objects, which have implicit `operator bool()`s for checking nullity. So even better than above:
+Humon APIs don't throw, but rather return nullish* objects, which have implicit `operator bool()`s for checking nullity. So even better than above:
 
     fooNode = rootNode / "foo";
     hasFoosStuff = fooNode ? fooNode % 1 : false;
@@ -450,9 +456,9 @@ And, if you intend to actually use the data (probably, right?), it may be even b
     auto foosStuff = rootNode / "foo" / 1;
     if (foosStuff) { ... }
 
-Above, `foosStuff` will be a nullish* object if any part of the path doesn't actually exist in the Humon source. It's all in one succinct line of code, though this is harder to debug; if the path is invalid, it may be hard to check which part of the path fell off of reality. So use this compact query style with caution.
+Above, `foosStuff` will be a nullish object if any part of the path doesn't actually exist in the Humon source. It's all in one succinct line of code, though this is harder to debug; if the path is invalid, it may be hard to check which part of the path fell off of reality. So use this compact query style with caution.
 
-> *nullish* objects are `hu::Trove`, `hu::Node`, or `hu::Token` objects that manage a null pointer. `HU_NULLTROVE`, `HU_NULLNODE`, and `HU_NULLTOKEN` are aliases to `NULL`. Operations on these objects will return other nullish objects, or `nullptr` as appropriate.
+> * *nullish* objects are `hu::Trove`, `hu::Node`, or `hu::Token` objects that manage a null pointer. `HU_NULLTROVE`, `HU_NULLNODE`, and `HU_NULLTOKEN` are aliases to `NULL`. Operations on these objects will return other nullish objects, or `NULL` or `nullptr` as appropriate.
 
 Up to now, we've mostly been using `operator /` to get nodes. But there's a string-based addressing method as well. Every node has a unique address based on the progression of keys and indices used to get to it from the trove or another node. You can get a node's address easily enough:
 
@@ -462,7 +468,7 @@ Node addresses are computed, not stored in the trove; as a result, the return va
 
 The address of a node looks like:
 
-    /foo/20/baz/3
+    "/foo/20/baz/3"
 
 The `/`s delimit the terms, and each term is either a key or integer index.
 
@@ -476,9 +482,9 @@ You get a node object back, which is valid if the address is valid or nullish if
 
 There are some finnicky bits about node addresses when considering that a dict's keys can be numbers in a token stream. They're still just string keys to Humon. But, `hu::Trove::nodeByAddress(address)` and `hu::Node::nodeByAddress(address)` interpret numeric terms in the address as indices. If you intend them to be read as keys, enquote that term in the address:
 
-    /foo/"20"/baz/
+    "/foo/'20'/baz/"
 
-`hu::Node::address()` returns appropriately `"`-enquoted terms if it needs to, and will escape already-present `"`s if it has to enquote such a term.
+`hu::Node::address()` always returns an address that is legal to use in `hu::Trove::nodeByAddress()` to find the node again. `hu::Node::address()` will appropriately `"`-enquoted terms if it needs to, and will escape already-present `"`s if it has to enquote such a term.
 
     {
         bufferSources: {
@@ -511,15 +517,13 @@ There are some finnicky bits about node addresses when considering that a dict's
     $ runSample
     required's address: /bufferSources/"res/\"game\ assets\"/meshes.hu"/required
 
-`hu::Node::address()` always returns an address that is legal to use in `hu::Trove::nodeByAddress()` to find the node again. You could even store those addresses (perhaps in other Humon data) for cross-referencing.
-
 A relative address can be used to get from one node to another:
 
     auto requiredAddress = requiredNode.nodeByAddress("../.. / 1 / 0");
 
-Notice the relative path does not start with `/`. The relative address is taken from the node, not from the trove.
+Notice the relative path does not start with `/`. The relative address is followed from the node, not from the trove.
 
-There are explicit member functions for getting nodes by child index or key or parentage:
+There are also explicit member functions for getting nodes by child index or key or parentage:
 
     auto node = trove.root();
     
@@ -536,19 +540,21 @@ There are explicit member functions for getting nodes by child index or key or p
     while (childNode);
 
     node = node.parent();
+
+### Getting node data
     
 So you've got a value node. Whooptie-doo. To get a value from it:
 
     node = trove / "bufferSources" / 0 / "monitoredForChanges";
-    string_view valStr = node.value();
+    string_view valStr = node.value();          // [1]
     // or
-    int valBool = node / hu::val<bool>{};
+    bool valBool = node / hu::val<bool>{};      // [2]
 
-> There are numerous Humon APIs that return a `std::string_view`, which might raise some of y'all's flags--`std::string_view`s do not own their own data. But remember, Humon objects are immutable and don't ever move in memory; the C++ objects just wrap heap pointers. Once the trove is loaded, none of its references go bad until the trove is destroyed. The returned `std::string_view`s point to memory that is static and good until the trove is gone, so in the case of Humon APIs, returning a `std::string_view` is copasetic. Just keep the trove around.
+> There are numerous Humon APIs that return a `std::string_view`, which might raise some of y'all's flags--`std::string_view`s do not own their own data. But remember, Humon objects are immutable and don't ever move in memory; the C++ objects just wrap heap pointers. Once the trove is loaded, none of its references go bad until the trove is destroyed. The returned `std::string_view`s point to memory that is static and good until the trove is gone, so in the case of Humon APIs, returning a `std::string_view` is copacetic. Just keep the trove around.
 
-`hu::Node::value()` actually returns a `hu::Token`, which has an implicit conversion to a `std::string_view`. A `hu::Token` has information about the token's representation in the token stream. You can get line / column data and the string value itself. Use token information if you want to report on the location of interesting data in a token stream.
+Though `hu::Node::value()` is assigned to a `std::string_view` above, it actually returns a `hu::Token`, which has an implicit conversion to a `std::string_view`. A `hu::Token` has information about the token's representation in the token stream. You can get line / column data and the string value itself. Use token information if you want to report on the location of interesting data in a token stream.
 
-In the second example above, the `hu::val<T>` type is defined to extract typed data from the value string of a node.  It allows you to deserialize and return an arbitrary-typed value. There are definitions for the basic numeric types and `bool` (using English spelling of "true" to denote truth). This is how you'll get the vast majority of your data.
+In example [2] above, the `hu::val<T>` type is defined to extract typed data from the value string of a node.  It allows you to deserialize and return an arbitrary-typed value. There are definitions for the basic numeric types and `bool` (using English spelling of "true" to denote truth). This is how you'll get the vast majority of your data.
 
 You can also define your own specialization of `hu::val<T>` for your own type. Start with the type you'd like to deserialize:
 
@@ -572,7 +578,7 @@ And define the specialized extractor:
     template <>
     struct hu::val<V3>
     {
-        static inline V3 extract(std::string_view valStr)
+        static V3 extract(std::string_view valStr)
         {
             return V3(valStr);
         }
@@ -590,10 +596,12 @@ Now you can use it:
 
     auto gccVersion = trove / "dependencies" / "gcc" / hu::val<V3>{};
 
-C++ will deduce tye type of `toolVersion` above from the `V3` template parameter passed to `hu::val<>`. `hu::val<T>` is a convenience which allows you to code the lookup and conversion in line, without grouping parentheses. You can also use the extractor member to convert strings by themselves:
+C++ will deduce tye type of `gccVersion` above from the `V3` template parameter passed to `hu::val<>`. `hu::val<T>` is a convenience which allows you to code the lookup and conversion in line, without grouping parentheses. You can also use the extractor member to convert strings by themselves:
 
     auto const literalVersion = "9.2.1";
-    auto toolVersion = hu::val<V3>::extract(literalVersion);    cout << "toolVersion: " << toolVersion << "\n";
+    auto toolVersion = hu::val<V3>::extract(literalVersion);
+
+### Getting annotation data
 
 Annotations are described in detail below. They're essentially per-node metadata. Examine a node's annotations in several ways:
 
@@ -645,16 +653,21 @@ Trove objects can have annotations too, separate from any node annotations, and 
 
 Similar APIs also exist for nodes and troves that search comment content and return associated nodes. See the API spec for these.
 
+### Formatting a token stream
+
 There are APIs for serializing a trove back to memory or a stream. There are three whitespace formatting options to serialize Humon objects:
-1. **Clonedgraphic**: A direct copy of the original token stream is produced, including all comments and commas and whitespace. Just a brainless memory slam.
+1. **Cloned**: A direct copy of the original token stream is produced, including all comments and commas and whitespace. Just a brainless memory slam.
 1. **Minimal**: This reduces whitespace to at most one character each to pare down length. Humon does as much as it can, but if you choose to preserve comments in the minified output, you may notice that not all newlines get replaced. This is because the next read operation on the resultant token stream must replicate the comment associations from the original, and that requires some comments to be on their own line. Also, C++-style `//comment`s end in a newline, and the token after must be on its own line, so those newlines are also preserved.
 1. **Pretty**: This produces a clean, indented, eminently readable string.
 
 You can generate a Humon token stream from a `hu::Trove` like so:
 
-    auto tokStr = trove.toPrettyString();
+    hu::SerializeOptions opts {};
+    auto tokStr = trove.toString(opts);
 
-This will generate an uncolored, well-formatted token stream, or an error code. These are returned as a `std::variant<std::string, hu::ErrorCode>`. There are options to make it suit your needs:
+This will generate an uncolored, well-formatted token stream, or an error code. These are returned as a `std::variant<std::string, hu::ErrorCode>`. The `hu::SerializeOptions` class has formatting options to customize the token stream to you liking.
+
+There are sugar functions to make it even easier:
 
     // Output the exact token stream used to build the trove. Fast.
     tokStr = trove.toClonedString();
@@ -667,7 +680,7 @@ This will generate an uncolored, well-formatted token stream, or an error code. 
     // Minimal whitespace, with old style HTML line breaks (default is "\n").
     tokStr = trove.toMinimalString({}, true, "<br />");
 
-For printing with colors, specify a color table of type `hu::ColorTable`, which is just a type alias for `std::array<std::string_view, capi::HU_COLORCODE_NUMCOLORS>`. You can set these values manually; each string corresponds index-wise to color codes in `hu::ColorCode`, and is inserted just before the appropriate token in the printed token stream. There are a few special values: `hu::ColorCode::tokenStreamBegin` which is placed before all other characters, `hu::ColorCode::tokenEnd` which is placed after *each* colored token, and `hu::ColorCode::tokenStreamEnd` which is placed after the *last* token in the token stream.
+For printing with colors, specify a color table of type `hu::ColorTable`, which is just a type alias for `std::array<std::string_view, hu::capi::HU_COLORCODE_NUMCOLORS>`. You can set these values manually; each string corresponds index-wise to color codes in `hu::ColorCode`, and is inserted just before the appropriate token in the printed token stream. There are a few special values: `hu::ColorCode::tokenStreamBegin` which is placed before all other characters, `hu::ColorCode::tokenEnd` which is placed after *each* colored token, and `hu::ColorCode::tokenStreamEnd` which is placed after the *last* token in the token stream.
 
 > Sometimes C-style enums can be more convenient than C++ enum classes. It's okay to admit it. You can use the analogous `hu::capi::huColorCode`, or `huColorCode` as defined in the `humon.h` C header.
 
@@ -675,7 +688,7 @@ Humon provides a function to make a `hu::ColorTable` with ANSI terminal color co
 
     hu::ColorTable colorTable = hu::getAnsiColorTable();
 
-    // You can specify minimal whitespace and still use a color table for the tokens--see below.
+    // You can specify minimal whitespace and still use a color table for the tokens.
     tokStr = trove.toMinimalString(colorTable, false, "\n");
     if (auto str = std::get_if<std::string>(& tokStr))
         { cout << * str; }
@@ -694,7 +707,7 @@ This is mostly for recording line numbers in token objects, for error reporting 
 **All non-whitespace, non-quote characters are part of some token.**
 Only whitespace characters like spaces, newlines, commas, and quote characters around keys and values are discarded from tracking in the tokenizer.
 
-**All tokens are part of some node, or the trove.**
+**All tokens are part of some node, xor the trove.**
 During a load, a Humon token stream is tokenized into a list of token objects, and then those tokens are parsed into a node hierarchy. Every single token object is owned by exactly one node, or by the trove itself in a few cases. A trove can completely reconstruct a Humon token stream from the nodes and tokens, including reconstructing comments and annotations with their appropriate associations.
 
 **All keys and values are strings.**
@@ -714,7 +727,7 @@ Once loaded, a Humon trove does not move or change. This has implications:
 **The C-family APIs don't signal by default; rather, they return null objects.**
 Normally, trove and node functions that return other nodes or tokens will not throw exceptions on bad parameters or lookup terms, or if they're nullish objects. Instead they just return other nullish objects or degenerate values. In the C++ API, you can check `IsNullish()` on `hu::Trove`, `hu::Node`, and `hu::Token` objects to see whether they're managing null values. Most of the functions are marked `noexcept` by default as well.
 
-Tou can turn turn on exceptions for the C++ API. Before your `#include <humon.hpp>` declaration, define any of these (TODO: or set these up in cmake):
+Tou can turn turn on exceptions for the C++ API. Before your `#include <humon.hpp>` declaration, define any of these:
 * `#define HUMON_USE_NULLISH_EXCEPTIONS` This will cause nullish `hu::Token` and `hu::Node` objects to throw when their member functions are called, instead of returning other nullish objects.
 * `#define HUMON_USE_NODE_PATH_EXCEPTIONS` This will cause  `hu::Trove::operator/` and `hu::Node::operator/` to throw exceptions instead of returning nullish objects when called with bad indices or keys. It can help you track down erroneous lookups.
 * `#define HUMON_SUPPRESS_NOEXCEPT` This turns off `noexcept` on most member functions, causing exceptions to be thrown instead of terminating the program.
@@ -739,7 +752,7 @@ This is different from some JSON libraries, that don't preserve the order of key
 **Comments have no meaning, but they do have context.**
 Humon doesn't know or care about your comments, as already stated in the language rules. But it doesn't discard them in the parsing process; they're preserved for searching and reserialization.
 
-All comments are associated to either a node in the hierarchy, or the trove itself. Humon tries to be smart about associating comments. Here's an example; the comments indicate to which entity they associate:
+All comments are associated to either a node in the hierarchy, or the trove itself. Humon tries to be smart about associating comments. Here's an example; the comments indicate to which token and node they associate:
 
     // ↓ root dict node
     // ↓ root dict node
@@ -786,7 +799,7 @@ If you're never searching by comments, or are ignoring them altogether, then non
 > Usually you would prefer annotations for searchable metadata, as comments are kind of "more optional" and likely more ephemeral--nobody expects comments to be required in any file, especially for machining purposes, and it may not occur to someone to maintain them for functional reasons. But I'm not here to tell you what to do.
 
 **Annotations have context.**
-Like comments, annotations are associated with nodes or the trove. You can access annotations by key from a node, or search all annotations by key or value and get their associated nodes.
+Like comments, annotations are associated with nodes or the trove. You can access annotations by key from a node, or search all annotations by key or value (or both) and get their associated nodes.
 
 Annotations are always *associated backward*. They modify the nearest non-comment node that appeared before the annotation, regardless of same-lineness. Any amount of whitespace or comments in between is ignored, as usual. If the previous token was a collection-starter or collection-ender (`[`, `{`, `]` or `}`), it modifies that list or dict node. In the following, `remoteStorage:true` annotates the player dict, not the userId value, because it follows the player dict's `{` opener:
 
@@ -801,7 +814,7 @@ Annotations are always *associated backward*. They modify the nearest non-commen
 
 (Personally, I would place the annotation on the same line as the `player: {`, for clarity.)
 
-If no nodes appear before an annotation, it applies to the trove. A great way to begin a Humon file spec is by specifying annotations for the application version or config version for which the file is good. Maybe you're developing a code-generation suite cleverly called "hudo", and want to ensure the correct version of the engine is called to consume every model file, even older ones. Hudo could look for a version annotation on the trove, before examining any nodes, and use the appropriate engine version to interpret the structure. Here we'll reuse the `using V3 = Version<int>;` class from earlier:
+If no nodes appear before an annotation, it applies to the trove. A great way to begin a Humon file spec is by specifying annotations for the application version or config version for which the file is good. Maybe you're developing a code-generation suite cleverly called "hudo", and want to ensure the correct version of the engine is called to consume every model file, even older ones. Hudo could look for a version annotation on the trove, before examining any nodes, and use the appropriate engine version to interpret the structure. Here we'll reuse the `using V3 = Version<3>;` class from earlier:
 
     @ { app: hudo, hudo-version: 0.1.1 }
 
@@ -844,6 +857,6 @@ Near-future features include:
 * Modules for C++
 * Single-header-ify the C++ (as an alternative to modules)
 * Constexpr All The Things in the single-header version. Kind of a research project.
-* Type size overrides for some of the runtime data elements
-* Better CMake for proper building, testing, installation, etc. What's extant is pretty spartan.
+* Type overrides for some of the runtime data elements like line/column data
+* Better build process. Considering CMake, but that's not set in stone.
 * C++ Range views for depth- and breadth-first node visitation

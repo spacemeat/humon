@@ -91,7 +91,7 @@ using V3 = Version<3>;
 template <>
 struct hu::val<V3>
 {
-    static inline V3 extract(std::string_view valStr)
+    static V3 extract(std::string_view valStr)
     {
         return V3(valStr);
     }
@@ -201,6 +201,7 @@ int main()
         auto childNode = trove.root().firstChild();                 
         do
         {                                                           cout << "childNode: " << childNode.address() << "\n";
+            // do something with childNode
             childNode = childNode.nextSibling();
         }
         while (childNode);
@@ -210,7 +211,7 @@ int main()
         node = trove / "bufferSources" / 0 / "monitoredForChanges";
         string_view valStr = node.value();                          cout << "valStr: " << valStr << "\n";
         // or
-        int valBool = node / hu::val<bool>{};                       cout << "valBool: " << valBool << "\n";
+        bool valBool = node / hu::val<bool>{};                       cout << "valBool: " << valBool << "\n";
     }
 
     {
@@ -281,7 +282,8 @@ int main()
                                                             cout << "node: " << node.address() << "\n";
         }
 
-        auto tokStr = trove.toPrettyString();
+        hu::SerializeOptions opts {};
+        auto tokStr = trove.toString(opts);
 
         // Output the exact token stream used to build the trove. Fast.
         tokStr = trove.toClonedString();

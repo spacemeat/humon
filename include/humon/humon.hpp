@@ -331,9 +331,9 @@ namespace hu
     {
     public:
         /// Construct with sane defaults.
-        SerializeOptions(WhitespaceFormat WhitespaceFormat, int indentSize = 4, bool indentWithTabs = false,
-            std::optional<ColorTable> const & colors = {}, bool printComments = true, 
-            std::string_view newline = "\n", bool printBom = false) HUMON_NOEXCEPT
+        SerializeOptions(WhitespaceFormat WhitespaceFormat = WhitespaceFormat::pretty, 
+            int indentSize = 4, bool indentWithTabs = false, std::optional<ColorTable> const & colors = {}, 
+            bool printComments = true, std::string_view newline = "\n", bool printBom = false) HUMON_NOEXCEPT
         {
             capi::huInitSerializeOptionsN(& cparams, static_cast<int>(WhitespaceFormat), indentSize, indentWithTabs,
                 false, capiColorTable, printComments, newline.data(), (int) newline.size(), printBom);
