@@ -1,9 +1,18 @@
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <string.h>
 #include "humon.internal.h"
 
 
 FILE * openFile(char const * path, char const * mode)
 {
+    struct stat fstatData;
+    if (stat(path, & fstatData) < 0)
+        { return NULL; }
+    
+    if (S_ISREG(fstatData.st_mode) == false)
+        { return NULL; }
+
     FILE * fp = NULL;
 #ifdef _MSC_VER
     errno_t err = fopen_s(& fp, path, mode);
@@ -14,10 +23,46 @@ FILE * openFile(char const * path, char const * mode)
 }
 
 
-bool stringInString(char const * haystack, int haystackLen, char const * needle, int needleLen)
+huEnumType_t getFileSize(FILE * fp, huIndexSize_t * fileLen, huEnumType_t errorResponse)
+{
+    if (fseeko(fp, 0, SEEK_END) != 0)
+    {
+        printError(errorResponse, "Could not read file.");
+        return HU_ERROR_BADFILE;
+    }
+
+#ifdef _MSC_VER
+    _ftelli64 dataLen = _ftelli64(fp);    
+#else
+    off_t dataLen = ftello(fp);
+#endif
+    if (dataLen == -1L)
+    {
+        printError(errorResponse, "Could not read file.");
+        return HU_ERROR_BADFILE;
+    }
+
+    if (dataLen > maxOfType(huIndexSize_t))
+    {
+        printError(errorResponse, "File is too large. Consider setting HU_STRLEN_TYPE to a 64-bit integer type.");
+        return HU_ERROR_BADFILE;
+    }
+
+    rewind(fp);
+
+    * fileLen = dataLen;
+
+    return HU_ERROR_NOERROR;
+}
+
+
+bool stringInString(char const * haystack, huIndexSize_t haystackLen, char const * needle, huIndexSize_t needleLen)
 {
     // I'm unconcerned about O(m*n).
-    for (int i = 0; i < haystackLen - needleLen + 1; ++i)
+    if (haystackLen < needleLen)
+        { return false; }
+
+    for (huIndexSize_t i = 0; i < haystackLen - needleLen + 1; ++i)
     {
         if (strncmp(haystack + i, needle, needleLen) == 0)
             { return true; }
@@ -27,7 +72,7 @@ bool stringInString(char const * haystack, int haystackLen, char const * needle,
 }
 
 
-char const * huEncodingToString(int rhs)
+char const * huEncodingToString(huEnumType_t rhs)
 {
     switch(rhs)
     {
@@ -42,7 +87,7 @@ char const * huEncodingToString(int rhs)
 }
 
 
-char const * huTokenKindToString(int rhs)
+char const * huTokenKindToString(huEnumType_t rhs)
 {
     switch(rhs)
     {
@@ -61,7 +106,7 @@ char const * huTokenKindToString(int rhs)
 }
 
 
-char const * huNodeKindToString(int rhs)
+char const * huNodeKindToString(huEnumType_t rhs)
 {
     switch(rhs)
     {
@@ -74,7 +119,7 @@ char const * huNodeKindToString(int rhs)
 }
 
 
-char const * huWhitespaceFormatToString(int rhs)
+char const * huWhitespaceFormatToString(huEnumType_t rhs)
 {
     switch(rhs)
     {
@@ -86,7 +131,7 @@ char const * huWhitespaceFormatToString(int rhs)
 }
 
 
-char const * huOutputErrorToString(int rhs)
+char const * huOutputErrorToString(huEnumType_t rhs)
 {
     switch(rhs)
     {
@@ -120,7 +165,7 @@ bool isMachineBigEndian()
 }
 
 
-void huInitDeserializeOptions(huDeserializeOptions * params, int encoding, bool strictUnicode, int tabSize)
+void huInitDeserializeOptions(huDeserializeOptions * params, huEnumType_t encoding, bool strictUnicode, huIndexSize_t tabSize)
 {
     params->encoding = encoding;
     params->allowOutOfRangeCodePoints = ! strictUnicode;
@@ -129,18 +174,22 @@ void huInitDeserializeOptions(huDeserializeOptions * params, int encoding, bool 
 }
 
 
-void huInitSerializeOptionsZ(huSerializeOptions * params, int WhitespaceFormat, int indentSize, 
+void huInitSerializeOptionsZ(huSerializeOptions * params, huEnumType_t WhitespaceFormat, huIndexSize_t indentSize, 
     bool indentWithTabs, bool usingColors, huStringView const * colorTable,  bool printComments, 
     char const * newline, bool printBom)
 {
+    size_t newlineLenC = strlen(newline);
+    if (newlineLenC > maxOfType(huIndexSize_t))
+        { newlineLenC = maxOfType(huIndexSize_t); }
+
     huInitSerializeOptionsN(params, WhitespaceFormat, indentSize, indentWithTabs, usingColors, colorTable, 
-        printComments, newline, (int)strlen(newline), printBom);
+        printComments, newline, (huIndexSize_t) newlineLenC, printBom);
 }
 
 
-void huInitSerializeOptionsN(huSerializeOptions * params, int WhitespaceFormat, int indentSize, 
+void huInitSerializeOptionsN(huSerializeOptions * params, huEnumType_t WhitespaceFormat, huIndexSize_t indentSize, 
     bool indentWithTabs, bool usingColors, huStringView const * colorTable,  bool printComments, 
-    char const * newline, int newlineSize, bool printBom)
+    char const * newline, huIndexSize_t newlineSize, bool printBom)
 {
     params->WhitespaceFormat = WhitespaceFormat;
     params->indentSize = indentSize;

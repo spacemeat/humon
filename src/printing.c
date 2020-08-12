@@ -11,7 +11,7 @@ static void printUtf8Bom(PrintTracker * printer)
 }
 
 
-void appendString(PrintTracker * printer, char const * addend, int size)
+void appendString(PrintTracker * printer, char const * addend, huIndexSize_t size)
 {
     appendToVector(printer->str, addend, size);
     printer->lastPrintWasIndent = false;
@@ -20,7 +20,7 @@ void appendString(PrintTracker * printer, char const * addend, int size)
 }
 
 
-static void appendColor(PrintTracker * printer, int colorCode)
+static void appendColor(PrintTracker * printer, huEnumType_t colorCode)
 {
     if (printer->SerializeOptions->usingColors == false)
         { return; }
@@ -29,7 +29,7 @@ static void appendColor(PrintTracker * printer, int colorCode)
 }
 
 
-static void appendWs(PrintTracker * printer, int numChars)
+static void appendWs(PrintTracker * printer, huIndexSize_t numChars)
 {
     if (printer->SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_MINIMAL)
         { numChars = max(numChars, 1); }
@@ -53,7 +53,7 @@ static void ensureWs(PrintTracker * printer)
 }
 
 
-static void appendTabs(PrintTracker * printer, int numTabs)
+static void appendTabs(PrintTracker * printer, huIndexSize_t numTabs)
 {
     char const tabs[] = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t"; // 16 tabs
     while (numTabs > 16)
@@ -92,7 +92,7 @@ static void appendNewline(PrintTracker * printer)
 }
 
 
-static void appendColoredString(PrintTracker * printer, char const * addend, int size, int colorCode)
+static void appendColoredString(PrintTracker * printer, char const * addend, huIndexSize_t size, huEnumType_t colorCode)
 {
     appendColor(printer, colorCode);
     appendString(printer, addend, size);
@@ -101,7 +101,7 @@ static void appendColoredString(PrintTracker * printer, char const * addend, int
 }
 
 
-static void appendColoredToken(PrintTracker * printer, huToken const * tok, int colorCode)
+static void appendColoredToken(PrintTracker * printer, huToken const * tok, huEnumType_t colorCode)
 {
     // prevent adjacent unquoted words from abutting
     if (printer->lastPrintWasUnquotedWord && tok->kind != HU_TOKENKIND_COMMENT)
@@ -140,10 +140,10 @@ static void printTrailingComment(PrintTracker * printer, huToken const * tok)
 }
 
 
-static int printAllPrecedingComments(PrintTracker * printer, huNode const * node, huToken const * tok, int startingWith)
+static huIndexSize_t printAllPrecedingComments(PrintTracker * printer, huNode const * node, huToken const * tok, huIndexSize_t startingWith)
 {
-    int commentIdx = startingWith;
-    int numComments = huGetNumComments(node);
+    huIndexSize_t commentIdx = startingWith;
+    huIndexSize_t numComments = huGetNumComments(node);
 
     for (; commentIdx < numComments; ++commentIdx)
     {
@@ -163,10 +163,10 @@ static int printAllPrecedingComments(PrintTracker * printer, huNode const * node
 }
 
 
-static int printAllTrailingComments(PrintTracker * printer, huNode const * node, huToken const * tok, int startingWith)
+static huIndexSize_t printAllTrailingComments(PrintTracker * printer, huNode const * node, huToken const * tok, huIndexSize_t startingWith)
 {
-    int commentIdx = startingWith;
-    int numComments = huGetNumComments(node);
+    huIndexSize_t commentIdx = startingWith;
+    huIndexSize_t numComments = huGetNumComments(node);
 
     for (; commentIdx < numComments; ++commentIdx)
     {
@@ -189,7 +189,7 @@ static int printAllTrailingComments(PrintTracker * printer, huNode const * node,
 
 static void printAnnotations(PrintTracker * printer, huVector const * annotations, bool isTroveAnnotations)
 {
-    int numAnnos = getVectorSize(annotations);
+    huIndexSize_t numAnnos = getVectorSize(annotations);
     if (numAnnos == 0)
         { return; }
 
@@ -220,7 +220,7 @@ static void printAnnotations(PrintTracker * printer, huVector const * annotation
         if (printer->SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
             { appendWs(printer, 1); }
     }
-    for (int annoIdx = 0; annoIdx < numAnnos; ++annoIdx)
+    for (huIndexSize_t annoIdx = 0; annoIdx < numAnnos; ++annoIdx)
     {
         if (annoIdx > 0 && printer->SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
             { ensureWs(printer); }
@@ -245,8 +245,8 @@ static void printAnnotations(PrintTracker * printer, huVector const * annotation
 
 static void printNode(PrintTracker * printer, huNode const * node)
 {    
-    int numComments = huGetNumComments(node);
-    int commentIdx = 0;
+    huIndexSize_t numComments = huGetNumComments(node);
+    huIndexSize_t commentIdx = 0;
 
     //  print preceding comments
     commentIdx = printAllPrecedingComments(printer, node, node->valueToken, commentIdx);
@@ -281,7 +281,7 @@ static void printNode(PrintTracker * printer, huNode const * node)
         // print children
         printer->currentDepth += 1;
         huNode const * chNode = NULL;
-        for (int chIdx = 0; chIdx < huGetNumChildren(node); ++chIdx)
+        for (huIndexSize_t chIdx = 0; chIdx < huGetNumChildren(node); ++chIdx)
         {
             chNode = huGetChildByIndex(node, chIdx);
             printNode(printer, chNode);
@@ -310,7 +310,7 @@ static void printNode(PrintTracker * printer, huNode const * node)
         // print children
         printer->currentDepth += 1;
         huNode const * chNode = NULL;
-        for (int chIdx = 0; chIdx < huGetNumChildren(node); ++chIdx)
+        for (huIndexSize_t chIdx = 0; chIdx < huGetNumChildren(node); ++chIdx)
         {
             chNode = huGetChildByIndex(node, chIdx);
             printNode(printer, chNode);
@@ -336,7 +336,7 @@ static void printNode(PrintTracker * printer, huNode const * node)
     //  print comments preceding any annos
     //  print annos
     commentIdx = printAllTrailingComments(printer, node, node->lastValueToken, commentIdx);
-    int startIdx = commentIdx;
+    huIndexSize_t startIdx = commentIdx;
     for (; commentIdx < numComments; ++commentIdx)
     {
         if (commentIdx == startIdx && printer->SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY && printer->SerializeOptions->printComments)
@@ -375,9 +375,9 @@ void troveToPrettyString(huTrove const * trove, huVector * str, huSerializeOptio
     // Print trove comments that precede the root node token; These are comments that appear before 
     // or amidst trove annotations, before the root. These will all be the first trove comments, so 
     // just start scumming from 0.
-    int troveCommentIdx = 0;
-    int numTroveComments = huGetNumTroveComments(trove);
-    int numTroveAnnotations = huGetNumTroveAnnotations(trove);
+    huIndexSize_t troveCommentIdx = 0;
+    huIndexSize_t numTroveComments = huGetNumTroveComments(trove);
+    huIndexSize_t numTroveAnnotations = huGetNumTroveAnnotations(trove);
     if (numTroveAnnotations > 0)
     {
         for (; troveCommentIdx < numTroveComments; ++troveCommentIdx)
@@ -418,9 +418,10 @@ void troveToPrettyString(huTrove const * trove, huVector * str, huSerializeOptio
 }
 
 
-static void setTableEntry(huStringView table[], int colorKind, char const * str)
+static void setTableEntry(huStringView table[], huEnumType_t colorKind, char const * str)
 {
-    table[colorKind].ptr = str; table[colorKind].size = (int) strlen(str);
+    table[(unsigned) colorKind].ptr = str; 
+    table[(unsigned) colorKind].size = (huIndexSize_t) strlen(str);
 }
 
 

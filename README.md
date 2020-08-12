@@ -525,20 +525,25 @@ Notice the relative path does not start with `/`. The relative address is follow
 
 There are also explicit member functions for getting nodes by child index or key or parentage:
 
-    auto node = trove.root();
+    // get the root node
+    auto root = trove.root();
     
-    node = node.child(1);
+    // get its second child (index 1)
+    auto node = root.child(1);
     
-    node = node.child(R"(res/"game\ assets"/materials.hu)"sv);
+    // or, get its child by key
+    node = root.child("pipelineSources"sv);
 
-    auto childNode = trove.root().firstChild();                 
+    // cycle through each of root's child nodes
+    auto childNode = trove.root().firstChild();
     do
     {
-        // do something with childNode
+        // ...do something with childNode
         childNode = childNode.nextSibling();
     }
     while (childNode);
 
+    // call your mom
     node = node.parent();
 
 ### Getting node data
@@ -828,7 +833,7 @@ If no nodes appear before an annotation, it applies to the trove. A great way to
 
     ...
 
-    desRes = hu::Trove::fromFile("samples/sampleFiles/hudo.hu"sv);
+    desRes = hu::Trove::fromFile("apps/readmeSrc/hudo.hu"sv);
     if (auto trove = std::get_if<hu::Trove>(& desRes))
     {
         if (trove->troveAnnotation("app") != "hudo"sv)

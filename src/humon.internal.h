@@ -37,6 +37,20 @@
 /// Option to examine useful debug reporting. Mainly for Humon development.
 //#define HUMON_CAVEPERSON_DEBUGGING
 
+
+// For determining the max value of a type t. Useful for user-settable types.
+// Thanks, SO! https://stackoverflow.com/questions/2053843/min-and-max-value-of-data-type-in-c
+#define isSignedType(t) (((t)(-1)) < ((t) 0))
+
+#define uMaxOfType(t) (((0x1ULL << ((sizeof(t) * 8ULL) - 1ULL)) - 1ULL) | \
+                        (0xFULL << ((sizeof(t) * 8ULL) - 4ULL)))
+
+#define sMaxOfType(t) (((0x1ULL << ((sizeof(t) * 8ULL) - 1ULL)) - 1ULL) | \
+                        (0x7ULL << ((sizeof(t) * 8ULL) - 4ULL)))
+
+#define maxOfType(t) ((unsigned long long) (isSignedType(t) ? sMaxOfType(t) : uMaxOfType(t)))
+
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -45,29 +59,32 @@ extern "C"
     int min(int a, int b);
     int max(int a, int b);
 
+    void printError(huEnumType_t errorResponse, char const * msg);
+
     FILE * openFile(char const * path, char const * mode);
+    huEnumType_t getFileSize(FILE * fp, huIndexSize_t * fileLen, huEnumType_t errorResponse);
 
     /// Returns whether a string is contained in another string.
-    bool stringInString(char const * haystack, int haystackLen, char const * needle, int needleLen);
+    bool stringInString(char const * haystack, huIndexSize_t haystackLen, char const * needle, huIndexSize_t needleLen);
 
     /// Initializes a vector to zero size. Vector can count characters but not store them. Does not allocate.
     void initVectorForCounting(huVector * vector);
     /// Initializes a vector with a preallocated buffer. Does not allocate, and cannot grow.
-    void initVectorPreallocated(huVector * vector, void * buffer, int elementSize, int numElements);
+    void initVectorPreallocated(huVector * vector, void * buffer, huIndexSize_t elementSize, huIndexSize_t numElements);
     /// Initializes a vector to zero size. Does not allocate yet.
-    void initGrowableVector(huVector * vector, int elementSize);
+    void initGrowableVector(huVector * vector, huIndexSize_t elementSize);
     /// Frees the memory owned by a huVector.
     void destroyVector(huVector const * vector);
     /// Returns the number of elements in a huVector.
-    int getVectorSize(huVector const * vector);
+    huIndexSize_t getVectorSize(huVector const * vector);
     /// Returns a pointer to an element in a huVector.
-    void * getVectorElement(huVector const * vector, int idx);
+    void * getVectorElement(huVector const * vector, huIndexSize_t idx);
     /// Resets a vector to its Init* state.
     void resetVector(huVector * vector);
     /// Adds an array of elements to the vector, and returns the number of elements successfully appended.
-    int appendToVector(huVector * vector, void const * data, int numElements);
+    huIndexSize_t appendToVector(huVector * vector, void const * data, huIndexSize_t numElements);
     /// Grows a growable vector, and return a pointer to the first element of the appended entries.
-    void * growVector(huVector * vector, int * numElements);
+    void * growVector(huVector * vector, huIndexSize_t * numElements);
 
     typedef struct huCursor_tag
     {
@@ -85,7 +102,7 @@ extern "C"
     {
         huTrove * trove;
         char const * inputStr;
-        int inputStrLen;
+        huIndexSize_t inputStrLen;
         huCursor * curCursor;
         huCursor * nextCursor;
         huCursor cursors[2];
@@ -97,9 +114,9 @@ extern "C"
     /// Move the scanner's character cursor by one.
     void nextCharacter(huScanner * cursor);
     /// Initialize a huScanner.
-    void initScanner(huScanner * scanner, huTrove * trove, char const * str, int strLen);
+    void initScanner(huScanner * scanner, huTrove * trove, char const * str, huIndexSize_t strLen);
     /// Move the scanner's character cursor past any whitespace.
-    void eatWs(huScanner * cursor, int tabSize, int * line, int * col);
+    void eatWs(huScanner * cursor, huIndexSize_t tabSize, huLine_t * line, huCol_t * col);
 
     /// Initialize a huNode object.
     void initNode(huNode * node, huTrove const * trove);
@@ -107,23 +124,23 @@ extern "C"
     void destroyNode(huNode const * node);
 
     /// Add a huToken to a trove's token array.
-    huToken * allocNewToken(huTrove * trove, int kind, char const * str, int size, int line, int col, int endLine, int endCol, char quoteChar);
+    huToken * allocNewToken(huTrove * trove, huEnumType_t kind, char const * str, huIndexSize_t size, huLine_t line, huCol_t col, huLine_t endLine, huCol_t endCol, char quoteChar);
     /// Add a huNode to a trove's node array.
-    huNode * allocNewNode(huTrove * trove, int nodeKind, huToken const * firstToken);
+    huNode * allocNewNode(huTrove * trove, huEnumType_t nodeKind, huToken const * firstToken);
 
     /// Add a huError to a trove's error array during tokenization.
-    void recordTokenizeError(huTrove * trove, int errorCode, int line, int col);
+    void recordTokenizeError(huTrove * trove, huEnumType_t errorCode, huLine_t line, huCol_t col);
     /// Add a huError to a trove's error array during parsing.
-    void recordParseError(huTrove * trove, int errorCode, huToken const * pCur);
+    void recordParseError(huTrove * trove, huEnumType_t errorCode, huToken const * pCur);
 
     /// Attempt to determine the Unicode encoding of a string in memory.
-    int swagEncodingFromString(huStringView const * data, size_t * numBomChars, huDeserializeOptions * DeserializeOptions);
+    huEnumType_t swagEncodingFromString(huStringView const * data, huIndexSize_t * numBomChars, huDeserializeOptions * DeserializeOptions);
     /// Attempt to determine the Unicode encoding of a file.
-    int swagEncodingFromFile(FILE * fp, int fileSize, size_t * numBomChars, huDeserializeOptions * DeserializeOptions);
+    huEnumType_t swagEncodingFromFile(FILE * fp, huIndexSize_t fileSize, huIndexSize_t * numBomChars, huDeserializeOptions * DeserializeOptions);
     /// Transcode a string in memory from its native encoding to a UTF-8 memory buffer.
-    int transcodeToUtf8FromString(char * dest, size_t * numBytesEncoded, huStringView const * src, huDeserializeOptions * DeserializeOptions);
+    huEnumType_t transcodeToUtf8FromString(char * dest, huIndexSize_t * numBytesEncoded, huStringView const * src, huDeserializeOptions * DeserializeOptions);
     /// Transcode a file from its native encoding to a UTF-8 memory buffer.
-    int transcodeToUtf8FromFile(char * dest, size_t * numBytesEncoded, FILE * fp, int srcLen, huDeserializeOptions * DeserializeOptions);
+    huEnumType_t transcodeToUtf8FromFile(char * dest, huIndexSize_t * numBytesEncoded, FILE * fp, huIndexSize_t srcLen, huDeserializeOptions * DeserializeOptions);
 
     /// Extracts the tokens from a token stream.
     void tokenizeTrove(huTrove * trove);
@@ -142,7 +159,7 @@ extern "C"
 
         huSerializeOptions * SerializeOptions;
 
-        int currentDepth;
+        huIndexSize_t currentDepth;
         bool lastPrintWasNewline;
         bool lastPrintWasIndent;
         bool lastPrintWasUnquotedWord;
@@ -150,7 +167,7 @@ extern "C"
     } PrintTracker;
 
     /// This appends a string to a PrintTracker.
-    void appendString(PrintTracker * printer, char const * addend, int size);
+    void appendString(PrintTracker * printer, char const * addend, huIndexSize_t size);
     /// This prints a trove to a whitespace-formatted string.
     void troveToPrettyString(huTrove const * trove, huVector * str, huSerializeOptions * SerializeOptions);
 

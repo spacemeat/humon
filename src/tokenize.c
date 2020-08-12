@@ -112,7 +112,7 @@ void nextCharacter(huScanner * scanner)
 }
 
 
-void initScanner(huScanner * scanner, huTrove * trove, char const * str, int strLen)
+void initScanner(huScanner * scanner, huTrove * trove, char const * str, huIndexSize_t strLen)
 {
     * scanner = (huScanner) {
         .trove = trove, 
@@ -159,7 +159,7 @@ void initScanner(huScanner * scanner, huTrove * trove, char const * str, int str
 }
 
 
-void eatWs(huScanner * scanner, int tabSize, int * line, int * col)
+void eatWs(huScanner * scanner, huIndexSize_t tabSize, huLine_t * line, huCol_t * col)
 {
     bool eating = true;
     while (eating)
@@ -190,7 +190,7 @@ void eatWs(huScanner * scanner, int tabSize, int * line, int * col)
 }
 
 
-static void eatDoubleSlashComment(huScanner * scanner, int tabSize, int * len, int * line, int * col)
+static void eatDoubleSlashComment(huScanner * scanner, huIndexSize_t tabSize, huIndexSize_t * len, huLine_t * line, huCol_t * col)
 {
     // The first two characters are already confirmed //, so, next please.
     * len += scanner->curCursor->charLength;
@@ -220,11 +220,11 @@ static void eatDoubleSlashComment(huScanner * scanner, int tabSize, int * len, i
 }
 
 
-static void eatCStyleComment(huScanner * scanner, int tabSize, int * len, int * line, int * col)
+static void eatCStyleComment(huScanner * scanner, huIndexSize_t tabSize, huIndexSize_t * len, huLine_t * line, huCol_t * col)
 {
     // record the location for error reporting
-    int tokenStartLine = * line;
-    int tokenStartCol = * col;
+    huLine_t tokenStartLine = * line;
+    huCol_t tokenStartCol = * col;
 
     // The first two characters are already confirmed /*, so, next please.    
     * len += scanner->curCursor->charLength;
@@ -282,7 +282,7 @@ static void eatCStyleComment(huScanner * scanner, int tabSize, int * len, int * 
 }
 
 
-static void eatWord(huScanner * scanner, int * len, int * line, int * col)
+static void eatWord(huScanner * scanner, huIndexSize_t * len, huLine_t * line, huCol_t * col)
 {
     // The first character is already confirmed a word char, so, next please.
     * len += scanner->curCursor->charLength;
@@ -344,13 +344,13 @@ static void eatWord(huScanner * scanner, int * len, int * line, int * col)
 }
 
 
-static void eatQuotedWord(huScanner * scanner, int tabSize, int * len, int * line, int * col)
+static void eatQuotedWord(huScanner * scanner, huIndexSize_t tabSize, huIndexSize_t * len, huLine_t * line, huCol_t * col)
 {
     // record the location for error reporting
-    int tokenStartLine = * line;
-    int tokenStartCol = * col;
+    huLine_t tokenStartLine = * line;
+    huCol_t tokenStartCol = * col;
 
-    int32_t quoteChar = scanner->curCursor->codePoint;
+    uint32_t quoteChar = scanner->curCursor->codePoint;
 
     // The first character is already confirmed quoteChar, so, next please.
     * col += 1;
@@ -390,13 +390,13 @@ static void eatQuotedWord(huScanner * scanner, int tabSize, int * len, int * lin
                 nextCharacter(scanner);
 
                 // skip over the escaped quote so we don't encounter it and end the string
-                if (scanner->curCursor->codePoint == (uint32_t) quoteChar)
+                if (scanner->curCursor->codePoint == quoteChar)
                 {
                     * len += scanner->curCursor->charLength;
                     nextCharacter(scanner);
                 }
             }
-            else if (scanner->curCursor->codePoint == (uint32_t) quoteChar)
+            else if (scanner->curCursor->codePoint == quoteChar)
             {
                 nextCharacter(scanner);
                 eating = false;
@@ -420,17 +420,17 @@ void tokenizeTrove(huTrove * trove)
     huScanner scanner;
     initScanner(& scanner, trove, beg, trove->dataStringSize);
 
-    int line = 1;
-    int col = 1;
+    huLine_t line = 1;
+    huCol_t col = 1;
     bool scanning = true;
 
     // lexi scan
     while (scanning && scanner.curCursor->isError == false)
     {
         eatWs(& scanner, trove->inputTabSize, & line, & col);
-        int len = 0;
-        int lineM = line;
-        int colM = col;
+        huIndexSize_t len = 0;
+        huLine_t lineM = line;
+        huCol_t colM = col;
 
         huCursor * cur = scanner.curCursor;
         char const * tokenStart = cur->character;

@@ -121,7 +121,7 @@ int main()
 
     {
         auto desResFromRam = hu::Trove::fromString("{foo: [100, 200]}"sv);
-        auto DesResFromFile = hu::Trove::fromFile("data/foo.hu"sv);
+        auto DesResFromFile = hu::Trove::fromFile("apps/readmeSrc/materials.hu"sv);
 
         auto & trove = std::get<hu::Trove>(desResFromRam);
 
@@ -194,24 +194,31 @@ int main()
         
         auto relativeNode = requiredNode.nodeByAddress("../.. / .. /1 / 0"); cout << "relative node address: " << relativeNode.address() << "\n";
 
-        auto node = trove.root();                                   cout << "node: " << node.address() << "\n";
-        node = node.child(1);                                       cout << "node: " << node.address() << "\n";
-        node = node.child(R"(res/"game\ assets"/materials.hu)"sv);  cout << "node: " << node.address() << "\n";
+        // get the root node
+        auto root = trove.root();
+    
+        // get its second child (index 1)
+        auto node = root.child(1);                                  cout << "node: " << node.address() << "\n";
+        
+        // or, get its child by key
+        node = root.child("pipelineSources"sv);                     cout << "node: " << node.address() << "\n";
 
+        // cycle through each of root's child nodes
         auto childNode = trove.root().firstChild();                 
         do
         {                                                           cout << "childNode: " << childNode.address() << "\n";
-            // do something with childNode
+            // ...do something with childNode
             childNode = childNode.nextSibling();
         }
         while (childNode);
 
+        // call your mom
         node = node.parent();                                       cout << "node: " << node.address() << "\n";
 
         node = trove / "bufferSources" / 0 / "monitoredForChanges";
         string_view valStr = node.value();                          cout << "valStr: " << valStr << "\n";
         // or
-        bool valBool = node / hu::val<bool>{};                       cout << "valBool: " << valBool << "\n";
+        bool valBool = node / hu::val<bool>{};                      cout << "valBool: " << valBool << "\n";
     }
 
     {
@@ -309,7 +316,7 @@ int main()
     }
 
     {
-        auto desRes = hu::Trove::fromFile("samples/sampleFiles/hudo.hu"sv);
+        auto desRes = hu::Trove::fromFile("apps/readmeSrc/hudo.hu"sv);
         if (auto trove = std::get_if<hu::Trove>(& desRes))
         {
             if (trove->troveAnnotation("app") != "hudo"sv)

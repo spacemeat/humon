@@ -44,12 +44,12 @@ def buildObj (target, src, incDirs, debug, pic, cLanguage, tool):
     if tool in ["gcc", "clang"]:
         gFlag = ""
         oFlag = "-O3"
-        defs = ""
+        defs = "-D_FILE_OFFSET_BITS=64 -D_POSIX_C_SOURCE=200112L"
         fpicFlag = ""
         if debug:
             gFlag = "-g"
             oFlag = "-O0"
-            defs = "-DDEBUG"
+            defs = "-DDEBUG -D_FILE_OFFSET_BITS=64 -D_POSIX_C_SOURCE=200112L"
         if pic:
             fpicFlag = "-fPIC"
     
@@ -134,6 +134,10 @@ def buildSo (target, srcList, incDirs, debug, cLanguage, tool):
         if buildObj(doto, src, incDirs, debug, True, src.endswith(".c"), tool) != 0:
             canProceed = False
 
+    defs = "-D_FILE_OFFSET_BITS=64 -D_POSIX_C_SOURCE=200112L"
+    if debug:
+        defs = "-DDEBUG -D_FILE_OFFSET_BITS=64 -D_POSIX_C_SOURCE=200112L"
+
     cmd = 'echo "Failure to build target. Aborting."'
     if canProceed:
         cmd = 'echo "No build tools set. Select from \"gcc\" or \"clang\"."'
@@ -149,7 +153,7 @@ def buildSo (target, srcList, incDirs, debug, cLanguage, tool):
             else:
                 cmplr = "clang++ -std=c++17 -stdlib=libstdc++" 
         
-        cmd = f"{cmplr} -Wall -shared -Wl,-soname,{soname} -o {binDir}/{target} {' '.join(dotos)}"
+        cmd = f"{cmplr} -Wall -shared -Wl,-soname,{soname} {defs} -o {binDir}/{target} {' '.join(dotos)}"
 
     return doShellCommand(cmd)
 
@@ -164,12 +168,12 @@ def buildExe (target, srcList, incDirs, libDirs, libs, debug, cLanguage, tool):
     if tool in ["gcc", "clang"]:
         gFlag = ""
         oFlag = "-O3"
-        defs = ""
+        defs = "-D_FILE_OFFSET_BITS=64 -D_POSIX_C_SOURCE=200112L"
         fpicFlag = ""
         if debug:
             gFlag = "-g"
             oFlag = "-O0"
-            defs = "-DDEBUG"
+            defs = "-DDEBUG -D_FILE_OFFSET_BITS=64 -D_POSIX_C_SOURCE=200112L"
         
         incDirsArgs = [f"-I{incDir}" for incDir in incDirs]
         libDirsArgs = [f"-L{libDir}" for libDir in libDirs]
