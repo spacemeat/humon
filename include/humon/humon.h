@@ -232,7 +232,7 @@ extern "C"
         huEnumType_t encoding;
         bool allowOutOfRangeCodePoints;
         bool allowUtf16UnmatchedSurrogates;
-        huIndexSize_t tabSize;
+        huCol_t tabSize;
     } huDeserializeOptions;
 
     /// Fill in a huDeserializeOptions struct quickly.
@@ -242,7 +242,7 @@ extern "C"
     typedef struct huSerializeOptions_tag
     {
         huEnumType_t WhitespaceFormat;
-        huIndexSize_t indentSize;
+        huCol_t indentSize;
         bool indentWithTabs;
         bool usingColors;
         huStringView const * colorTable;

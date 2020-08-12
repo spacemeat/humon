@@ -1,5 +1,5 @@
 DONE THIS CHECKIN:
-Got to zero warnings on -Werror (gcc).
+tabSize and indentSize -> huCol_t
 
 TODO:
 P1 doxygen
