@@ -5,6 +5,7 @@ TODO:
 P1 doxygen
 P1 finish README install desc
 P1 _MSC_VER -> _WIN32 or whatever?
+P1 early out for detected encoding swag
 P1 additional int-like args that could be is-integral_v templates
 P1 c++ extractor for int types that aren't int
 P2 Improved error state transitions

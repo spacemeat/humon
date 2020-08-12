@@ -6,12 +6,21 @@
 
 FILE * openFile(char const * path, char const * mode)
 {
-    struct stat fstatData;
-    if (stat(path, & fstatData) < 0)
+#ifdef _MSC_VER
+	struct stat fstatData;
+	if (stat(path, & fstatData) < 0)
+        { return NULL; }
+    
+    if ((_S_IFREG & fstatData.st_mode) == 0)
+        { return NULL; }
+#else
+	struct stat fstatData;
+	if (stat(path, & fstatData) < 0)
         { return NULL; }
     
     if (S_ISREG(fstatData.st_mode) == false)
         { return NULL; }
+#endif
 
     FILE * fp = NULL;
 #ifdef _MSC_VER
@@ -25,18 +34,22 @@ FILE * openFile(char const * path, char const * mode)
 
 huEnumType_t getFileSize(FILE * fp, huIndexSize_t * fileLen, huEnumType_t errorResponse)
 {
-    if (fseeko(fp, 0, SEEK_END) != 0)
-    {
-        printError(errorResponse, "Could not read file.");
-        return HU_ERROR_BADFILE;
-    }
+#ifdef _MSC_VER
+	if (_fseeki64(fp, 0, SEEK_END) != 0)
+#else
+	if (fseeko(fp, 0, SEEK_END) != 0)
+#endif
+	{
+		printError(errorResponse, "Could not read file.");
+		return HU_ERROR_BADFILE;
+	}
 
 #ifdef _MSC_VER
-    _ftelli64 dataLen = _ftelli64(fp);    
+	__int64 dataLen = _ftelli64(fp);
 #else
     off_t dataLen = ftello(fp);
 #endif
-    if (dataLen == -1L)
+    if (dataLen < 0)
     {
         printError(errorResponse, "Could not read file.");
         return HU_ERROR_BADFILE;
@@ -50,7 +63,7 @@ huEnumType_t getFileSize(FILE * fp, huIndexSize_t * fileLen, huEnumType_t errorR
 
     rewind(fp);
 
-    * fileLen = dataLen;
+    * fileLen = (huIndexSize_t) dataLen;
 
     return HU_ERROR_NOERROR;
 }
@@ -154,8 +167,21 @@ char const * huOutputErrorToString(huEnumType_t rhs)
 }
 
 
-int min(int a, int b) { if (a < b) { return a; } else { return b; } }
-int max(int a, int b) { if (a >= b) { return a; } else { return b; } }
+huIndexSize_t min(huIndexSize_t a, huIndexSize_t b)
+{
+	if (a < b)
+		{ return a; }
+	else
+		{ return b; }
+}
+
+huIndexSize_t max(huIndexSize_t a, huIndexSize_t b)
+{
+	if (a >= b)
+		{ return a; }
+	else
+		{ return b; }
+}
 
 
 bool isMachineBigEndian()
@@ -165,7 +191,7 @@ bool isMachineBigEndian()
 }
 
 
-void huInitDeserializeOptions(huDeserializeOptions * params, huEnumType_t encoding, bool strictUnicode, huIndexSize_t tabSize)
+void huInitDeserializeOptions(huDeserializeOptions * params, huEnumType_t encoding, bool strictUnicode, huCol_t tabSize)
 {
     params->encoding = encoding;
     params->allowOutOfRangeCodePoints = ! strictUnicode;
@@ -174,7 +200,7 @@ void huInitDeserializeOptions(huDeserializeOptions * params, huEnumType_t encodi
 }
 
 
-void huInitSerializeOptionsZ(huSerializeOptions * params, huEnumType_t WhitespaceFormat, huIndexSize_t indentSize, 
+void huInitSerializeOptionsZ(huSerializeOptions * params, huEnumType_t WhitespaceFormat, huCol_t indentSize,
     bool indentWithTabs, bool usingColors, huStringView const * colorTable,  bool printComments, 
     char const * newline, bool printBom)
 {
@@ -187,7 +213,7 @@ void huInitSerializeOptionsZ(huSerializeOptions * params, huEnumType_t Whitespac
 }
 
 
-void huInitSerializeOptionsN(huSerializeOptions * params, huEnumType_t WhitespaceFormat, huIndexSize_t indentSize, 
+void huInitSerializeOptionsN(huSerializeOptions * params, huEnumType_t WhitespaceFormat, huCol_t indentSize,
     bool indentWithTabs, bool usingColors, huStringView const * colorTable,  bool printComments, 
     char const * newline, huIndexSize_t newlineSize, bool printBom)
 {

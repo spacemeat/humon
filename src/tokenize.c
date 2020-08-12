@@ -159,7 +159,7 @@ void initScanner(huScanner * scanner, huTrove * trove, char const * str, huIndex
 }
 
 
-void eatWs(huScanner * scanner, huIndexSize_t tabSize, huLine_t * line, huCol_t * col)
+void eatWs(huScanner * scanner, huCol_t tabSize, huLine_t * line, huCol_t * col)
 {
     bool eating = true;
     while (eating)
@@ -190,7 +190,7 @@ void eatWs(huScanner * scanner, huIndexSize_t tabSize, huLine_t * line, huCol_t 
 }
 
 
-static void eatDoubleSlashComment(huScanner * scanner, huIndexSize_t tabSize, huIndexSize_t * len, huCol_t * col)
+static void eatDoubleSlashComment(huScanner * scanner, huCol_t tabSize, huIndexSize_t * len, huCol_t * col)
 {
     // The first two characters are already confirmed //, so, next please.
     * len += scanner->curCursor->charLength;
@@ -220,7 +220,7 @@ static void eatDoubleSlashComment(huScanner * scanner, huIndexSize_t tabSize, hu
 }
 
 
-static void eatCStyleComment(huScanner * scanner, huIndexSize_t tabSize, huIndexSize_t * len, huLine_t * line, huCol_t * col)
+static void eatCStyleComment(huScanner * scanner, huCol_t tabSize, huIndexSize_t * len, huLine_t * line, huCol_t * col)
 {
     // record the location for error reporting
     huLine_t tokenStartLine = * line;
@@ -344,7 +344,7 @@ static void eatWord(huScanner * scanner, huIndexSize_t * len, huCol_t * col)
 }
 
 
-static void eatQuotedWord(huScanner * scanner, huIndexSize_t tabSize, huIndexSize_t * len, huLine_t * line, huCol_t * col)
+static void eatQuotedWord(huScanner * scanner, huCol_t tabSize, huIndexSize_t * len, huLine_t * line, huCol_t * col)
 {
     // record the location for error reporting
     huLine_t tokenStartLine = * line;

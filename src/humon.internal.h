@@ -56,8 +56,8 @@ extern "C"
 {
 #endif
 
-    int min(int a, int b);
-    int max(int a, int b);
+	huIndexSize_t min(huIndexSize_t a, huIndexSize_t b);
+	huIndexSize_t max(huIndexSize_t a, huIndexSize_t b);
 
     void printError(huEnumType_t errorResponse, char const * msg);
 
@@ -116,7 +116,7 @@ extern "C"
     /// Initialize a huScanner.
     void initScanner(huScanner * scanner, huTrove * trove, char const * str, huIndexSize_t strLen);
     /// Move the scanner's character cursor past any whitespace.
-    void eatWs(huScanner * cursor, huIndexSize_t tabSize, huLine_t * line, huCol_t * col);
+    void eatWs(huScanner * cursor, huCol_t tabSize, huLine_t * line, huCol_t * col);
 
     /// Initialize a huNode object.
     void initNode(huNode * node, huTrove const * trove);

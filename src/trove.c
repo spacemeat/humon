@@ -719,11 +719,11 @@ huNode const * huFindNodesWithAnnotationValueN(huTrove const * trove, char const
        { return HU_NULLNODE; }
 #endif
 
-    int numNodes = huGetNumNodes(trove);
+    huIndexSize_t numNodes = huGetNumNodes(trove);
     for (; * cursor < numNodes; ++ * cursor)
     {
         huNode const * node = huGetNodeByIndex(trove, * cursor);
-        int na = huGetNumAnnotationsWithValueN(node, value, valueLen);
+		huIndexSize_t na = huGetNumAnnotationsWithValueN(node, value, valueLen);
         if (na > 0)
         {
             * cursor += 1;

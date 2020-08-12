@@ -4,16 +4,32 @@
 #include <stdio.h>
 
 
-#ifdef _MSC_VER				//	if we're on Windows
-#ifdef HUMON_BUILDING_DLL	//		if we're building the DLL
+#if defined(_WIN32) || defined(_WIN64)		//	if we're on Windows
+#if defined (HUMON_BUILDING_DLL)			//		if we're building the DLL
 #define HUMON_PUBLIC __declspec(dllexport)
-#elif HUMON_USING_DLL		//		else if we're building an application with the DLL's import lib
+#elif defined(HUMON_USING_DLL)				//		else if we're building an application with the DLL's import lib
 #define HUMON_PUBLIC __declspec(dllimport)
-#else						//		else we're building an application with the static lib
+#else										//		else we're building an application with the static lib
 #define HUMON_PUBLIC
 #endif
-#else						//	else we're on unix-like, using the static lib or .so
+#else										//	else we're on unix-like, using the static lib or .so
 #define HUMON_PUBLIC
+#endif
+
+#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN64)
+#define ENV64BIT
+#else
+#define ENV32BIT
+#endif
+#endif
+
+#if defined(__GNUC__)
+#if defined(__x86_64__) || defined(__ppc64__)
+#define ENV64BIT
+#else
+#define ENV32BIT
+#endif
 #endif
 
 #define HU_NULLTOKEN        (NULL)
@@ -24,7 +40,12 @@
 #define HU_ENUM_TYPE        char
 #define HU_LINE_TYPE        long
 #define HU_COL_TYPE         long
+
+#if defined(ENV64BIT)
 #define HU_STRLEN_TYPE      long long
+#else
+#define HU_STRLEN_TYPE      long
+#endif
 
 typedef HU_ENUM_TYPE        huEnumType_t;
 typedef HU_LINE_TYPE        huLine_t;
@@ -236,7 +257,7 @@ extern "C"
     } huDeserializeOptions;
 
     /// Fill in a huDeserializeOptions struct quickly.
-	HUMON_PUBLIC void huInitDeserializeOptions(huDeserializeOptions * params, huEnumType_t encoding, bool strictUnicode, huIndexSize_t tabSize);
+	HUMON_PUBLIC void huInitDeserializeOptions(huDeserializeOptions * params, huEnumType_t encoding, bool strictUnicode, huCol_t tabSize);
 
     /// Encapsulates a selection of parameters to control the serialization of a trove.
     typedef struct huSerializeOptions_tag
@@ -254,10 +275,10 @@ extern "C"
     struct huTrove_tag;
 
     /// Fill in a huSerializeOptions struct quickly.
-	HUMON_PUBLIC void huInitSerializeOptionsZ(huSerializeOptions * params, huEnumType_t WhitespaceFormat, huIndexSize_t indentSize, bool indentWithTabs,
+	HUMON_PUBLIC void huInitSerializeOptionsZ(huSerializeOptions * params, huEnumType_t WhitespaceFormat, huCol_t indentSize, bool indentWithTabs,
         bool usingColors, huStringView const * colorTable,  bool printComments, char const * newline, bool printBom);
     /// Fill in a huSerializeOptions struct quickly.
-	HUMON_PUBLIC void huInitSerializeOptionsN(huSerializeOptions * params, huEnumType_t WhitespaceFormat, huIndexSize_t indentSize, bool indentWithTabs,
+	HUMON_PUBLIC void huInitSerializeOptionsN(huSerializeOptions * params, huEnumType_t WhitespaceFormat, huCol_t indentSize, bool indentWithTabs,
         bool usingColors, huStringView const * colorTable,  bool printComments, char const * newline, huIndexSize_t newlineSize, bool printBom);
 
     /// Encodes a Humon data node.
@@ -384,7 +405,7 @@ extern "C"
         huVector nodes;                 ///< Manages a huNode []. This is the array of node objects parsed from tokens.
         huVector errors;                ///< Manages a huError []. This is an array of errors encountered during load.
         huEnumType_t errorResponse;     ///< How the trove respones to errors during load.
-        huIndexSize_t inputTabSize;     ///< The tab length Humon uses to compute column values for tokens.
+		huCol_t inputTabSize;			///< The tab length Humon uses to compute column values for tokens.
         huVector annotations;           ///< Manages a huAnnotation []. Contains the annotations associated to the trove.
         huVector comments;              ///< Manages a huComment[]. Contains the comments associated to the trove.
         huToken const * lastAnnoToken;  ///< Token referencing the last token of any trove annotations.

@@ -310,7 +310,7 @@ huNode const * huGetRelativeN(huNode const * node, char const * address, huIndex
         char * wordEnd;
         unsigned long long index = strtoull(wordStart, & wordEnd, 10);
         if (quoted == false && wordEnd - wordStart == len && index <= maxOfType(huIndexSize_t))
-            { nextNode = huGetChildByIndex(node, index); }
+            { nextNode = huGetChildByIndex(node, (huIndexSize_t) index); }
         else
         {
             if (doubleQuoted)

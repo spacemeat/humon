@@ -299,7 +299,7 @@ namespace hu
     {
     public:
         /// Construct with sane defaults.
-        DeserializeOptions(Encoding encoding = Encoding::unknown, bool strictUnicode = true, capi::huIndexSize_t tabSize = 4) HUMON_NOEXCEPT
+        DeserializeOptions(Encoding encoding = Encoding::unknown, bool strictUnicode = true, capi::huCol_t tabSize = 4) HUMON_NOEXCEPT
         {
             capi::huInitDeserializeOptions(& cparams, static_cast<capi::huEnumType_t>(encoding), strictUnicode, tabSize);
         }
@@ -311,7 +311,7 @@ namespace hu
         /// Allow unpaired surrogate code units in UTF-16.
         void setAllowUtf16UnmatchedSurrogates(bool shallWe) HUMON_NOEXCEPT { cparams.allowUtf16UnmatchedSurrogates = shallWe; }
         /// Use this tab size when computing the column of a token and the token stream contains tabs.
-        void setTabSize(capi::huIndexSize_t tabSize) HUMON_NOEXCEPT { cparams.tabSize = tabSize; }
+        void setTabSize(capi::huCol_t tabSize) HUMON_NOEXCEPT { cparams.tabSize = tabSize; }
 
         /// Get the encoding to expect.
         Encoding encoding() const HUMON_NOEXCEPT { return static_cast<Encoding>(cparams.encoding); }
@@ -320,7 +320,7 @@ namespace hu
         /// Get whether unpaired surrogates in UTF-16 are allowed.
         bool allowUtf16UnmatchedSurrogates() const HUMON_NOEXCEPT { return cparams.allowUtf16UnmatchedSurrogates; }
         /// Get the tab size used to compute column information in token streams that contain tabs.
-        capi::huIndexSize_t tabSize() const HUMON_NOEXCEPT { return cparams.tabSize; }
+        capi::huCol_t tabSize() const HUMON_NOEXCEPT { return cparams.tabSize; }
 
         /// Aggregated C structure.
         capi::huDeserializeOptions cparams;
@@ -332,7 +332,7 @@ namespace hu
     public:
         /// Construct with sane defaults.
         SerializeOptions(WhitespaceFormat WhitespaceFormat = WhitespaceFormat::pretty, 
-            capi::huIndexSize_t indentSize = 4, bool indentWithTabs = false, std::optional<ColorTable> const & colors = {}, 
+            capi::huCol_t indentSize = 4, bool indentWithTabs = false, std::optional<ColorTable> const & colors = {},
             bool printComments = true, std::string_view newline = "\n", bool printBom = false) HUMON_NOEXCEPT
         {
             std::size_t newlineSize = newline.size();
@@ -347,7 +347,7 @@ namespace hu
         /// Set the whitespace formatting.
         void setFormat(WhitespaceFormat WhitespaceFormat) HUMON_NOEXCEPT { cparams.WhitespaceFormat = static_cast<capi::huEnumType_t>(WhitespaceFormat); }
         /// Set the number of spaces to use for indentation.
-        void setIndentSize(capi::huIndexSize_t indentSize) HUMON_NOEXCEPT { cparams.indentSize = indentSize; }
+        void setIndentSize(capi::huCol_t indentSize) HUMON_NOEXCEPT { cparams.indentSize = indentSize; }
         /// Use tab instead of spaces for indentation.
         void setIndentWithTabs(bool shallWe) HUMON_NOEXCEPT { cparams.indentWithTabs = shallWe; }
 
@@ -1242,7 +1242,7 @@ namespace hu
         }
 
         /// Serializes a trove with whitespace formatting suitable for readability.
-        [[nodiscard]] std::variant<std::string, ErrorCode> toPrettyString(capi::huIndexSize_t indentSize = 4, 
+        [[nodiscard]] std::variant<std::string, ErrorCode> toPrettyString(capi::huCol_t indentSize = 4,
             bool indentWithTabs = false, std::optional<ColorTable> const & colors = {}, bool printComments = true, 
             std::string_view newline = "\n", bool printBom = false) const HUMON_NOEXCEPT 
         {
@@ -1290,7 +1290,7 @@ namespace hu
 
         /// Serializes a trove with whitespace formatting suitable for readability.
         [[nodiscard]] std::variant<capi::huIndexSize_t, ErrorCode> toPrettyFile(std::string_view path, 
-            capi::huIndexSize_t indentSize = 4, bool indentWithTabs = false, std::optional<ColorTable> const & colors = {}, bool printComments = true, 
+            capi::huCol_t indentSize = 4, bool indentWithTabs = false, std::optional<ColorTable> const & colors = {}, bool printComments = true,
             std::string_view newline = "\n", bool printBom = false) const HUMON_NOEXCEPT 
         {
             SerializeOptions sp = { WhitespaceFormat::pretty, indentSize, indentWithTabs, colors, printComments, newline, printBom };
