@@ -1035,21 +1035,7 @@ huEnumType_t huSerializeTrove(huTrove const * trove, char * dest, huIndexSize_t 
 
 #pragma GCC diagnostic pop
 
-huEnumType_t huSerializeTroveToFileZ(huTrove const * trove, char const * path, huIndexSize_t * destLength, huSerializeOptions * SerializeOptions)
-{
-#ifdef HUMON_CHECK_PARAMS
-    if (path == NULL)
-        { return HU_ERROR_BADPARAMETER; }
-#endif
-
-    size_t pathLenC = strlen(path);
-    if (pathLenC > maxOfType(huIndexSize_t))
-        { return HU_ERROR_BADPARAMETER; }
-
-    return huSerializeTroveToFileN(trove, path, (huIndexSize_t) pathLenC, destLength, SerializeOptions);
-}
-
-huEnumType_t huSerializeTroveToFileN(huTrove const * trove, char const * path, huIndexSize_t pathLen, huIndexSize_t * destLength, huSerializeOptions * SerializeOptions)
+huEnumType_t huSerializeTroveToFile(huTrove const * trove, char const * path, huIndexSize_t * destLength, huSerializeOptions * SerializeOptions)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || path == NULL)

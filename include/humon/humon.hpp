@@ -359,11 +359,11 @@ namespace hu
                 std::string_view const * sv = (* colors).data();
                 for (capi::huEnumType_t i = 0; i < capi::HU_COLORCODE_NUMCOLORS; ++i)
                 {
-                    std::size_t sz = sv[(unsigned) i].size();
+                    std::size_t sz = sv[(size_t) i].size();
                     if (sz > static_cast<std::size_t>(std::numeric_limits<capi::huIndexSize_t>::max()))
                         { sz = static_cast<std::size_t>(std::numeric_limits<capi::huIndexSize_t>::max()); }
-                    capiColorTable[(unsigned) i].ptr = sv[(unsigned) i].data();
-                    capiColorTable[(unsigned) i].size = static_cast<capi::huIndexSize_t>(sz);
+                    capiColorTable[(size_t) i].ptr = sv[(size_t) i].data();
+                    capiColorTable[(size_t) i].size = static_cast<capi::huIndexSize_t>(sz);
                 }
                 cparams.usingColors = true;
             }
@@ -401,8 +401,8 @@ namespace hu
             std::string_view * sv = newColorTable.data();
             for (capi::huEnumType_t i = 0; i < capi::HU_COLORCODE_NUMCOLORS; ++i)
             {
-                sv[(unsigned) i] = { capiColorTable[(unsigned) i].ptr,
-                                     static_cast<std::size_t>(capiColorTable[(unsigned) i].size) };
+                sv[(size_t) i] = { capiColorTable[(size_t) i].ptr,
+                                   static_cast<std::size_t>(capiColorTable[(size_t) i].size) };
             }
             return newColorTable;
         }
@@ -428,6 +428,8 @@ namespace hu
 #ifdef HUMON_USING_EXCEPTIONS
         if (cp == nullptr)
             { throw std::runtime_error("object is nullish"); }
+#else
+        (void) cp;  // unused, satisfy -Wextra
 #endif
     }
 
@@ -446,8 +448,8 @@ namespace hu
         operator bool() const HUMON_NOEXCEPT          ///< Implicit validity test.
             { return isValid(); }
         TokenKind kind() const HUMON_NOEXCEPT         ///< Returns the kind of token this is.
-            { check(); return static_cast<TokenKind>(
-                isValid() ? ctoken->kind : capi::HU_TOKENKIND_NULL); }
+            { check(); return isValid() ? static_cast<TokenKind>(ctoken->kind) 
+                                        : static_cast<TokenKind>(capi::HU_TOKENKIND_NULL); }
         std::string_view str() const HUMON_NOEXCEPT   ///< Returns the string value of the token.
             { check(); return isValid() ? make_sv(ctoken->str) : ""; }
         capi::huLine_t line() const HUMON_NOEXCEPT               ///< Returns the line number of the first character of the token in the file.
@@ -506,8 +508,8 @@ namespace hu
         capi::huIndexSize_t nodeIndex() const HUMON_NOEXCEPT              ///< Returns the node index within the trove. Rarely needed.
             { check(); return isValid() ? cnode->nodeIdx : -1; }
         NodeKind kind() const HUMON_NOEXCEPT              ///< Returns the kind of node this is.
-            { check(); return static_cast<NodeKind>(
-                isValid() ? cnode->kind : capi::HU_NODEKIND_NULL); }
+            { check(); return isValid() ? static_cast<NodeKind>(cnode->kind)
+                                        : static_cast<NodeKind>(capi::HU_NODEKIND_NULL); }
         Token firstToken() const HUMON_NOEXCEPT           ///< Returns the first token which contributes to this node, including any annotation and comment tokens.
             { check(); return Token(isValid() ? cnode->firstToken : HU_NULLTOKEN); }
         Token firstValueToken() const HUMON_NOEXCEPT      ///< Returns the first token of this node's actual value; for a container, it points to the opening brac(e|ket).
@@ -761,7 +763,7 @@ namespace hu
         }
 
         /// Return the parent of this node.
-        Node operator / (Parent p) const HUMON_PATH_NOEXCEPT
+        Node operator / (Parent) const HUMON_PATH_NOEXCEPT
         {
             check();
             if (isValid())
@@ -1308,7 +1310,7 @@ namespace hu
             if (path.size() > static_cast<std::size_t>(std::numeric_limits<capi::huIndexSize_t>::max()))
                 { return ErrorCode::badParameter; }
 
-            auto error = capi::huSerializeTroveToFileN(ctrove, path.data(), static_cast<capi::huIndexSize_t>(path.size()), & outputLength, & SerializeOptions.cparams);
+            auto error = capi::huSerializeTroveToFile(ctrove, path.data(), & outputLength, & SerializeOptions.cparams);
             if (error != capi::HU_ERROR_NOERROR)
                 { return error; }
 
@@ -1385,7 +1387,7 @@ namespace hu
         capi::huStringView nativeTable[capi::HU_COLORCODE_NUMCOLORS];
         capi::huFillAnsiColorTable(nativeTable);
         for (capi::huEnumType_t i = 0; i < capi::HU_COLORCODE_NUMCOLORS; ++i)
-            { table[(unsigned) i] = {nativeTable[(unsigned) i].ptr, static_cast<std::size_t>(nativeTable[(unsigned) i].size)}; }
+            { table[(size_t) i] = {nativeTable[(size_t) i].ptr, static_cast<std::size_t>(nativeTable[(size_t) i].size)}; }
 
         return table;
     }

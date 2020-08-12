@@ -4,6 +4,9 @@
 
 int strntol(char const * str, int strLen, char const ** end, int radix)
 {
+    (void) strLen;
+    (void) end;
+    (void) radix;
     if (strncmp(str, "1024", 4) == 0)
         { return 1024; }
     else

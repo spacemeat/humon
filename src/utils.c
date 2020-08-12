@@ -42,7 +42,7 @@ huEnumType_t getFileSize(FILE * fp, huIndexSize_t * fileLen, huEnumType_t errorR
         return HU_ERROR_BADFILE;
     }
 
-    if (dataLen > maxOfType(huIndexSize_t))
+    if ((long long unsigned) dataLen > (long long unsigned) maxOfType(huIndexSize_t))
     {
         printError(errorResponse, "File is too large. Consider setting HU_STRLEN_TYPE to a 64-bit integer type.");
         return HU_ERROR_BADFILE;

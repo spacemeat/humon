@@ -3949,30 +3949,30 @@ TEST(huSerializeTroveToFile, pathological)
     huEnumType_t error = HU_ERROR_NOERROR;
     huIndexSize_t fileLen = 0;
 
-    error = huSerializeTroveToFileZ(NULL, validFile, & fileLen, & params);
+    error = huSerializeTroveToFile(NULL, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "NULL->file sz == 0");
     acc = haveAccess(validFile);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
     if (acc != -1)
         { remove(validFile); }
 
-    error = huSerializeTroveToFileZ(HU_NULLTROVE, validFile, & fileLen, & params);
+    error = huSerializeTroveToFile(HU_NULLTROVE, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
 
-    error = huSerializeTroveToFileZ(HU_NULLTROVE, NULL, & fileLen, & params);
+    error = huSerializeTroveToFile(HU_NULLTROVE, NULL, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
 
-    error = huSerializeTroveToFileZ(HU_NULLTROVE, "", & fileLen, & params);
+    error = huSerializeTroveToFile(HU_NULLTROVE, "", & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
 
-    error = huSerializeTroveToFileZ(HU_NULLTROVE, "..", & fileLen, & params);
+    error = huSerializeTroveToFile(HU_NULLTROVE, "..", & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
 
-    error = huSerializeTroveToFileZ(HU_NULLTROVE, "/", & fileLen, & params);
+    error = huSerializeTroveToFile(HU_NULLTROVE, "/", & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
 
     huInitSerializeOptionsZ(& params, 3, 4, false, false, NULL, false, "\n", false);
-    error = huSerializeTroveToFileZ(l.trove, validFile, & fileLen, & params);
+    error = huSerializeTroveToFile(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = haveAccess(validFile);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
@@ -3980,7 +3980,7 @@ TEST(huSerializeTroveToFile, pathological)
         { remove(validFile); }
 
     huInitSerializeOptionsZ(& params, -1, 4, false, false, NULL, false, "\n", false);
-    error = huSerializeTroveToFileZ(l.trove, validFile, & fileLen, & params);
+    error = huSerializeTroveToFile(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = haveAccess(validFile);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
@@ -3990,7 +3990,7 @@ TEST(huSerializeTroveToFile, pathological)
     if (isSignedType(huIndexSize_t))
     {
         huInitSerializeOptionsZ(& params, HU_WHITESPACEFORMAT_CLONED, -1, false, false, NULL, false, "\n", false);
-        error = huSerializeTroveToFileZ(l.trove, validFile, & fileLen, & params);
+        error = huSerializeTroveToFile(l.trove, validFile, & fileLen, & params);
         LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
         acc = haveAccess(validFile);
         LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
@@ -3999,7 +3999,7 @@ TEST(huSerializeTroveToFile, pathological)
     }
 
     huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, false, NULL, false, NULL, 1, false);
-    error = huSerializeTroveToFileZ(l.trove, validFile, & fileLen, & params);
+    error = huSerializeTroveToFile(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = haveAccess(validFile);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
@@ -4007,7 +4007,7 @@ TEST(huSerializeTroveToFile, pathological)
         { remove(validFile); }
 
     huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, true, NULL, false, "\n", 1, false);
-    error = huSerializeTroveToFileZ(l.trove, validFile, & fileLen, & params);
+    error = huSerializeTroveToFile(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = haveAccess(validFile);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
@@ -4015,7 +4015,7 @@ TEST(huSerializeTroveToFile, pathological)
         { remove(validFile); }
 
     huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_PRETTY, 4, false, false, NULL, false, "\n", 0, false);
-    error = huSerializeTroveToFileZ(l.trove, validFile, & fileLen, & params);
+    error = huSerializeTroveToFile(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = haveAccess(validFile);
     LONGS_EQUAL_TEXT(-1, acc, "file does not exist");
@@ -4025,7 +4025,7 @@ TEST(huSerializeTroveToFile, pathological)
     if (isSignedType(huIndexSize_t))
     {
         huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, false, NULL, false, "\n", -1, false);
-        error = huSerializeTroveToFileZ(l.trove, validFile, & fileLen, & params);
+        error = huSerializeTroveToFile(l.trove, validFile, & fileLen, & params);
         LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
         acc = haveAccess(validFile);
         LONGS_EQUAL_TEXT(-1, acc, "file does not exist");

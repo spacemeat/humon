@@ -64,7 +64,7 @@ def buildObj (target, src, incDirs, debug, pic, cLanguage, tool):
             else:
                 cmplr = "clang++ -std=c++17 -stdlib=libstdc++"
         
-        cmd=f"{cmplr} -Wall -c {fpicFlag} {gFlag} {oFlag} {defs} {' '.join(incDirsArgs)} -o {target} {src}"
+        cmd=f"{cmplr} -Wall -Wextra -c {fpicFlag} {gFlag} {oFlag} {defs} {' '.join(incDirsArgs)} -o {target} {src}"
         
     return doShellCommand(cmd)
 
@@ -153,7 +153,7 @@ def buildSo (target, srcList, incDirs, debug, cLanguage, tool):
             else:
                 cmplr = "clang++ -std=c++17 -stdlib=libstdc++" 
         
-        cmd = f"{cmplr} -Wall -shared -Wl,-soname,{soname} {defs} -o {binDir}/{target} {' '.join(dotos)}"
+        cmd = f"{cmplr} -Wall -Wextra -shared -Wl,-soname,{soname} {defs} -o {binDir}/{target} {' '.join(dotos)}"
 
     return doShellCommand(cmd)
 
@@ -190,7 +190,7 @@ def buildExe (target, srcList, incDirs, libDirs, libs, debug, cLanguage, tool):
             else:
                 cmplr = "clang++ -std=c++17 -stdlib=libstdc++"
 
-        cmd=f"{cmplr} -Wall {fpicFlag} {gFlag} {oFlag} {defs} {' '.join(incDirsArgs)} -o {binDir}/{target} {' '.join(src)} {' '.join(libDirsArgs)} {' '.join(libsArgs)}"
+        cmd=f"{cmplr} -Wall -Wextra {fpicFlag} {gFlag} {oFlag} {defs} {' '.join(incDirsArgs)} -o {binDir}/{target} {' '.join(src)} {' '.join(libDirsArgs)} {' '.join(libsArgs)}"
 
     return doShellCommand(cmd)
 

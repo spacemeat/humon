@@ -420,8 +420,8 @@ void troveToPrettyString(huTrove const * trove, huVector * str, huSerializeOptio
 
 static void setTableEntry(huStringView table[], huEnumType_t colorKind, char const * str)
 {
-    table[(unsigned) colorKind].ptr = str; 
-    table[(unsigned) colorKind].size = (huIndexSize_t) strlen(str);
+    table[(size_t) colorKind].ptr = str; 
+    table[(size_t) colorKind].size = (huIndexSize_t) strlen(str);
 }
 
 

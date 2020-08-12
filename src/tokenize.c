@@ -190,7 +190,7 @@ void eatWs(huScanner * scanner, huIndexSize_t tabSize, huLine_t * line, huCol_t 
 }
 
 
-static void eatDoubleSlashComment(huScanner * scanner, huIndexSize_t tabSize, huIndexSize_t * len, huLine_t * line, huCol_t * col)
+static void eatDoubleSlashComment(huScanner * scanner, huIndexSize_t tabSize, huIndexSize_t * len, huCol_t * col)
 {
     // The first two characters are already confirmed //, so, next please.
     * len += scanner->curCursor->charLength;
@@ -282,7 +282,7 @@ static void eatCStyleComment(huScanner * scanner, huIndexSize_t tabSize, huIndex
 }
 
 
-static void eatWord(huScanner * scanner, huIndexSize_t * len, huLine_t * line, huCol_t * col)
+static void eatWord(huScanner * scanner, huIndexSize_t * len, huCol_t * col)
 {
     // The first character is already confirmed a word char, so, next please.
     * len += scanner->curCursor->charLength;
@@ -474,9 +474,8 @@ void tokenizeTrove(huTrove * trove)
         case '/':
             if (scanner.nextCursor->codePoint == '/')
             {
-                eatDoubleSlashComment(& scanner, trove->inputTabSize, & len, & lineM, & colM);
-                allocNewToken(trove, HU_TOKENKIND_COMMENT, tokenStart, len, line, col, lineM, colM, '\0');
-                line = lineM;
+                eatDoubleSlashComment(& scanner, trove->inputTabSize, & len, & colM);
+                allocNewToken(trove, HU_TOKENKIND_COMMENT, tokenStart, len, line, col, line, colM, '\0');
                 col = colM;
             }
             else if (scanner.nextCursor->codePoint == '*')
@@ -489,9 +488,8 @@ void tokenizeTrove(huTrove * trove)
             else
             {
                 // else treat like a word char
-                eatWord(& scanner, & len, & lineM, & colM);
-                allocNewToken(trove, HU_TOKENKIND_WORD, tokenStart, len, line, col, lineM, colM, '\0');
-                line = lineM;
+                eatWord(& scanner, & len, & colM);
+                allocNewToken(trove, HU_TOKENKIND_WORD, tokenStart, len, line, col, line, colM, '\0');
                 col = colM;
             }
             break;
@@ -507,9 +505,8 @@ void tokenizeTrove(huTrove * trove)
             }
             break;
         default: // word char
-            eatWord(& scanner, & len, & lineM, & colM);
-            allocNewToken(trove, HU_TOKENKIND_WORD, tokenStart, len, line, col, lineM, colM, '\0');
-            line = lineM;
+            eatWord(& scanner, & len, & colM);
+            allocNewToken(trove, HU_TOKENKIND_WORD, tokenStart, len, line, col, line, colM, '\0');
             col = colM;
             break;
         }

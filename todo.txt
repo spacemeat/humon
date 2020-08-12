@@ -1,8 +1,5 @@
 DONE THIS CHECKIN:
-Initial run getting typedefable int types for enum, line, col, and index.
-printf taking 64-bit %d?
-Fixed some readme src bugs.
-
+Got to zero warnings on -Werror (gcc).
 
 TODO:
 P1 doxygen

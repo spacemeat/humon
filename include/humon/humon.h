@@ -20,9 +20,10 @@
 #define HU_NULLNODE         (NULL)
 #define HU_NULLTROVE        (NULL)
 
-#define HU_ENUM_TYPE        unsigned char
-#define HU_LINE_TYPE        unsigned long
-#define HU_COL_TYPE         unsigned long
+// For proper operation, these types must be signed.
+#define HU_ENUM_TYPE        char
+#define HU_LINE_TYPE        long
+#define HU_COL_TYPE         long
 #define HU_STRLEN_TYPE      long long
 
 typedef HU_ENUM_TYPE        huEnumType_t;
@@ -530,10 +531,7 @@ extern "C"
 	HUMON_PUBLIC huEnumType_t huSerializeTrove(huTrove const * trove, char * dest, huIndexSize_t * destLength, huSerializeOptions * SerializeOptions);
     /// Serializes a trove to file.
     /** This function stores a new copy of the token steram to file, optionally with formatting options.*/
-	HUMON_PUBLIC huEnumType_t huSerializeTroveToFileZ(huTrove const * trove, char const * path, huIndexSize_t * destLength, huSerializeOptions * SerializeOptions);
-    /// Serializes a trove to file.
-    /** This function stores a new copy of the token steram to file, optionally with formatting options.*/
-	HUMON_PUBLIC huEnumType_t huSerializeTroveToFileN(huTrove const * trove, char const * path, huIndexSize_t pathLen, huIndexSize_t * destLength, huSerializeOptions * SerializeOptions);
+	HUMON_PUBLIC huEnumType_t huSerializeTroveToFile(huTrove const * trove, char const * path, huIndexSize_t * destLength, huSerializeOptions * SerializeOptions);
 
     /// Fills an array of HU_COLORCODE_NUMCOLORS huStringViews with ANSI terminal color codes for printing to console.
 	HUMON_PUBLIC void huFillAnsiColorTable(huStringView table[]);
