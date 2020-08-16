@@ -1,5 +1,5 @@
 DONE THIS CHECKIN:
-tabSize and indentSize -> huCol_t
+Brand new test infrastructure. Ditching CPPUTest, which doesn't suck, but I wanted my own build to support 32-bit linux and 64-bit windows, and to drop reliance on an external package.
 
 TODO:
 P1 doxygen

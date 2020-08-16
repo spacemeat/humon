@@ -6,7 +6,7 @@
 #include <unistd.h>
 #endif
 #include "humon.h"
-#include <CppUTest/TestHarness.h>
+#include "utest.hpp"
 #include "testData.h"
 
 
@@ -3692,7 +3692,7 @@ static std::string makeFileName(std::string_view path, int WhitespaceFormat, boo
 
 
 
-FILE * openFile(char const * path, char const * mode)
+FILE * openHuFile(char const * path, char const * mode)
 {
 	FILE * fp = NULL;
 #ifdef _MSC_VER
@@ -3707,7 +3707,7 @@ static std::tuple<std::string, huIndexSize_t> getFile(std::string_view path)
 {
     std::string str;
     huIndexSize_t fileSize = 0;
-    FILE * fp = openFile(path.data(), "rb");
+    FILE * fp = openHuFile(path.data(), "rb");
     fseek(fp, 0L, SEEK_END);
     str.resize(fileSize = ftell(fp));
     rewind(fp);

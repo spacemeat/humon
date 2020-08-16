@@ -356,8 +356,9 @@ huNode const * huGetRelativeN(huNode const * node, char const * address, huIndex
 
 
 // This is kinda fugly. But for most cases (x < 1000) it's probably fine.
-static huIndexSize_t log10i(huIndexSize_t x)
+static huIndexSize_t log10i(huIndexSize_t a)
 {
+    int64_t x = (int64_t) a;
 		 if (x < (int16_t)1 * 10) { return 0; }
 	else if (x < (int16_t)1 * 100) { return 1; }
     else if (sizeof(huIndexSize_t) == 1) { return 2; }

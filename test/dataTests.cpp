@@ -1,19 +1,20 @@
-#include <CppUTest/TestHarness.h>
 #include <string.h>
-#include "humon.h"
 #include <string_view>
+#include "utest.hpp"
+#include "humon.h"
 
 using namespace std::literals;
 
 
 TEST_GROUP(emptyString)
+//struct TestGroup_emptyString : public TestGroup
 {
   huTrove const * trove = NULL;
 
   void setup()
   {
     auto humon = R"()"sv;
-    huDeserializeTroveN(& trove, humon.data(), (int) humon.size(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
+    huDeserializeTroveN(& trove, humon.data(), humon.size(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
   }
 
   void teardown()
@@ -22,6 +23,17 @@ TEST_GROUP(emptyString)
       { huDestroyTrove(trove); }
   }
 };
+
+/*
+struct Test_emptyString_numTokens : public TestGroup_emptyString
+{
+    virtual void runTest();
+};
+void Test_emptyString_numTokens::runTest()
+{
+  if ((1) != (this->trove->tokens.numElements)) { fail("tokens.num"); return; }
+}*/
+
 
 TEST(emptyString, numTokens)
 {

@@ -128,8 +128,8 @@ The following are built in Linux:
 * libhumon-d.a                  - debug static library for Linux
 * libhumon.so.ver.si.on         - optimized shared library for Linux
 * libhumon-d.so.ver.si.on       - debug shared library for Linux
-* humon-test-d                  - test binary, debug version
-* humon-test-r                  - test binary, optimized version
+* test-d                        - test binary, debug version
+* test-r                        - test binary, optimized version
 * hux                           - a command-line tool for translating and validating Humon
 * readmeSrc-c                   - a small sample with example code from the README.md
 * readmeSrc-cpp                 - a less small sample with example code from the README.md

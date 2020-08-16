@@ -5,7 +5,7 @@
 #include <unistd.h>
 #endif
 #include "../src/humon.internal.h"
-#include <CppUTest/TestHarness.h>
+#include "utest.hpp"
 #include "testData.h"
 
 

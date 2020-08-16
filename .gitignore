@@ -45,5 +45,6 @@ mmap_address.bin
 build/
 python/build/
 docs/
+utest-gen-*
 
 *.pyc

@@ -9,7 +9,7 @@
 #endif
 #include <iostream>
 #include "humon.hpp"
-#include <CppUTest/TestHarness.h>
+#include "utest.hpp"
 #include "testDataCpp.h"
 
 using namespace std::literals;

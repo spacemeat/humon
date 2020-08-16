@@ -9,11 +9,12 @@
 #include <unistd.h>
 #endif
 #include "humon.hpp"
-#include <CppUTest/TestHarness.h>
+#include "utest.hpp"
 #include "testDataCpp.h"
 
 using namespace std::literals;
 
+/*
 SimpleString StringFrom(const hu::Trove & other)
 {
     std::stringstream ss;
@@ -27,6 +28,8 @@ SimpleString StringFrom(const hu::Node & other)
     ss << "{type: node address:" << other.address() << "}";
     return SimpleString(ss.str().data());
 }
+*/
+
 
 TEST_GROUP(makers)
 {

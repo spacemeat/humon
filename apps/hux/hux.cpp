@@ -13,26 +13,26 @@ void printUsage()
 {
     cout << R"(Usage:
  hux <args>
-  -pc print cloned
-  -pm print minimal
-  -pp print pretty  [default]
+  -pc               print cloned
+  -pm               print minimal
+  -pp               print pretty  [default]
 
-  -my do print comments  [default]
-  -mn do not print comments
+  -my               do print comments  [default]
+  -mn               do not print comments
  
-  -n <indentSize> use indentSize spaces for indentation  [default=4]
-  -nt use \t for indentation
+  -n <indentSize>   use indentSize spaces for indentation  [default=4]
+  -nt               use \t for indentation
 
-  -cn do not use colors  [default]
-  -ca use ansi colors
+  -cn               do not use colors  [default]
+  -ca               use ansi colors
 
-  -by do print utf8 BOM
-  -bn do not print utf8 BOM [default]
+  -by               do print utf8 BOM
+  -bn               do not print utf8 BOM [default]
  
-  -o <outputFile> output file
+  -o <outputFile>   output file
 
-  -- use stdin [default]
-  <intputFile> use file
+  --                use stdin [default]
+  <intputFile>      use file
 
 Returns 0 on successful operation.
 Returns 1 on bad command line arguments.

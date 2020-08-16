@@ -803,7 +803,7 @@ namespace hu
         /// Returns the entire text contained by this node and all its children.
         /** The entire text of this node is returned, including all its children's 
          * texts, and any comments and annotations associated to this node. */
-        std::string_view nestedValue() const HUMON_NOEXCEPT
+        std::string_view tokenStream() const HUMON_NOEXCEPT
         {
             check();
             auto sv = capi::huGetTokenStream(cnode);
@@ -1224,6 +1224,16 @@ namespace hu
                     { vec.emplace_back(Node(node)); }
             } while(node != HU_NULLNODE);
             return vec;
+        }
+
+        /// Returns the entire token stream of a trove (its text), including all nodes and all comments and annotations.
+        /** This function returns the stored text as a view. It does not allocate or copy memory, 
+         * and cannot format the string.*/
+        std::string_view tokenStream() const HUMON_NOEXCEPT
+        {
+            check();
+            auto sv = capi::huGetTroveTokenStream(ctrove);
+            return make_sv(sv);
         }
 
         /// Serializes a trove with the exact input token stream.

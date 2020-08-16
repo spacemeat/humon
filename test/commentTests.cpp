@@ -9,7 +9,7 @@
 #include <unistd.h>
 #endif
 #include "humon.hpp"
-#include <CppUTest/TestHarness.h>
+#include "utest.hpp"
 #include "testDataCpp.h"
 
 TEST_GROUP(comments)
