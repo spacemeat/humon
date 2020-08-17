@@ -1,6 +1,6 @@
 #include <string.h>
 #include <string_view>
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include <io.h>
 #else
 #include <unistd.h>
@@ -3695,7 +3695,7 @@ static std::string makeFileName(std::string_view path, int WhitespaceFormat, boo
 FILE * openHuFile(char const * path, char const * mode)
 {
 	FILE * fp = NULL;
-#ifdef _MSC_VER
+#ifdef _WIN32
 	errno_t err = fopen_s(&fp, path, mode);
 #else
 	fp = fopen(path, mode);
@@ -3926,7 +3926,7 @@ TEST_GROUP(huSerializeTroveToFile)
 
 int haveAccess(char const * path)
 {
-#ifdef _MSC_VER
+#ifdef _WIN32
 	return _access(path, 06);
 #else
 	return access(path, R_OK | W_OK);

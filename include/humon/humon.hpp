@@ -187,61 +187,42 @@ namespace hu
      * `auto numEyes = node / "frogs" / "numEyes" / hu::val<int> {};`
      * `auto color = node / "frogs" / "colors" / 0 / hu::val<AnimalColorsEnum> {};`
      */
-    template <class T>
+    template <class T, typename V = void>
     struct val
     { };
 
     /// Extractor for type int.
-    template<>
-    struct val<int>
+    template <class T>
+    struct val<T, typename std::enable_if_t<std::is_integral_v<T>>>
     {
-        static inline int extract(std::string_view valStr) HUMON_PATH_NOEXCEPT
+        static inline T extract(std::string_view valStr) HUMON_PATH_NOEXCEPT
         {
-            int val;
-            auto [p, ec] = std::from_chars(valStr.data(), valStr.data() + valStr.size(), val);
+            T value;
+            auto [p, ec] = std::from_chars(valStr.data(), valStr.data() + valStr.size(), value);
             if (ec == std::errc())
-                { return val; }
+                { return value; }
             else
-                { return int {}; }
+                { return T {}; }
         }
     };
-
 
     /// Extractor for type float.
-    template <>
-    struct val<float>
+    template <class T>
+    struct val<T, typename std::enable_if_t<std::is_floating_point_v<T>>>
     {
-        static inline float extract(std::string_view valStr) HUMON_PATH_NOEXCEPT
+        static inline T extract(std::string_view valStr) HUMON_PATH_NOEXCEPT
         {
-            // TODO: (gcc): Once from_chars(..float&) is complete, use this or remove this specialization. We're making a useless string here and it maketh me to bite metal. Don't forget to HUMON_NOEXCEPT.
+            // TODO: (gcc): Once std::from_chars(..T&) is complete, use this or remove this specialization. We're making a useless string here and it maketh me to bite metal. Don't forget to HUMON_NOEXCEPT.
     #if 0
-            float val;
+            T val;
             auto [p, ec] = std::from_chars(valStr.data(), valStr.data() + valStr.size(), val, std::chars_format::general);
             if (ec == std::errc())
                 { return val; }
             else
-                { return float {}; }
+                { return T {}; }
+    #else
+            return static_cast<T>(std::stod(std::string(valStr)));
     #endif
-            return std::stof(std::string(valStr));
-        }
-    };
-
-    /// Extractor for type double.
-    template <>
-    struct val<double>
-    {
-        static inline double extract(std::string_view valStr) HUMON_PATH_NOEXCEPT
-        {
-            // TODO: (gcc): Once from_chars(..double&) is complete, use this or remove this specialization. We're making a useless string here and it maketh me to bite metal. Don't forget to HUMON_NOEXCEPT.
-    #if 0
-            double val;
-            auto [p, ec] = std::from_chars(valStr.data(), valStr.data() + valStr.size(), val, std::chars_format::general);
-            if (ec == std::errc())
-                { return val; }
-            else
-                { return double {}; }
-    #endif
-            return std::stod(std::string(valStr));
         }
     };
 

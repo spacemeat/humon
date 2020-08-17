@@ -4,7 +4,7 @@
 #include <string.h>
 #include <string_view>
 #include <iostream>
-#ifdef _MSC_VER
+#ifdef _WIN32
 #else
 #include <unistd.h>
 #endif

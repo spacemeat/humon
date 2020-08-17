@@ -6,24 +6,20 @@
 
 FILE * openFile(char const * path, char const * mode)
 {
-#ifdef _MSC_VER
 	struct stat fstatData;
 	if (stat(path, & fstatData) < 0)
         { return NULL; }
     
+#ifdef _WIN32
     if ((_S_IFREG & fstatData.st_mode) == 0)
         { return NULL; }
 #else
-	struct stat fstatData;
-	if (stat(path, & fstatData) < 0)
-        { return NULL; }
-    
     if (S_ISREG(fstatData.st_mode) == false)
         { return NULL; }
 #endif
 
     FILE * fp = NULL;
-#ifdef _MSC_VER
+#ifdef _WIN32
     errno_t err = fopen_s(& fp, path, mode);
 #else
     fp = fopen(path, mode);
@@ -34,7 +30,7 @@ FILE * openFile(char const * path, char const * mode)
 
 huEnumType_t getFileSize(FILE * fp, huIndexSize_t * fileLen, huEnumType_t errorResponse)
 {
-#ifdef _MSC_VER
+#ifdef _WIN32
 	if (_fseeki64(fp, 0, SEEK_END) != 0)
 #else
 	if (fseeko(fp, 0, SEEK_END) != 0)
@@ -44,7 +40,7 @@ huEnumType_t getFileSize(FILE * fp, huIndexSize_t * fileLen, huEnumType_t errorR
 		return HU_ERROR_BADFILE;
 	}
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 	__int64 dataLen = _ftelli64(fp);
 #else
     off_t dataLen = ftello(fp);

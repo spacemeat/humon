@@ -1,10 +1,11 @@
 DONE THIS CHECKIN:
-Brand new test infrastructure. Ditching CPPUTest, which doesn't suck, but I wanted my own build to support 32-bit linux and 64-bit windows, and to drop reliance on an external package.
+_MSC_VER -> _WIN32
+Excise the CMake files.
+Improved SFINAE on extractors.
 
 TODO:
 P1 doxygen
 P1 finish README install desc
-P1 _MSC_VER -> _WIN32 or whatever?
 P1 early out for detected encoding swag
 P1 additional int-like args that could be is-integral_v templates
 P1 c++ extractor for int types that aren't int
