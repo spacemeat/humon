@@ -9,12 +9,14 @@
 #include <cmath>
 #include <algorithm>
 #include <sstream>
+#include <string_view>
 
 using namespace std::literals;
 
 
 std::string toString(bool val);
 std::string toString(long val);
+std::string toString(long long val);
 std::string toString(double val);
 std::string toString(char const * val, long len);
 std::string toString(void * val);
@@ -61,12 +63,12 @@ public:
         this->line = line;
     }
 
-    void fail(char const * expected, char const * got, long len, std::string_view checkThatFailed, 
+    void fail(char const * expected, char const * got, long long len, std::string_view checkThatFailed, 
         std::string_view, int line)
     {
         this->passed = false;
-        this->expected = toString(expected, len);
-        this->got = toString(got, len);
+        this->expected = toString(expected, (long) len);
+        this->got = toString(got, (long) len);
         this->checkThatFailed = checkThatFailed;
         this->file = file;
         this->line = line;
@@ -108,7 +110,7 @@ LONGS_EQUAL_LOCATION(utest_lhs, utest_rhs, utest_text,  __FILE__, __LINE__)
 LONGS_EQUAL_LOCATION(utest_lhs, utest_rhs, "",  __FILE__, __LINE__)
 
 #define LONGS_EQUAL_LOCATION(utest_lhs, utest_rhs, utest_text, utest_file, utest_line)\
-{checksRun += 1; long utest_l = (utest_lhs); long utest_r = (utest_rhs); \
+{checksRun += 1; long long utest_l = (utest_lhs); long long utest_r = (utest_rhs); \
 if (utest_l != utest_r) { fail(utest_l, utest_r, utest_text, utest_file, utest_line); return; }}
 
 
@@ -160,7 +162,7 @@ STRNCMP_EQUAL_LOCATION(utest_lhs, utest_rhs, len, utest_text, __FILE__, __LINE__
 STRNCMP_EQUAL_LOCATION(utest_lhs, utest_rhs, len, "", __FILE__, __LINE__)
 
 #define STRNCMP_EQUAL_LOCATION(utest_lhs, utest_rhs, len, utest_text, utest_file, utest_line) \
-{checksRun += 1; if (strncmp((utest_lhs), (utest_rhs), (len)) != 0) { fail(utest_lhs, utest_rhs, len, utest_text, utest_file, utest_line); return; }}
+{checksRun += 1; if (strncmp((utest_lhs), (utest_rhs), (long)(len)) != 0) { fail(utest_lhs, utest_rhs, len, utest_text, utest_file, utest_line); return; }}
 
 
 #define MEMCMP_EQUAL_TEXT(utest_lhs, utest_rhs, len, utest_text) \
@@ -170,7 +172,7 @@ MEMCMP_EQUAL_LOCATION(utest_lhs, utest_rhs, len, utest_text, __FILE__, __LINE__)
 MEMCMP_EQUAL_LOCATION(utest_lhs, utest_rhs, len, "", __FILE__, __LINE__)
 
 #define MEMCMP_EQUAL_LOCATION(utest_lhs, utest_rhs, len, utest_text, utest_file, utest_line) \
-{checksRun += 1; if (memcmp((utest_lhs), (utest_rhs), (len)) != 0) { fail(utest_text, utest_file, utest_line); return; }}
+{checksRun += 1; if (memcmp((utest_lhs), (utest_rhs), (long)(len)) != 0) { fail(utest_text, utest_file, utest_line); return; }}
 
 
 #define POINTERS_EQUAL_TEXT(utest_lhs, utest_rhs, utest_text) \

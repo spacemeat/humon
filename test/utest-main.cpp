@@ -43,6 +43,11 @@ std::string toString(long val)
     return std::to_string(val);
 }
 
+std::string toString(long long val)
+{
+	return std::to_string(val);
+}
+
 std::string toString(double val)
 {
     return std::to_string(val);

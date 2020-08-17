@@ -875,7 +875,10 @@ huNode * allocNewNode(huTrove * trove, huEnumType_t nodeKind, huToken const * fi
 
 void recordTokenizeError(huTrove * trove, huEnumType_t errorCode, huLine_t line, huCol_t col)
 {
-    huIndexSize_t num = 1;
+	if (trove == NULL)
+        { return; }
+
+	huIndexSize_t num = 1;
     huError * error = growVector(& trove->errors, & num);
     if (num)
     {
