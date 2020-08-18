@@ -18,7 +18,7 @@
 // are not referenced in public headers, so they don't need to be set by
 // a project that uses the Humon library.
 
-/// Sets the allocation block size for swagging an endocing.
+/// Sets the block size for swagging an endocing.
 #ifndef HUMON_SWAG_BLOCKSIZE
 #define HUMON_SWAG_BLOCKSIZE		(64)	// checks a cache line at a time
 #endif

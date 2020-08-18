@@ -37,14 +37,22 @@
 #define HU_NULLTROVE        (NULL)
 
 // For proper operation, these types must be signed.
+#ifndef HU_ENUM_TYPE
 #define HU_ENUM_TYPE        char
+#endif
+#ifndef HU_LINE_TYPE
 #define HU_LINE_TYPE        long
+#endif
+#ifndef HU_COL_TYPE
 #define HU_COL_TYPE         long
+#endif
 
+#ifndef HU_STRLEN_TYPE
 #if defined(ENV64BIT)
 #define HU_STRLEN_TYPE      long long
 #else
 #define HU_STRLEN_TYPE      long
+#endif
 #endif
 
 typedef HU_ENUM_TYPE        huEnumType_t;

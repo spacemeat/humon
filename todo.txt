@@ -1,9 +1,10 @@
 DONE THIS CHECKIN:
-Bail early in encoding swag based on statistics.
 
 TODO:
 P1 doxygen
 P1 finish README install desc
+P1 converge HU_* and HUMON_*
+P1 HUMON_FILE_BLOCKSIZE->HUMON_TRANSCODE_BLOCKSIZE?
 P1 consolidate deserializeOption unicode flags?
 P2 Improved error state transitions
 P2 vcpkg

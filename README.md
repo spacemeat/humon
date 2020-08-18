@@ -118,6 +118,10 @@ or, if you want to use clang:
 
 > Currently the clang build uses gcc's standard library. A better build experience is in the works, but in the meantime it's trivial to modify the `build-linux.py` script to use whatever library you have.
 
+If you're on a 64-bit machine that can run 32-bit programs (like Intel/AMD), you can build a 32-bit version:
+
+    ~/src/humon$ ./build-linux.py 32bit
+
 In Windows, you can open the root-level `humon.sln` file in Visual Studio 2017+, and build the targets you like.
 
 For all builds, the binary artifacts are produced in `{humon directory}/build/bin`. Currently, you can just copy the built binaries and the headers from `{humon directory}/include/humon` for use in your projects.
@@ -130,9 +134,9 @@ The following are built in Linux:
 * libhumon-d.so.ver.si.on       - debug shared library for Linux
 * test-d                        - test binary, debug version
 * test-r                        - test binary, optimized version
-* hux                           - a command-line tool for translating and validating Humon
-* readmeSrc-c                   - a small sample with example code from the README.md
-* readmeSrc-cpp                 - a less small sample with example code from the README.md
+* hux                           - a command-line tool for translformatting and validating Humon data
+* readmeSrc-c                   - a small sample with example code from this README.md
+* readmeSrc-cpp                 - a less small sample with example code from this README.md
 
 These files are built in Windows:
 * humon-win32.lib               - optimized static library for 32-bit Windows
@@ -850,6 +854,28 @@ If no nodes appear before an annotation, it applies to the trove. A great way to
     Using version 0.1.x
 
 Like asserted earlier, annotations are 100% open in their use. Humon doesn't use any annotation keys or values and doesn't interpret them. Applications can use them or not, but all annotations that are legal are guaranteed to be parsed, even if the application doesn't know about or use them at all. In this way you can embed metadata about objects in a Humon file, and even old versions of Humon apps will correctly read (and ignore) them, because all official versions of Humon always have.
+
+## Building Humon
+Humon builds on 64-bit and 32-bit architectures for Linux using GNU or Clang tools, and on 64-bit and 32-bit architectures in Visual Studio 2017+. There are a number of options you can set to change how the build is made.
+
+### Specifying integer types
+HU_ENUM_TYPE
+HU_LINE_TYPE
+HU_COL_TYPE
+HU_STRLEN_TYPE
+
+### Internal memory block sizes
+HUMON_SWAG_BLOCKSIZE
+HUMON_FILE_BLOCKSIZE
+
+### Skipping parameter checks
+HUMON_NO_PARAMETER_CHECKS
+
+### Debugging
+HUMON_CAVEPERSON_DEBUGGING
+
+### Excizing features for a leaner Humon
+
 
 ## The future of Humonity
 
