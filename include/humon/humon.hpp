@@ -177,10 +177,8 @@ namespace hu
 
     /// Value extraction template for in-line grokking of value nodes.
     /** This template is a helper to extract machine values out of Humon value nodes.
-     * Standard types are supported, and custom extractors can be specified in two
-     * ways:
-     * 1. Overload `std::from_chars()` for your type.
-     * 2. Specialize `hu::val<T>` for your type `T`, and implement the `extract()`
+     * Standard types are supported, and custom extractors can be specified. Just
+     * specialize `hu::val<T>` for your type `T`, and implement the `extract()`
      * function.
      * Usage: Use in conjunction with the `/` operator on a value node. This allows
      * you to extract a value in the natural flow of things:
@@ -506,17 +504,20 @@ namespace hu
         capi::huIndexSize_t numChildren() const HUMON_NOEXCEPT            ///< Returns the number of children of this node.
             { check(); return capi::huGetNumChildren(cnode); }
 
+        /// Returns the child node, by child index.
         template <class IntType, 
             typename std::enable_if<
                 std::is_integral_v<IntType>, IntType>::type * = nullptr>
-        Node child(IntType idx) const HUMON_NOEXCEPT      ///< Returns the child node, by child index.
+        Node child(IntType idx) const HUMON_NOEXCEPT
         {
             check();
             if (idx > 0 && static_cast<std::size_t>(idx) > static_cast<std::size_t>(std::numeric_limits<capi::huIndexSize_t>::max()))
                 { return Node(HU_NULLNODE); }
             return capi::huGetChildByIndex(cnode, static_cast<capi::huIndexSize_t>(idx));
         }
-        Node child(std::string_view key) const HUMON_NOEXCEPT  ///< Returns the child node, by key (if this is a dict).
+
+        /// Returns the child node, by key (if this is a dict).
+        Node child(std::string_view key) const HUMON_NOEXCEPT
         {
             check();
             std::size_t sz = key.size();
@@ -524,10 +525,12 @@ namespace hu
                 { return Node(HU_NULLNODE); }
             return capi::huGetChildByKeyN(cnode, key.data(), static_cast<capi::huIndexSize_t>(sz));
         }
+
         Node firstChild() const HUMON_NOEXCEPT            ///< Returns the first child node of this node.
             { check(); return child(0); }
         Node nextSibling() const HUMON_NOEXCEPT        ///< Returns the node ordinally after this one in the parent's children, or the null node if it's the last.
             { check(); return Node(capi::huGetNextSibling(cnode)); }
+        
         /// Access a node by an address relative to this node.
         /** A relative address is a single string, which contains as contents a `/`-delimited path
          * through the hierarchy. A key or index between the slashes indicates the child node to
