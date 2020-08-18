@@ -1,14 +1,10 @@
 DONE THIS CHECKIN:
-_MSC_VER -> _WIN32
-Excise the CMake files.
-Improved SFINAE on extractors.
+Bail early in encoding swag based on statistics.
 
 TODO:
 P1 doxygen
 P1 finish README install desc
-P1 early out for detected encoding swag
-P1 additional int-like args that could be is-integral_v templates
-P1 c++ extractor for int types that aren't int
+P1 consolidate deserializeOption unicode flags?
 P2 Improved error state transitions
 P2 vcpkg
 P2 string sizes should be size_t?

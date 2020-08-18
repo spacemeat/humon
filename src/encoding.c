@@ -35,7 +35,7 @@
             0000 0000  0000 0000 - <  1101 1000 0000 0000   0000 - d800    BMP code point
             1101 1000  0000 0000 - <  1101 1100 0000 0000   d800 - dc00    high surrogate
             1101 1100  0000 0000 - <  1110 0000 0000 0000   dc00 - e000    low surrogate
-            1110 0000  0000 0000 - <= 1111 1111 1111 1111   e000 - ffff    BMP code point (rarer?)
+            1110 0000  0000 0000 - <= 1111 1111 1111 1111   e000 - ffff    BMP code point (rarer)
 
             0000 -  d800
             e000 - 10000
@@ -70,7 +70,8 @@ huIndexSize_t const bomSizes[] = { sizeof(utf8_bom), sizeof(utf16be_bom), sizeof
 
 typedef struct ReadState_tag
 {
-    huDeserializeOptions * DeserializeOptions;
+    huEnumType_t encoding;
+    huDeserializeOptions * deserializeOptions;
     bool maybe;
     uint32_t partialCodePoint;
     huIndexSize_t bytesRemaining;
@@ -83,13 +84,14 @@ typedef struct ReadState_tag
 } ReadState;
 
 
-static void initReaders(ReadState readers[], huDeserializeOptions * DeserializeOptions)
+static void initReaders(ReadState readers[], huDeserializeOptions * deserializeOptions)
 {
     bool machineIsBigEndian = isMachineBigEndian();
 
     readers[HU_ENCODING_UTF8] = (ReadState)
     {
-        .DeserializeOptions = DeserializeOptions,
+        .encoding = HU_ENCODING_UTF8,
+        .deserializeOptions = deserializeOptions,
         .partialCodePoint = 0,
         .bytesRemaining = 0,
         .maybe = true,
@@ -103,7 +105,8 @@ static void initReaders(ReadState readers[], huDeserializeOptions * DeserializeO
 
     readers[HU_ENCODING_UTF16_BE] = (ReadState)
     {
-        .DeserializeOptions = DeserializeOptions,
+        .encoding = HU_ENCODING_UTF16_BE,
+        .deserializeOptions = deserializeOptions,
         .partialCodePoint = 0,
         .bytesRemaining = 0,
         .maybe = true,
@@ -117,7 +120,8 @@ static void initReaders(ReadState readers[], huDeserializeOptions * DeserializeO
 
     readers[HU_ENCODING_UTF16_LE] = (ReadState)
     {
-        .DeserializeOptions = DeserializeOptions,
+        .encoding = HU_ENCODING_UTF16_LE,
+        .deserializeOptions = deserializeOptions,
         .partialCodePoint = 0,
         .bytesRemaining = 0,
         .maybe = true,
@@ -131,7 +135,8 @@ static void initReaders(ReadState readers[], huDeserializeOptions * DeserializeO
 
     readers[HU_ENCODING_UTF32_BE] = (ReadState)
     {
-        .DeserializeOptions = DeserializeOptions,
+        .encoding = HU_ENCODING_UTF32_BE,
+        .deserializeOptions = deserializeOptions,
         .partialCodePoint = 0,
         .bytesRemaining = 0,
         .maybe = true,
@@ -145,7 +150,8 @@ static void initReaders(ReadState readers[], huDeserializeOptions * DeserializeO
 
     readers[HU_ENCODING_UTF32_LE] = (ReadState)
     {
-        .DeserializeOptions = DeserializeOptions,
+        .encoding = HU_ENCODING_UTF32_LE,
+        .deserializeOptions = deserializeOptions,
         .partialCodePoint = 0,
         .bytesRemaining = 0,
         .maybe = true,
@@ -156,6 +162,33 @@ static void initReaders(ReadState readers[], huDeserializeOptions * DeserializeO
         .errorOffset = 0,
         .machineIsBigEndian = machineIsBigEndian
     };
+}
+
+
+static huEnumType_t getEncodingFromBom(huStringView const * data, huIndexSize_t * numBomChars)
+{
+    huEnumType_t encoding = HU_ENCODING_UNKNOWN;
+
+    // look for 32bit first, then 16bit
+    if (memcmp(utf32le_bom, data->ptr, min(data->size, bomSizes[HU_ENCODING_UTF32_LE])) == 0)
+        { encoding = HU_ENCODING_UTF32_LE; }
+    else if (memcmp(utf32be_bom, data->ptr, min(data->size, bomSizes[HU_ENCODING_UTF32_BE])) == 0)
+        { encoding = HU_ENCODING_UTF32_BE; }
+    else if (memcmp(utf16le_bom, data->ptr, min(data->size, bomSizes[HU_ENCODING_UTF16_LE])) == 0)
+        { encoding = HU_ENCODING_UTF16_LE; }
+    else if (memcmp(utf16be_bom, data->ptr, min(data->size, bomSizes[HU_ENCODING_UTF16_BE])) == 0)
+        { encoding = HU_ENCODING_UTF16_BE; }
+    else if (memcmp(utf8_bom, data->ptr, min(data->size, bomSizes[HU_ENCODING_UTF8])) == 0)
+        { encoding = HU_ENCODING_UTF8; }
+
+    if (encoding != HU_ENCODING_UNKNOWN)
+    {
+        * numBomChars = bomSizes[(size_t) encoding];
+        return encoding;
+    }
+
+    * numBomChars = 0;
+    return HU_ENCODING_UNKNOWN;
 }
 
 
@@ -203,7 +236,7 @@ static void scanUtf8(uint8_t codeUnit, ReadState * rs)
             { rs->numNuls += 1; }
         else if (rs->partialCodePoint < 128)
             { rs->numAsciiRangeCodePoints += 1; }
-        else if (rs->DeserializeOptions->allowOutOfRangeCodePoints == false &&
+        else if (rs->deserializeOptions->allowOutOfRangeCodePoints == false &&
                  (rs->partialCodePoint > 0x10ffff ||
                   (rs->partialCodePoint >= 0xd800 && 
                    rs->partialCodePoint < 0xe000)))
@@ -225,7 +258,7 @@ static void scanUtf16(uint16_t codeUnit, ReadState * rs)
             foundValidCodeUnit = true;
         }
         // Non-surrogate; may have to accept it for Windows filenames.
-        else if (rs->DeserializeOptions->allowUtf16UnmatchedSurrogates)
+        else if (rs->deserializeOptions->allowUtf16UnmatchedSurrogates)
         {
             // undo high surrogate math from the previous code unit and add that code point
             rs->partialCodePoint = rs->partialCodePoint / 0x400 + 0xd800;
@@ -255,7 +288,7 @@ static void scanUtf16(uint16_t codeUnit, ReadState * rs)
             foundValidCodeUnit = true;
         }
             // low surrogate; invalid UTF16
-        else if (rs->DeserializeOptions->allowUtf16UnmatchedSurrogates)
+        else if (rs->deserializeOptions->allowUtf16UnmatchedSurrogates)
         {
             rs->partialCodePoint += codeUnit;
             rs->bytesRemaining = 0;
@@ -283,7 +316,7 @@ static void scanUtf32(uint32_t codeUnit, ReadState * rs)
     // we'll remove the second predicate here.
     if ((codeUnit < 0xd800) ||
         (codeUnit > 0xe000 && codeUnit < 0x110000) ||
-        rs->DeserializeOptions->allowOutOfRangeCodePoints)
+        rs->deserializeOptions->allowOutOfRangeCodePoints)
     {
         rs->partialCodePoint = codeUnit;
         rs->numCodePoints += 1;
@@ -410,10 +443,122 @@ static void swagEncodingFromBlock(char const * block, huIndexSize_t blockSize, R
 }
 
 
-static ReadState * chooseFromAmbiguousEncodings(ReadState readers[], huIndexSize_t numValidEncodings)
+// Can return HU_ENCODING_UNKNOWN, in which case we should keep checking blocks.
+static huEnumType_t findLikelyEncoding(ReadState readers[], huIndexSize_t numValidEncodings)
+{
+    if (numValidEncodings == 0) // shouldn't ever happen
+        { return HU_ENCODING_UNKNOWN; }
+
+    if (numValidEncodings == 1)
+    {
+        for (size_t i = 0; i < (size_t) HU_ENCODING_UNKNOWN; ++i)
+        {
+            if (readers[i].maybe)
+                { return i; }
+        }
+    }
+
+    else
+    {
+        // static insertion sort
+        /*  Because there is a small number of encodings, I can make an array of
+            2^n-1 empty slots. Then, starting from the middle, I insert readers
+            in priority order, each time halving the offset distance in the array
+            until I'm down to 1. Then a linear scan through the array picks up
+            the read states in sorted order. This alg probably has an actual name. 
+            O(nlogn) for all n insertions, O(2^n) search, but we're talking n = 5 
+            here, and two cachelines' worth of RAM, the first of which is guaranteed
+            to contain the winner.*/
+        ReadState * sortedReaders[(1 << HU_ENCODING_UNKNOWN) - 1] = { 0 };
+
+        for (size_t i = 0; i < (size_t) HU_ENCODING_UNKNOWN; ++i)
+        {
+            size_t offset = (1 << HU_ENCODING_UNKNOWN) / 2 - 1; // 15
+            size_t cursor = offset;
+            // inserting b into sorted array
+            ReadState * b = & readers[i];
+            for (size_t j = 0; j < i; ++j)
+            {
+                // Empty slot; take it and bail
+                ReadState * a = sortedReaders[cursor];
+                if (a == NULL)
+                    { break; }
+
+                // if this reader (b) is worse than the previous reader (a), bin b to the right (compare = 1)
+                // else let b bin left
+                int compare = -1;    // 1 or -1
+
+                // losers finish last
+                if (b->maybe == false)
+                    { compare = 1; }
+                // Prefer the encoding with the fewer nul codepoints.
+                else if (b->numNuls > a->numNuls)
+                    { compare = 1; }
+                else if (b->numNuls == a->numNuls)
+                {
+                    // Prefer the encoding with more codepoints < 127, since all Humon
+                    // punctuation is in that range.
+                    if (b->numAsciiRangeCodePoints < a->numAsciiRangeCodePoints)
+                        { compare = 1; }
+                    else if (b->numAsciiRangeCodePoints == a->numAsciiRangeCodePoints &&
+                             // All else failing to disambiguate, prefer the encoding with
+                             // more codepoints (shorter code units, really; utf8 over utf16).
+                             b->numCodePoints < a->numCodePoints)
+                        { compare = 1; }
+                }
+
+                offset = (1 << HU_ENCODING_UNKNOWN) / (1 << (j + 2));
+                // j=0                          32  /  4        = 8
+                // j=1                          32  /  8        = 4
+                // j=2                          32  /  16       = 2
+                // j=3                          32  /  32       = 1
+                cursor += offset * compare;
+            }
+
+            sortedReaders[cursor] = b;
+        }
+
+        // now find the first two; these are highest-rated encodings
+        // this is why we prefer to insert left; they get found earlier
+        ReadState * a = NULL;
+        ReadState * b = NULL;
+        for (size_t i = 0; i < sizeof(sortedReaders) / sizeof(ReadState *); ++i)
+        {
+            if (sortedReaders[i])
+            {
+                if (a == NULL) { a = sortedReaders[i]; }
+                else if (b == NULL) { b = sortedReaders[i]; break; }
+            }
+        }
+
+        // if a is significantly better than b, then we've found our king
+        huIndexSize_t HU_NUL_THRESHOLD = 2;
+        huIndexSize_t HU_ASCII_THRESHOLD = 10;
+        huIndexSize_t HU_NUMCP_THRESHOLD = 10;
+        if (a->numNuls - b->numNuls >= HU_NUL_THRESHOLD)
+            { return a->encoding; }
+        else if (a->numAsciiRangeCodePoints - b->numAsciiRangeCodePoints >= HU_ASCII_THRESHOLD)
+            { return a->encoding; }
+        else if (a->numCodePoints - b->numCodePoints >= HU_NUMCP_THRESHOLD)
+            { return a->encoding; }
+
+        return HU_ENCODING_UNKNOWN;
+    }
+
+    // satisfy the compiler, but we'll never get here
+    return HU_ENCODING_UNKNOWN;
+}
+
+
+// This must only be called if we've read all the way through the string/file and cannot
+// determine the correct encoding yet. This checks whether there are any incomplete encodings
+// at the end of the string that would disqualify the encodings from consideration. It's a
+// hail mary check if somehow the encodings are completely ambiguous otherwise, and this is
+// miraculously the deciding factor. Shrug.
+static void disqualifyIncompleteEncodings(ReadState readers[], huIndexSize_t numValidEncodings)
 {
     // If we finished scanning while expecting more bytes in a multi-codeUnit 
-    // encoding, that encoding is bunk. (UTF32 never has more than one code unit.)
+    // encoding, that encoding is bunk.
     if (numValidEncodings > 1)
     {
         if (readers[HU_ENCODING_UTF8].maybe && 
@@ -424,89 +569,27 @@ static ReadState * chooseFromAmbiguousEncodings(ReadState readers[], huIndexSize
         }
         if (readers[HU_ENCODING_UTF16_BE].maybe &&
             readers[HU_ENCODING_UTF16_BE].bytesRemaining &&
-            readers[HU_ENCODING_UTF16_BE].DeserializeOptions->allowUtf16UnmatchedSurrogates == false) 
+            readers[HU_ENCODING_UTF16_BE].deserializeOptions->allowUtf16UnmatchedSurrogates == false) 
         {
             readers[HU_ENCODING_UTF16_BE].maybe = false;
             numValidEncodings -= 1;
         }
         if (readers[HU_ENCODING_UTF16_LE].maybe &&
             readers[HU_ENCODING_UTF16_LE].bytesRemaining &&
-            readers[HU_ENCODING_UTF16_BE].DeserializeOptions->allowUtf16UnmatchedSurrogates == false)
+            readers[HU_ENCODING_UTF16_BE].deserializeOptions->allowUtf16UnmatchedSurrogates == false)
         {
             readers[HU_ENCODING_UTF16_LE].maybe = false;
             numValidEncodings -= 1;
         }
+        // UTF32 never has more than one code unit per codepoint.
     }
-
-    ReadState * selectedEncoding = NULL;
-    if (numValidEncodings == 1)
-    {
-        for (huEnumType_t i = 0; i < HU_ENCODING_UNKNOWN; ++i)
-        {
-            if (readers[(size_t) i].maybe)
-            {
-                selectedEncoding = readers + i;
-                break;
-            }
-        }
-    }
-    else if (numValidEncodings > 1)
-    {
-        for (huEnumType_t i = 0; i < HU_ENCODING_UNKNOWN; ++i)
-        {
-            if (readers[(size_t) i].maybe)
-            {
-                if (selectedEncoding == NULL)
-                    { selectedEncoding = readers + i; }
-                else
-                {
-                    if (readers[(size_t) i].numNuls < selectedEncoding->numNuls)
-                        { selectedEncoding = readers + i; }
-                    else if (readers[(size_t) i].numNuls == selectedEncoding->numNuls)
-                    {
-                        if (readers[(size_t) i].numAsciiRangeCodePoints > selectedEncoding->numAsciiRangeCodePoints)
-                            { selectedEncoding = readers + i; }
-                        else if (readers[(size_t) i].numAsciiRangeCodePoints == selectedEncoding->numAsciiRangeCodePoints &&
-                                 readers[(size_t) i].numCodePoints > selectedEncoding->numCodePoints)
-                            { selectedEncoding = readers + i; }
-                    }
-                }
-            }
-        }
-    }
-
-    return selectedEncoding;
 }
 
 
-static huEnumType_t getEncodingFromBom(huStringView const * data, huIndexSize_t * numBomChars)
-{
-    huEnumType_t encoding = HU_ENCODING_UNKNOWN;
-
-    // look for 32bit first, then 16bit
-    if (memcmp(utf32le_bom, data->ptr, min(data->size, bomSizes[HU_ENCODING_UTF32_LE])) == 0)
-        { encoding = HU_ENCODING_UTF32_LE; }
-    else if (memcmp(utf32be_bom, data->ptr, min(data->size, bomSizes[HU_ENCODING_UTF32_BE])) == 0)
-        { encoding = HU_ENCODING_UTF32_BE; }
-    else if (memcmp(utf16le_bom, data->ptr, min(data->size, bomSizes[HU_ENCODING_UTF16_LE])) == 0)
-        { encoding = HU_ENCODING_UTF16_LE; }
-    else if (memcmp(utf16be_bom, data->ptr, min(data->size, bomSizes[HU_ENCODING_UTF16_BE])) == 0)
-        { encoding = HU_ENCODING_UTF16_BE; }
-    else if (memcmp(utf8_bom, data->ptr, min(data->size, bomSizes[HU_ENCODING_UTF8])) == 0)
-        { encoding = HU_ENCODING_UTF8; }
-
-    if (encoding != HU_ENCODING_UNKNOWN)
-    {
-        * numBomChars = bomSizes[(size_t) encoding];
-        return encoding;
-    }
-
-    * numBomChars = 0;
-    return HU_ENCODING_UNKNOWN;
-}
-
-
-huEnumType_t swagEncodingFromString(huStringView const * data, huIndexSize_t * numBomChars, huDeserializeOptions * DeserializeOptions)
+/*  POST: The encoding detected from the file is returned. If HU_ENCODING_UNKNONWN
+    is returned, then there was an error; we'll always just choose a legal one if
+    we can't decide which is best.*/
+huEnumType_t swagEncodingFromString(huStringView const * data, huIndexSize_t * numBomChars, huDeserializeOptions * deserializeOptions)
 {
     huEnumType_t bomEncoding = getEncodingFromBom(data, numBomChars);
 
@@ -520,11 +603,11 @@ huEnumType_t swagEncodingFromString(huStringView const * data, huIndexSize_t * n
     if (bomEncoding != HU_ENCODING_UNKNOWN)
         { return bomEncoding; }
 
-    huIndexSize_t numValidEncodings = HU_ENCODING_UNKNOWN;
-    ReadState * selectedEncoding = NULL;
+    huIndexSize_t numValidEncodings = (huIndexSize_t) HU_ENCODING_UNKNOWN;
+    huEnumType_t bestEncoding = HU_ENCODING_UNKNOWN;
     ReadState readers[HU_ENCODING_UNKNOWN];
 
-    initReaders(readers, DeserializeOptions);
+    initReaders(readers, deserializeOptions);
 
     char const * block = data->ptr;
     huIndexSize_t blockSize = min(data->size, HUMON_SWAG_BLOCKSIZE);
@@ -535,39 +618,60 @@ huEnumType_t swagEncodingFromString(huStringView const * data, huIndexSize_t * n
     {
         swagEncodingFromBlock(block, blockSize, readers, & numValidEncodings);
 
-        if (numValidEncodings == 1)
-            { break; }
+        // if there's a clear winning encoding even among legal ones, choose it early
+        huEnumType_t winningEncoding = findLikelyEncoding(readers, numValidEncodings);
+        if (winningEncoding != HU_ENCODING_UNKNOWN)
+        {
+            bestEncoding = winningEncoding;
+            break;
+        }
         
         bytesRead += blockSize;
         block += HUMON_SWAG_BLOCKSIZE;
         blockSize = min(HUMON_SWAG_BLOCKSIZE, data->size - bytesRead);
     }
 
-    selectedEncoding = chooseFromAmbiguousEncodings(readers, numValidEncodings);
+    // If we finished and still can't decide, maybe some candidates will be disqualified
+    // by broken code units at end-of-file. It's -real- unlikely.
+    if (bytesRead == data->size)
+    {
+        disqualifyIncompleteEncodings(readers, numValidEncodings);
+        huEnumType_t winningEncoding = findLikelyEncoding(readers, numValidEncodings);
+        if (winningEncoding != HU_ENCODING_UNKNOWN)
+            { bestEncoding = winningEncoding; }
+    }
+
+    if (bestEncoding == HU_ENCODING_UNKNOWN)
+    {
+        // We always choose a legal one, even if one isn't obviously the best.
+        for (size_t i = 0; i < (size_t) HU_ENCODING_UNKNOWN; ++i)
+        {
+            if (readers[i].maybe)
+                { return readers[i].encoding; }
+        }
+    }
 
 #ifdef HUMON_CAVEPERSON_DEBUGGING
-    if (selectedEncoding != NULL)
-        { printf("Encoding determined from bit pattern: %d\n", (huIndexSize_t)(selectedEncoding - readers)); }
+    if (bestEncoding != HU_ENCODING_UNKNOWN)
+        { printf("Encoding determined from bit pattern: %d\n", huEncodingToString(bestEncoding)); }
     else
         { printf("Encoding not determined from bit pattern\n"); }
 #endif
 
-    if (selectedEncoding != NULL)
-        { return (huEnumType_t)(selectedEncoding - readers); }
-    else
-        { return HU_ENCODING_UNKNOWN; }
+    return bestEncoding;
 }
 
 
 /*  PRE: fp is opened in binary mode, and is pointing to the beginning of the data.
-*/
-huEnumType_t swagEncodingFromFile(FILE * fp, huIndexSize_t fileSize, huIndexSize_t * numBomChars, huDeserializeOptions * DeserializeOptions)
+    POST: The encoding detected from the file is returned. If HU_ENCODING_UNKNONWN
+    is returned, then there was an error; we'll always just choose a legal one if
+    we can't decide which is best.*/
+huEnumType_t swagEncodingFromFile(FILE * fp, huIndexSize_t fileSize, huIndexSize_t * numBomChars, huDeserializeOptions * deserializeOptions)
 {
     huIndexSize_t numValidEncodings = HU_ENCODING_UNKNOWN;
-    ReadState * selectedEncoding = NULL;
     ReadState readers[HU_ENCODING_UNKNOWN];
 
-    initReaders(readers, DeserializeOptions);
+    initReaders(readers, deserializeOptions);
 
     char buf[HUMON_SWAG_BLOCKSIZE];
     char * block = buf;
@@ -580,28 +684,59 @@ huEnumType_t swagEncodingFromFile(FILE * fp, huIndexSize_t fileSize, huIndexSize
     bytesRead += blockSize;
 
     huStringView sv = { .ptr = block, .size = blockSize };
-    huEnumType_t bomEncoding = getEncodingFromBom(& sv, numBomChars);
-    if (bomEncoding != HU_ENCODING_UNKNOWN)
-        { return bomEncoding; }
+    huEnumType_t bestEncoding = getEncodingFromBom(& sv, numBomChars);
+    if (bestEncoding != HU_ENCODING_UNKNOWN)
+        { return bestEncoding; }
 
     // scan through the input file in HUMON_SWAG_BLOCKSIZE-byte blocks
     do
     {
         swagEncodingFromBlock(block, blockSize, readers, & numValidEncodings);
 
+        // if there's a clear winning encoding even among legal ones, choose it early
+        huEnumType_t winningEncoding = findLikelyEncoding(readers, numValidEncodings);
+        if (winningEncoding != HU_ENCODING_UNKNOWN)
+        {
+            bestEncoding = winningEncoding;
+            break;
+        }
+        
         blockSize = (huIndexSize_t) fread(block, 1, HUMON_SWAG_BLOCKSIZE, fp);
         if (blockSize == 0)
             { return HU_ENCODING_UNKNOWN; } // ERROR! WTF
         block = buf;
         bytesRead += blockSize;
     }
-    while (bytesRead < fileSize && numValidEncodings > 1);
+    while (bytesRead < fileSize);
 
-    selectedEncoding = chooseFromAmbiguousEncodings(readers, numValidEncodings);
-    if (selectedEncoding != NULL)
-        { return (huEnumType_t)(selectedEncoding - readers); }
+    // If we finished and still can't decide, maybe some candidates will be disqualified
+    // by broken code units at end-of-file. It's -real- unlikely.
+    if (bytesRead == fileSize)
+    {
+        disqualifyIncompleteEncodings(readers, numValidEncodings);
+        huEnumType_t winningEncoding = findLikelyEncoding(readers, numValidEncodings);
+        if (winningEncoding != HU_ENCODING_UNKNOWN)
+            { bestEncoding = winningEncoding; }
+    }
+
+    if (bestEncoding == HU_ENCODING_UNKNOWN)
+    {
+        // We always choose a legal one, even if one isn't obviously the best.
+        for (size_t i = 0; i < (size_t) HU_ENCODING_UNKNOWN; ++i)
+        {
+            if (readers[i].maybe)
+                { return readers[i].encoding; }
+        }
+    }
+
+#ifdef HUMON_CAVEPERSON_DEBUGGING
+    if (bestEncoding != HU_ENCODING_UNKNOWN)
+        { printf("Encoding determined from bit pattern: %d\n", huEncodingToString(bestEncoding)); }
     else
-        { return HU_ENCODING_UNKNOWN; }
+        { printf("Encoding not determined from bit pattern\n"); }
+#endif
+
+    return bestEncoding;
 }
 
 
@@ -842,7 +977,7 @@ static huIndexSize_t transcodeToUtf8FromBlock_utf32le(char * dest, char const * 
 
 static huIndexSize_t transcodeToUtf8FromBlock(char * dest, char const * block, huIndexSize_t blockSize, ReadState * reader)
 {
-    switch(reader->DeserializeOptions->encoding)
+    switch(reader->deserializeOptions->encoding)
     {
     case HU_ENCODING_UTF8:
         return transcodeToUtf8FromBlock_utf8(dest, block, blockSize, reader);
@@ -864,17 +999,17 @@ static huIndexSize_t transcodeToUtf8FromBlock(char * dest, char const * block, h
     PRE: srcEncoding is not HU_ENCODING_UNKNOWN
     Sets *numBytesEncoded and returns a HU_ERROR_*.
 */
-huEnumType_t transcodeToUtf8FromString(char * dest, huIndexSize_t * numBytesEncoded, huStringView const * src, huDeserializeOptions * DeserializeOptions)
+huEnumType_t transcodeToUtf8FromString(char * dest, huIndexSize_t * numBytesEncoded, huStringView const * src, huDeserializeOptions * deserializeOptions)
 {
-    if (DeserializeOptions->encoding == HU_ENCODING_UNKNOWN)
+    if (deserializeOptions->encoding == HU_ENCODING_UNKNOWN)
         { return HU_ERROR_BADPARAMETER; }
     
     // faster codepath for UTF8->UTF8 transcoding
     // This path doesn't check for invalid or overlong UTF8 sequences. It just
     // slams memory. You can separately specify strictUnicode for output for
     // huTroveTo* functions. Humon won't be fooled by overlong imposters.
-    if (DeserializeOptions->encoding == HU_ENCODING_UTF8 && 
-        DeserializeOptions->allowOutOfRangeCodePoints == true)
+    if (deserializeOptions->encoding == HU_ENCODING_UTF8 && 
+        deserializeOptions->allowOutOfRangeCodePoints == true)
     {
         // skip the BOM if there is one
         if (memcmp(src, utf8_bom, sizeof(utf8_bom)) == 0)
@@ -887,7 +1022,8 @@ huEnumType_t transcodeToUtf8FromString(char * dest, huIndexSize_t * numBytesEnco
     else
     {
         ReadState reader;
-        reader.DeserializeOptions = DeserializeOptions;
+        reader.encoding = deserializeOptions->encoding;
+        reader.deserializeOptions = deserializeOptions;
         reader.maybe = true;
         reader.partialCodePoint = 0;
         reader.bytesRemaining = 0;
@@ -905,8 +1041,8 @@ huEnumType_t transcodeToUtf8FromString(char * dest, huIndexSize_t * numBytesEnco
         huIndexSize_t bytesRead = 0;
 
         // skip the BOM if there is one
-        char const * bom = bomDefs[(size_t) DeserializeOptions->encoding];
-        huIndexSize_t bomLen = bomSizes[(size_t) DeserializeOptions->encoding];
+        char const * bom = bomDefs[(size_t) deserializeOptions->encoding];
+        huIndexSize_t bomLen = bomSizes[(size_t) deserializeOptions->encoding];
         if (bomLen > 0 && memcmp(src->ptr, bom, bomLen) == 0)
         {
             block += bomLen;
@@ -937,17 +1073,17 @@ huEnumType_t transcodeToUtf8FromString(char * dest, huIndexSize_t * numBytesEnco
 }
 
 
-huEnumType_t transcodeToUtf8FromFile(char * dest, huIndexSize_t * numBytesEncoded, FILE * fp, huIndexSize_t srcLen, huDeserializeOptions * DeserializeOptions)
+huEnumType_t transcodeToUtf8FromFile(char * dest, huIndexSize_t * numBytesEncoded, FILE * fp, huIndexSize_t srcLen, huDeserializeOptions * deserializeOptions)
 {
-    if (DeserializeOptions->encoding == HU_ENCODING_UNKNOWN)
+    if (deserializeOptions->encoding == HU_ENCODING_UNKNOWN)
         { return HU_ERROR_BADPARAMETER; }
     
     // faster codepath for UTF8->UTF8 transcoding
     // This path doesn't check for invalid or overlong UTF8 sequences. It just
     // slams memory. You can separately specify strictUnicode for output for
     // huTroveTo* functions. Humon won't be fooled by overlong imposters.
-    if (DeserializeOptions->encoding == HU_ENCODING_UTF8 && 
-        DeserializeOptions->allowOutOfRangeCodePoints == true)
+    if (deserializeOptions->encoding == HU_ENCODING_UTF8 && 
+        deserializeOptions->allowOutOfRangeCodePoints == true)
     {
         * numBytesEncoded = (huIndexSize_t) fread(dest, 1, srcLen, fp);
         return HU_ERROR_NOERROR;
@@ -955,7 +1091,8 @@ huEnumType_t transcodeToUtf8FromFile(char * dest, huIndexSize_t * numBytesEncode
     else
     {
         ReadState reader;
-        reader.DeserializeOptions = DeserializeOptions;
+        reader.encoding = deserializeOptions->encoding;
+        reader.deserializeOptions = deserializeOptions;
         reader.maybe = true;
         reader.partialCodePoint = 0;
         reader.bytesRemaining = 0;
@@ -981,8 +1118,8 @@ huEnumType_t transcodeToUtf8FromFile(char * dest, huIndexSize_t * numBytesEncode
         bytesRead += blockSize;
 
         // skip the BOM if there is one
-        char const * bom = bomDefs[(size_t) DeserializeOptions->encoding];
-        huIndexSize_t bomLen = bomSizes[(size_t) DeserializeOptions->encoding];
+        char const * bom = bomDefs[(size_t) deserializeOptions->encoding];
+        huIndexSize_t bomLen = bomSizes[(size_t) deserializeOptions->encoding];
         if (bomLen > 0 && memcmp(block, bom, bomLen) == 0)
         {
             block += bomLen;
