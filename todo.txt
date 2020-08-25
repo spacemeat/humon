@@ -1,25 +1,17 @@
 DONE THIS CHECKIN:
-Renamed the size type name.
-Added filters to utest.
-Other improvements to utest. I like it.
-Now calling utest ztest so it shows up last in lists.
-Added build arguments to build any / all targets in linux.
-Fixed major bug re transcoding blocks.
-More detailed build information in the readme.
-Began linux install script.
+Migrate obj/ to int/
 
 TODO:
 P1 doxygen
 P1 finish README install desc
-P1 linux install
 P1 option to decolorize caveperson
+P1 linux install - .so
 P1 get hux to build with .so
 P1 Update buildUtfnTestFiles.sh to use correct hux args
 P1 version number in header and build
 P1 converge HU_* and HUMON_*
 P1 huGetRelativeZ -> huGetNodeByRelativeAddress?
-P1 relocate HUMON_STATIC_TERM_SIZE
-P1 HUMON_TRANSCODE_BLOCKSIZE->HUMON_TRANSCODE_BLOCKSIZE?
+P1 relocate HUMON_STATIC_TERM_SIZE (and rename HUMON_ADDRESS_BLOCKSIZE)
 P1 consolidate deserializeOption unicode flags?
 P2 Improved error state transitions
 P2 vcpkg

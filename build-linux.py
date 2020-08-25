@@ -7,8 +7,8 @@ import subprocess
 from runpy import run_path
 
 buildDir = "build"
-objDir = '/'.join([buildDir, "obj"])
-objBinDir = '/'.join([objDir, "bin"])
+intDir = '/'.join([buildDir, "int"])
+intBinDir = '/'.join([intDir, "bin"])
 binDir = '/'.join([buildDir, "bin"])
 
 all_off = '\033[0m'
@@ -38,7 +38,7 @@ def doShellCommand(cmd):
 
 
 def buildObj (target, src, incDirs, flags, arch32bit, debug, pic, cLanguage, tool):
-    global objDir
+    global intDir
 
     incDirsArgs = [f"-I{incDir}" for incDir in incDirs]
     
@@ -69,8 +69,8 @@ def buildObj (target, src, incDirs, flags, arch32bit, debug, pic, cLanguage, too
 
 
 def buildLib (target, srcList, incDirs, flags, arch32bit, debug, cLanguage, tool):
-    global objDir
-    global objBinDir
+    global intDir
+    global intBinDir
     global binDir
 
     finalTarget = f"lib{target}.a"
@@ -81,7 +81,7 @@ def buildLib (target, srcList, incDirs, flags, arch32bit, debug, cLanguage, tool
     dotos = []
     canProceed = True
     for src in srcList:
-        doto = f"{objDir}/{os.path.basename(src)}{'-32' if arch32bit else ''}{'-d' if debug else ''}.o"
+        doto = f"{intDir}/{os.path.basename(src)}{'-32' if arch32bit else ''}{'-d' if debug else ''}.o"
         dotos.append(doto)
         if buildObj(doto, src, incDirs, flags, arch32bit, debug, False, cLanguage, tool) != 0:
             canProceed = False
@@ -89,12 +89,12 @@ def buildLib (target, srcList, incDirs, flags, arch32bit, debug, cLanguage, tool
     if canProceed:
         cmd = 'echo "No build tools set. Select from \"gcc\" or \"clang\"."'
         if tool in ["gcc", "clang"]:
-            cmd = f"ar cr -o {objBinDir}/{target} {' '.join(dotos)}"
+            cmd = f"ar cr -o {intBinDir}/{target} {' '.join(dotos)}"
             res = doShellCommand(cmd)
             if res != 0:
                 return res
             
-            cmd = f"cp {objBinDir}/{target} {binDir}/{finalTarget}"
+            cmd = f"cp {intBinDir}/{target} {binDir}/{finalTarget}"
             return doShellCommand(cmd)
 
     cmd = 'echo "Failure to build target. Aborting."'
@@ -102,7 +102,7 @@ def buildLib (target, srcList, incDirs, flags, arch32bit, debug, cLanguage, tool
 
 
 def buildPythonLib (target, srcList, incDirc, flags, arch32bit, debug, tool):
-    global objDir
+    global intDir
 
     target=f"lib{target}{'-py'}.a"
 
@@ -111,7 +111,7 @@ def buildPythonLib (target, srcList, incDirc, flags, arch32bit, debug, tool):
     dotos = []
     canProceed = True
     for src in srcList:
-        doto = f"{objDir}/{os.path.basename(src)}{'-rd' if debug else '-r'}.o"
+        doto = f"{intDir}/{os.path.basename(src)}{'-rd' if debug else '-r'}.o"
         dotos.append(doto)
         if buildObj(doto, src, incDirs, flags, arch32bit, debug, True, True, tool) != 0:
             canProceed = False
@@ -119,7 +119,7 @@ def buildPythonLib (target, srcList, incDirc, flags, arch32bit, debug, tool):
     if canProceed:
         cmd = 'echo "No build tools set. Select from \"gcc\" or \"clang\"."'
         if tool in ["gcc", "clang"]:
-            cmd = f"ar cr -o {objBinDir}/{target} {' '.join(dotos)}"
+            cmd = f"ar cr -o {intBinDir}/{target} {' '.join(dotos)}"
             return doShellCommand(cmd)
 
     cmd = 'echo "Failure to build target. Aborting."'
@@ -127,8 +127,8 @@ def buildPythonLib (target, srcList, incDirc, flags, arch32bit, debug, tool):
 
 
 def buildSo (target, srcList, incDirs, flags, arch32bit, debug, cLanguage, tool):
-    global objDir
-    global objBinDir
+    global intDir
+    global intBinDir
     global binDir
 
     finalTarget = f"lib{target}.so.0.0.0"
@@ -143,7 +143,7 @@ def buildSo (target, srcList, incDirs, flags, arch32bit, debug, cLanguage, tool)
     dotos = []
     canProceed = True
     for src in srcList:
-        doto = f"{objDir}/{os.path.basename(src)}{'-d' if debug else ''}.o"
+        doto = f"{intDir}/{os.path.basename(src)}{'-d' if debug else ''}.o"
         dotos.append(doto)
         if buildObj(doto, src, incDirs, flags, arch32bit, debug, True, cLanguage, tool) != 0:
             canProceed = False
@@ -167,12 +167,12 @@ def buildSo (target, srcList, incDirs, flags, arch32bit, debug, cLanguage, tool)
             else:
                 cmplr = "clang++ -std=c++17 -stdlib=libstdc++" 
         
-        cmd = f"{cmplr} -Wall -Wextra -Werror -shared -Wl,-soname,{soname} {arch} {defs} -o {objBinDir}/{target} {' '.join(dotos)}"
+        cmd = f"{cmplr} -Wall -Wextra -Werror -shared -Wl,-soname,{soname} {arch} {defs} -o {intBinDir}/{target} {' '.join(dotos)}"
         res = doShellCommand(cmd)
         if res != 0:
             return res
 
-        cmd = f"cp {objBinDir}/{target} {binDir}/{finalTarget}"
+        cmd = f"cp {intBinDir}/{target} {binDir}/{finalTarget}"
         return doShellCommand(cmd)
 
     cmd = 'echo "Failure to build target. Aborting."'
@@ -180,8 +180,8 @@ def buildSo (target, srcList, incDirs, flags, arch32bit, debug, cLanguage, tool)
 
 
 def buildExe (target, srcList, incDirs, libDirs, libs, flags, arch32bit, debug, cLanguage, tool):
-    global objDir
-    global objBinDir
+    global intDir
+    global intBinDir
     global binDir
 
     finalTarget = target
@@ -198,7 +198,7 @@ def buildExe (target, srcList, incDirs, libDirs, libs, flags, arch32bit, debug, 
         arch = "-m32" if arch32bit else ""
 
         incDirsArgs = [f"-I{incDir}" for incDir in incDirs]
-        libDirsArgs = [f"-L{objBinDir}" for libDir in libDirs]
+        libDirsArgs = [f"-L{intBinDir}" for libDir in libDirs]
         libsArgs    = [f"-l{lib}"    for lib in libs]
         
         if tool == "gcc":
@@ -212,12 +212,12 @@ def buildExe (target, srcList, incDirs, libDirs, libs, flags, arch32bit, debug, 
             else:
                 cmplr = "clang++ -std=c++17 -stdlib=libstdc++"
 
-        cmd = f"{cmplr} -Wall -Wextra -Werror {arch} {gFlag} {oFlag} {defs} {' '.join(incDirsArgs)} -o {objBinDir}/{target} {' '.join(src)} {' '.join(libDirsArgs)} {' '.join(libsArgs)}"
+        cmd = f"{cmplr} -Wall -Wextra -Werror {arch} {gFlag} {oFlag} {defs} {' '.join(incDirsArgs)} -o {intBinDir}/{target} {' '.join(src)} {' '.join(libDirsArgs)} {' '.join(libsArgs)}"
         res = doShellCommand(cmd)
         if res != 0:
             return res
         
-        cmd = f"cp {objBinDir}/{target} {binDir}/{finalTarget}"
+        cmd = f"cp {intBinDir}/{target} {binDir}/{finalTarget}"
         return doShellCommand(cmd)
 
     cmd = 'echo "No build tools set. Select from \"gcc\" or \"clang\"."'
@@ -279,11 +279,11 @@ if __name__ == "__main__":
     if not os.path.exists(buildDir):
         os.mkdir(buildDir)
 
-    if not os.path.exists(objDir):
-        os.mkdir(objDir)
+    if not os.path.exists(intDir):
+        os.mkdir(intDir)
 
-    if not os.path.exists(objBinDir):
-        os.mkdir(objBinDir)
+    if not os.path.exists(intBinDir):
+        os.mkdir(intBinDir)
 
     if not os.path.exists(binDir):
         os.mkdir(binDir)

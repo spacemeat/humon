@@ -6,10 +6,6 @@ import os.path
 import subprocess
 from runpy import run_path
 
-buildDir = "build"
-objDir = '/'.join([buildDir, "obj"])
-binDir = '/'.join([buildDir, "bin"])
-
 all_off = '\033[0m'
 
 dk_black_fg = '\033[30m'
@@ -37,12 +33,12 @@ def doShellCommand(cmd):
 
 
 if __name__ == "__main__":
-    tests = [f for f in os.listdir('build/obj/bin')
-               if os.path.isfile('build/obj/bin/' + f) and 
+    tests = [f for f in os.listdir('build/int/bin')
+               if os.path.isfile('build/int/bin/' + f) and 
                   os.path.splitext(f)[0].startswith('test-')]
     numErrors = 0
     for test in tests:
-        numErrors += doShellCommand('build/obj/bin/' + test)
+        numErrors += doShellCommand('build/int/bin/' + test)
     
     if numErrors == 0:
         print (f"\nTest binaries run: {len(tests)};  Errors returned: {numErrors}")
