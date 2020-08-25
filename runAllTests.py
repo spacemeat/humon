@@ -34,7 +34,7 @@ def doShellCommand(cmd):
 
 if __name__ == "__main__":
     # get linux tests
-    tests = [f for f in os.listdir('build/int/bin')
+    tests = ['build/int/bin/' + f for f in os.listdir('build/int/bin')
                if os.path.isfile('build/int/bin/' + f) and 
                   os.path.splitext(f)[0].startswith('test-')]
     # get windows tests
