@@ -1,5 +1,5 @@
 DONE THIS CHECKIN:
-Migrate obj/ to int/
+Fix runAllTests.py in Windows.
 
 TODO:
 P1 doxygen

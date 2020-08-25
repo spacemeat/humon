@@ -29,16 +29,25 @@ lt_white_fg = '\033[97m'
 
 def doShellCommand(cmd):
     print (f"{lt_black_fg}{cmd}{all_off}")
-    return subprocess.run(cmd, shell=True, check=True).returncode
+    return subprocess.run(cmd, shell=False, check=True).returncode
 
 
 if __name__ == "__main__":
+    # get linux tests
     tests = [f for f in os.listdir('build/int/bin')
                if os.path.isfile('build/int/bin/' + f) and 
                   os.path.splitext(f)[0].startswith('test-')]
+    # get windows tests
+    for d in os.listdir('build/int/bin'):
+        dd = 'build/int/bin/' + d
+        if os.path.isdir(dd) and d.startswith('test.'):
+            for f in os.listdir(dd):
+                if os.path.splitext(f)[1] == '.exe':
+                    tests.append(dd + '/' + f)
+                
     numErrors = 0
     for test in tests:
-        numErrors += doShellCommand('build/int/bin/' + test)
+        numErrors += doShellCommand(test)
     
     if numErrors == 0:
         print (f"\nTest binaries run: {len(tests)};  Errors returned: {numErrors}")
