@@ -10,6 +10,7 @@ usrLocalInclude = '/usr/local/include'
 usrLocalIncludeHumon = '/usr/local/include/humon'
 usrLocalLib = '/usr/local/lib'
 usrLocalLibHumon = '/usr/local/lib/humon'
+usrLocalBin = '/usr/local/bin'
 
 if __name__ == "__main__":
     if not os.path.exists(include):
@@ -24,8 +25,6 @@ if __name__ == "__main__":
     shutil.copy('/'.join([includeHumon, 'humon.hpp']), usrLocalIncludeHumon)
     shutil.copy('/'.join([includeHumon, 'ansiColors.h']), usrLocalIncludeHumon)
     
-    if not os.path.exists(usrLocalLibHumon):
-        os.mkdir(usrLocalLibHumon)
-    
     shutil.copy('/'.join([buildBin, 'libhumon.a']), usrLocalLib)
+    shutil.copy('/'.join([buildBin, 'hux']), usrLocalBin)
     
