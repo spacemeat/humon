@@ -128,7 +128,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <LanguageStandard>
       </LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)include\humon;$(SolutionDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
       <CompileAs>Default</CompileAs>
@@ -160,7 +160,7 @@ xcopy "$(OutDir)$(TargetName).pdb" "$(SolutionDir)build\bin\" /Y
       <ExceptionHandling>false</ExceptionHandling>
       <LanguageStandard>
       </LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)include\humon;$(SolutionDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
       <CompileAs>Default</CompileAs>
@@ -191,7 +191,7 @@ xcopy "$(OutDir)$(TargetName).pdb" "$(SolutionDir)build\bin\" /Y
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)include\humon;$(SolutionDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ExceptionHandling>false</ExceptionHandling>
       <DisableSpecificWarnings>4068;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
@@ -219,7 +219,7 @@ xcopy "$(OutDir)$(TargetName).lib" "$(SolutionDir)build\bin\" /Y</Command>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)include\humon;$(SolutionDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ExceptionHandling>false</ExceptionHandling>
       <DisableSpecificWarnings>4068;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>

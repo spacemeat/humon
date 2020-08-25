@@ -451,9 +451,9 @@ static huEnumType_t findLikelyEncoding(ReadState readers[], huSize_t numValidEnc
 
     if (numValidEncodings == 1)
     {
-        for (size_t i = 0; i < (size_t) HU_ENCODING_UNKNOWN; ++i)
+        for (huEnumType_t i = 0; i < HU_ENCODING_UNKNOWN; ++i)
         {
-            if (readers[i].maybe)
+            if (readers[(size_t)i].maybe)
                 { return i; }
         }
     }
