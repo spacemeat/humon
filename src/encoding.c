@@ -66,7 +66,7 @@ char const utf32be_bom[] = { 0x00, 0x00, 0xfe, 0xff };
 char const utf32le_bom[] = { 0xff, 0xfe, 0x00, 0x00 };
 
 char const * const bomDefs[] = { utf8_bom, utf16be_bom, utf16le_bom, utf32be_bom, utf32le_bom, NULL };
-huIndexSize_t const bomSizes[] = { sizeof(utf8_bom), sizeof(utf16be_bom), sizeof(utf16le_bom), sizeof(utf32be_bom), sizeof(utf32le_bom), 0 };
+huSize_t const bomSizes[] = { sizeof(utf8_bom), sizeof(utf16be_bom), sizeof(utf16le_bom), sizeof(utf32be_bom), sizeof(utf32le_bom), 0 };
 
 typedef struct ReadState_tag
 {
@@ -74,10 +74,10 @@ typedef struct ReadState_tag
     huDeserializeOptions * deserializeOptions;
     bool maybe;
     uint32_t partialCodePoint;
-    huIndexSize_t bytesRemaining;
-    huIndexSize_t numCodePoints;
-    huIndexSize_t numNuls;
-    huIndexSize_t numAsciiRangeCodePoints;
+    huSize_t bytesRemaining;
+    huSize_t numCodePoints;
+    huSize_t numNuls;
+    huSize_t numAsciiRangeCodePoints;
     huEnumType_t errorCode;
     char const * errorOffset;
     bool machineIsBigEndian;
@@ -165,7 +165,7 @@ static void initReaders(ReadState readers[], huDeserializeOptions * deserializeO
 }
 
 
-static huEnumType_t getEncodingFromBom(huStringView const * data, huIndexSize_t * numBomChars)
+static huEnumType_t getEncodingFromBom(huStringView const * data, huSize_t * numBomChars)
 {
     huEnumType_t encoding = HU_ENCODING_UNKNOWN;
 
@@ -330,7 +330,7 @@ static void scanUtf32(uint32_t codeUnit, ReadState * rs)
 }
 
 
-static void swagEncodingFromBlock(char const * block, huIndexSize_t blockSize, ReadState * readers, huIndexSize_t * numValidEncodings)
+static void swagEncodingFromBlock(char const * block, huSize_t blockSize, ReadState * readers, huSize_t * numValidEncodings)
 {
     char const * u8Cur = block;
     char const * u16beCur = block;
@@ -444,7 +444,7 @@ static void swagEncodingFromBlock(char const * block, huIndexSize_t blockSize, R
 
 
 // Can return HU_ENCODING_UNKNOWN, in which case we should keep checking blocks.
-static huEnumType_t findLikelyEncoding(ReadState readers[], huIndexSize_t numValidEncodings)
+static huEnumType_t findLikelyEncoding(ReadState readers[], huSize_t numValidEncodings)
 {
     if (numValidEncodings == 0) // shouldn't ever happen
         { return HU_ENCODING_UNKNOWN; }
@@ -532,9 +532,9 @@ static huEnumType_t findLikelyEncoding(ReadState readers[], huIndexSize_t numVal
         }
 
         // if a is significantly better than b, then we've found our king
-        huIndexSize_t HU_NUL_THRESHOLD = 2;
-        huIndexSize_t HU_ASCII_THRESHOLD = 10;
-        huIndexSize_t HU_NUMCP_THRESHOLD = 10;
+        huSize_t HU_NUL_THRESHOLD = 2;
+        huSize_t HU_ASCII_THRESHOLD = 10;
+        huSize_t HU_NUMCP_THRESHOLD = 10;
         if (a->numNuls - b->numNuls >= HU_NUL_THRESHOLD)
             { return a->encoding; }
         else if (a->numAsciiRangeCodePoints - b->numAsciiRangeCodePoints >= HU_ASCII_THRESHOLD)
@@ -555,7 +555,7 @@ static huEnumType_t findLikelyEncoding(ReadState readers[], huIndexSize_t numVal
 // at the end of the string that would disqualify the encodings from consideration. It's a
 // hail mary check if somehow the encodings are completely ambiguous otherwise, and this is
 // miraculously the deciding factor. Shrug.
-static void disqualifyIncompleteEncodings(ReadState readers[], huIndexSize_t numValidEncodings)
+static void disqualifyIncompleteEncodings(ReadState readers[], huSize_t numValidEncodings)
 {
     // If we finished scanning while expecting more bytes in a multi-codeUnit 
     // encoding, that encoding is bunk.
@@ -589,7 +589,7 @@ static void disqualifyIncompleteEncodings(ReadState readers[], huIndexSize_t num
 /*  POST: The encoding detected from the file is returned. If HU_ENCODING_UNKNONWN
     is returned, then there was an error; we'll always just choose a legal one if
     we can't decide which is best.*/
-huEnumType_t swagEncodingFromString(huStringView const * data, huIndexSize_t * numBomChars, huDeserializeOptions * deserializeOptions)
+huEnumType_t swagEncodingFromString(huStringView const * data, huSize_t * numBomChars, huDeserializeOptions * deserializeOptions)
 {
     huEnumType_t bomEncoding = getEncodingFromBom(data, numBomChars);
 
@@ -603,15 +603,15 @@ huEnumType_t swagEncodingFromString(huStringView const * data, huIndexSize_t * n
     if (bomEncoding != HU_ENCODING_UNKNOWN)
         { return bomEncoding; }
 
-    huIndexSize_t numValidEncodings = (huIndexSize_t) HU_ENCODING_UNKNOWN;
+    huSize_t numValidEncodings = (huSize_t) HU_ENCODING_UNKNOWN;
     huEnumType_t bestEncoding = HU_ENCODING_UNKNOWN;
     ReadState readers[HU_ENCODING_UNKNOWN];
 
     initReaders(readers, deserializeOptions);
 
     char const * block = data->ptr;
-    huIndexSize_t blockSize = min(data->size, HUMON_SWAG_BLOCKSIZE);
-    huIndexSize_t bytesRead = 0;
+    huSize_t blockSize = min(data->size, HUMON_SWAG_BLOCKSIZE);
+    huSize_t bytesRead = 0;
 
     // scan through the input string in BLOCKSIZE-byte blocks
     while (bytesRead < data->size)
@@ -653,7 +653,7 @@ huEnumType_t swagEncodingFromString(huStringView const * data, huIndexSize_t * n
 
 #ifdef HUMON_CAVEPERSON_DEBUGGING
     if (bestEncoding != HU_ENCODING_UNKNOWN)
-        { printf("Encoding determined from bit pattern: %d\n", huEncodingToString(bestEncoding)); }
+        { printf("Encoding determined from bit pattern: %s\n", huEncodingToString(bestEncoding)); }
     else
         { printf("Encoding not determined from bit pattern\n"); }
 #endif
@@ -666,19 +666,19 @@ huEnumType_t swagEncodingFromString(huStringView const * data, huIndexSize_t * n
     POST: The encoding detected from the file is returned. If HU_ENCODING_UNKNONWN
     is returned, then there was an error; we'll always just choose a legal one if
     we can't decide which is best.*/
-huEnumType_t swagEncodingFromFile(FILE * fp, huIndexSize_t fileSize, huIndexSize_t * numBomChars, huDeserializeOptions * deserializeOptions)
+huEnumType_t swagEncodingFromFile(FILE * fp, huSize_t fileSize, huSize_t * numBomChars, huDeserializeOptions * deserializeOptions)
 {
-    huIndexSize_t numValidEncodings = HU_ENCODING_UNKNOWN;
+    huSize_t numValidEncodings = HU_ENCODING_UNKNOWN;
     ReadState readers[HU_ENCODING_UNKNOWN];
 
     initReaders(readers, deserializeOptions);
 
     char buf[HUMON_SWAG_BLOCKSIZE];
     char * block = buf;
-    huIndexSize_t blockSize = 0;
-    huIndexSize_t bytesRead = 0;
+    huSize_t blockSize = 0;
+    huSize_t bytesRead = 0;
 
-    blockSize = (huIndexSize_t) fread(block, 1, HUMON_SWAG_BLOCKSIZE, fp);
+    blockSize = (huSize_t) fread(block, 1, HUMON_SWAG_BLOCKSIZE, fp);
     if (blockSize == 0)
         { return HU_ENCODING_UNKNOWN; } // ERROR! WTF
     bytesRead += blockSize;
@@ -701,7 +701,7 @@ huEnumType_t swagEncodingFromFile(FILE * fp, huIndexSize_t fileSize, huIndexSize
             break;
         }
         
-        blockSize = (huIndexSize_t) fread(block, 1, HUMON_SWAG_BLOCKSIZE, fp);
+        blockSize = (huSize_t) fread(block, 1, HUMON_SWAG_BLOCKSIZE, fp);
         if (blockSize == 0)
             { return HU_ENCODING_UNKNOWN; } // ERROR! WTF
         block = buf;
@@ -731,7 +731,7 @@ huEnumType_t swagEncodingFromFile(FILE * fp, huIndexSize_t fileSize, huIndexSize
 
 #ifdef HUMON_CAVEPERSON_DEBUGGING
     if (bestEncoding != HU_ENCODING_UNKNOWN)
-        { printf("Encoding determined from bit pattern: %d\n", huEncodingToString(bestEncoding)); }
+        { printf("Encoding determined from bit pattern: %s\n", huEncodingToString(bestEncoding)); }
     else
         { printf("Encoding not determined from bit pattern\n"); }
 #endif
@@ -740,9 +740,9 @@ huEnumType_t swagEncodingFromFile(FILE * fp, huIndexSize_t fileSize, huIndexSize
 }
 
 
-static huIndexSize_t appendEncodedUtf8CodePoint(char * dest, uint32_t codePoint)
+static huSize_t appendEncodedUtf8CodePoint(char * dest, uint32_t codePoint)
 {
-    huIndexSize_t encodedLen = 0;
+    huSize_t encodedLen = 0;
 
     // encode reader->codePoint
     if (codePoint < (1 << 7))
@@ -786,10 +786,10 @@ static huIndexSize_t appendEncodedUtf8CodePoint(char * dest, uint32_t codePoint)
 }
 
 
-static huIndexSize_t transcodeToUtf8FromBlock_utf8(char * dest, char const * block, huIndexSize_t blockSize, ReadState * reader)
+static huSize_t transcodeToUtf8FromBlock_utf8(char * dest, char const * block, huSize_t blockSize, ReadState * reader)
 {
     uint8_t const * uCur = (uint8_t const *) block;
-    huIndexSize_t encodedLen = 0;
+    huSize_t encodedLen = 0;
 
     while (uCur < (uint8_t const *) (block + blockSize))
     {
@@ -814,10 +814,10 @@ static huIndexSize_t transcodeToUtf8FromBlock_utf8(char * dest, char const * blo
 }
 
 
-static huIndexSize_t transcodeToUtf8FromBlock_utf16be(char * dest, char const * block, huIndexSize_t blockSize, ReadState * reader)
+static huSize_t transcodeToUtf8FromBlock_utf16be(char * dest, char const * block, huSize_t blockSize, ReadState * reader)
 {
     char const * uCur = block;
-    huIndexSize_t encodedLen = 0;
+    huSize_t encodedLen = 0;
 
     while (uCur < block + blockSize)
     {
@@ -852,10 +852,10 @@ static huIndexSize_t transcodeToUtf8FromBlock_utf16be(char * dest, char const * 
 }
 
 
-static huIndexSize_t transcodeToUtf8FromBlock_utf16le(char * dest, char const * block, huIndexSize_t blockSize, ReadState * reader)
+static huSize_t transcodeToUtf8FromBlock_utf16le(char * dest, char const * block, huSize_t blockSize, ReadState * reader)
 {
     char const * uCur = block;
-    huIndexSize_t encodedLen = 0;
+    huSize_t encodedLen = 0;
 
     while (uCur < block + blockSize)
     {
@@ -891,10 +891,10 @@ static huIndexSize_t transcodeToUtf8FromBlock_utf16le(char * dest, char const * 
 }
 
 
-static huIndexSize_t transcodeToUtf8FromBlock_utf32be(char * dest, char const * block, huIndexSize_t blockSize, ReadState * reader)
+static huSize_t transcodeToUtf8FromBlock_utf32be(char * dest, char const * block, huSize_t blockSize, ReadState * reader)
 {
     char const * uCur = block;
-    huIndexSize_t encodedLen = 0;
+    huSize_t encodedLen = 0;
 
     while (uCur < block + blockSize)
     {
@@ -933,10 +933,10 @@ static huIndexSize_t transcodeToUtf8FromBlock_utf32be(char * dest, char const * 
 }
 
 
-static huIndexSize_t transcodeToUtf8FromBlock_utf32le(char * dest, char const * block, huIndexSize_t blockSize, ReadState * reader)
+static huSize_t transcodeToUtf8FromBlock_utf32le(char * dest, char const * block, huSize_t blockSize, ReadState * reader)
 {
     char const * uCur = block;
-    huIndexSize_t encodedLen = 0;
+    huSize_t encodedLen = 0;
 
     while (uCur < block + blockSize)
     {
@@ -975,7 +975,7 @@ static huIndexSize_t transcodeToUtf8FromBlock_utf32le(char * dest, char const * 
 }
 
 
-static huIndexSize_t transcodeToUtf8FromBlock(char * dest, char const * block, huIndexSize_t blockSize, ReadState * reader)
+static huSize_t transcodeToUtf8FromBlock(char * dest, char const * block, huSize_t blockSize, ReadState * reader)
 {
     switch(reader->deserializeOptions->encoding)
     {
@@ -999,7 +999,7 @@ static huIndexSize_t transcodeToUtf8FromBlock(char * dest, char const * block, h
     PRE: srcEncoding is not HU_ENCODING_UNKNOWN
     Sets *numBytesEncoded and returns a HU_ERROR_*.
 */
-huEnumType_t transcodeToUtf8FromString(char * dest, huIndexSize_t * numBytesEncoded, huStringView const * src, huDeserializeOptions * deserializeOptions)
+huEnumType_t transcodeToUtf8FromString(char * dest, huSize_t * numBytesEncoded, huStringView const * src, huDeserializeOptions * deserializeOptions)
 {
     if (deserializeOptions->encoding == HU_ENCODING_UNKNOWN)
         { return HU_ERROR_BADPARAMETER; }
@@ -1034,15 +1034,15 @@ huEnumType_t transcodeToUtf8FromString(char * dest, huIndexSize_t * numBytesEnco
         reader.errorOffset = 0;
         reader.machineIsBigEndian = isMachineBigEndian();
 
-        huIndexSize_t encodedLen = 0;
+        huSize_t encodedLen = 0;
 
         char const * block = src->ptr;
-        huIndexSize_t blockSize = min(src->size, HUMON_FILE_BLOCKSIZE);
-        huIndexSize_t bytesRead = 0;
+        huSize_t blockSize = min(src->size, HUMON_TRANSCODE_BLOCKSIZE);
+        huSize_t bytesRead = 0;
 
         // skip the BOM if there is one
         char const * bom = bomDefs[(size_t) deserializeOptions->encoding];
-        huIndexSize_t bomLen = bomSizes[(size_t) deserializeOptions->encoding];
+        huSize_t bomLen = bomSizes[(size_t) deserializeOptions->encoding];
         if (bomLen > 0 && memcmp(src->ptr, bom, bomLen) == 0)
         {
             block += bomLen;
@@ -1050,10 +1050,23 @@ huEnumType_t transcodeToUtf8FromString(char * dest, huIndexSize_t * numBytesEnco
             bytesRead = bomLen;
         }
 
-        // scan through the input string in HUMON_FILE_BLOCKSIZE-byte blocks
+        huSize_t enc = transcodeToUtf8FromBlock(dest, block, blockSize, & reader);
+        if (reader.errorCode != 0)
+        {
+            * numBytesEncoded = 0;
+            return HU_ERROR_BADENCODING;
+        }
+
+        encodedLen += enc;
+
+        // scan through the input string in HUMON_TRANSCODE_BLOCKSIZE-byte blocks
         while (bytesRead < src->size)
         {
-            huIndexSize_t enc = transcodeToUtf8FromBlock(dest, block, blockSize, & reader);
+            bytesRead += blockSize;
+            block += blockSize;
+            blockSize = min(HUMON_TRANSCODE_BLOCKSIZE, src->size - bytesRead);
+
+            huSize_t enc = transcodeToUtf8FromBlock(dest + encodedLen, block, blockSize, & reader);
             if (reader.errorCode != 0)
             {
                 * numBytesEncoded = 0;
@@ -1061,10 +1074,6 @@ huEnumType_t transcodeToUtf8FromString(char * dest, huIndexSize_t * numBytesEnco
             }
 
             encodedLen += enc;
-            
-            bytesRead += blockSize;
-            block += bytesRead;
-            blockSize = min(HUMON_FILE_BLOCKSIZE, src->size - bytesRead);
         }
 
         * numBytesEncoded = encodedLen;
@@ -1073,7 +1082,7 @@ huEnumType_t transcodeToUtf8FromString(char * dest, huIndexSize_t * numBytesEnco
 }
 
 
-huEnumType_t transcodeToUtf8FromFile(char * dest, huIndexSize_t * numBytesEncoded, FILE * fp, huIndexSize_t srcLen, huDeserializeOptions * deserializeOptions)
+huEnumType_t transcodeToUtf8FromFile(char * dest, huSize_t * numBytesEncoded, FILE * fp, huSize_t srcLen, huDeserializeOptions * deserializeOptions)
 {
     if (deserializeOptions->encoding == HU_ENCODING_UNKNOWN)
         { return HU_ERROR_BADPARAMETER; }
@@ -1085,7 +1094,7 @@ huEnumType_t transcodeToUtf8FromFile(char * dest, huIndexSize_t * numBytesEncode
     if (deserializeOptions->encoding == HU_ENCODING_UTF8 && 
         deserializeOptions->allowOutOfRangeCodePoints == true)
     {
-        * numBytesEncoded = (huIndexSize_t) fread(dest, 1, srcLen, fp);
+        * numBytesEncoded = (huSize_t) fread(dest, 1, srcLen, fp);
         return HU_ERROR_NOERROR;
     }
     else
@@ -1103,45 +1112,46 @@ huEnumType_t transcodeToUtf8FromFile(char * dest, huIndexSize_t * numBytesEncode
         reader.errorOffset = 0;
         reader.machineIsBigEndian = isMachineBigEndian();
 
-        huIndexSize_t encodedLen = 0;
+        huSize_t encodedLen = 0;
+        * numBytesEncoded = 0;
 
-        // As stack allocations go, this might be large. HUMON_FILE_BLOCKSIZE is
+        // As stack allocations go, this might be large. HUMON_TRANSCODE_BLOCKSIZE is
 		// considered a build parameter.
-        char buf[HUMON_FILE_BLOCKSIZE];
+        char buf[HUMON_TRANSCODE_BLOCKSIZE];
         char * block = buf;
-        huIndexSize_t blockSize = srcLen % HUMON_FILE_BLOCKSIZE;
-        huIndexSize_t bytesRead = 0;
-
-        blockSize = (huIndexSize_t) fread(block, 1, HUMON_FILE_BLOCKSIZE, fp);
+        huSize_t blockSize = (huSize_t) fread(block, 1, HUMON_TRANSCODE_BLOCKSIZE, fp);
         if (blockSize == 0)
-            { return HU_ENCODING_UNKNOWN; } // ERROR! WTF
-        bytesRead += blockSize;
+            { return HU_ERROR_BADENCODING; }
+        huSize_t bytesRead = blockSize;
 
         // skip the BOM if there is one
         char const * bom = bomDefs[(size_t) deserializeOptions->encoding];
-        huIndexSize_t bomLen = bomSizes[(size_t) deserializeOptions->encoding];
+        huSize_t bomLen = bomSizes[(size_t) deserializeOptions->encoding];
         if (bomLen > 0 && memcmp(block, bom, bomLen) == 0)
         {
             block += bomLen;
             blockSize -= bomLen;
-            bytesRead = bomLen;
         }
 
-        do
-        {
-            huIndexSize_t enc = transcodeToUtf8FromBlock(dest, block, blockSize, & reader);
-            if (reader.errorCode != 0)
-            {
-                * numBytesEncoded = 0;
-                return HU_ERROR_BADENCODING;
-            }
+        huSize_t enc = transcodeToUtf8FromBlock(dest, block, blockSize, & reader);
+        if (reader.errorCode != 0)
+            { return HU_ERROR_BADENCODING; }
+        encodedLen += enc;
+        block = buf;
 
-            encodedLen += enc;
+        while (bytesRead < srcLen)
+        {
+            blockSize = (huSize_t) fread(block, 1, HUMON_TRANSCODE_BLOCKSIZE, fp);
+            if (blockSize == 0)
+                { return HU_ERROR_BADENCODING; }
             bytesRead += blockSize;
-            blockSize = min(HUMON_FILE_BLOCKSIZE, srcLen - bytesRead);
-            block = buf;
-        } while (bytesRead < srcLen);
-        
+
+            enc = transcodeToUtf8FromBlock(dest + encodedLen, block, blockSize, & reader);
+            if (reader.errorCode != 0)
+                { return HU_ERROR_BADENCODING; }
+            encodedLen += enc;
+        } 
+
         * numBytesEncoded = encodedLen;
         return HU_ERROR_NOERROR;
     }

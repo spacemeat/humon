@@ -112,7 +112,7 @@ void nextCharacter(huScanner * scanner)
 }
 
 
-void initScanner(huScanner * scanner, huTrove * trove, char const * str, huIndexSize_t strLen)
+void initScanner(huScanner * scanner, huTrove * trove, char const * str, huSize_t strLen)
 {
     * scanner = (huScanner) {
         .trove = trove, 
@@ -190,7 +190,7 @@ void eatWs(huScanner * scanner, huCol_t tabSize, huLine_t * line, huCol_t * col)
 }
 
 
-static void eatDoubleSlashComment(huScanner * scanner, huCol_t tabSize, huIndexSize_t * len, huCol_t * col)
+static void eatDoubleSlashComment(huScanner * scanner, huCol_t tabSize, huSize_t * len, huCol_t * col)
 {
     // The first two characters are already confirmed //, so, next please.
     * len += scanner->curCursor->charLength;
@@ -220,7 +220,7 @@ static void eatDoubleSlashComment(huScanner * scanner, huCol_t tabSize, huIndexS
 }
 
 
-static void eatCStyleComment(huScanner * scanner, huCol_t tabSize, huIndexSize_t * len, huLine_t * line, huCol_t * col)
+static void eatCStyleComment(huScanner * scanner, huCol_t tabSize, huSize_t * len, huLine_t * line, huCol_t * col)
 {
     // record the location for error reporting
     huLine_t tokenStartLine = * line;
@@ -282,7 +282,7 @@ static void eatCStyleComment(huScanner * scanner, huCol_t tabSize, huIndexSize_t
 }
 
 
-static void eatWord(huScanner * scanner, huIndexSize_t * len, huCol_t * col)
+static void eatWord(huScanner * scanner, huSize_t * len, huCol_t * col)
 {
     // The first character is already confirmed a word char, so, next please.
     * len += scanner->curCursor->charLength;
@@ -344,7 +344,7 @@ static void eatWord(huScanner * scanner, huIndexSize_t * len, huCol_t * col)
 }
 
 
-static void eatQuotedWord(huScanner * scanner, huCol_t tabSize, huIndexSize_t * len, huLine_t * line, huCol_t * col)
+static void eatQuotedWord(huScanner * scanner, huCol_t tabSize, huSize_t * len, huLine_t * line, huCol_t * col)
 {
     // record the location for error reporting
     huLine_t tokenStartLine = * line;
@@ -428,7 +428,7 @@ void tokenizeTrove(huTrove * trove)
     while (scanning && scanner.curCursor->isError == false)
     {
         eatWs(& scanner, trove->inputTabSize, & line, & col);
-        huIndexSize_t len = 0;
+        huSize_t len = 0;
         huLine_t lineM = line;
         huCol_t colM = col;
 

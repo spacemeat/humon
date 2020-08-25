@@ -5,8 +5,8 @@
 #else
 #include <unistd.h>
 #endif
-#include "humon.h"
-#include "utest.hpp"
+#include "humon/humon.h"
+#include "ztest/ztest.hpp"
 #include "testData.h"
 
 
@@ -1003,7 +1003,7 @@ TEST_GROUP(huGetAnnotationWithValue)
 
 TEST(huGetAnnotationWithValue, lists)
 {
-    huIndexSize_t cursor = 0;
+    huSize_t cursor = 0;
     auto anno = huGetAnnotationWithValueZ(l.root, "root", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("name"), anno.size, "root.anno v0 name size = sz root");
     STRNCMP_EQUAL_TEXT("name", anno.ptr, anno.size, "root.anno v0 name == root");
@@ -1069,7 +1069,7 @@ TEST(huGetAnnotationWithValue, lists)
 
 TEST(huGetAnnotationWithValue, dicts)
 {
-    huIndexSize_t cursor = 0;
+    huSize_t cursor = 0;
     auto anno = huGetAnnotationWithValueZ(d.root, "root", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("name"), anno.size, "root.anno v0 name size = sz root");
     STRNCMP_EQUAL_TEXT("name", anno.ptr, anno.size, "root.anno v0 name == root");
@@ -1135,7 +1135,7 @@ TEST(huGetAnnotationWithValue, dicts)
 
 TEST(huGetAnnotationWithValue, pathological)
 {
-    huIndexSize_t cursor = 0;
+    huSize_t cursor = 0;
     POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithValueZ(NULL, "", & cursor), "NULL.anno v0 '' == null");
     cursor = 0;
     POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithValueZ(NULL, "foo", & cursor), "NULL.anno v0 foo == null");
@@ -1449,7 +1449,7 @@ TEST_GROUP(huGetCommentsContaining)
 
 TEST(huGetCommentsContaining, lists)
 {
-    huIndexSize_t cursor = 0;
+    huSize_t cursor = 0;
     huToken const * comm = huGetCommentsContainingZ(l.a, "aaa", & cursor);
     CHECK(comm != HU_NULLTOKEN);
     auto exp = "// This is a aaaa right here.";
@@ -1548,7 +1548,7 @@ TEST(huGetCommentsContaining, lists)
 
 TEST(huGetCommentsContaining, dicts)
 {
-    huIndexSize_t cursor = 0;
+    huSize_t cursor = 0;
     huToken const * comm = huGetCommentsContainingZ(d.a, "aaa", & cursor);
     CHECK(comm != HU_NULLTOKEN);
     auto exp = "// This is a aaaa right here.";
@@ -1646,7 +1646,7 @@ TEST(huGetCommentsContaining, dicts)
 
 TEST(huGetCommentsContaining, pathological)
 {
-    huIndexSize_t cursor = 0;
+    huSize_t cursor = 0;
     POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetCommentsContainingZ(NULL, "aaa", & cursor), "NULL.gcc aaa == null");
     cursor = 0;
     POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetCommentsContainingZ(HU_NULLNODE, "aaa", & cursor), "null.gcc aaa == null");
@@ -1804,7 +1804,7 @@ TEST_GROUP(huGetAddress)
 
 TEST(huGetAddress, lists)
 {
-    huIndexSize_t addressLen = 0;
+    huSize_t addressLen = 0;
     huGetAddress(l.root, NULL, & addressLen);
     char * s = new char[addressLen + 1];
     s[addressLen] = '\0';
@@ -1878,7 +1878,7 @@ TEST(huGetAddress, lists)
 
 TEST(huGetAddress, dicts)
 {
-    huIndexSize_t addressLen = 0;
+    huSize_t addressLen = 0;
     huGetAddress(d.root, NULL, & addressLen);
     char * s = new char[addressLen + 1];
     s[addressLen] = '\0';
@@ -1951,7 +1951,7 @@ TEST(huGetAddress, dicts)
 
 TEST(huGetAddress, overflow)
 {
-    huIndexSize_t addressLen = 0;
+    huSize_t addressLen = 0;
     huGetAddress(d.c, NULL, & addressLen);
     char * s = new char[addressLen + 1];
     s[addressLen] = '\0';
@@ -1966,7 +1966,7 @@ TEST(huGetAddress, overflow)
 
 TEST(huGetAddress, funky)
 {
-    huIndexSize_t addressLen = 0;
+    huSize_t addressLen = 0;
     huGetAddress(a.a, NULL, & addressLen);
     char * s = new char[addressLen + 1];
     s[addressLen] = '\0';
@@ -2167,7 +2167,7 @@ TEST(huGetAddress, funky)
 
 TEST(huGetAddress, pathological)
 {
-    huIndexSize_t len = 256;
+    huSize_t len = 256;
     char str[256] = {0};
     huGetAddress(NULL, NULL, & len);
     LONGS_EQUAL_TEXT(0, str[0], "NULL");
@@ -2237,7 +2237,7 @@ TEST(huDeserializeTrove, pathological)
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "encoding=unk+1 == NULL");
 
-    if (isSignedType(huIndexSize_t))
+    if (isSignedType(huCol_t))
     {
         trove = (huTrove const *) 4;
         params.encoding = HU_ENCODING_UTF8;
@@ -2286,60 +2286,60 @@ TEST(huDeserializeTroveFromFile, pathological)
     huDeserializeOptions params;
     huInitDeserializeOptions(& params, HU_ENCODING_UTF8, true, 4);
 
-    error = huDeserializeTroveFromFileZ(NULL, "", & params, HU_ERRORRESPONSE_MUM);
+    error = huDeserializeTroveFromFile(NULL, "", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromFile NULL == NULL");
 
     trove = (huTrove const *) 4;
-    error = huDeserializeTroveFromFileZ(& trove, NULL, & params, HU_ERRORRESPONSE_MUM);
+    error = huDeserializeTroveFromFile(& trove, NULL, & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromFile NULL == NULL");
 
     trove = (huTrove const *) 4;
-    error = huDeserializeTroveFromFileZ(& trove, "", & params, HU_ERRORRESPONSE_MUM);
-    LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
+    error = huDeserializeTroveFromFile(& trove, "", & params, HU_ERRORRESPONSE_MUM);
+    LONGS_EQUAL(HU_ERROR_BADFILE, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromFile '' == NULL");
 
     trove = (huTrove const *) 4;
-    error = huDeserializeTroveFromFileZ(& trove, "..", & params, HU_ERRORRESPONSE_MUM);
+    error = huDeserializeTroveFromFile(& trove, "..", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADFILE, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromFile .. == NULL");
 
     trove = (huTrove const *) 4;
-    error = huDeserializeTroveFromFileZ(& trove, "/", & params, HU_ERRORRESPONSE_MUM);
+    error = huDeserializeTroveFromFile(& trove, "/", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADFILE, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromFile / == NULL");
 
     trove = (huTrove const *) 4;
     params.encoding = -1;
-    error = huDeserializeTroveFromFileZ(& trove, "test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_MUM);
+    error = huDeserializeTroveFromFile(& trove, "test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromFile encoding=-1 == NULL");
 
     trove = (huTrove const *) 4;
     params.encoding = HU_ENCODING_UNKNOWN + 1;
-    error = huDeserializeTroveFromFileZ(& trove, "test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_MUM);
+    error = huDeserializeTroveFromFile(& trove, "test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromFile encoding=unk+1 == NULL");
 
-    if (isSignedType(huIndexSize_t))
+    if (isSignedType(huCol_t))
     {
         trove = (huTrove const *) 4;
         params.encoding = HU_ENCODING_UTF8;
         params.tabSize = -1;
-        error = huDeserializeTroveFromFileZ(& trove, "test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_MUM);
+        error = huDeserializeTroveFromFile(& trove, "test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_MUM);
         LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
         POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromFile tabSize=-1 == NULL");
     }
 
     trove = (huTrove const *) 4;
     params.tabSize = 4;
-    error = huDeserializeTroveFromFileZ(& trove, "test/testFiles/utf8.hu", & params, -1);
+    error = huDeserializeTroveFromFile(& trove, "test/testFiles/utf8.hu", & params, -1);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromFile errorResponse=-1 == NULL");
 
     trove = (huTrove const *) 4;
-    error = huDeserializeTroveFromFileZ(& trove, "test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_NUMRESPONSES);
+    error = huDeserializeTroveFromFile(& trove, "test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_NUMRESPONSES);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromFile errorResponse=high == NULL");
 }
@@ -2882,7 +2882,7 @@ TEST_GROUP(huGetTroveAnnotationWithValue)
 
 TEST(huGetTroveAnnotationWithValue, normal)
 {
-    huIndexSize_t cursor = 0;
+    huSize_t cursor = 0;
     auto anno = huGetTroveAnnotationWithValueZ(l.trove, "ta", & cursor);
     CHECK_TEXT(anno != HU_NULLTOKEN, "l anno v ta 0 not NULL");
     LONGS_EQUAL_TEXT(2, anno->str.size, "l anno v ta 0 sz == 2");
@@ -2917,7 +2917,7 @@ TEST(huGetTroveAnnotationWithValue, normal)
 
 TEST(huGetTroveAnnotationWithValue, pathological)
 {
-    huIndexSize_t cursor = 0;
+    huSize_t cursor = 0;
     POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetTroveAnnotationWithValueZ(NULL, "ta", & cursor), "NULL anno v ta 0 == null");
     cursor = 0;
     POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetTroveAnnotationWithValueZ(HU_NULLTROVE, "ta", & cursor), "null anno v ta 0 == null");
@@ -3101,7 +3101,7 @@ TEST_GROUP(huFindNodesWithAnnotationKey)
 
 TEST(huFindNodesWithAnnotationKey, normal)
 {
-    huIndexSize_t cursor = 0;    
+    huSize_t cursor = 0;    
     huNode const * node = huFindNodesWithAnnotationKeyZ(l.trove, "a", & cursor);
     POINTERS_EQUAL_TEXT(l.a, node, "l fnbak a 0 == a");
     node = huFindNodesWithAnnotationKeyZ(l.trove, "a", & cursor);
@@ -3192,7 +3192,7 @@ TEST(huFindNodesWithAnnotationKey, normal)
 
 TEST(huFindNodesWithAnnotationKey, pathological)
 {
-    huIndexSize_t cursor = 0;
+    huSize_t cursor = 0;
     huNode const * node = huFindNodesWithAnnotationKeyZ(NULL, "type", & cursor);
     POINTERS_EQUAL_TEXT(HU_NULLNODE, node, "NULL fnbak type == null");
 
@@ -3247,7 +3247,7 @@ TEST_GROUP(huFindNodesWithAnnotationValue)
 
 TEST(huFindNodesWithAnnotationValue, normal)
 {
-    huIndexSize_t cursor = 0;    
+    huSize_t cursor = 0;    
     huNode const * node = huFindNodesWithAnnotationValueZ(l.trove, "a", & cursor);
     POINTERS_EQUAL_TEXT(l.a, node, "l fnbav a 0 == a");
     node = huFindNodesWithAnnotationValueZ(l.trove, "a", & cursor);
@@ -3334,7 +3334,7 @@ TEST(huFindNodesWithAnnotationValue, normal)
 
 TEST(huFindNodesWithAnnotationValue, pathological)
 {
-    huIndexSize_t cursor = 0;
+    huSize_t cursor = 0;
     huNode const * node = huFindNodesWithAnnotationValueZ(NULL, "type", & cursor);
     POINTERS_EQUAL_TEXT(HU_NULLNODE, node, "NULL fnbav type == 0");
     cursor = 0;
@@ -3387,7 +3387,7 @@ TEST_GROUP(huFindNodesWithAnnotationKeyValue)
 
 TEST(huFindNodesWithAnnotationKeyValue, normal)
 {
-    huIndexSize_t cursor = 0;
+    huSize_t cursor = 0;
     huNode const * node = huFindNodesWithAnnotationKeyValueZZ(l.trove, "a", "a", & cursor);
     POINTERS_EQUAL_TEXT(l.a, node, "l fnbakv a 0 == a");
     node = huFindNodesWithAnnotationKeyValueZZ(l.trove, "a", "a", & cursor);
@@ -3486,7 +3486,7 @@ TEST(huFindNodesWithAnnotationKeyValue, normal)
 
 TEST(huFindNodesWithAnnotationKeyValue, pathological)
 {
-    huIndexSize_t cursor = 0;
+    huSize_t cursor = 0;
     huNode const * node = huFindNodesWithAnnotationKeyValueZZ(NULL, "type", "value", & cursor);
     POINTERS_EQUAL_TEXT(HU_NULLNODE, node, "NULL fnbakv type == 0");
 
@@ -3552,7 +3552,7 @@ TEST_GROUP(huFindNodesByCommentContaining)
 
 TEST(huFindNodesByCommentContaining, normal)
 {
-    huIndexSize_t cursor = 0;
+    huSize_t cursor = 0;
     auto exp = "This is a "sv;
     huNode const * node = NULL;
     node = huFindNodesByCommentContainingN(l.trove, exp.data(), (int) exp.size(), & cursor);
@@ -3644,7 +3644,7 @@ TEST(huFindNodesByCommentContaining, normal)
 
 TEST(huFindNodesByCommentContaining, pathological)
 {
-    huIndexSize_t cursor = 0;
+    huSize_t cursor = 0;
     huNode const * node = huFindNodesByCommentContainingZ(NULL, "This", & cursor);
     POINTERS_EQUAL_TEXT(HU_NULLNODE, node, "NULL fnbcc This == 0");
 
@@ -3703,10 +3703,10 @@ FILE * openHuFile(char const * path, char const * mode)
 	return fp;
 }
 
-static std::tuple<std::string, huIndexSize_t> getFile(std::string_view path)
+static std::tuple<std::string, huSize_t> getFile(std::string_view path)
 {
     std::string str;
-    huIndexSize_t fileSize = 0;
+    huSize_t fileSize = 0;
     FILE * fp = openHuFile(path.data(), "rb");
     fseek(fp, 0L, SEEK_END);
     str.resize(fileSize = ftell(fp));
@@ -3718,7 +3718,7 @@ static std::tuple<std::string, huIndexSize_t> getFile(std::string_view path)
     return { str, fileSize };
 }
 
-static std::tuple<std::string, huIndexSize_t> getFile(std::string_view path, huEnumType_t WhitespaceFormat, bool useColors, bool printComments, bool printBom)
+static std::tuple<std::string, huSize_t> getFile(std::string_view path, huEnumType_t WhitespaceFormat, bool useColors, bool printComments, bool printBom)
 {
     std::string consPath = makeFileName(path, WhitespaceFormat, useColors, printComments, printBom);
     return getFile(consPath);
@@ -3749,7 +3749,7 @@ TEST(huGetTroveTokenStream, correctness)
     {
         auto [src, sz] = getFile(testFile);
         huTrove const * trove;
-        huEnumType_t err = huDeserializeTroveFromFileN(& trove, testFile.data(), (huIndexSize_t) testFile.size(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
+        huEnumType_t err = huDeserializeTroveFromFile(& trove, testFile.data(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
         LONGS_EQUAL(HU_ERROR_NOERROR, err);
         auto sv = huGetTroveTokenStream(trove);
         LONGS_EQUAL(sz, sv.size);
@@ -3794,11 +3794,11 @@ TEST_GROUP(huSerializeTrove)
     std::string troveToString(std::string_view srcFile, int format, bool useColors, bool printComments, bool printBom)
     {
         huTrove const * tc = nullptr;
-        huEnumType_t error = huDeserializeTroveFromFileN(& tc, srcFile.data(), (huIndexSize_t) srcFile.size(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
+        huEnumType_t error = huDeserializeTroveFromFile(& tc, srcFile.data(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
         if (error != HU_ERROR_NOERROR)
             { return "<could not make trove>"; }
 
-        huIndexSize_t toStrLen = 0;
+        huSize_t toStrLen = 0;
         huSerializeOptions SerializeOptions;
         huStringView colors[HU_COLORCODE_NUMCOLORS];
         if (useColors)
@@ -3854,7 +3854,7 @@ TEST(huSerializeTrove, correctness)
 TEST(huSerializeTrove, pathological)
 {
     huEnumType_t error = HU_ERROR_NOERROR;
-    huIndexSize_t strLen = 1024;
+    huSize_t strLen = 1024;
     huSerializeOptions params;
     huInitSerializeOptionsZ(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, false, NULL, true, "\n", false);
 
@@ -3877,7 +3877,7 @@ TEST(huSerializeTrove, pathological)
     error = huSerializeTrove(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
-    if (isSignedType(huIndexSize_t))
+    if (isSignedType(huCol_t))
     {
         strLen = 1024;
         huInitSerializeOptionsZ(& params, HU_WHITESPACEFORMAT_CLONED, -1, false, false, NULL, true, "\n", false);
@@ -3895,7 +3895,7 @@ TEST(huSerializeTrove, pathological)
     error = huSerializeTrove(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
-    if (isSignedType(huIndexSize_t))
+    if (isSignedType(huCol_t))
     {
         strLen = 1024;
         huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, false, NULL, true, "\n", -1, false);
@@ -3947,7 +3947,7 @@ TEST(huSerializeTroveToFile, pathological)
     huInitSerializeOptionsZ(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, false, NULL, false, "\n", false);
 
     huEnumType_t error = HU_ERROR_NOERROR;
-    huIndexSize_t fileLen = 0;
+    huSize_t fileLen = 0;
 
     error = huSerializeTroveToFile(NULL, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "NULL->file sz == 0");
@@ -3987,7 +3987,7 @@ TEST(huSerializeTroveToFile, pathological)
     if (acc != -1)
         { remove(validFile); }
 
-    if (isSignedType(huIndexSize_t))
+    if (isSignedType(huCol_t))
     {
         huInitSerializeOptionsZ(& params, HU_WHITESPACEFORMAT_CLONED, -1, false, false, NULL, false, "\n", false);
         error = huSerializeTroveToFile(l.trove, validFile, & fileLen, & params);
@@ -4022,7 +4022,7 @@ TEST(huSerializeTroveToFile, pathological)
     if (acc != -1)
         { remove(validFile); }
 
-    if (isSignedType(huIndexSize_t))
+    if (isSignedType(huSize_t))
     {
         huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, false, NULL, false, "\n", -1, false);
         error = huSerializeTroveToFile(l.trove, validFile, & fileLen, & params);

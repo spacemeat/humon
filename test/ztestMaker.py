@@ -37,16 +37,16 @@ def processTestSrc(testDir):
 
 
 def generateRunner(srcFile, testGroups):
-    fi = open(f"utest-gen-{srcFile}", "wt")
+    fi = open(f"ztest/gen-{srcFile}", "wt")
     fi.write(f"""// AUTO-GENERATED FILE. Do not modify this file, or your changes
 // will be lost and you will has a sad.
 
 #include <vector>
 #include <map>
 #include <string>
-#include "utest.hpp"
+#include "ztest.hpp"
 
-#include "{srcFile}"
+#include "../{srcFile}"
 """)
 
     srcFileBase = os.path.splitext(srcFile)[0]
@@ -78,7 +78,7 @@ def generateRunner(srcFile, testGroups):
             test.setup();
             test.runTest();
             test.teardown();
-            return test;
+            return std::move(test);
         }}
 '''
 
@@ -88,11 +88,20 @@ def generateRunner(srcFile, testGroups):
     testNames += f'        }} }}'
     
     fi.write(f"""
-std::map<std::string, std::map<std::string, std::vector<std::string>>> getAllTests_{srcFileBase}()
+SourceMap getAllTests_{srcFileBase}(InexOpsVector const & inexOps)
 {{
-    return {{
-{testNames}
-    }};
+    SourceMap filteredTests;
+""")
+
+    for g, t in testGroups.items():
+        for tt in t:
+            fi.write(f"""
+    if (passesFilters(inexOps, "{srcFile}", "{g}", "{tt}"))
+        {{ addToFilteredTests(filteredTests, "{srcFile}", "{g}", "{tt}"); }}
+""")
+
+    fi.write(f"""
+    return filteredTests;
 }}
 
 
@@ -106,7 +115,7 @@ TestGroup runTest_{srcFileBase}(std::string_view groupName, std::string_view tes
 
 
 def generateRunnerHeader(testData):
-    fi = open(f"utest-gen-runners.h", "wt")
+    fi = open(f"ztest/gen-test-runners.h", "wt")
     fi.write(f"""// AUTO-GENERATED FILE. Do not modify this file, or your changes
 // will be lost and you will think about it a lot.
 
@@ -117,7 +126,7 @@ def generateRunnerHeader(testData):
 #include <string_view>
 #include <map>
 #include <utility>
-#include "utest.hpp"
+#include "ztest.hpp"
 
 using namespace std;
 """)
@@ -127,35 +136,40 @@ using namespace std;
 
         fi.write(f"""
 
-std::map<std::string, std::map<std::string, std::vector<std::string>>> getAllTests_{srcFileBase}();
+SourceMap getAllTests_{srcFileBase}(
+    InexOpsVector const & inexOps);
 TestGroup runTest_{srcFileBase}(std::string_view groupName, std::string_view testName);
 """)
 
 
 def generateRunnerSource(testData):
-    fi = open(f"utest-gen-runners.cpp", "wt")
+    fi = open(f"ztest/gen-test-runners.cpp", "wt")
     fi.write(f"""// AUTO-GENERATED FILE. Do not modify this file, or your changes
 // will be lost and you will feel things about it.
 
-#include "utest-gen-runners.h"
+#include "gen-test-runners.h"
 
 
-std::map<std::string, std::map<std::string, std::vector<std::string>>> getAllTests()
+SourceMap getAllTests(
+    InexOpsVector const & inexOps)
 {{
-    std::map<std::string, std::map<std::string, std::vector<std::string>>> uberMap;
+    SourceMap uberMap;
 """)
     first = True
     for f, _ in testData.items():
         srcFileBase = os.path.splitext(f)[0]
-        fi.write(f"    {'auto' if first else ''} map = getAllTests_{srcFileBase}();\n    uberMap.insert(map.begin(), map.end());\n")
+        fi.write(f"    {'auto ' if first else ''}map = getAllTests_{srcFileBase}(inexOps);\n    uberMap.insert(map.begin(), map.end());\n")
         first = False
 
     fi.write(f"""    return uberMap;
 }}
 
 
-TestGroup runTest(std::string_view file, std::string_view groupName, std::string_view testName)
+TestGroup runTest(InexOpsVector const & inexOps, std::string_view file, std::string_view groupName, std::string_view testName)
 {{
+    if (passesFilters(inexOps, file, groupName, testName) == false)
+        {{ return {{}}; }}
+
 """)
     first = True
     for f, _ in testData.items():
@@ -164,7 +178,7 @@ TestGroup runTest(std::string_view file, std::string_view groupName, std::string
 """)
         first = False
 
-    fi.write(f"""    return {{ }};
+    fi.write(f"""    return {{}};
 }}
 
 """)

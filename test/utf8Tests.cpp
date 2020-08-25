@@ -2,8 +2,8 @@
 
 #include <string_view>
 #include <cstring>
-#include "humon.hpp"
-#include "utest.hpp"
+#include "humon/humon.hpp"
+#include "ztest/ztest.hpp"
 
 using namespace std;
 using namespace std::literals;

@@ -52,27 +52,27 @@ huEnumType_t huDeserializeTroveZ(huTrove const ** trovePtr, char const * data, h
 
     // always check this'n
     size_t dataLenC = strlen(data);
-    if (dataLenC > maxOfType(huIndexSize_t))
+    if (dataLenC > maxOfType(huSize_t))
         { return HU_ERROR_BADPARAMETER; }
 
-    return huDeserializeTroveN(trovePtr, data, (huIndexSize_t) dataLenC, deserializeOptions, errorResponse);
+    return huDeserializeTroveN(trovePtr, data, (huSize_t) dataLenC, deserializeOptions, errorResponse);
 }
 
 
-huEnumType_t huDeserializeTroveN(huTrove const ** trovePtr, char const * data, huIndexSize_t dataLen, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse)
+huEnumType_t huDeserializeTroveN(huTrove const ** trovePtr, char const * data, huSize_t dataLen, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse)
 {
     if (trovePtr)
         { * trovePtr = HU_NULLTROVE; }
 
 #ifdef HUMON_CHECK_PARAMS
-    if (trovePtr == NULL || data == NULL || dataLen < 0)
+    if (trovePtr == NULL || data == NULL || isNegative(dataLen))
         { return HU_ERROR_BADPARAMETER; }
     if (deserializeOptions &&
-        (deserializeOptions->encoding < 0 ||
+        (isNegative(deserializeOptions->encoding) ||
          deserializeOptions->encoding > HU_ENCODING_UNKNOWN ||
-         deserializeOptions->tabSize < 0))
+         isNegative(deserializeOptions->tabSize)))
         { return HU_ERROR_BADPARAMETER; }
-    if (errorResponse < 0 ||
+    if (isNegative(errorResponse) ||
         errorResponse >= HU_ERRORRESPONSE_NUMRESPONSES)
         { return HU_ERROR_BADPARAMETER; }
 #endif
@@ -88,7 +88,7 @@ huEnumType_t huDeserializeTroveN(huTrove const ** trovePtr, char const * data, h
 
     if (deserializeOptions->encoding == HU_ENCODING_UNKNOWN)
     {
-        huIndexSize_t numEncBytes = 0;    // not useful here
+        huSize_t numEncBytes = 0;    // not useful here
         deserializeOptions->encoding = swagEncodingFromString(& inputDataView, & numEncBytes, deserializeOptions);
         if (deserializeOptions->encoding == HU_ENCODING_UNKNOWN)
         {
@@ -111,7 +111,7 @@ huEnumType_t huDeserializeTroveN(huTrove const ** trovePtr, char const * data, h
     // can contain unpaired surrogates, and Humon will accept them if strictUnicode
     // is clear. At that point, a UTF8 string can be longer than its UTF16, so we
     // have to double the size.
-    huIndexSize_t sizeFactor = deserializeOptions->allowUtf16UnmatchedSurrogates == false && 
+    huSize_t sizeFactor = deserializeOptions->allowUtf16UnmatchedSurrogates == false && 
                                (deserializeOptions->encoding == HU_ENCODING_UTF16_BE ||
                                 deserializeOptions->encoding == HU_ENCODING_UTF16_LE) ? 2 : 1;
     char * newData = malloc(dataLen * sizeFactor + 4);  // padding with 4 bytes of null at the end.
@@ -122,7 +122,7 @@ huEnumType_t huDeserializeTroveN(huTrove const ** trovePtr, char const * data, h
         return HU_ERROR_OUTOFMEMORY;
     }
 
-    huIndexSize_t transcodedLen = 0;
+    huSize_t transcodedLen = 0;
     huEnumType_t error = transcodeToUtf8FromString(newData, & transcodedLen, & inputDataView, deserializeOptions);
     if (error != HU_ERROR_NOERROR)
     {
@@ -151,39 +151,20 @@ huEnumType_t huDeserializeTroveN(huTrove const ** trovePtr, char const * data, h
 }
 
 
-huEnumType_t huDeserializeTroveFromFileZ(huTrove const ** trovePtr, char const * path, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse)
+huEnumType_t huDeserializeTroveFromFile(huTrove const ** trovePtr, char const * path, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse)
 {
     if (trovePtr != NULL)
         { * trovePtr = HU_NULLTROVE; }
 
 #ifdef HUMON_CHECK_PARAMS
-    if (path == NULL)
-        { return HU_ERROR_BADPARAMETER; }
-#endif
-
-    // always check this'n
-    size_t pathLenC = strlen(path);
-    if (pathLenC > maxOfType(huIndexSize_t))
-        { return HU_ERROR_BADPARAMETER; }
-
-    return huDeserializeTroveFromFileN(trovePtr, path, (huIndexSize_t) pathLenC, deserializeOptions, errorResponse);
-}
-
-
-huEnumType_t huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const * path, huIndexSize_t pathLen, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse)
-{
-    if (trovePtr != NULL)
-        { * trovePtr = HU_NULLTROVE; }
-
-#ifdef HUMON_CHECK_PARAMS
-    if (path == NULL || pathLen < 1)
+    if (trovePtr == NULL || path == NULL)
         { return HU_ERROR_BADPARAMETER; }
     if (deserializeOptions &&
-        (deserializeOptions->encoding < 0 ||
+        (isNegative(deserializeOptions->encoding) ||
          deserializeOptions->encoding > HU_ENCODING_UNKNOWN ||
-         deserializeOptions->tabSize < 0))
+         isNegative(deserializeOptions->tabSize)))
         { return HU_ERROR_BADPARAMETER; }
-    if (errorResponse < 0 ||
+    if (isNegative(errorResponse) ||
         errorResponse >= HU_ERRORRESPONSE_NUMRESPONSES)
         { return HU_ERROR_BADPARAMETER; }
 #endif
@@ -202,7 +183,7 @@ huEnumType_t huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const *
         return HU_ERROR_BADFILE;
     }
 
-    huIndexSize_t dataLen = 0;
+    huSize_t dataLen = 0;
     huEnumType_t gfsError = getFileSize(fp, & dataLen, errorResponse);
     if (gfsError != HU_ERROR_NOERROR)
     {
@@ -212,7 +193,7 @@ huEnumType_t huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const *
 
     if (deserializeOptions->encoding == HU_ENCODING_UNKNOWN)
     {
-        huIndexSize_t numEncBytes = 0;    // not useful here
+        huSize_t numEncBytes = 0;    // not useful here
         deserializeOptions->encoding = swagEncodingFromFile(fp, dataLen, & numEncBytes, deserializeOptions);
         if (deserializeOptions->encoding == HU_ENCODING_UNKNOWN)
         {
@@ -239,7 +220,7 @@ huEnumType_t huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const *
     // can contain unpaired surrogates, and Humon will accept them if strictUnicode
     // is clear. At that point, a UTF8 string can be longer than its UTF16, so we
     // have to double the size.
-    huIndexSize_t sizeFactor = deserializeOptions->allowUtf16UnmatchedSurrogates == false &&
+    huSize_t sizeFactor = deserializeOptions->allowUtf16UnmatchedSurrogates == false &&
                                (deserializeOptions->encoding == HU_ENCODING_UTF16_BE ||
                                 deserializeOptions->encoding == HU_ENCODING_UTF16_LE) ? 2 : 1;
     char * newData = malloc(dataLen * sizeFactor + 4); // padding with 4 bytes of null at the end
@@ -250,7 +231,7 @@ huEnumType_t huDeserializeTroveFromFileN(huTrove const ** trovePtr, char const *
         return HU_ERROR_OUTOFMEMORY;
     }
 
-    huIndexSize_t transcodedLen = 0;
+    huSize_t transcodedLen = 0;
     huEnumType_t error = transcodeToUtf8FromFile(newData, & transcodedLen, fp, dataLen, deserializeOptions);
     fclose(fp);
     if (error != HU_ERROR_NOERROR)
@@ -305,7 +286,7 @@ void huDestroyTrove(huTrove const * trove)
 }
 
 
-huIndexSize_t huGetNumTokens(huTrove const * trove)
+huSize_t huGetNumTokens(huTrove const * trove)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE)
@@ -316,7 +297,7 @@ huIndexSize_t huGetNumTokens(huTrove const * trove)
 }
 
 
-huToken const * huGetToken(huTrove const * trove, huIndexSize_t tokenIdx)
+huToken const * huGetToken(huTrove const * trove, huSize_t tokenIdx)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE)
@@ -331,10 +312,10 @@ huToken const * huGetToken(huTrove const * trove, huIndexSize_t tokenIdx)
 
 
 huToken * allocNewToken(huTrove * trove, huEnumType_t kind, char const * str, 
-    huIndexSize_t size, huLine_t line, huCol_t col, huLine_t endLine, 
+    huSize_t size, huLine_t line, huCol_t col, huLine_t endLine, 
     huCol_t endCol, char quoteChar)
 {
-    huIndexSize_t num = 1;
+    huSize_t num = 1;
     huToken * newToken = growVector(& trove->tokens, & num);
     if (num == 0)
         { return (huToken *) HU_NULLTOKEN; }
@@ -349,16 +330,16 @@ huToken * allocNewToken(huTrove * trove, huEnumType_t kind, char const * str,
     newToken->endCol = endCol;
 
 #ifdef HUMON_CAVEPERSON_DEBUGGING
-    printf ("%stoken: line: %d  col: %d  len: %d  %s        '%.*s'%s\n",
-        darkYellow, line, col, size, huTokenKindToString(kind), 
-        newToken->str.size, newToken->str.ptr, off);
+    printf ("%stoken: line: %lld  col: %lld  len: %lld  %s        '%.*s'%s\n",
+        ansi_darkYellow, (long long int) line, (long long int) col, (long long int) size, huTokenKindToString(kind), 
+        (int) newToken->str.size, newToken->str.ptr, ansi_off);
 #endif
     
     return newToken;
 }
 
 
-huIndexSize_t huGetNumNodes(huTrove const * trove)
+huSize_t huGetNumNodes(huTrove const * trove)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE)
@@ -380,7 +361,7 @@ huNode const * huGetRootNode(huTrove const * trove)
 }
 
 
-huNode const * huGetNodeByIndex(huTrove const * trove, huIndexSize_t nodeIdx)
+huNode const * huGetNodeByIndex(huTrove const * trove, huSize_t nodeIdx)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE)
@@ -402,14 +383,14 @@ huNode const * huGetNodeByAddressZ(huTrove const * trove, char const * address)
 #endif
 
     size_t addressLenC = strlen(address);
-    if (addressLenC > maxOfType(huIndexSize_t))
+    if (addressLenC > maxOfType(huSize_t))
         { return HU_NULLNODE; }
 
-    return huGetNodeByAddressN(trove, address, (huIndexSize_t) addressLenC);
+    return huGetNodeByAddressN(trove, address, (huSize_t) addressLenC);
 }
 
 
-huNode const * huGetNodeByAddressN(huTrove const * trove, char const * address, huIndexSize_t addressLen)
+huNode const * huGetNodeByAddressN(huTrove const * trove, char const * address, huSize_t addressLen)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || address == NULL || addressLen < 0)
@@ -439,7 +420,7 @@ huNode const * huGetNodeByAddressN(huTrove const * trove, char const * address, 
 }
 
 
-huIndexSize_t huGetNumErrors(huTrove const * trove)
+huSize_t huGetNumErrors(huTrove const * trove)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE)
@@ -450,7 +431,7 @@ huIndexSize_t huGetNumErrors(huTrove const * trove)
 }
 
 
-huError const * huGetError(huTrove const * trove, huIndexSize_t errorIdx)
+huError const * huGetError(huTrove const * trove, huSize_t errorIdx)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || errorIdx < 0)
@@ -466,7 +447,7 @@ huError const * huGetError(huTrove const * trove, huIndexSize_t errorIdx)
 }
 
 
-huIndexSize_t huGetNumTroveAnnotations(huTrove const * trove)
+huSize_t huGetNumTroveAnnotations(huTrove const * trove)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE)
@@ -477,7 +458,7 @@ huIndexSize_t huGetNumTroveAnnotations(huTrove const * trove)
 }
 
 
-huAnnotation const * huGetTroveAnnotation(huTrove const * trove, huIndexSize_t annotationIdx)
+huAnnotation const * huGetTroveAnnotation(huTrove const * trove, huSize_t annotationIdx)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || annotationIdx < 0)
@@ -501,21 +482,21 @@ bool huTroveHasAnnotationWithKeyZ(huTrove const * trove, char const * key)
 #endif
 
     size_t keyLenC = strlen(key);
-    if (keyLenC > maxOfType(huIndexSize_t))
+    if (keyLenC > maxOfType(huSize_t))
         { return false; }
 
-    return huTroveHasAnnotationWithKeyN(trove, key, (huIndexSize_t) keyLenC);
+    return huTroveHasAnnotationWithKeyN(trove, key, (huSize_t) keyLenC);
 }
 
 
-bool huTroveHasAnnotationWithKeyN(huTrove const * trove, char const * key, huIndexSize_t keyLen)
+bool huTroveHasAnnotationWithKeyN(huTrove const * trove, char const * key, huSize_t keyLen)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || key  == NULL || keyLen < 0)
         { return false; }
 #endif
 
-    for (huIndexSize_t i = 0; i < trove->annotations.numElements; ++i)
+    for (huSize_t i = 0; i < trove->annotations.numElements; ++i)
     { 
         huAnnotation * anno = (huAnnotation *) trove->annotations.buffer + i;
         if (anno->key->str.size == keyLen && 
@@ -535,21 +516,21 @@ huToken const * huGetTroveAnnotationWithKeyZ(huTrove const * trove, char const *
 #endif
 
     size_t keyLenC = strlen(key);
-    if (keyLenC > maxOfType(huIndexSize_t))
+    if (keyLenC > maxOfType(huSize_t))
         { return HU_NULLTOKEN; }
 
-    return huGetTroveAnnotationWithKeyN(trove, key, (huIndexSize_t) keyLenC);
+    return huGetTroveAnnotationWithKeyN(trove, key, (huSize_t) keyLenC);
 }
 
 
-huToken const * huGetTroveAnnotationWithKeyN(huTrove const * trove, char const * key, huIndexSize_t keyLen)
+huToken const * huGetTroveAnnotationWithKeyN(huTrove const * trove, char const * key, huSize_t keyLen)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || key  == NULL || keyLen < 0)
         { return HU_NULLTOKEN; }
 #endif
 
-    for (huIndexSize_t i = 0; i < trove->annotations.numElements; ++i)
+    for (huSize_t i = 0; i < trove->annotations.numElements; ++i)
     { 
         huAnnotation * anno = (huAnnotation *) trove->annotations.buffer + i;
         if (anno->key->str.size == keyLen && 
@@ -561,7 +542,7 @@ huToken const * huGetTroveAnnotationWithKeyN(huTrove const * trove, char const *
 }
 
 
-huIndexSize_t huGetNumTroveAnnotationsWithValueZ(huTrove const * trove, char const * value)
+huSize_t huGetNumTroveAnnotationsWithValueZ(huTrove const * trove, char const * value)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (value == NULL)
@@ -569,22 +550,22 @@ huIndexSize_t huGetNumTroveAnnotationsWithValueZ(huTrove const * trove, char con
 #endif
 
     size_t valueLenC = strlen(value);
-    if (valueLenC > maxOfType(huIndexSize_t))
+    if (valueLenC > maxOfType(huSize_t))
         { return 0; }
 
-    return huGetNumTroveAnnotationsWithValueN(trove, value, (huIndexSize_t) valueLenC);
+    return huGetNumTroveAnnotationsWithValueN(trove, value, (huSize_t) valueLenC);
 }
 
 
-huIndexSize_t huGetNumTroveAnnotationsWithValueN(huTrove const * trove, char const * value, huIndexSize_t valueLen)
+huSize_t huGetNumTroveAnnotationsWithValueN(huTrove const * trove, char const * value, huSize_t valueLen)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || value  == NULL || valueLen < 0)
         { return 0; }
 #endif
 
-    huIndexSize_t matches = 0;
-    for (huIndexSize_t i = 0; i < trove->annotations.numElements; ++i)
+    huSize_t matches = 0;
+    for (huSize_t i = 0; i < trove->annotations.numElements; ++i)
     { 
         huAnnotation * anno = (huAnnotation *) trove->annotations.buffer + i;
         if (anno->value->str.size == valueLen && 
@@ -596,7 +577,7 @@ huIndexSize_t huGetNumTroveAnnotationsWithValueN(huTrove const * trove, char con
 }
 
 
-huToken const * huGetTroveAnnotationWithValueZ(huTrove const * trove, char const * value, huIndexSize_t * cursor)
+huToken const * huGetTroveAnnotationWithValueZ(huTrove const * trove, char const * value, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (value  == NULL)
@@ -604,14 +585,14 @@ huToken const * huGetTroveAnnotationWithValueZ(huTrove const * trove, char const
 #endif
 
     size_t valueLenC = strlen(value);
-    if (valueLenC > maxOfType(huIndexSize_t))
+    if (valueLenC > maxOfType(huSize_t))
         { return HU_NULLTOKEN; }
 
-    return huGetTroveAnnotationWithValueN(trove, value, (huIndexSize_t) valueLenC, cursor);
+    return huGetTroveAnnotationWithValueN(trove, value, (huSize_t) valueLenC, cursor);
 }
 
 
-huToken const * huGetTroveAnnotationWithValueN(huTrove const * trove, char const * value, huIndexSize_t valueLen, huIndexSize_t * cursor)
+huToken const * huGetTroveAnnotationWithValueN(huTrove const * trove, char const * value, huSize_t valueLen, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || value  == NULL || valueLen < 0 || cursor == NULL || * cursor < 0)
@@ -632,7 +613,7 @@ huToken const * huGetTroveAnnotationWithValueN(huTrove const * trove, char const
 }
 
 
-huIndexSize_t huGetNumTroveComments(huTrove const * trove)
+huSize_t huGetNumTroveComments(huTrove const * trove)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE)
@@ -643,7 +624,7 @@ huIndexSize_t huGetNumTroveComments(huTrove const * trove)
 }
 
 
-huToken const * huGetTroveComment(huTrove const * trove, huIndexSize_t commentIdx)
+huToken const * huGetTroveComment(huTrove const * trove, huSize_t commentIdx)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || commentIdx < 0)
@@ -659,7 +640,7 @@ huToken const * huGetTroveComment(huTrove const * trove, huIndexSize_t commentId
 }
 
 
-huNode const * huFindNodesWithAnnotationKeyZ(huTrove const * trove, char const * key, huIndexSize_t * cursor)
+huNode const * huFindNodesWithAnnotationKeyZ(huTrove const * trove, char const * key, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (key == NULL)
@@ -667,21 +648,21 @@ huNode const * huFindNodesWithAnnotationKeyZ(huTrove const * trove, char const *
 #endif
 
     size_t keyLenC = strlen(key);
-    if (keyLenC > maxOfType(huIndexSize_t))
+    if (keyLenC > maxOfType(huSize_t))
         { return HU_NULLNODE; }
 
-    return huFindNodesWithAnnotationKeyN(trove, key, (huIndexSize_t) keyLenC, cursor);
+    return huFindNodesWithAnnotationKeyN(trove, key, (huSize_t) keyLenC, cursor);
 }
 
 
-huNode const * huFindNodesWithAnnotationKeyN(huTrove const * trove, char const * key, huIndexSize_t keyLen, huIndexSize_t * cursor)
+huNode const * huFindNodesWithAnnotationKeyN(huTrove const * trove, char const * key, huSize_t keyLen, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || key == NULL || keyLen < 0 || cursor == NULL || * cursor < 0)
        { return HU_NULLNODE; }
 #endif
 
-    huIndexSize_t numNodes = huGetNumNodes(trove);
+    huSize_t numNodes = huGetNumNodes(trove);
     for (; * cursor < numNodes; ++ * cursor)
     {
         huNode const * node = huGetNodeByIndex(trove, * cursor);
@@ -697,7 +678,7 @@ huNode const * huFindNodesWithAnnotationKeyN(huTrove const * trove, char const *
 }
 
 
-huNode const * huFindNodesWithAnnotationValueZ(huTrove const * trove, char const * value, huIndexSize_t * cursor)
+huNode const * huFindNodesWithAnnotationValueZ(huTrove const * trove, char const * value, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (value == NULL)
@@ -705,25 +686,25 @@ huNode const * huFindNodesWithAnnotationValueZ(huTrove const * trove, char const
 #endif
 
     size_t valueLenC = strlen(value);
-    if (valueLenC > maxOfType(huIndexSize_t))
+    if (valueLenC > maxOfType(huSize_t))
         { return HU_NULLNODE; }
 
-    return huFindNodesWithAnnotationValueN(trove, value, (huIndexSize_t) valueLenC, cursor);
+    return huFindNodesWithAnnotationValueN(trove, value, (huSize_t) valueLenC, cursor);
 }
 
 
-huNode const * huFindNodesWithAnnotationValueN(huTrove const * trove, char const * value, huIndexSize_t valueLen, huIndexSize_t * cursor)
+huNode const * huFindNodesWithAnnotationValueN(huTrove const * trove, char const * value, huSize_t valueLen, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || value == NULL || valueLen < 0 || cursor == NULL || * cursor < 0)
        { return HU_NULLNODE; }
 #endif
 
-    huIndexSize_t numNodes = huGetNumNodes(trove);
+    huSize_t numNodes = huGetNumNodes(trove);
     for (; * cursor < numNodes; ++ * cursor)
     {
         huNode const * node = huGetNodeByIndex(trove, * cursor);
-		huIndexSize_t na = huGetNumAnnotationsWithValueN(node, value, valueLen);
+		huSize_t na = huGetNumAnnotationsWithValueN(node, value, valueLen);
         if (na > 0)
         {
             * cursor += 1;
@@ -735,7 +716,7 @@ huNode const * huFindNodesWithAnnotationValueN(huTrove const * trove, char const
 }
 
 
-huNode const * huFindNodesWithAnnotationKeyValueZZ(huTrove const * trove, char const * key, char const * value, huIndexSize_t * cursor)
+huNode const * huFindNodesWithAnnotationKeyValueZZ(huTrove const * trove, char const * key, char const * value, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (key == NULL || value == NULL)
@@ -743,18 +724,18 @@ huNode const * huFindNodesWithAnnotationKeyValueZZ(huTrove const * trove, char c
 #endif
 
     size_t keyLenC = strlen(key);
-    if (keyLenC > maxOfType(huIndexSize_t))
+    if (keyLenC > maxOfType(huSize_t))
         { return HU_NULLNODE; }
 
     size_t valueLenC = strlen(value);
-    if (valueLenC > maxOfType(huIndexSize_t))
+    if (valueLenC > maxOfType(huSize_t))
         { return HU_NULLNODE; }
 
-    return huFindNodesWithAnnotationKeyValueNN(trove, key, (huIndexSize_t) keyLenC, value, (huIndexSize_t) valueLenC, cursor);
+    return huFindNodesWithAnnotationKeyValueNN(trove, key, (huSize_t) keyLenC, value, (huSize_t) valueLenC, cursor);
 }
 
 
-huNode const * huFindNodesWithAnnotationKeyValueNZ(huTrove const * trove, char const * key, huIndexSize_t keyLen, char const * value, huIndexSize_t * cursor)
+huNode const * huFindNodesWithAnnotationKeyValueNZ(huTrove const * trove, char const * key, huSize_t keyLen, char const * value, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (key == NULL || keyLen < 0 || value == NULL)
@@ -762,14 +743,14 @@ huNode const * huFindNodesWithAnnotationKeyValueNZ(huTrove const * trove, char c
 #endif
 
     size_t valueLenC = strlen(value);
-    if (valueLenC > maxOfType(huIndexSize_t))
+    if (valueLenC > maxOfType(huSize_t))
         { return HU_NULLNODE; }
 
-    return huFindNodesWithAnnotationKeyValueNN(trove, key, keyLen, value, (huIndexSize_t) valueLenC, cursor);
+    return huFindNodesWithAnnotationKeyValueNN(trove, key, keyLen, value, (huSize_t) valueLenC, cursor);
 }
 
 
-huNode const * huFindNodesWithAnnotationKeyValueZN(huTrove const * trove, char const * key, char const * value, huIndexSize_t valueLen, huIndexSize_t * cursor)
+huNode const * huFindNodesWithAnnotationKeyValueZN(huTrove const * trove, char const * key, char const * value, huSize_t valueLen, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (key == NULL || value == NULL || valueLen < 0)
@@ -777,21 +758,21 @@ huNode const * huFindNodesWithAnnotationKeyValueZN(huTrove const * trove, char c
 #endif
 
     size_t keyLenC = strlen(key);
-    if (keyLenC > maxOfType(huIndexSize_t))
+    if (keyLenC > maxOfType(huSize_t))
         { return HU_NULLNODE; }
 
-    return huFindNodesWithAnnotationKeyValueNN(trove, key, (huIndexSize_t) keyLenC, value, valueLen, cursor);
+    return huFindNodesWithAnnotationKeyValueNN(trove, key, (huSize_t) keyLenC, value, valueLen, cursor);
 }
 
 
-huNode const * huFindNodesWithAnnotationKeyValueNN(huTrove const * trove, char const * key, huIndexSize_t keyLen, char const * value, huIndexSize_t valueLen, huIndexSize_t * cursor)
+huNode const * huFindNodesWithAnnotationKeyValueNN(huTrove const * trove, char const * key, huSize_t keyLen, char const * value, huSize_t valueLen, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || key == NULL || keyLen < 0 || value == NULL || valueLen < 0 || cursor == NULL || * cursor < 0)
        { return HU_NULLNODE; }
 #endif
 
-    huIndexSize_t numNodes = huGetNumNodes(trove);
+    huSize_t numNodes = huGetNumNodes(trove);
     for (; * cursor < numNodes; ++ * cursor)
     {
         huNode const * node = huGetNodeByIndex(trove, * cursor);
@@ -811,7 +792,7 @@ huNode const * huFindNodesWithAnnotationKeyValueNN(huTrove const * trove, char c
 }
 
 
-huNode const * huFindNodesByCommentContainingZ(huTrove const * trove, char const * containedText, huIndexSize_t * cursor)
+huNode const * huFindNodesByCommentContainingZ(huTrove const * trove, char const * containedText, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (containedText == NULL)
@@ -819,21 +800,21 @@ huNode const * huFindNodesByCommentContainingZ(huTrove const * trove, char const
 #endif
 
     size_t containedTextLenC = strlen(containedText);
-    if (containedTextLenC > maxOfType(huIndexSize_t))
+    if (containedTextLenC > maxOfType(huSize_t))
         { return HU_NULLNODE; }
 
-    return huFindNodesByCommentContainingN(trove, containedText, (huIndexSize_t) containedTextLenC, cursor);
+    return huFindNodesByCommentContainingN(trove, containedText, (huSize_t) containedTextLenC, cursor);
 }
 
 
-huNode const * huFindNodesByCommentContainingN(huTrove const * trove, char const * containedText, huIndexSize_t containedTextLen, huIndexSize_t * cursor)
+huNode const * huFindNodesByCommentContainingN(huTrove const * trove, char const * containedText, huSize_t containedTextLen, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || containedText == NULL || containedTextLen < 0 || cursor == NULL || * cursor < 0)
        { return HU_NULLNODE; }
 #endif
 
-    huIndexSize_t numNodes = huGetNumNodes(trove);
+    huSize_t numNodes = huGetNumNodes(trove);
     for (; * cursor < numNodes; ++ * cursor)
     {
         huNode const * node = huGetNodeByIndex(trove, * cursor);
@@ -850,23 +831,23 @@ huNode const * huFindNodesByCommentContainingN(huTrove const * trove, char const
 
 huNode * allocNewNode(huTrove * trove, huEnumType_t nodeKind, huToken const * firstToken)
 {
-    huIndexSize_t num = 1;
+    huSize_t num = 1;
 
     huNode * newNode = growVector(& trove->nodes, & num);
     if (num == 0)
         { return (huNode *) HU_NULLNODE; }
 
     initNode(newNode, trove);
-    huIndexSize_t newNodeIdx = (huIndexSize_t)(newNode - (huNode *) trove->nodes.buffer);
+    huSize_t newNodeIdx = (huSize_t)(newNode - (huNode *) trove->nodes.buffer);
     newNode->nodeIdx = newNodeIdx;
     newNode->kind = nodeKind;
     newNode->firstToken = firstToken;
     newNode->lastToken = firstToken;
 
 #ifdef HUMON_CAVEPERSON_DEBUGGING
-    printf ("%snode: nodeIdx: %d    firstToken: %d    %s%s\n",
-        lightCyan, newNodeIdx, (huIndexSize_t)(firstToken - (huToken *) trove->tokens.buffer), 
-        huNodeKindToString(nodeKind), off);
+    printf ("%snode: nodeIdx: %lld    firstToken: %lld    %s%s\n",
+        ansi_lightCyan, (long long) newNodeIdx, (long long)(firstToken - (huToken *) trove->tokens.buffer), 
+        huNodeKindToString(nodeKind), ansi_off);
 #endif
 
     return newNode;
@@ -878,7 +859,7 @@ void recordTokenizeError(huTrove * trove, huEnumType_t errorCode, huLine_t line,
 	if (trove == NULL)
         { return; }
 
-	huIndexSize_t num = 1;
+	huSize_t num = 1;
     huError * error = growVector(& trove->errors, & num);
     if (num)
     {
@@ -918,7 +899,7 @@ void recordParseError(huTrove * trove, huEnumType_t errorCode, huToken const * p
 //        huGetNumErrors(trove) > 0)
 //        { return; }
 
-    huIndexSize_t num = 1;
+    huSize_t num = 1;
     huError * error = growVector(& trove->errors, & num);
     if (num)
     {
@@ -970,7 +951,7 @@ huStringView huGetTroveTokenStream(huTrove const * trove)
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
 
 
-huEnumType_t huSerializeTrove(huTrove const * trove, char * dest, huIndexSize_t * destLength, huSerializeOptions * SerializeOptions)
+huEnumType_t huSerializeTrove(huTrove const * trove, char * dest, huSize_t * destLength, huSerializeOptions * SerializeOptions)
 {
     if (dest == NULL && destLength != NULL)
         { * destLength = 0; }
@@ -979,8 +960,8 @@ huEnumType_t huSerializeTrove(huTrove const * trove, char * dest, huIndexSize_t 
     if (trove == HU_NULLTROVE || destLength == NULL)
         { return HU_ERROR_BADPARAMETER; }
     if (SerializeOptions &&
-        (SerializeOptions->WhitespaceFormat < 0 || SerializeOptions->WhitespaceFormat >= 3 || 
-         SerializeOptions->indentSize < 0 || 
+        (isNegative(SerializeOptions->WhitespaceFormat) || SerializeOptions->WhitespaceFormat >= 3 || 
+         isNegative(SerializeOptions->indentSize) || 
          (SerializeOptions->usingColors && SerializeOptions->colorTable == NULL) ||
          SerializeOptions->newline.ptr == NULL || SerializeOptions->newline.size < 1))
         { return HU_ERROR_BADPARAMETER; }
@@ -1038,14 +1019,14 @@ huEnumType_t huSerializeTrove(huTrove const * trove, char * dest, huIndexSize_t 
 
 #pragma GCC diagnostic pop
 
-huEnumType_t huSerializeTroveToFile(huTrove const * trove, char const * path, huIndexSize_t * destLength, huSerializeOptions * SerializeOptions)
+huEnumType_t huSerializeTroveToFile(huTrove const * trove, char const * path, huSize_t * destLength, huSerializeOptions * SerializeOptions)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || path == NULL)
         { return HU_ERROR_BADPARAMETER; }
     if (SerializeOptions &&
-        (SerializeOptions->WhitespaceFormat < 0 || SerializeOptions->WhitespaceFormat >= 3 || 
-         SerializeOptions->indentSize < 0 || 
+        (isNegative(SerializeOptions->WhitespaceFormat) || SerializeOptions->WhitespaceFormat >= 3 || 
+         isNegative(SerializeOptions->indentSize) || 
          (SerializeOptions->usingColors && SerializeOptions->colorTable == NULL) ||
          SerializeOptions->newline.ptr == NULL || SerializeOptions->newline.size < 1))
         { return HU_ERROR_BADPARAMETER; }
@@ -1054,7 +1035,7 @@ huEnumType_t huSerializeTroveToFile(huTrove const * trove, char const * path, hu
     if (destLength)
         { * destLength = 0; }
 
-    huIndexSize_t strLength = 0;
+    huSize_t strLength = 0;
     huEnumType_t error = huSerializeTrove(trove, NULL, & strLength, SerializeOptions);
     if (error != HU_ERROR_NOERROR)
         { return error; }
@@ -1071,7 +1052,7 @@ huEnumType_t huSerializeTroveToFile(huTrove const * trove, char const * path, hu
 	if (fp == NULL)
 	    { free(str); return HU_ERROR_BADFILE; }
 
-    huIndexSize_t writeLength = (huIndexSize_t) fwrite(str, sizeof(char), strLength, fp);
+    huSize_t writeLength = (huSize_t) fwrite(str, sizeof(char), strLength, fp);
     free(str);
     if (writeLength != strLength)
         { return HU_ERROR_BADFILE; }

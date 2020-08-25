@@ -57,7 +57,7 @@ void associateComment(huTrove * trove, huNode * node, huToken const * tok)
 {
     huComment * comment;
 
-    huIndexSize_t num = 1;
+    huSize_t num = 1;
     if (node)
         { comment = growVector(& node->comments, & num); }
     else
@@ -72,18 +72,18 @@ void associateComment(huTrove * trove, huNode * node, huToken const * tok)
 
 #ifdef HUMON_CAVEPERSON_DEBUGGING
     char address[32] = { 0 };
-    int addLen = 32;
+    huSize_t addLen = 32;
     if (node)
     {
         huGetAddress(node, address, & addLen);
         printf("Associating comment: %s%.*s%s to node %s%s%s\n", 
-            darkGreen, tok->str.size, tok->str.ptr, off,
-            lightBlue, address, off );
+            ansi_darkGreen, (int)tok->str.size, tok->str.ptr, ansi_off,
+            ansi_lightBlue, address, ansi_off );
     }
     else
     {
         printf("Associating comment: %s%.*s%s to trove\n", 
-            darkGreen, tok->str.size, tok->str.ptr, off);
+            ansi_darkGreen, (int)tok->str.size, tok->str.ptr, ansi_off);
     }
 #endif
 }
@@ -94,7 +94,7 @@ void enqueueComment(huVector * commentQueue, huToken const * comment)
     appendToVector(commentQueue, & comment, 1);
     
 #ifdef HUMON_CAVEPERSON_DEBUGGING
-    printf("Enqueuing comment: %s%.*s%s\n", darkGreen, comment->str.size, comment->str.ptr, off);
+    printf("Enqueuing comment: %s%.*s%s\n", ansi_darkGreen, (int)comment->str.size, comment->str.ptr, ansi_off);
 #endif
 }
 
@@ -104,15 +104,16 @@ void associateEnqueuedComments(huTrove * trove, huNode * node, huVector * commen
 {
 #ifdef HUMON_CAVEPERSON_DEBUGGING
     char address[32] = { 0 };
-    int addLen = 32;
+    huSize_t addLen = 32;
     if (node)
     {
         huGetAddress(node, address, & addLen);
-        printf("Associating enqueued %scomments%s to node %s%s%s\n", darkGreen, off,
-            lightBlue, address, off);
+        printf("Associating enqueued %scomments%s to node %s%s%s\n",
+            ansi_darkGreen, ansi_off,
+            ansi_lightBlue, address, ansi_off);
     }
     else
-        { printf("Associating enqueued %scomments%s to trove\n", darkGreen, off); }
+        { printf("Associating enqueued %scomments%s to trove\n", ansi_darkGreen, ansi_off); }
 #endif
 
     if (commentQueue->numElements == 0)
@@ -124,7 +125,7 @@ void associateEnqueuedComments(huTrove * trove, huNode * node, huVector * commen
     else
         { commentVector = & trove->comments; }
 
-    huIndexSize_t num = commentQueue->numElements;
+    huSize_t num = commentQueue->numElements;
     huComment * newCommentObj = growVector(commentVector, & num);
 
     // The first (earliest) one extends the node's first token to the comment token.
@@ -135,7 +136,7 @@ void associateEnqueuedComments(huTrove * trove, huNode * node, huVector * commen
     }
 
     // Now add all comments to the vector.
-    for (huIndexSize_t i = 0; i < num; ++i)
+    for (huSize_t i = 0; i < num; ++i)
     {
         huComment * comment = getVectorElement(commentQueue, i);
         (newCommentObj + i)->token = comment->token;
@@ -184,10 +185,10 @@ void addChildNode(huTrove * trove, huNode * node, huNode * child)
 
 #ifdef HUMON_CAVEPERSON_DEBUGGING
     char address[32] = { 0 };
-    int addLen = 32;
+    huSize_t addLen = 32;
     huGetAddress(node, address, & addLen);
     printf("Adding child node to node %s%s%s\n",
-        lightBlue, address, off);
+        ansi_lightBlue, address, ansi_off);
 #endif
 }
 
@@ -208,7 +209,7 @@ void addAnnotation(huTrove * trove, huNode * node, huToken const * keyToken)
     }    
 
     huAnnotation * anno = NULL;
-    huIndexSize_t num = 1;
+    huSize_t num = 1;
     if (node)
         { anno = growVector(& node->annotations, & num); }
     else
@@ -238,7 +239,7 @@ void setLastAnnotationValue(huTrove * trove, huNode * node, huToken const * valu
 
 
 // Pay special notice to whether we break or return from a particular case.
-void parseTroveRecursive(huTrove * trove, huIndexSize_t * tokenIdx, huNode * parentNode, huIndexSize_t depth, huEnumType_t state, huVector * commentQueue)
+void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNode, huSize_t depth, huEnumType_t state, huVector * commentQueue)
 {
     huNode * nodeCreatedThisState = NULL;
 
@@ -248,17 +249,17 @@ void parseTroveRecursive(huTrove * trove, huIndexSize_t * tokenIdx, huNode * par
         
 #ifdef HUMON_CAVEPERSON_DEBUGGING
         char address[32] = { 0 };
-        int addLen = 32;
+        huSize_t addLen = 32;
         if (parentNode)
         {
             huGetAddress(parentNode, address, & addLen);
-            printf("PTR: tokenIdx: %d  token: '%.*s'  parentNode: %s  depth: %d  state: %s\n",
-                * tokenIdx, tok->str.size, tok->str.ptr, address, depth, parseStateToString(state));
+            printf("PTR: tokenIdx: %lld  token: '%.*s'  parentNode: %s  depth: %lld  state: %s\n",
+                (long long) * tokenIdx, (int)tok->str.size, tok->str.ptr, address, (long long) depth, parseStateToString(state));
         }
         else
         {
-            printf("PTR: tokenIdx: %d  token: '%.*s'  parentNode: null  depth: %d  state: %s\n",
-                * tokenIdx, tok->str.size, tok->str.ptr, depth, parseStateToString(state));
+            printf("PTR: tokenIdx: %lld  token: '%.*s'  parentNode: null  depth: %lld  state: %s\n",
+                (long long) * tokenIdx, (int)tok->str.size, tok->str.ptr, (long long) depth, parseStateToString(state));
         }
         
 #endif
@@ -296,7 +297,7 @@ void parseTroveRecursive(huTrove * trove, huIndexSize_t * tokenIdx, huNode * par
                 else
                 {
                     nodeCreatedThisState = allocNewNode(trove, HU_NODEKIND_LIST, tok);
-                    huIndexSize_t nctsIdx = nodeCreatedThisState->nodeIdx;
+                    huSize_t nctsIdx = nodeCreatedThisState->nodeIdx;
 
                     associateEnqueuedComments(trove, nodeCreatedThisState, commentQueue);
                     setValueToken(nodeCreatedThisState, tok);
@@ -318,7 +319,7 @@ void parseTroveRecursive(huTrove * trove, huIndexSize_t * tokenIdx, huNode * par
                 else
                 {
                     nodeCreatedThisState = allocNewNode(trove, HU_NODEKIND_DICT, tok);
-                    huIndexSize_t nctsIdx = nodeCreatedThisState->nodeIdx;
+                    huSize_t nctsIdx = nodeCreatedThisState->nodeIdx;
 
                     associateEnqueuedComments(trove, nodeCreatedThisState, commentQueue);
                     setValueToken(nodeCreatedThisState, tok);
@@ -339,7 +340,7 @@ void parseTroveRecursive(huTrove * trove, huIndexSize_t * tokenIdx, huNode * par
                 else
                 {
                     nodeCreatedThisState = allocNewNode(trove, HU_NODEKIND_VALUE, tok);
-                    huIndexSize_t nctsIdx = nodeCreatedThisState->nodeIdx;
+                    huSize_t nctsIdx = nodeCreatedThisState->nodeIdx;
 
                     associateEnqueuedComments(trove, nodeCreatedThisState, commentQueue);
                     setValueToken(nodeCreatedThisState, tok);
@@ -395,10 +396,10 @@ void parseTroveRecursive(huTrove * trove, huIndexSize_t * tokenIdx, huNode * par
                 // nodeCreatedThisState = new node
                 // recursive(PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END, nodeCreatedThisState)
                 {
-                    huIndexSize_t parentIdx = parentNode->nodeIdx;
+                    huSize_t parentIdx = parentNode->nodeIdx;
                     nodeCreatedThisState = allocNewNode(trove, HU_NODEKIND_LIST, tok);
                     parentNode = (huNode *) huGetNodeByIndex(trove, parentIdx);
-                    huIndexSize_t nctsIdx = nodeCreatedThisState->nodeIdx;
+                    huSize_t nctsIdx = nodeCreatedThisState->nodeIdx;
 
                     setValueToken(nodeCreatedThisState, tok);
                     addChildNode(trove, parentNode, nodeCreatedThisState);
@@ -418,10 +419,10 @@ void parseTroveRecursive(huTrove * trove, huIndexSize_t * tokenIdx, huNode * par
                 // nodeCreatedThisState = new node
                 // recursive(PS_IN_DICT_EXPECT_KEY_OR_END, nodeCreatedThisState)
                 {
-                    huIndexSize_t parentIdx = parentNode->nodeIdx;
+                    huSize_t parentIdx = parentNode->nodeIdx;
                     nodeCreatedThisState = allocNewNode(trove, HU_NODEKIND_DICT, tok);
                     parentNode = (huNode *) huGetNodeByIndex(trove, parentIdx);
-                    huIndexSize_t nctsIdx = nodeCreatedThisState->nodeIdx;
+                    huSize_t nctsIdx = nodeCreatedThisState->nodeIdx;
 
                     setValueToken(nodeCreatedThisState, tok);
                     addChildNode(trove, parentNode, nodeCreatedThisState);
@@ -440,7 +441,7 @@ void parseTroveRecursive(huTrove * trove, huIndexSize_t * tokenIdx, huNode * par
                 // assign new node to parentNode
                 // nodeCreatedThisState = new node
                 {
-                    huIndexSize_t parentIdx = parentNode->nodeIdx;
+                    huSize_t parentIdx = parentNode->nodeIdx;
                     nodeCreatedThisState = allocNewNode(trove, HU_NODEKIND_VALUE, tok);
                     parentNode = (huNode *) huGetNodeByIndex(trove, parentIdx);
 
@@ -507,10 +508,10 @@ void parseTroveRecursive(huTrove * trove, huIndexSize_t * tokenIdx, huNode * par
                 // nodeCreatedThisState = new node
                 // recursive(PS_IN_DICT_EXPECT_KVS, nodeCreatedThisState)
                 {
-                    huIndexSize_t parentIdx = parentNode->nodeIdx;
+                    huSize_t parentIdx = parentNode->nodeIdx;
                     nodeCreatedThisState = allocNewNode(trove, HU_NODEKIND_NULL, tok);
                     parentNode = (huNode *) huGetNodeByIndex(trove, parentIdx);
-                    huIndexSize_t nctsIdx = nodeCreatedThisState->nodeIdx;
+                    huSize_t nctsIdx = nodeCreatedThisState->nodeIdx;
 
                     associateEnqueuedComments(trove, nodeCreatedThisState, commentQueue);
                     setKeyToken(nodeCreatedThisState, tok);
@@ -566,7 +567,7 @@ void parseTroveRecursive(huTrove * trove, huIndexSize_t * tokenIdx, huNode * par
             case HU_TOKENKIND_KEYVALUESEP:
                 // recursive(PS_IN_DICT_EXPECT_START_OR_VALUE)
                 {
-                    huIndexSize_t parentIdx = parentNode->nodeIdx;
+                    huSize_t parentIdx = parentNode->nodeIdx;
 
                     ensureContains(trove, parentNode, tok);
                     parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1, 
@@ -607,7 +608,7 @@ void parseTroveRecursive(huTrove * trove, huIndexSize_t * tokenIdx, huNode * par
                 // set parentNode to list kind
                 // recursive(PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END, parentNode)
                 {
-                    huIndexSize_t parentIdx = parentNode->nodeIdx;
+                    huSize_t parentIdx = parentNode->nodeIdx;
 
                     parentNode->kind = HU_NODEKIND_LIST;
                     setValueToken(parentNode, tok);
@@ -622,7 +623,7 @@ void parseTroveRecursive(huTrove * trove, huIndexSize_t * tokenIdx, huNode * par
                 // set parentNode to dict kind
                 // recursive(PS_IN_DICT_EXPECT_KEY_OR_END, parentNode)
                 {
-                    huIndexSize_t parentIdx = parentNode->nodeIdx;
+                    huSize_t parentIdx = parentNode->nodeIdx;
 
                     parentNode->kind = HU_NODEKIND_DICT;
                     setValueToken(parentNode, tok);
@@ -828,13 +829,13 @@ void parseTrove(huTrove * trove)
 {
 #ifdef HUMON_CAVEPERSON_DEBUGGING
     printf("%sParsing:%s\n%s\n%s",
-        darkRed, darkYellow, trove->dataString, off);
+        ansi_darkRed, ansi_darkYellow, trove->dataString, ansi_off);
 #endif
 
     huVector commentQueue;
     initGrowableVector(& commentQueue, sizeof(huToken *));
 
-    huIndexSize_t tokenIdx = 0;
+    huSize_t tokenIdx = 0;
     parseTroveRecursive(trove, & tokenIdx, NULL, 0, PS_TOP_LEVEL_EXPECT_START_OR_VALUE, & commentQueue);
     associateEnqueuedComments(trove, NULL, & commentQueue);
 }

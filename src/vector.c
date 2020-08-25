@@ -13,7 +13,7 @@ void initVectorForCounting(huVector * vector)
 }
 
 
-void initVectorPreallocated(huVector * vector, void * buffer, huIndexSize_t elementSize, huIndexSize_t numElements)
+void initVectorPreallocated(huVector * vector, void * buffer, huSize_t elementSize, huSize_t numElements)
 {
     vector->kind = HU_VECTORKIND_PREALLOCATED;
     vector->buffer = buffer;
@@ -23,7 +23,7 @@ void initVectorPreallocated(huVector * vector, void * buffer, huIndexSize_t elem
 }
 
 
-void initGrowableVector(huVector * vector, huIndexSize_t elementSize)
+void initGrowableVector(huVector * vector, huSize_t elementSize)
 {
     vector->kind = HU_VECTORKIND_GROWABLE;
     vector->buffer = NULL;
@@ -63,22 +63,22 @@ void resetVector(huVector * vector)
 }
 
 
-huIndexSize_t getVectorSize(huVector const * vector)
+huSize_t getVectorSize(huVector const * vector)
 {
     return vector->numElements;
 }
 
 
-void * getVectorElement(huVector const * vector, huIndexSize_t idx)
+void * getVectorElement(huVector const * vector, huSize_t idx)
 {
     return vector->buffer + vector->elementSize * idx;
 }
 
 
-void * growVector(huVector * vector, huIndexSize_t * numElements)
+void * growVector(huVector * vector, huSize_t * numElements)
 {
     char * next = NULL;
-    huIndexSize_t numToAppend = * numElements;
+    huSize_t numToAppend = * numElements;
 
     switch(vector->kind)
     {
@@ -97,7 +97,7 @@ void * growVector(huVector * vector, huIndexSize_t * numElements)
         if (vector->buffer == NULL)
         {
             // round up capacity to nearest multiple of 16
-            huIndexSize_t cap = numToAppend;
+            huSize_t cap = numToAppend;
             if (cap % 16 != 0)
                 { cap = ((numToAppend / 16) + 1) * 16; }
 
@@ -109,10 +109,10 @@ void * growVector(huVector * vector, huIndexSize_t * numElements)
         }
         else
         {
-            huIndexSize_t nextOffset = vector->numElements * vector->elementSize;
+            huSize_t nextOffset = vector->numElements * vector->elementSize;
 
             // adjust capacity
-            huIndexSize_t cap = vector->vectorCapacity;
+            huSize_t cap = vector->vectorCapacity;
             while (vector->numElements + numToAppend > vector->vectorCapacity)
                 { vector->vectorCapacity *= 2; }
 
@@ -132,9 +132,9 @@ void * growVector(huVector * vector, huIndexSize_t * numElements)
 }
 
 
-huIndexSize_t appendToVector(huVector * vector, void const * data, huIndexSize_t numElements)
+huSize_t appendToVector(huVector * vector, void const * data, huSize_t numElements)
 {
-    huIndexSize_t maxAppend = numElements;
+    huSize_t maxAppend = numElements;
     void * dest = growVector(vector, & maxAppend);
     if (vector->kind != HU_VECTORKIND_COUNTING)
         { memcpy(dest, data, maxAppend * vector->elementSize); }

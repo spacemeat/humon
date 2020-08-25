@@ -8,27 +8,11 @@
 #else
 #include <unistd.h>
 #endif
-#include "humon.hpp"
-#include "utest.hpp"
+#include "humon/humon.hpp"
+#include "ztest/ztest.hpp"
 #include "testDataCpp.h"
 
 using namespace std::literals;
-
-/*
-SimpleString StringFrom(const hu::Trove & other)
-{
-    std::stringstream ss;
-    ss << "{type: trove tokens:" << other.numTokens() << " nodes:" << other.numNodes() << "}";
-    return SimpleString(ss.str().data());
-}
-
-SimpleString StringFrom(const hu::Node & other)
-{
-    std::stringstream ss;
-    ss << "{type: node address:" << other.address() << "}";
-    return SimpleString(ss.str().data());
-}
-*/
 
 
 TEST_GROUP(makers)

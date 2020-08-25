@@ -5,7 +5,7 @@
 #include <unistd.h>
 #endif
 #include "../src/humon.internal.h"
-#include "utest.hpp"
+#include "ztest/ztest.hpp"
 #include "testData.h"
 
 
@@ -30,7 +30,7 @@ TEST(huVectorTests, initVectorForCounting)
     LONGS_EQUAL(0, v.numElements);
     LONGS_EQUAL(0, v.vectorCapacity);
 
-    huIndexSize_t g = 1;
+    huSize_t g = 1;
     auto p = growVector(&v, &g);
     LONGS_EQUAL(1, g);
     POINTERS_EQUAL(NULL, p);
@@ -61,7 +61,7 @@ TEST(huVectorTests, initVectorForCounting)
 TEST(huVectorTests, initVectorPreallocated)
 {
     huVector v;
-    huIndexSize_t const numElements = 100;
+    huSize_t const numElements = 100;
     char buf[numElements];
     initVectorPreallocated(&v, buf, 1, numElements);
 
@@ -70,7 +70,7 @@ TEST(huVectorTests, initVectorPreallocated)
     LONGS_EQUAL(0, v.numElements);
     LONGS_EQUAL(100, v.vectorCapacity);
 
-    huIndexSize_t g = 1;  
+    huSize_t g = 1;  
     auto p = growVector(&v, &g);
     LONGS_EQUAL(1, g);
     POINTERS_EQUAL(v.buffer, p);
@@ -113,7 +113,7 @@ TEST(huVectorTests, initGrowableVector)
     LONGS_EQUAL(0, v.numElements);
     LONGS_EQUAL(0, v.vectorCapacity);
 
-    huIndexSize_t g = 1;  
+    huSize_t g = 1;  
     auto p = growVector(&v, &g);
     LONGS_EQUAL(1, g);
     POINTERS_EQUAL(v.buffer, p);

@@ -1,7 +1,7 @@
 #include <string.h>
 #include <string_view>
-#include "utest.hpp"
-#include "humon.h"
+#include "ztest/ztest.hpp"
+#include "humon/humon.h"
 
 using namespace std::literals;
 

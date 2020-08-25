@@ -76,10 +76,10 @@ The `@` syntax is an *annotation*. We'll discuss that, but for now just think of
 
 Using the APIs is straightforward. To get the image's (x, y) extents above, we might invoke the following in C:
 
-    #include <Humon.h>
+    #include <humon/humon.h>
     ...
         huTrove const * trove = NULL;
-        int error = huDeserializeTroveFromFileZ(& trove, "samples/sampleFiles/materials.hu", NULL,
+        int error = huDeserializeTroveFromFile(& trove, "samples/sampleFiles/materials.hu", NULL,
             HU_ERRORRESPONSE_STDERRANSICOLOR);
         if (error == HU_ERROR_NOERROR && huGetNumErrors(trove) == 0)
         {
@@ -95,7 +95,7 @@ Using the APIs is straightforward. To get the image's (x, y) extents above, we m
 
 or in C++:
 
-    #include <Humon.hpp>
+    #include <humon/humon.hpp>
     ...
         auto desRes = hu::Trove::fromFile("samples/sampleFiles/materials.hu"sv);
         if (auto trove = std::get_if<hu::Trove>(& desRes))
@@ -114,59 +114,26 @@ Building Humon in Linux is easy enough, but you need to have Python3 installed. 
 
 or, if you want to use clang:
 
-    ~/src/humon$ ./build-linux.py clang
+    ~/src/humon$ ./build-linux.py -clang
 
 > Currently the clang build uses gcc's standard library. A better build experience is in the works, but in the meantime it's trivial to modify the `build-linux.py` script to use whatever library you have.
 
-If you're on a 64-bit machine that can run 32-bit programs (like Intel/AMD), you can build a 32-bit version:
-
-    ~/src/humon$ ./build-linux.py 32bit
-
 In Windows, you can open the root-level `humon.sln` file in Visual Studio 2017+, and build the targets you like.
 
-For all builds, the binary artifacts are produced in `{humon directory}/build/bin`. Currently, you can just copy the built binaries and the headers from `{humon directory}/include/humon` for use in your projects.
+There are a number of build options available to get just what you want: 32-bit architecture, debug vs release builds, and a few switches to customize the runtime. See [this here section here](#buildingHumon).
 
-The following are built in Linux:
+### Integrating Humon into your application
+If you've successfully built, there will be an appropriate binary of interest in `build/bin`. The build system makes a static and shared library in Linux, and a static library and DLL (with import library) in Visual Studio.
 
-* libhumon.a                    - optimized static library for Linux
-* libhumon-d.a                  - debug static library for Linux
-* libhumon.so.ver.si.on         - optimized shared library for Linux
-* libhumon-d.so.ver.si.on       - debug shared library for Linux
-* test-d                        - test binary, debug version
-* test-r                        - test binary, optimized version
-* hux                           - a command-line tool for translformatting and validating Humon data
-* readmeSrc-c                   - a small sample with example code from this README.md
-* readmeSrc-cpp                 - a less small sample with example code from this README.md
+In Linux, you can install Humon into your system by invoking 
 
-These files are built in Windows:
-* humon-win32.lib               - optimized static library for 32-bit Windows
-* humon-win32-d.lib             - debug static library for 32-bit Windows
-* humon-win32-shared.dll        - optimized DLL for 32-bit Windows
-* humon-win32-shared.lib        - import library for the 32-bit optimized DLL
-* humon-win32-shared-d.dll      - debug DLL for 32-bit Windows
-* humon-win32-shared-d.lib      - import library for the 32-bit debug DLL
-* humon-win32-shared-d.pdb      - PDB for the 32-bit debug DLL
-* humon-win64.lib               - optimized static library for 64-bit Windows
-* humon-win64-d.lib             - debug static library for 64-bit Windows
-* humon-win64-shared.dll        - optimized DLL for 64-bit Windows
-* humon-win64-shared.lib        - import library for the 64-bit optimized DLL
-* humon-win64-shared-d.dll      - debug DLL for 64-bit Windows
-* humon-win64-shared-d.lib      - import library for the 64-bit debug DLL
-* humon-win64-shared-d.pdb      - PDB for the 64-bit debug DLL
-* humon-test.Win32.Debug.exe    - test binary
-* humon-test.Win32.Debug.pdb    - PDB for test binary
-* hux.exe                       - a command-line tool for translating and validating Humon
-* hux.pdb                       - PDB for hux.exe
+    ~/src/humon$ sudo install-linux.py
 
-The tests are built along with the libraries. Run them from the project root:
+This will place the built headers and libraries into the appropriate places so build tools can find them. (Currently just the headers and static lib are installed; the .so install is coming soon.)
 
-    ~/src/humon$ build/bin/humon-test-d
+As an alternative to installing, you can simply copy the lib from `build/bin` and the headers from `include/humon` into your application's code.
 
-or
-
-    PS C:\Users\you\src\humon> build\bin\humon-test.Win32.Debug.exe
-
-or run the test project directly from Visual Studio.
+If you're building a Windows project in Visual Studio, and you want to use the static library, simply #include <humon/humon.h> or <humon/humon.hpp>, and link against the lib. If you want to use the DLL, define the HUMON_USING_DLL preprocessor symbol (either with a preceding #define or by passing `-DHUMON_USING_DLL` to the build) and link against the import lib.
 
 ### Humon version
 Humon uses three values in its language/API versioning scheme: `major.minor.revision` For changes that do not affect the API, the revision is incremented. For changes that only add to the API but do not break builds or behaviors, the minor value is incremented. For breaking changes, the major value is incremented. The version will generally refer to the API version; the Humon format is considered stable. (Though of course, it's only Humon, and may not know of its own imperfections yet.)
@@ -389,9 +356,9 @@ There are API specs for the C and C++ interfaces. The C API is fully featured bu
 
 ### Getting a trove
 
-Start with `#include <humon.hpp>`. The interface is contained in a namespace, `hu`. The C API is itself contained in a nested namespace, `hu::capi`, but you generally won't reference it yourself.
+Start with `#include <humon/humon.hpp>`. The interface is contained in a namespace, `hu`. The C API is itself contained in a nested namespace, `hu::capi`, but you generally won't reference it yourself.
 
-(Note: To use the C API, `#include <humon.h>` instead. Obviously there is no namespace there, because it's a pure C99 header.)
+(Note: To use the C API, `#include <humon/humon.h>` instead. Obviously there is no namespace there, because it's a pure C99 header.)
 
 To deserialize a Humon token stream, invoke one of `hu::Trove`'s static member functions:
 
@@ -736,7 +703,7 @@ Once loaded, a Humon trove does not move or change. This has implications:
 **The C-family APIs don't signal by default; rather, they return null objects.**
 Normally, trove and node functions that return other nodes or tokens will not throw exceptions on bad parameters or lookup terms, or if they're nullish objects. Instead they just return other nullish objects or degenerate values. In the C++ API, you can check `IsNullish()` on `hu::Trove`, `hu::Node`, and `hu::Token` objects to see whether they're managing null values. Most of the functions are marked `noexcept` by default as well.
 
-Tou can turn turn on exceptions for the C++ API. Before your `#include <humon.hpp>` declaration, define any of these:
+Tou can turn turn on exceptions for the C++ API. Before your `#include <humon/humon.hpp>` declaration, define any of these:
 * `#define HUMON_USE_NULLISH_EXCEPTIONS` This will cause nullish `hu::Token` and `hu::Node` objects to throw when their member functions are called, instead of returning other nullish objects.
 * `#define HUMON_USE_NODE_PATH_EXCEPTIONS` This will cause  `hu::Trove::operator/` and `hu::Node::operator/` to throw exceptions instead of returning nullish objects when called with bad indices or keys. It can help you track down erroneous lookups.
 * `#define HUMON_SUPPRESS_NOEXCEPT` This turns off `noexcept` on most member functions, causing exceptions to be thrown instead of terminating the program.
@@ -753,7 +720,7 @@ So, if you want bad lookup sequences to throw exceptions, but all other function
     #define HUMON_USE_NODE_PATH_EXCEPTIONS
     #define HUMON_SUPPRESS_PATH_NOEXCEPT
 
-    #include <humon.hpp>
+    #include <humon/humon.hpp>
 
 **Objects in dicts remain in serial order.**
 This is different from some JSON libraries, that don't preserve the order of key-object pairs in dicts. Humon guarantees that, when you access a dict's children by index (like you would a list), they'll be returned in the order you expect. Humon can maintain an extra table for accessing dict entries quickly by key. (Currently this is not implemented, and keys are searched in linear order. This is obviously on the fix-it list, but it's often the case that a linear search beats hash tables or binary searches for small numbers of entries.<sup>[citation needed]</sup>)
@@ -855,32 +822,124 @@ If no nodes appear before an annotation, it applies to the trove. A great way to
 
 Like asserted earlier, annotations are 100% open in their use. Humon doesn't use any annotation keys or values and doesn't interpret them. Applications can use them or not, but all annotations that are legal are guaranteed to be parsed, even if the application doesn't know about or use them at all. In this way you can embed metadata about objects in a Humon file, and even old versions of Humon apps will correctly read (and ignore) them, because all official versions of Humon always have.
 
-## Building Humon
-Humon builds on 64-bit and 32-bit architectures for Linux using GNU or Clang tools, and on 64-bit and 32-bit architectures in Visual Studio 2017+. There are a number of options you can set to change how the build is made.
+## <a name="buildingHumon">Building Humon
+Humon builds on 64-bit and 32-bit architectures for Linux (so far, tested on Ubuntu) using GNU or Clang tools, and on 64-bit and 32-bit architectures in Visual Studio 2017+. The default build behaves as described above, but there are switches you can provide when you build Humon to change its behavior.
+
+For all builds, the binary artifacts are produced in `{humon directory}/build/bin`. Currently, you can just copy the built binaries and the headers from `{humon directory}/include/humon` for use in your projects.
+
+The following are built in Linux:
+
+* libhumon{-target}.a               - static library for Linux
+* libhumon{-target}.so.ver.si.on    - shared library for Linux
+* test{-target}                     - test binary
+* hux{-target}                      - a command-line tool for transformatting and validating Humon data
+* readmeSrc-c{-target}              - a small sample with example code from this README.md
+* readmeSrc-cpp{-target}            - a less small sample with example code from this README.md
+
+where `{target}` consists of `{-gcc|-clang}{-32}?{-d}?`, depending on the build tool you specify, whether to build a 32-bit version (if you're on a 64-bit machine), and whether it is a debug build. You can specify these settings; see below.
+
+These files are built in Visual Studio 2017+:
+* humon-win32.lib               - optimized static library for 32-bit Windows
+* humon-win32-d.lib             - debug static library for 32-bit Windows
+* humon-win32-shared.dll        - optimized DLL for 32-bit Windows
+* humon-win32-shared.lib        - import library for the 32-bit optimized DLL
+* humon-win32-shared-d.dll      - debug DLL for 32-bit Windows
+* humon-win32-shared-d.lib      - import library for the 32-bit debug DLL
+* humon-win32-shared-d.pdb      - PDB for the 32-bit debug DLL
+* humon-win64.lib               - optimized static library for 64-bit Windows
+* humon-win64-d.lib             - debug static library for 64-bit Windows
+* humon-win64-shared.dll        - optimized DLL for 64-bit Windows
+* humon-win64-shared.lib        - import library for the 64-bit optimized DLL
+* humon-win64-shared-d.dll      - debug DLL for 64-bit Windows
+* humon-win64-shared-d.lib      - import library for the 64-bit debug DLL
+* humon-win64-shared-d.pdb      - PDB for the 64-bit debug DLL
+* humon-test.Win32.Debug.exe    - test binary for 32-bit Windows
+* humon-test.Win32.Debug.pdb    - PDB for test binary for 32-bit Windows
+* humon-test.Win32.Release.exe  - test binary for 32-bit Windows
+* humon-test.Win64.Debug.exe    - test binary for 64-bit Windows
+* humon-test.Win64.Debug.pdb    - PDB for test binary for 64-bit Windows
+* humon-test.Win64.Release.exe  - test binary for 64-bit Windows
+* hux.exe                       - a command-line tool for translating and validating Humon
+* hux.pdb                       - PDB for hux.exe
+
+The tests are built along with the libraries. Run them from the project root:
+
+    ~/src/humon$ build/bin/test-gcc-d
+
+or
+
+    PS C:\Users\you\src\humon> build\bin\humon-test.Win64.Debug.exe
+
+or run the test project directly from Visual Studio. See [Testing Humon](#testingHumon) for details.
+
+### Building your preferred target
+The build script takes several switches to build a specific target:
+
+| switch       | default | what it do                                             |
+|------------- |-------- |------------------------------------------------------- |
+| -tool=<tool> | gcc     | set <tool> to `gcc` or `clang`                         |
+| -debug       | (no)    | set to build a debug version of Humon                  |
+| -arch=<bits> | 64/32*  | set to 32 in a 64-bit machine to build a 32-bit target |
+| -buildAll    | (no)    | set to build *all* targets                             |
 
 ### Specifying integer types
-HU_ENUM_TYPE
-HU_LINE_TYPE
-HU_COL_TYPE
-HU_STRLEN_TYPE
+You can set the integer types Humon uses internally. If you *know*, beyond any doubt, that you'll *never* have more than 32767 lines in any Humon file your app reads, you can set the line integer type to `int16_t`. If you *know* you'll never read more than 255 columns, you can set the column integer type to `uint8_t`. This may sound picky, but these integers are stored in every token object in the token tracking array, and that size can add up, especially for large Humon troves. (See below for turning line and column tracking off completely.)
+
+Here's what you can set, and the restrictions. Use the switch to pass in to the build system, and the associated macro to build against the header and lib. Since this macro affects types defined in the public `humon.h` header, it's important to use the same macros when building Humon and using it in another application, probably by passing something like `-DHUMON_LINE_TYPE=short` to the compiler if you passed `-lineType=short` to the build tool.
+
+| switch          	| macro           | default          | requirements                 |
+|----------------	|-------------    |----------------- |----------------------------- |
+| -enumType=<type>  | HUMON_ENUM_TYPE | char             | integer, signed or unsigned  |
+| -lineType=<type>  | HUMON_LINE_TYPE | long             | integer, signed or unsigned  |
+| -colType=<type>   | HUMON_COL_TYPE  | long             | integer, signed or unsigned  |
+| -sizeType=<type>  | HUMON_SIZE_TYPE | long/long long*  | integer, signed              |
+
+* 32-bit architectures default to long, 64-bit to long long
+
+If you set the `HUMON_SIZE_TYPE` to a 16-bit value, be sure to set the `HUMON_TRANSCODE_BLOCKSIZE` (see below) to something containable in 16 bits, or you're gonna have a bad time.
 
 ### Internal memory block sizes
-HUMON_SWAG_BLOCKSIZE
-HUMON_FILE_BLOCKSIZE
+These values change some internal block size values for determining the Unicode encoding and transcoding from UTF-n to UTF-8. If you know what you're looking at, goofing with these numbers might be useful for tuning certain tradeoffs. (The stack is grown by these amounts in their respective operations, so if you have stack size restrictions, these adjustments may help.) Each of these values must be positive integers, multiples of 4, and containable by `HUMON_SIZE_TYPE` (see above).
+
+| switch              | macro                     | default   |
+|-------------------- |-------------------------- |---------- |
+| -swagBlock=<n>      | HUMON_SWAG_BLOCKSIZE      | (64)      |
+| -transcodeBlock=<n> | HUMON_TRANSCODE_BLOCKSIZE | (1 << 16) |
 
 ### Skipping parameter checks
-HUMON_NO_PARAMETER_CHECKS
+If you're sure you're passing good parameters all the time to Humon, you can disable some parameter sanity checks by passing `-noChecks` to the build script. These checks will be excised, and bad parameters can then cause undefined behavior, so be certain.
 
-### Debugging
-HUMON_CAVEPERSON_DEBUGGING
+> The time saved by removing these checks is almost certainly not worth the risk of undefined behavior, but it's here if you're sure.
 
-### Excizing features for a leaner Humon
+### Debugging aids
+If you think Humon is doing wrong things, you can check out its analysis in the form of stdout spam. Enable caveperson debugging by passing `-caveperson` to the build script (which then passes `-DHUMON_CAVEPERSON_DEBUGGING` to the build tool). Be aware, this produces a lot of text for a little Humon.
 
+### Turning off line and column tracking altogether (Coming soon!)
+Pass `-noLineCol` (which then passes `-DHUMON_NOLINECOL` to the build tool) to turn off tracking and storage of line and column data in tokens. This simply removes that data from the huToken structure, freeing up a bunch of RAM. Doing this turns *off* line/column reporting in errors and disables comment associations--all comments are associated to the trove. Since this macro affects types defined in the public `humon.h` header, it's important to use the same macros when building Humon and using it in another application, probably by passing `-DHUMON_NOLINECOL` to the compiler.
+
+## <a name="testingHumon">Testing Humon builds
+You can run the unit tests from a shell at the Humon project root, as mentioned above. The tests are organized in a file/group/test hierarchy, and coincidentally look a lot like CPPUTest files. Files under `test/ztest/` are for the test harness and some generated test framework code.
+
+> I migrated away from CPPUTest because I wanted to remove the only external package dependency, and because I wanted to natively build the test code to match the target architecture. So I hacked a little test harness to reuse the test source files and it was fun times.
+
+The generated test runs a bunch of checks to test the Humon API's correctness. You can focus on specific source files, test groups, or tests with command line switches. Pass `-?` to get the skinny on that.
+
+It's important to note that changing some build parameters will invalidate some tests. Specifically, if you set `-noChecks` in the build process, you'll want to disable running the `pathological` tests which test for invalid parameters.
+
+    ~/src/humon$ build-linux.py -noChecks
+    ~/src/humon$ build/bin/test-gcc -xt pathological
+
+There's a convenient script in the project directory that runs all the tests. After building with `-buildAll`, test all the targets at once:
+
+    ~/src/humon$ build-linux.py -buildAll
+    Building static library libhumon-gcc-32-d.a
+    ...
+    ~/src/humon$ ./runAllTests.py
 
 ## The future of Humonity
 
 Near-future features include:
-* Language bindings for Python
+* Language bindings for Python (in the works now)
 * Language bindings for .NET
 * Language bindings for Node
 * Language bindings for Rust

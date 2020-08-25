@@ -28,7 +28,7 @@ FILE * openFile(char const * path, char const * mode)
 }
 
 
-huEnumType_t getFileSize(FILE * fp, huIndexSize_t * fileLen, huEnumType_t errorResponse)
+huEnumType_t getFileSize(FILE * fp, huSize_t * fileLen, huEnumType_t errorResponse)
 {
 #ifdef _WIN32
 	if (_fseeki64(fp, 0, SEEK_END) != 0)
@@ -51,27 +51,27 @@ huEnumType_t getFileSize(FILE * fp, huIndexSize_t * fileLen, huEnumType_t errorR
         return HU_ERROR_BADFILE;
     }
 
-    if ((long long unsigned) dataLen > (long long unsigned) maxOfType(huIndexSize_t))
+    if ((long long unsigned) dataLen > (long long unsigned) maxOfType(huSize_t))
     {
-        printError(errorResponse, "File is too large. Consider setting HU_STRLEN_TYPE to a 64-bit integer type.");
+        printError(errorResponse, "File is too large. Consider setting HUMON_SIZE_TYPE to a 64-bit integer type.");
         return HU_ERROR_BADFILE;
     }
 
     rewind(fp);
 
-    * fileLen = (huIndexSize_t) dataLen;
+    * fileLen = (huSize_t) dataLen;
 
     return HU_ERROR_NOERROR;
 }
 
 
-bool stringInString(char const * haystack, huIndexSize_t haystackLen, char const * needle, huIndexSize_t needleLen)
+bool stringInString(char const * haystack, huSize_t haystackLen, char const * needle, huSize_t needleLen)
 {
     // I'm unconcerned about O(m*n).
     if (haystackLen < needleLen)
         { return false; }
 
-    for (huIndexSize_t i = 0; i < haystackLen - needleLen + 1; ++i)
+    for (huSize_t i = 0; i < haystackLen - needleLen + 1; ++i)
     {
         if (strncmp(haystack + i, needle, needleLen) == 0)
             { return true; }
@@ -163,7 +163,7 @@ char const * huOutputErrorToString(huEnumType_t rhs)
 }
 
 
-huIndexSize_t min(huIndexSize_t a, huIndexSize_t b)
+huSize_t min(huSize_t a, huSize_t b)
 {
 	if (a < b)
 		{ return a; }
@@ -171,7 +171,7 @@ huIndexSize_t min(huIndexSize_t a, huIndexSize_t b)
 		{ return b; }
 }
 
-huIndexSize_t max(huIndexSize_t a, huIndexSize_t b)
+huSize_t max(huSize_t a, huSize_t b)
 {
 	if (a >= b)
 		{ return a; }
@@ -201,17 +201,17 @@ void huInitSerializeOptionsZ(huSerializeOptions * params, huEnumType_t Whitespac
     char const * newline, bool printBom)
 {
     size_t newlineLenC = strlen(newline);
-    if (newlineLenC > maxOfType(huIndexSize_t))
-        { newlineLenC = maxOfType(huIndexSize_t); }
+    if (newlineLenC > maxOfType(huSize_t))
+        { newlineLenC = maxOfType(huSize_t); }
 
     huInitSerializeOptionsN(params, WhitespaceFormat, indentSize, indentWithTabs, usingColors, colorTable, 
-        printComments, newline, (huIndexSize_t) newlineLenC, printBom);
+        printComments, newline, (huSize_t) newlineLenC, printBom);
 }
 
 
 void huInitSerializeOptionsN(huSerializeOptions * params, huEnumType_t WhitespaceFormat, huCol_t indentSize,
     bool indentWithTabs, bool usingColors, huStringView const * colorTable,  bool printComments, 
-    char const * newline, huIndexSize_t newlineSize, bool printBom)
+    char const * newline, huSize_t newlineSize, bool printBom)
 {
     params->WhitespaceFormat = WhitespaceFormat;
     params->indentSize = indentSize;

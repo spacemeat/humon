@@ -8,8 +8,8 @@
 #else
 #include <unistd.h>
 #endif
-#include "humon.hpp"
-#include "utest.hpp"
+#include "humon/humon.hpp"
+#include "ztest/ztest.hpp"
 #include "testDataCpp.h"
 
 TEST_GROUP(comments)

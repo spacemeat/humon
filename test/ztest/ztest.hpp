@@ -22,6 +22,17 @@ std::string toString(char const * val, long len);
 std::string toString(void * val);
 
 
+enum class InexOperation
+{
+    excludeSource,
+    excludeGroup,
+    excludeTest,
+    includeSource,
+    includeGroup,
+    includeTest,
+};
+
+
 struct TestGroup
 {
 public:
@@ -64,7 +75,7 @@ public:
     }
 
     void fail(char const * expected, char const * got, long long len, std::string_view checkThatFailed, 
-        std::string_view, int line)
+        std::string_view file, int line)
     {
         this->passed = false;
         this->expected = toString(expected, (long) len);
@@ -87,8 +98,15 @@ public:
 };
 
 
-std::map<std::string, std::map<std::string, std::vector<std::string>>> getAllTests();
-TestGroup runTest(std::string_view file, std::string_view groupName, std::string_view testName);
+using GroupMap = std::map<std::string, std::vector<std::string>>;
+using SourceMap = std::map<std::string, GroupMap>;
+using InexOpsVector = std::vector<std::pair<InexOperation, std::string>>;
+
+
+void addToFilteredTests(SourceMap & filteredTests, std::string_view source, std::string_view group, std::string_view test);
+bool passesFilters(InexOpsVector const & inexOps, std::string_view source, std::string_view group, std::string_view test);
+SourceMap getAllTests(InexOpsVector const & inexOps);
+TestGroup runTest(InexOpsVector const & inexOps, std::string_view file, std::string_view groupName, std::string_view testName);
 
 
 #define TEST_GROUP(groupName) \

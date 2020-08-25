@@ -1,4 +1,5 @@
-echo "Building test files"
+echo "Building test files. Carefully examine each result to ensure it's"
+echo "printing the way you want. These are the test cases for the printer."
 
 function makePerms {
     echo "Scanning $1"

@@ -2,8 +2,8 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
-#include "ansiColors.h"
-#include "utest.hpp"
+#include "humon/ansiColors.h"
+#include "ztest.hpp"
 
 using namespace std;
 
@@ -12,19 +12,26 @@ void printUsage()
 {
     cout << R"(Usage: 
 test <args>
+ -h|?               print this usage document
  -cn                do not colorize output
  -v                 verbose output
- -lg                print a list of test group names
- -ln                print a list of group.test names
+ -ls                print a list of test source files
+ -lg                print a list of test source:group names
+ -lt                print a list of source:group.test names
+ -s <sourcename>    include test sources with name containing 'sourcename'
  -g <groupname>     include test groups with name containing 'groupname'
- -n <testname>      include tests with name containing 'testname'
+ -t <testname>      include tests with name containing 'testname'
+ -xs <sourcename>   exclude test sources with name containing 'sourcename'
  -xg <groupname>    exclude test groups with name containing 'groupname'
- -xn <testname>     exclude tests with name containing 'testname'
+ -xt <testname>     exclude tests with name containing 'testname'
 
 Multiple include/exclude (inex) arguments can be given. The first 
--g <groupname> argument sets all groups to be excluded, and 'groupname' is
-then added. Subsequent -g arguments add groups to the run list. The same
-logic applies to tests.
+-s <sourcename> argument sets all other sources to be excluded and then 
+'sourcename' is included. Subsequent -s arguments add sources to the run list.
+The same logic applies to groups and tests.
+
+For another example, pass '-xt pathological' to skip all pathological tests in
+all groups in all sources.
 
 Returns 0 on successful test run with all tests passing.
 Returns 1 when a bad parameter is given.
@@ -82,15 +89,6 @@ bool argStartsWith(char const * arg, char const * spec)
 }
 
 
-enum class InexOperation
-{
-    excludeGroup,
-    excludeTest,
-    includeGroup,
-    includeTest,
-};
-
-
 enum class ExpectedArgument
 {
     cmdSwitch,
@@ -101,6 +99,7 @@ enum class ExpectedArgument
 enum class OperatingMode
 {
     runTests,
+    printSources,
     printGroups,
     printTests
 };
@@ -123,37 +122,53 @@ int main(int argc, char *argv[])
         switch (expectedArg)
         {
         case ExpectedArgument::cmdSwitch:
-            if (argMatches(arg, "-cn"))
+            if (argMatches(arg, "-h") ||
+                argMatches(arg, "-?"))
+                { printUsage(); return 0; }
+            else if (argMatches(arg, "-cn"))
                 { useColor = false; }
             else if (argMatches(arg, "-v"))
                 { verbose = true; }
+            else if (argMatches(arg, "-ls"))
+                { mode = OperatingMode::printSources; }
             else if (argMatches(arg, "-lg"))
                 { mode = OperatingMode::printGroups; }
-            else if (argMatches(arg, "-ln"))
+            else if (argMatches(arg, "-lt"))
                 { mode = OperatingMode::printTests; }
+            else if (argMatches(arg, "-s"))
+            {
+                expectedArg = ExpectedArgument::name;
+                inexOp = InexOperation::includeSource;
+            }
             else if (argMatches(arg, "-g"))
             {
                 expectedArg = ExpectedArgument::name;
                 inexOp = InexOperation::includeGroup;
             }
-            else if (argMatches(arg, "-n"))
+            else if (argMatches(arg, "-t"))
             {
                 expectedArg = ExpectedArgument::name;
                 inexOp = InexOperation::includeTest;
+            }
+            else if (argMatches(arg, "-xs"))
+            {
+                expectedArg = ExpectedArgument::name;
+                inexOp = InexOperation::excludeSource;
             }
             else if (argMatches(arg, "-xg"))
             {
                 expectedArg = ExpectedArgument::name;
                 inexOp = InexOperation::excludeGroup;
             }
-            else if (argMatches(arg, "-xn"))
+            else if (argMatches(arg, "-xt"))
             {
                 expectedArg = ExpectedArgument::name;
                 inexOp = InexOperation::excludeTest;
             }
             else
             {
-                cerr << "Bad parameter: " << arg << "\n";
+                cerr << "Bad switch: " << arg << "\n";
+                printUsage();
                 return 1;
             }
             break;
@@ -165,26 +180,44 @@ int main(int argc, char *argv[])
         }
     }
 
+    if (expectedArg != ExpectedArgument::cmdSwitch)
+    {
+        cerr << "Missing switch argument.\n";
+        printUsage();
+        return 1;
+    }
+
+    auto tests = getAllTests(inexOps);
+
     switch(mode)
     {
+    case OperatingMode::printSources:
+        {
+            bool first = true;
+            for (auto & [file, groups] : tests)
+            {
+                cout << (first ? "" : " ") << file;
+                first = false;
+            }
+        }
+        return 0;
+
     case OperatingMode::printGroups:
         {
-            auto tests = getAllTests();
             bool first = true;
             for (auto & [file, groups] : tests)
             {
                 for (auto & [groupName, group] : groups)
                 {
-                    // if g fails filters, continue;
-                    cout << (first ? "" : " ") << groupName;
+                    cout << (first ? "" : " ") << file << ":" << groupName;
                     first = false;
                 }
             }
         }
-        break;
+        return 0;
+
     case OperatingMode::printTests:
         {
-            auto tests = getAllTests();
             bool first = true;
             for (auto & [file, groups] : tests)
             {
@@ -192,15 +225,14 @@ int main(int argc, char *argv[])
                 {
                     for (auto & testName : group)
                     {
-                        // if g fails filters, continue;
-                        // if t fails filters, continue;
-                        cout << (first ? "" : " ") << groupName << "." << testName;
+                        cout << (first ? "" : " ") << file << ":" << groupName << "." << testName;
                         first = false;
                     }
                 }
             }
         }
-        break;
+        return 0;
+
     case OperatingMode::runTests:
         {
             int numFilesRun = 0;
@@ -210,7 +242,6 @@ int main(int argc, char *argv[])
             int numTestsFailed = 0;
             int numChecksRun = 0;
 
-            auto tests = getAllTests();
             for (auto & [file, groups] : tests)
             {
                 // if file fails filters, continue;
@@ -223,7 +254,7 @@ int main(int argc, char *argv[])
                     {
                         // if t fails filters, continue;
                         numTestsRun += 1;
-                        auto test = runTest(file, groupName, testName);
+                        auto test = runTest(inexOps, file, groupName, testName);
                         if (test.passed)
                         {
                             if (verbose)
@@ -304,7 +335,10 @@ int main(int argc, char *argv[])
                      << "\n    Tests failed: " << std::setw(7) << numTestsFailed << std::setw(0) << " / " << numTestsRun
                      << "\n";
             }
+            
+            return numTestsFailed == 0 ? 0 : 2;
         }
-        break;
     }
+
+    return 3;
 }
