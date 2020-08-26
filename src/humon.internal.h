@@ -18,14 +18,19 @@
 // are not referenced in public headers, so they don't need to be set by
 // a project that uses the Humon library.
 
-/// Sets the block size for swagging an endocing.
+/// Sets the stack-allocated block size for swagging an endocing.
 #ifndef HUMON_SWAG_BLOCKSIZE
 #define HUMON_SWAG_BLOCKSIZE		(64)	// checks a cache line at a time
 #endif
 
 /// Sets the stack-allocated block size for reading from file.
 #ifndef HUMON_TRANSCODE_BLOCKSIZE
-#define HUMON_TRANSCODE_BLOCKSIZE        (1 << 16)
+#define HUMON_TRANSCODE_BLOCKSIZE   (1 << 16)
+#endif
+
+/// Sets the stack-allocated block size for translating an address component.
+#ifndef HUMON_ADDRESS_BLOCKSIZE
+#define HUMON_ADDRESS_BLOCKSIZE     (64)
 #endif
 
 /// Option to skip parameter checks for faster invocations.
@@ -37,6 +42,12 @@
 /// Option to examine useful debug reporting. Mainly for Humon development.
 //#define HUMON_CAVEPERSON_DEBUGGING
 
+/// Option to select terminal colors in console output.
+#define HUMON_TERMINALCOLORS_NOCOLOR 1
+#define HUMON_TERMINALCOLORS_ANSI    2
+#ifndef HUMON_TERMINALCOLORS
+#define HUMON_TERMINALCOLORS HUMON_TERMINALCOLORS_ANSI
+#endif
 
 // For determining the max value of a type t. Useful for user-settable types.
 // Thanks, SO! https://stackoverflow.com/questions/2053843/min-and-max-value-of-data-type-in-c

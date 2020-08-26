@@ -330,9 +330,13 @@ huToken * allocNewToken(huTrove * trove, huEnumType_t kind, char const * str,
     newToken->endCol = endCol;
 
 #ifdef HUMON_CAVEPERSON_DEBUGGING
-    printf ("%stoken: line: %lld  col: %lld  len: %lld  %s        '%.*s'%s\n",
-        ansi_darkYellow, (long long int) line, (long long int) col, (long long int) size, huTokenKindToString(kind), 
-        (int) newToken->str.size, newToken->str.ptr, ansi_off);
+    printf ("%stoken%s: line: %s%lld%s  col: %s%lld%s  len: %s%lld%s  %s%s%s  '%s%.*s%s'\n",
+        ansi_darkYellow, ansi_off, 
+        ansi_white, (long long int) line, ansi_off, 
+        ansi_white, (long long int) col, ansi_off, 
+        ansi_white, (long long int) size, ansi_off, 
+        ansi_lightMagenta, huTokenKindToString(kind), ansi_off, 
+        ansi_white, (int) newToken->str.size, newToken->str.ptr, ansi_off);
 #endif
     
     return newToken;
@@ -845,9 +849,11 @@ huNode * allocNewNode(huTrove * trove, huEnumType_t nodeKind, huToken const * fi
     newNode->lastToken = firstToken;
 
 #ifdef HUMON_CAVEPERSON_DEBUGGING
-    printf ("%snode: nodeIdx: %lld    firstToken: %lld    %s%s\n",
-        ansi_lightCyan, (long long) newNodeIdx, (long long)(firstToken - (huToken *) trove->tokens.buffer), 
-        huNodeKindToString(nodeKind), ansi_off);
+    printf ("%snode%s: nodeIdx: %s%lld%s    firstToken: %s%lld%s    %s%s%s\n",
+        ansi_lightCyan, ansi_off, 
+        ansi_lightBlue, (long long) newNodeIdx, ansi_off,
+        ansi_darkYellow, (long long)(firstToken - (huToken *) trove->tokens.buffer), ansi_off,
+        ansi_lightMagenta, huNodeKindToString(nodeKind), ansi_off);
 #endif
 
     return newNode;

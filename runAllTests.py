@@ -44,7 +44,7 @@ if __name__ == "__main__":
             for f in os.listdir(dd):
                 if os.path.splitext(f)[1] == '.exe':
                     tests.append(dd + '/' + f)
-                
+
     numErrors = 0
     for test in tests:
         numErrors += doShellCommand(test)

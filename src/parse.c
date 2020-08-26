@@ -1,5 +1,5 @@
+#include <string.h>
 #include "humon.internal.h"
-
 
 enum parseState
 {
@@ -71,18 +71,18 @@ void associateComment(huTrove * trove, huNode * node, huToken const * tok)
     }
 
 #ifdef HUMON_CAVEPERSON_DEBUGGING
-    char address[32] = { 0 };
-    huSize_t addLen = 32;
+    char address[HUMON_ADDRESS_BLOCKSIZE];
+    huSize_t addLen = HUMON_ADDRESS_BLOCKSIZE;
     if (node)
     {
         huGetAddress(node, address, & addLen);
-        printf("Associating comment: %s%.*s%s to node %s%s%s\n", 
+        printf("Associating comment: '%s%.*s%s' to node %s%.*s%s\n", 
             ansi_darkGreen, (int)tok->str.size, tok->str.ptr, ansi_off,
-            ansi_lightBlue, address, ansi_off );
+            ansi_lightBlue, (int)addLen, address, ansi_off );
     }
     else
     {
-        printf("Associating comment: %s%.*s%s to trove\n", 
+        printf("Associating comment: '%s%.*s%s' to trove\n", 
             ansi_darkGreen, (int)tok->str.size, tok->str.ptr, ansi_off);
     }
 #endif
@@ -94,7 +94,7 @@ void enqueueComment(huVector * commentQueue, huToken const * comment)
     appendToVector(commentQueue, & comment, 1);
     
 #ifdef HUMON_CAVEPERSON_DEBUGGING
-    printf("Enqueuing comment: %s%.*s%s\n", ansi_darkGreen, (int)comment->str.size, comment->str.ptr, ansi_off);
+    printf("Enqueuing comment: '%s%.*s%s'\n", ansi_darkGreen, (int)comment->str.size, comment->str.ptr, ansi_off);
 #endif
 }
 
@@ -102,20 +102,6 @@ void enqueueComment(huVector * commentQueue, huToken const * comment)
 // node can be NULL, for comments assigned to trove
 void associateEnqueuedComments(huTrove * trove, huNode * node, huVector * commentQueue)
 {
-#ifdef HUMON_CAVEPERSON_DEBUGGING
-    char address[32] = { 0 };
-    huSize_t addLen = 32;
-    if (node)
-    {
-        huGetAddress(node, address, & addLen);
-        printf("Associating enqueued %scomments%s to node %s%s%s\n",
-            ansi_darkGreen, ansi_off,
-            ansi_lightBlue, address, ansi_off);
-    }
-    else
-        { printf("Associating enqueued %scomments%s to trove\n", ansi_darkGreen, ansi_off); }
-#endif
-
     if (commentQueue->numElements == 0)
         { return; }
 
@@ -126,6 +112,25 @@ void associateEnqueuedComments(huTrove * trove, huNode * node, huVector * commen
         { commentVector = & trove->comments; }
 
     huSize_t num = commentQueue->numElements;
+
+#ifdef HUMON_CAVEPERSON_DEBUGGING
+    if (num > 0)
+    {
+        char address[HUMON_ADDRESS_BLOCKSIZE];
+        huSize_t addLen = HUMON_ADDRESS_BLOCKSIZE;
+        if (node)
+        {
+            huGetAddress(node, address, & addLen);
+            printf("Associating %s%lld%s enqueued comments to node %s%.*s%s\n",
+                ansi_white, (long long) num, ansi_off,
+                ansi_lightBlue, (int)addLen, address, ansi_off);
+        }
+        else
+            { printf("Associating %s%lld%s enqueued comments to trove\n", 
+                ansi_white, (long long) num, ansi_off); }
+    }
+#endif
+
     huComment * newCommentObj = growVector(commentVector, & num);
 
     // The first (earliest) one extends the node's first token to the comment token.
@@ -184,11 +189,11 @@ void addChildNode(huTrove * trove, huNode * node, huNode * child)
     child->childOrdinal = node->childNodeIdxs.numElements - 1;
 
 #ifdef HUMON_CAVEPERSON_DEBUGGING
-    char address[32] = { 0 };
-    huSize_t addLen = 32;
+    char address[HUMON_ADDRESS_BLOCKSIZE];
+    huSize_t addLen = HUMON_ADDRESS_BLOCKSIZE;
     huGetAddress(node, address, & addLen);
-    printf("Adding child node to node %s%s%s\n",
-        ansi_lightBlue, address, ansi_off);
+    printf("Adding child node to node %s%.*s%s\n",
+        ansi_lightBlue, (int)addLen, address, ansi_off);
 #endif
 }
 
@@ -248,19 +253,22 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
         huToken const * tok = huGetToken(trove, * tokenIdx);
         
 #ifdef HUMON_CAVEPERSON_DEBUGGING
-        char address[32] = { 0 };
-        huSize_t addLen = 32;
+        char address[HUMON_ADDRESS_BLOCKSIZE];
+        huSize_t addLen = HUMON_ADDRESS_BLOCKSIZE;
         if (parentNode)
-        {
-            huGetAddress(parentNode, address, & addLen);
-            printf("PTR: tokenIdx: %lld  token: '%.*s'  parentNode: %s  depth: %lld  state: %s\n",
-                (long long) * tokenIdx, (int)tok->str.size, tok->str.ptr, address, (long long) depth, parseStateToString(state));
-        }
+            { huGetAddress(parentNode, address, & addLen); }
         else
         {
-            printf("PTR: tokenIdx: %lld  token: '%.*s'  parentNode: null  depth: %lld  state: %s\n",
-                (long long) * tokenIdx, (int)tok->str.size, tok->str.ptr, (long long) depth, parseStateToString(state));
+            memcpy(address, "null", 4);
+            addLen = 4;
         }
+
+        printf("PTR: tokenIdx: %s%lld%s  token: '%s%.*s%s'  parentNode: %s%.*s%s  depth: %s%lld%s  state: %s%s%s\n",
+            ansi_darkYellow, (long long) * tokenIdx, ansi_off,
+            ansi_white, (int)tok->str.size, tok->str.ptr, ansi_off,
+            ansi_lightBlue, (int)addLen, address, ansi_off,
+            ansi_white, (long long) depth, ansi_off,
+            ansi_darkBlue, parseStateToString(state), ansi_off);
         
 #endif
         * tokenIdx += 1;
@@ -829,7 +837,7 @@ void parseTrove(huTrove * trove)
 {
 #ifdef HUMON_CAVEPERSON_DEBUGGING
     printf("%sParsing:%s\n%s\n%s",
-        ansi_darkRed, ansi_darkYellow, trove->dataString, ansi_off);
+        ansi_darkGreen, ansi_darkGray, trove->dataString, ansi_off);
 #endif
 
     huVector commentQueue;

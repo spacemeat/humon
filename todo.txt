@@ -1,5 +1,7 @@
 DONE THIS CHECKIN:
-Fix runAllTests.py in Windows.
+converge HU_* and HUMON_* where I want
+relocate HUMON_STATIC_TERM_SIZE (and rename HUMON_ADDRESS_BLOCKSIZE)
+improved terminal coloring and caveperson output
 
 TODO:
 P1 doxygen
@@ -9,9 +11,7 @@ P1 linux install - .so
 P1 get hux to build with .so
 P1 Update buildUtfnTestFiles.sh to use correct hux args
 P1 version number in header and build
-P1 converge HU_* and HUMON_*
 P1 huGetRelativeZ -> huGetNodeByRelativeAddress?
-P1 relocate HUMON_STATIC_TERM_SIZE (and rename HUMON_ADDRESS_BLOCKSIZE)
 P1 consolidate deserializeOption unicode flags?
 P2 Improved error state transitions
 P2 vcpkg

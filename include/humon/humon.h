@@ -18,17 +18,17 @@
 
 #if defined(_WIN32) || defined(_WIN64)
 #if defined(_WIN64)
-#define HU_ENV64BIT
+#define HUMON_ENV64BIT
 #else
-#define HU_ENV32BIT
+#define HUMON_ENV32BIT
 #endif
 #endif
 
 #if defined(__GNUC__)
 #if defined(__x86_64__) || defined(__ppc64__)
-#define HU_ENV64BIT
+#define HUMON_ENV64BIT
 #else
-#define HU_ENV32BIT
+#define HUMON_ENV32BIT
 #endif
 #endif
 
@@ -48,7 +48,7 @@
 #endif
 
 #ifndef HUMON_SIZE_TYPE
-#if defined(HU_ENV64BIT)
+#if defined(HUMON_ENV64BIT)
 #define HUMON_SIZE_TYPE     long long
 #else
 #define HUMON_SIZE_TYPE     long

@@ -242,9 +242,6 @@ huNode const * huGetRelativeZ(huNode const * node, char const * address)
 }
 
 
-#define HUMON_STATIC_TERM_SIZE (64)
-
-
 huNode const * huGetRelativeN(huNode const * node, char const * address, huSize_t addressLen)
 {
 #ifdef HUMON_CHECK_PARAMS
@@ -316,10 +313,10 @@ huNode const * huGetRelativeN(huNode const * node, char const * address, huSize_
             if (doubleQuoted)
             {
                 // process a quoted string into a proper key
-                char trKey[HUMON_STATIC_TERM_SIZE];
+                char trKey[HUMON_ADDRESS_BLOCKSIZE];
                 char * ptrKey = trKey;
                 huSize_t trCursor = 0;
-                if (len < HUMON_STATIC_TERM_SIZE)   // We have a static buffer, but if it's not big enough, make a sufficiently huge one.
+                if (len < HUMON_ADDRESS_BLOCKSIZE)   // We have a static buffer, but if it's not big enough, make a sufficiently huge one.
                     { ptrKey = malloc(len); }
                 // extract the key
                 for (char const * pc = wordStart; pc < wordStart + len; ++pc)
@@ -330,7 +327,7 @@ huNode const * huGetRelativeN(huNode const * node, char const * address, huSize_
                         { trKey[trCursor++] = * pc; }
                 }
                 nextNode = huGetChildByKeyN(node, trKey, trCursor);
-                if (len < HUMON_STATIC_TERM_SIZE)   // If we had to make a bigger buffer, dispose of it.
+                if (len < HUMON_ADDRESS_BLOCKSIZE)   // If we had to make a bigger buffer, dispose of it.
                     { free(ptrKey); }
             }
             else

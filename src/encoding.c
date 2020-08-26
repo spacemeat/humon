@@ -595,9 +595,9 @@ huEnumType_t swagEncodingFromString(huStringView const * data, huSize_t * numBom
 
 #ifdef HUMON_CAVEPERSON_DEBUGGING
     if (bomEncoding != HU_ENCODING_UNKNOWN)
-        { printf("Encoding detected from BOM: %d\n", bomEncoding); }
+        { printf("%sEncoding detected from BOM: %s%d%s\n", ansi_darkGreen, ansi_lightGreen, bomEncoding, ansi_off); }
     else
-        { printf("Encoding not detected from BOM\n"); }
+        { printf("%sEncoding not detected from BOM%s\n", ansi_darkYellow, ansi_off); }
 #endif
 
     if (bomEncoding != HU_ENCODING_UNKNOWN)
@@ -653,9 +653,9 @@ huEnumType_t swagEncodingFromString(huStringView const * data, huSize_t * numBom
 
 #ifdef HUMON_CAVEPERSON_DEBUGGING
     if (bestEncoding != HU_ENCODING_UNKNOWN)
-        { printf("Encoding determined from bit pattern: %s\n", huEncodingToString(bestEncoding)); }
+        { printf("%sEncoding determined from bit pattern: %s%s%s\n", ansi_darkGreen, ansi_lightGreen, huEncodingToString(bestEncoding), ansi_off); }
     else
-        { printf("Encoding not determined from bit pattern\n"); }
+        { printf("%sEncoding not determined from bit pattern%s\n", ansi_darkRed, ansi_off); }
 #endif
 
     return bestEncoding;
@@ -731,9 +731,9 @@ huEnumType_t swagEncodingFromFile(FILE * fp, huSize_t fileSize, huSize_t * numBo
 
 #ifdef HUMON_CAVEPERSON_DEBUGGING
     if (bestEncoding != HU_ENCODING_UNKNOWN)
-        { printf("Encoding determined from bit pattern: %s\n", huEncodingToString(bestEncoding)); }
+        { printf("%sEncoding determined from bit pattern: %s%s%s\n", ansi_darkGreen, ansi_lightGreen, huEncodingToString(bestEncoding), ansi_off); }
     else
-        { printf("Encoding not determined from bit pattern\n"); }
+        { printf("%sEncoding not determined from bit pattern%s\n", ansi_darkRed, ansi_off); }
 #endif
 
     return bestEncoding;
