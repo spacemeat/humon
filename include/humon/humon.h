@@ -329,9 +329,9 @@ extern "C"
 	HUMON_PUBLIC huNode const * huGetNextSibling(huNode const * node);
 
     /// Looks up a node by relative address to a node.    
-	HUMON_PUBLIC huNode const * huGetRelativeZ(huNode const * node, char const * address);
+	HUMON_PUBLIC huNode const * huGetNodeByRelativeAddressZ(huNode const * node, char const * address);
     /// Looks up a node by relative address to a node.    
-	HUMON_PUBLIC huNode const * huGetRelativeN(huNode const * node, char const * address, huSize_t addressLen);
+	HUMON_PUBLIC huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * address, huSize_t addressLen);
 
     /// Gets the full address of a node, or the length of that address.
 	HUMON_PUBLIC void huGetAddress(huNode const * node, char * address, huSize_t * addressLen);

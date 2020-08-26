@@ -541,7 +541,7 @@ namespace hu
             std::size_t sz = relativeAddress.size();
             if (sz > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
                 { return Node(HU_NULLNODE); }
-            return capi::huGetRelativeN(cnode, relativeAddress.data(), static_cast<capi::huSize_t>(sz));
+            return capi::huGetNodeByRelativeAddressN(cnode, relativeAddress.data(), static_cast<capi::huSize_t>(sz));
         }
         bool hasKey() const HUMON_NOEXCEPT                ///< Returns whether this node has a key. (If it's in a dict.)
             { check(); return capi::huHasKey(cnode); }
@@ -1073,7 +1073,7 @@ namespace hu
             return capi::huGetTroveAnnotationWithKeyN(
                 ctrove, key.data(), static_cast<capi::huSize_t>(key.size()));
         }
-        
+
         /// Return the number of trove annotations associated to this trove (not to any node) with 
         /// the specified value.
         capi::huSize_t numTroveAnnotationsWithValue(std::string_view value) const HUMON_NOEXCEPT

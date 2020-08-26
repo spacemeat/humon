@@ -291,7 +291,7 @@ static PyObject * Node_getRelative(NodeObject * self, PyObject * args)
     if (!PyArg_ParseTuple(args, "s#", & arg, & argLen))
         { return NULL; }
     
-    huNode const * node = huGetRelativeN(self->nodePtr, arg, argLen);
+    huNode const * node = huGetNodeByRelativeAddressN(self->nodePtr, arg, argLen);
     PyObject * nodeObj = makeNode((PyObject *) self->trove, node);
     if (nodeObj == NULL)
         { return NULL; }

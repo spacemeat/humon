@@ -227,7 +227,7 @@ static void eatQuotedAddressWord(huScanner * scanner, char quoteChar, huSize_t *
 }
 
 
-huNode const * huGetRelativeZ(huNode const * node, char const * address)
+huNode const * huGetNodeByRelativeAddressZ(huNode const * node, char const * address)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (address == NULL)
@@ -238,11 +238,11 @@ huNode const * huGetRelativeZ(huNode const * node, char const * address)
     if (addressLenC > maxOfType(huSize_t))
         { return HU_NULLNODE; }
 
-    return huGetRelativeN(node, address, (huSize_t) addressLenC);
+    return huGetNodeByRelativeAddressN(node, address, (huSize_t) addressLenC);
 }
 
 
-huNode const * huGetRelativeN(huNode const * node, char const * address, huSize_t addressLen)
+huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * address, huSize_t addressLen)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (node == HU_NULLNODE || address == NULL || addressLen < 0)
@@ -344,7 +344,7 @@ huNode const * huGetRelativeN(huNode const * node, char const * address, huSize_
         { return nextNode; }
     else if (address[col] == '/')
     {
-        return huGetRelativeN(
+        return huGetNodeByRelativeAddressN(
             nextNode, address + col + 1, addressLen - col - 1);
     }
     else

@@ -1682,102 +1682,102 @@ TEST_GROUP(huGetNodeByRelativeAddress)
 
 TEST(huGetNodeByRelativeAddress, lists)
 {
-    POINTERS_EQUAL(l.a, huGetRelativeZ(l.root, "0"));
-    POINTERS_EQUAL(l.root, huGetRelativeZ(l.root, "0/.."));
-    POINTERS_EQUAL(l.root, huGetRelativeZ(l.a, ".."));
-    POINTERS_EQUAL(l.b, huGetRelativeZ(l.bp, "0"));
-    POINTERS_EQUAL(l.bp, huGetRelativeZ(l.bp, "0/.."));
-    POINTERS_EQUAL(l.root, huGetRelativeZ(l.bp, "0/../.."));
-    POINTERS_EQUAL(l.cp, huGetRelativeZ(l.cpp, "0"));
-    POINTERS_EQUAL(l.c, huGetRelativeZ(l.cpp, "0/0"));
-    POINTERS_EQUAL(l.cpp, huGetRelativeZ(l.cpp, "0/0/../.."));
-    POINTERS_EQUAL(l.c, huGetRelativeZ(l.cp, "0"));
-    POINTERS_EQUAL(l.cpp, huGetRelativeZ(l.cp, ".."));
-    POINTERS_EQUAL(l.cp, huGetRelativeZ(l.c, ".."));
-    POINTERS_EQUAL(l.cpp, huGetRelativeZ(l.c, "../.."));
-    POINTERS_EQUAL(l.root, huGetRelativeZ(l.c, "../../.."));
-    POINTERS_EQUAL(l.b, huGetRelativeZ(l.a, "../1/0"));
-    POINTERS_EQUAL(l.c, huGetRelativeZ(l.a, "../2/0/0"));
-    POINTERS_EQUAL(l.a, huGetRelativeZ(l.b, "../../0"));
-    POINTERS_EQUAL(l.c, huGetRelativeZ(l.b, "../../2/0/0"));
-    POINTERS_EQUAL(l.a, huGetRelativeZ(l.c, "../../../0"));
-    POINTERS_EQUAL(l.b, huGetRelativeZ(l.c, "../../../1/0"));
-    POINTERS_EQUAL(l.c, huGetRelativeZ(l.b, " .. / .. / 2 / 0 / 0 "));
+    POINTERS_EQUAL(l.a, huGetNodeByRelativeAddressZ(l.root, "0"));
+    POINTERS_EQUAL(l.root, huGetNodeByRelativeAddressZ(l.root, "0/.."));
+    POINTERS_EQUAL(l.root, huGetNodeByRelativeAddressZ(l.a, ".."));
+    POINTERS_EQUAL(l.b, huGetNodeByRelativeAddressZ(l.bp, "0"));
+    POINTERS_EQUAL(l.bp, huGetNodeByRelativeAddressZ(l.bp, "0/.."));
+    POINTERS_EQUAL(l.root, huGetNodeByRelativeAddressZ(l.bp, "0/../.."));
+    POINTERS_EQUAL(l.cp, huGetNodeByRelativeAddressZ(l.cpp, "0"));
+    POINTERS_EQUAL(l.c, huGetNodeByRelativeAddressZ(l.cpp, "0/0"));
+    POINTERS_EQUAL(l.cpp, huGetNodeByRelativeAddressZ(l.cpp, "0/0/../.."));
+    POINTERS_EQUAL(l.c, huGetNodeByRelativeAddressZ(l.cp, "0"));
+    POINTERS_EQUAL(l.cpp, huGetNodeByRelativeAddressZ(l.cp, ".."));
+    POINTERS_EQUAL(l.cp, huGetNodeByRelativeAddressZ(l.c, ".."));
+    POINTERS_EQUAL(l.cpp, huGetNodeByRelativeAddressZ(l.c, "../.."));
+    POINTERS_EQUAL(l.root, huGetNodeByRelativeAddressZ(l.c, "../../.."));
+    POINTERS_EQUAL(l.b, huGetNodeByRelativeAddressZ(l.a, "../1/0"));
+    POINTERS_EQUAL(l.c, huGetNodeByRelativeAddressZ(l.a, "../2/0/0"));
+    POINTERS_EQUAL(l.a, huGetNodeByRelativeAddressZ(l.b, "../../0"));
+    POINTERS_EQUAL(l.c, huGetNodeByRelativeAddressZ(l.b, "../../2/0/0"));
+    POINTERS_EQUAL(l.a, huGetNodeByRelativeAddressZ(l.c, "../../../0"));
+    POINTERS_EQUAL(l.b, huGetNodeByRelativeAddressZ(l.c, "../../../1/0"));
+    POINTERS_EQUAL(l.c, huGetNodeByRelativeAddressZ(l.b, " .. / .. / 2 / 0 / 0 "));
 
-    POINTERS_EQUAL(HU_NULLNODE, huGetRelativeZ(l.root, ".."));
-    POINTERS_EQUAL(HU_NULLNODE, huGetRelativeZ(l.a, "0"));
-    POINTERS_EQUAL(HU_NULLNODE, huGetRelativeZ(l.root, "3"));
-    POINTERS_EQUAL(HU_NULLNODE, huGetRelativeZ(l.root, "0/0"));
-    POINTERS_EQUAL(HU_NULLNODE, huGetRelativeZ(l.root, "1/1"));
-    POINTERS_EQUAL(HU_NULLNODE, huGetRelativeZ(l.root, "1/0/0"));
+    POINTERS_EQUAL(HU_NULLNODE, huGetNodeByRelativeAddressZ(l.root, ".."));
+    POINTERS_EQUAL(HU_NULLNODE, huGetNodeByRelativeAddressZ(l.a, "0"));
+    POINTERS_EQUAL(HU_NULLNODE, huGetNodeByRelativeAddressZ(l.root, "3"));
+    POINTERS_EQUAL(HU_NULLNODE, huGetNodeByRelativeAddressZ(l.root, "0/0"));
+    POINTERS_EQUAL(HU_NULLNODE, huGetNodeByRelativeAddressZ(l.root, "1/1"));
+    POINTERS_EQUAL(HU_NULLNODE, huGetNodeByRelativeAddressZ(l.root, "1/0/0"));
 }
 
 TEST(huGetNodeByRelativeAddress, dicts)
 {
-    POINTERS_EQUAL(d.a, huGetRelativeZ(d.root, "0"));
-    POINTERS_EQUAL(d.root, huGetRelativeZ(d.root, "0/.."));
-    POINTERS_EQUAL(d.root, huGetRelativeZ(d.a, ".."));
-    POINTERS_EQUAL(d.b, huGetRelativeZ(d.bp, "0"));
-    POINTERS_EQUAL(d.bp, huGetRelativeZ(d.bp, "0/.."));
-    POINTERS_EQUAL(d.root, huGetRelativeZ(d.bp, "0/../.."));
-    POINTERS_EQUAL(d.cp, huGetRelativeZ(d.cpp, "0"));
-    POINTERS_EQUAL(d.c, huGetRelativeZ(d.cpp, "0/0"));
-    POINTERS_EQUAL(d.cpp, huGetRelativeZ(d.cpp, "0/0/../.."));
-    POINTERS_EQUAL(d.c, huGetRelativeZ(d.cp, "0"));
-    POINTERS_EQUAL(d.cpp, huGetRelativeZ(d.cp, ".."));
-    POINTERS_EQUAL(d.cp, huGetRelativeZ(d.c, ".."));
-    POINTERS_EQUAL(d.cpp, huGetRelativeZ(d.c, "../.."));
-    POINTERS_EQUAL(d.root, huGetRelativeZ(d.c, "../../.."));
-    POINTERS_EQUAL(d.b, huGetRelativeZ(d.a, "../1/0"));
-    POINTERS_EQUAL(d.c, huGetRelativeZ(d.a, "../2/0/0"));
-    POINTERS_EQUAL(d.a, huGetRelativeZ(d.b, "../../0"));
-    POINTERS_EQUAL(d.c, huGetRelativeZ(d.b, "../../2/0/0"));
-    POINTERS_EQUAL(d.a, huGetRelativeZ(d.c, "../../../0"));
-    POINTERS_EQUAL(d.b, huGetRelativeZ(d.c, "../../../1/0"));
-    POINTERS_EQUAL(d.c, huGetRelativeZ(d.b, " .. / .. / 2 / 0 / 0 "));
+    POINTERS_EQUAL(d.a, huGetNodeByRelativeAddressZ(d.root, "0"));
+    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.root, "0/.."));
+    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.a, ".."));
+    POINTERS_EQUAL(d.b, huGetNodeByRelativeAddressZ(d.bp, "0"));
+    POINTERS_EQUAL(d.bp, huGetNodeByRelativeAddressZ(d.bp, "0/.."));
+    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.bp, "0/../.."));
+    POINTERS_EQUAL(d.cp, huGetNodeByRelativeAddressZ(d.cpp, "0"));
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.cpp, "0/0"));
+    POINTERS_EQUAL(d.cpp, huGetNodeByRelativeAddressZ(d.cpp, "0/0/../.."));
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.cp, "0"));
+    POINTERS_EQUAL(d.cpp, huGetNodeByRelativeAddressZ(d.cp, ".."));
+    POINTERS_EQUAL(d.cp, huGetNodeByRelativeAddressZ(d.c, ".."));
+    POINTERS_EQUAL(d.cpp, huGetNodeByRelativeAddressZ(d.c, "../.."));
+    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.c, "../../.."));
+    POINTERS_EQUAL(d.b, huGetNodeByRelativeAddressZ(d.a, "../1/0"));
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.a, "../2/0/0"));
+    POINTERS_EQUAL(d.a, huGetNodeByRelativeAddressZ(d.b, "../../0"));
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.b, "../../2/0/0"));
+    POINTERS_EQUAL(d.a, huGetNodeByRelativeAddressZ(d.c, "../../../0"));
+    POINTERS_EQUAL(d.b, huGetNodeByRelativeAddressZ(d.c, "../../../1/0"));
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.b, " .. / .. / 2 / 0 / 0 "));
 
-    POINTERS_EQUAL(d.a, huGetRelativeZ(d.root, "ak"));
-    POINTERS_EQUAL(d.root, huGetRelativeZ(d.root, "ak/.."));
-    POINTERS_EQUAL(d.root, huGetRelativeZ(d.a, ".."));
-    POINTERS_EQUAL(d.b, huGetRelativeZ(d.bp, "bk"));
-    POINTERS_EQUAL(d.bp, huGetRelativeZ(d.bp, "bk/.."));
-    POINTERS_EQUAL(d.root, huGetRelativeZ(d.bp, "bk/../.."));
-    POINTERS_EQUAL(d.cp, huGetRelativeZ(d.cpp, "ck"));
-    POINTERS_EQUAL(d.c, huGetRelativeZ(d.cpp, "ck/ck"));
-    POINTERS_EQUAL(d.cpp, huGetRelativeZ(d.cpp, "ck/ck/../.."));
-    POINTERS_EQUAL(d.c, huGetRelativeZ(d.cp, "ck"));
-    POINTERS_EQUAL(d.cpp, huGetRelativeZ(d.cp, ".."));
-    POINTERS_EQUAL(d.cp, huGetRelativeZ(d.c, ".."));
-    POINTERS_EQUAL(d.cpp, huGetRelativeZ(d.c, "../.."));
-    POINTERS_EQUAL(d.root, huGetRelativeZ(d.c, "../../.."));
-    POINTERS_EQUAL(d.b, huGetRelativeZ(d.a, "../bk/bk"));
-    POINTERS_EQUAL(d.c, huGetRelativeZ(d.a, "../ck/ck/ck"));
-    POINTERS_EQUAL(d.a, huGetRelativeZ(d.b, "../../ak"));
-    POINTERS_EQUAL(d.c, huGetRelativeZ(d.b, "../../ck/ck/ck"));
-    POINTERS_EQUAL(d.a, huGetRelativeZ(d.c, "../../../ak"));
-    POINTERS_EQUAL(d.b, huGetRelativeZ(d.c, "../../../bk/bk"));
-    POINTERS_EQUAL(d.c, huGetRelativeZ(d.b, " .. / .. / ck / ck / ck "));
-    POINTERS_EQUAL(d.c, huGetRelativeZ(d.b, "../../`ck`/'ck'/\"ck\""));
-    POINTERS_EQUAL(d.c, huGetRelativeZ(d.b, " .. / .. / `ck` / 'ck' / \"ck\" "));
+    POINTERS_EQUAL(d.a, huGetNodeByRelativeAddressZ(d.root, "ak"));
+    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.root, "ak/.."));
+    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.a, ".."));
+    POINTERS_EQUAL(d.b, huGetNodeByRelativeAddressZ(d.bp, "bk"));
+    POINTERS_EQUAL(d.bp, huGetNodeByRelativeAddressZ(d.bp, "bk/.."));
+    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.bp, "bk/../.."));
+    POINTERS_EQUAL(d.cp, huGetNodeByRelativeAddressZ(d.cpp, "ck"));
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.cpp, "ck/ck"));
+    POINTERS_EQUAL(d.cpp, huGetNodeByRelativeAddressZ(d.cpp, "ck/ck/../.."));
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.cp, "ck"));
+    POINTERS_EQUAL(d.cpp, huGetNodeByRelativeAddressZ(d.cp, ".."));
+    POINTERS_EQUAL(d.cp, huGetNodeByRelativeAddressZ(d.c, ".."));
+    POINTERS_EQUAL(d.cpp, huGetNodeByRelativeAddressZ(d.c, "../.."));
+    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.c, "../../.."));
+    POINTERS_EQUAL(d.b, huGetNodeByRelativeAddressZ(d.a, "../bk/bk"));
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.a, "../ck/ck/ck"));
+    POINTERS_EQUAL(d.a, huGetNodeByRelativeAddressZ(d.b, "../../ak"));
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.b, "../../ck/ck/ck"));
+    POINTERS_EQUAL(d.a, huGetNodeByRelativeAddressZ(d.c, "../../../ak"));
+    POINTERS_EQUAL(d.b, huGetNodeByRelativeAddressZ(d.c, "../../../bk/bk"));
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.b, " .. / .. / ck / ck / ck "));
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.b, "../../`ck`/'ck'/\"ck\""));
+    POINTERS_EQUAL(d.c, huGetNodeByRelativeAddressZ(d.b, " .. / .. / `ck` / 'ck' / \"ck\" "));
 
-    POINTERS_EQUAL(HU_NULLNODE, huGetRelativeZ(d.root, ".."));
-    POINTERS_EQUAL(HU_NULLNODE, huGetRelativeZ(d.a, "0"));
-    POINTERS_EQUAL(HU_NULLNODE, huGetRelativeZ(d.root, "3"));
-    POINTERS_EQUAL(HU_NULLNODE, huGetRelativeZ(d.root, "0/0"));
-    POINTERS_EQUAL(HU_NULLNODE, huGetRelativeZ(d.root, "1/1"));
-    POINTERS_EQUAL(HU_NULLNODE, huGetRelativeZ(d.root, "1/0/0"));
+    POINTERS_EQUAL(HU_NULLNODE, huGetNodeByRelativeAddressZ(d.root, ".."));
+    POINTERS_EQUAL(HU_NULLNODE, huGetNodeByRelativeAddressZ(d.a, "0"));
+    POINTERS_EQUAL(HU_NULLNODE, huGetNodeByRelativeAddressZ(d.root, "3"));
+    POINTERS_EQUAL(HU_NULLNODE, huGetNodeByRelativeAddressZ(d.root, "0/0"));
+    POINTERS_EQUAL(HU_NULLNODE, huGetNodeByRelativeAddressZ(d.root, "1/1"));
+    POINTERS_EQUAL(HU_NULLNODE, huGetNodeByRelativeAddressZ(d.root, "1/0/0"));
 }
 
 TEST(huGetNodeByRelativeAddress, pathological)
 {
-    POINTERS_EQUAL(HU_NULLNODE, huGetRelativeZ(NULL, "0"));
-    POINTERS_EQUAL(HU_NULLNODE, huGetRelativeZ(HU_NULLNODE, "0"));
-    POINTERS_EQUAL(HU_NULLNODE, huGetRelativeZ(l.root, "-1"));
-    POINTERS_EQUAL(HU_NULLNODE, huGetRelativeZ(l.a, "-1"));
-    POINTERS_EQUAL(HU_NULLNODE, huGetRelativeZ(l.root, NULL));
-    POINTERS_EQUAL(l.root, huGetRelativeZ(l.root, ""));
-    POINTERS_EQUAL(d.root, huGetRelativeZ(d.root, ""));
-    POINTERS_EQUAL(HU_NULLNODE, huGetRelativeZ(l.root, "/"));
+    POINTERS_EQUAL(HU_NULLNODE, huGetNodeByRelativeAddressZ(NULL, "0"));
+    POINTERS_EQUAL(HU_NULLNODE, huGetNodeByRelativeAddressZ(HU_NULLNODE, "0"));
+    POINTERS_EQUAL(HU_NULLNODE, huGetNodeByRelativeAddressZ(l.root, "-1"));
+    POINTERS_EQUAL(HU_NULLNODE, huGetNodeByRelativeAddressZ(l.a, "-1"));
+    POINTERS_EQUAL(HU_NULLNODE, huGetNodeByRelativeAddressZ(l.root, NULL));
+    POINTERS_EQUAL(l.root, huGetNodeByRelativeAddressZ(l.root, ""));
+    POINTERS_EQUAL(d.root, huGetNodeByRelativeAddressZ(d.root, ""));
+    POINTERS_EQUAL(HU_NULLNODE, huGetNodeByRelativeAddressZ(l.root, "/"));
 }
 
 

@@ -1,12 +1,11 @@
 DONE THIS CHECKIN:
-Update buildUtfnTestFiles.sh to use correct hux args
+huGetRelative. -> huGetNodeByRelativeAddress.
 
 TODO:
 P1 doxygen
 P1 linux install - .so
 P1 get hux to build with .so
 P1 version number in header and build
-P1 huGetRelativeZ -> huGetNodeByRelativeAddress?
 P1 consolidate deserializeOption unicode flags?
 P2 Improved error state transitions
 P2 vcpkg
