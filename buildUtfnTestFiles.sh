@@ -3,14 +3,14 @@ echo "printing the way you want. These are the test cases for the printer."
 
 function makePerms {
     echo "Scanning $1"
-    samples/bin/hux $1 -px -my -cn -by -o $1.px.my.cn.by.hu
-    samples/bin/hux $1 -px -my -cn -bn -o $1.px.my.cn.bn.hu
-    samples/bin/hux $1 -px -my -ca -by -o $1.px.my.ca.by.hu
-    samples/bin/hux $1 -px -my -ca -bn -o $1.px.my.ca.bn.hu
-    samples/bin/hux $1 -px -mn -cn -by -o $1.px.mn.cn.by.hu
-    samples/bin/hux $1 -px -mn -cn -bn -o $1.px.mn.cn.bn.hu
-    samples/bin/hux $1 -px -mn -ca -by -o $1.px.mn.ca.by.hu
-    samples/bin/hux $1 -px -mn -ca -bn -o $1.px.mn.ca.bn.hu
+    samples/bin/hux $1 -pc -my -cn -by -o $1.px.my.cn.by.hu
+    samples/bin/hux $1 -pc -my -cn -bn -o $1.px.my.cn.bn.hu
+    samples/bin/hux $1 -pc -my -ca -by -o $1.px.my.ca.by.hu
+    samples/bin/hux $1 -pc -my -ca -bn -o $1.px.my.ca.bn.hu
+    samples/bin/hux $1 -pc -mn -cn -by -o $1.px.mn.cn.by.hu
+    samples/bin/hux $1 -pc -mn -cn -bn -o $1.px.mn.cn.bn.hu
+    samples/bin/hux $1 -pc -mn -ca -by -o $1.px.mn.ca.by.hu
+    samples/bin/hux $1 -pc -mn -ca -bn -o $1.px.mn.ca.bn.hu
     samples/bin/hux $1 -pm -my -cn -by -o $1.pm.my.cn.by.hu
     samples/bin/hux $1 -pm -my -cn -bn -o $1.pm.my.cn.bn.hu
     samples/bin/hux $1 -pm -my -ca -by -o $1.pm.my.ca.by.hu

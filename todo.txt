@@ -1,15 +1,10 @@
 DONE THIS CHECKIN:
-converge HU_* and HUMON_* where I want
-relocate HUMON_STATIC_TERM_SIZE (and rename HUMON_ADDRESS_BLOCKSIZE)
-improved terminal coloring and caveperson output
+Update buildUtfnTestFiles.sh to use correct hux args
 
 TODO:
 P1 doxygen
-P1 finish README install desc
-P1 option to decolorize caveperson
 P1 linux install - .so
 P1 get hux to build with .so
-P1 Update buildUtfnTestFiles.sh to use correct hux args
 P1 version number in header and build
 P1 huGetRelativeZ -> huGetNodeByRelativeAddress?
 P1 consolidate deserializeOption unicode flags?
