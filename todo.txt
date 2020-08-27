@@ -1,12 +1,14 @@
 DONE THIS CHECKIN:
-huGetRelative. -> huGetNodeByRelativeAddress.
+linux install - .so
+get hux to build with .so
+version number in header and build
+move docs to build/docs, and remove their CMakeLists.txts
 
 TODO:
 P1 doxygen
-P1 linux install - .so
-P1 get hux to build with .so
-P1 version number in header and build
-P1 consolidate deserializeOption unicode flags?
+P2 32/64 bit /usr/local/bin locations?
+P2 consolidate deserializeOption unicode flags?
+P2 get readme to import text from other source
 P2 Improved error state transitions
 P2 vcpkg
 P2 string sizes should be size_t?

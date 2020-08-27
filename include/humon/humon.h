@@ -2,7 +2,7 @@
 
 #include <stdbool.h>
 #include <stdio.h>
-
+#include "version.h"
 
 #if defined(_WIN32) || defined(_WIN64)		//	if we're on Windows
 #if defined (HUMON_BUILDING_DLL)			//		if we're building the DLL

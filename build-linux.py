@@ -4,40 +4,27 @@ import sys
 import os
 import os.path
 import subprocess
+import ansi
+from getVersion import getVersion
+
 from runpy import run_path
+
 
 buildDir = "build"
 intDir = '/'.join([buildDir, "int"])
 intBinDir = '/'.join([intDir, "bin"])
 binDir = '/'.join([buildDir, "bin"])
-
-all_off = '\033[0m'
-
-dk_black_fg = '\033[30m'
-dk_red_fg = '\033[31m'
-dk_green_fg = '\033[32m'
-dk_yellow_fg = '\033[33m'
-dk_blue_fg = '\033[34m'
-dk_magenta_fg = '\033[35m'
-dk_cyan_fg = '\033[36m'
-dk_white_fg = '\033[37m'
-
-lt_black_fg = '\033[90m'
-lt_red_fg = '\033[91m'
-lt_green_fg = '\033[92m'
-lt_yellow_fg = '\033[93m'
-lt_blue_fg = '\033[94m'
-lt_magenta_fg = '\033[95m'
-lt_cyan_fg = '\033[96m'
-lt_white_fg = '\033[97m'
+docsDir = '/'.join([buildDir, "docs"])
+docsDirC = '/'.join([docsDir, "humon-c"])
+docsDirCpp = '/'.join([docsDir, "humon-cpp"])
 
 
 def doShellCommand(cmd):
-    print (f"{lt_black_fg}{cmd}{all_off}")
+    print (f"{ansi.lt_black_fg}{cmd}{ansi.all_off}")
     return subprocess.run(cmd, shell=True, check=True).returncode
 
 
-def buildObj (target, src, incDirs, flags, arch32bit, debug, pic, cLanguage, tool):
+def buildObj(target, src, incDirs, flags, arch32bit, debug, pic, cLanguage, tool):
     global intDir
 
     incDirsArgs = [f"-I{incDir}" for incDir in incDirs]
@@ -74,14 +61,23 @@ def buildLib (target, srcList, incDirs, flags, arch32bit, debug, cLanguage, tool
     global binDir
 
     finalTarget = f"lib{target}.a"
-    target=f"lib{target}{'-clang' if tool == 'clang' else '-gcc'}{'-32' if arch32bit else ''}{'-d' if debug else ''}.a"
 
-    print (f"{dk_yellow_fg}Building static library {lt_yellow_fg}{target}{all_off}")
-    
+    intConfigDir = f"{intDir}/cfg{'-clang' if tool == 'clang' else '-gcc'}{'-32' if arch32bit else ''}{'-d' if debug else ''}"
+    if not os.path.exists(intConfigDir):
+        os.mkdir(intConfigDir)
+    intConfigDir += f"/{finalTarget}"
+    if not os.path.exists(intConfigDir):
+        os.mkdir(intConfigDir)
+    intBinConfigDir = f"{intBinDir}/cfg{'-clang' if tool == 'clang' else '-gcc'}{'-32' if arch32bit else ''}{'-d' if debug else ''}"
+    if not os.path.exists(intBinConfigDir):
+        os.mkdir(intBinConfigDir)
+
+    print (f"{ansi.dk_yellow_fg}Building static library {ansi.lt_yellow_fg}{intBinConfigDir}/{finalTarget}{ansi.all_off}")
+
     dotos = []
     canProceed = True
     for src in srcList:
-        doto = f"{intDir}/{os.path.basename(src)}{'-32' if arch32bit else ''}{'-d' if debug else ''}.o"
+        doto = f"{intConfigDir}/{os.path.basename(src)}{'-32' if arch32bit else ''}{'-d' if debug else ''}.o"
         dotos.append(doto)
         if buildObj(doto, src, incDirs, flags, arch32bit, debug, False, cLanguage, tool) != 0:
             canProceed = False
@@ -89,12 +85,12 @@ def buildLib (target, srcList, incDirs, flags, arch32bit, debug, cLanguage, tool
     if canProceed:
         cmd = 'echo "No build tools set. Select from \"gcc\" or \"clang\"."'
         if tool in ["gcc", "clang"]:
-            cmd = f"ar cr -o {intBinDir}/{target} {' '.join(dotos)}"
+            cmd = f"ar cr -o {intBinConfigDir}/{finalTarget} {' '.join(dotos)}"
             res = doShellCommand(cmd)
             if res != 0:
                 return res
             
-            cmd = f"cp {intBinDir}/{target} {binDir}/{finalTarget}"
+            cmd = f"cp {intBinConfigDir}/{finalTarget} {binDir}/{finalTarget}"
             return doShellCommand(cmd)
 
     cmd = 'echo "Failure to build target. Aborting."'
@@ -106,7 +102,7 @@ def buildPythonLib (target, srcList, incDirc, flags, arch32bit, debug, tool):
 
     target=f"lib{target}{'-py'}.a"
 
-    print (f"{dk_yellow_fg}Building static relocatable library {lt_yellow_fg}{target}{all_off}")
+    print (f"{ansi.dk_yellow_fg}Building static relocatable library {ansi.lt_yellow_fg}{target}{ansi.all_off}")
     
     dotos = []
     canProceed = True
@@ -131,19 +127,33 @@ def buildSo (target, srcList, incDirs, flags, arch32bit, debug, cLanguage, tool)
     global intBinDir
     global binDir
 
-    finalTarget = f"lib{target}.so.0.0.0"
+    version = getVersion()
+    v3 = f"{version['major']}.{version['minor']}.{version['patch']}"
+    v2 = f"{version['major']}.{version['minor']}"
+    v1 = f"{version['major']}"
 
-    if tool in ["gcc", "clang"]:
-        soname=f"lib{target}{'-clang' if tool == 'clang' else '-gcc'}{'-32' if arch32bit else ''}{'-d' if debug else ''}.so"
-        target = '.'.join([soname, "0.0.0"])
-        soname = '.'.join([soname, "0.0"])
+    linkername = f"lib{target}.so"
+    soname = linkername + f".{v1}"
+    finalTarget = linkername + f".{v3}"
+    #target=f"lib{target}{'-clang' if tool == 'clang' else '-gcc'}{'-32' if arch32bit else ''}{'-d' if debug else ''}.so.{v3}"
+    target = linkername
 
-    print (f"{dk_yellow_fg}Building shared library {lt_yellow_fg}{target}{all_off}")
+    intConfigDir = f"{intDir}/cfg{'-clang' if tool == 'clang' else '-gcc'}{'-32' if arch32bit else ''}{'-d' if debug else ''}"
+    if not os.path.exists(intConfigDir):
+        os.mkdir(intConfigDir)
+    intConfigDir += f"/{linkername}"
+    if not os.path.exists(intConfigDir):
+        os.mkdir(intConfigDir)
+    intBinConfigDir = f"{intBinDir}/cfg{'-clang' if tool == 'clang' else '-gcc'}{'-32' if arch32bit else ''}{'-d' if debug else ''}"
+    if not os.path.exists(intBinConfigDir):
+        os.mkdir(intBinConfigDir)
+    
+    print (f"{ansi.dk_yellow_fg}Building shared library {ansi.lt_yellow_fg}{intBinConfigDir}/{target}{ansi.all_off}")
 
     dotos = []
     canProceed = True
     for src in srcList:
-        doto = f"{intDir}/{os.path.basename(src)}{'-d' if debug else ''}.o"
+        doto = f"{intConfigDir}/{os.path.basename(src)}{'-d' if debug else ''}.o"
         dotos.append(doto)
         if buildObj(doto, src, incDirs, flags, arch32bit, debug, True, cLanguage, tool) != 0:
             canProceed = False
@@ -167,27 +177,41 @@ def buildSo (target, srcList, incDirs, flags, arch32bit, debug, cLanguage, tool)
             else:
                 cmplr = "clang++ -std=c++17 -stdlib=libstdc++" 
         
-        cmd = f"{cmplr} -Wall -Wextra -Werror -shared -Wl,-soname,{soname} {arch} {defs} -o {intBinDir}/{target} {' '.join(dotos)}"
+        cmd = f"{cmplr} -Wall -Wextra -Werror -shared -Wl,-soname,{soname} {arch} {defs} -o {intBinConfigDir}/{target} {' '.join(dotos)}"
         res = doShellCommand(cmd)
         if res != 0:
             return res
 
-        cmd = f"cp {intBinDir}/{target} {binDir}/{finalTarget}"
+        cmd = f"cp {intBinConfigDir}/{target} {binDir}/{finalTarget}"
+        res = doShellCommand(cmd)
+        if res != 0:
+            return res
+        
+        cmd = f"ln -sf {finalTarget} {binDir}/{soname}"
+        res = doShellCommand(cmd)
+        if res != 0:
+            return res
+        
+        cmd = f"ln -sf {soname} {binDir}/{linkername}"
         return doShellCommand(cmd)
 
     cmd = 'echo "Failure to build target. Aborting."'
     return doShellCommand(cmd)
 
 
-def buildExe (target, srcList, incDirs, libDirs, libs, flags, arch32bit, debug, cLanguage, tool):
+def buildExe (target, srcList, incDirs, libDirs, staticLibs, sharedLibs, flags, arch32bit, debug, cLanguage, tool):
     global intDir
     global intBinDir
     global binDir
 
     finalTarget = target
-    target=f"{target}{'-clang' if tool == 'clang' else '-gcc'}{'-32' if arch32bit else ''}{'-d' if debug else ''}"
+    #target=f"{target}{'-clang' if tool == 'clang' else '-gcc'}{'-32' if arch32bit else ''}{'-d' if debug else ''}"
 
-    print (f"{dk_yellow_fg}Building executable {lt_yellow_fg}{target}{all_off}")
+    intBinConfigDir = f"{intBinDir}/cfg{'-clang' if tool == 'clang' else '-gcc'}{'-32' if arch32bit else ''}{'-d' if debug else ''}"
+    if not os.path.exists(intBinConfigDir):
+        os.mkdir(intBinConfigDir)
+
+    print (f"{ansi.dk_yellow_fg}Building executable {ansi.lt_yellow_fg}{intBinConfigDir}/{finalTarget}{ansi.all_off}")
 
     if tool in ["gcc", "clang"]:
         gFlag = "-g" if debug else ""
@@ -198,8 +222,9 @@ def buildExe (target, srcList, incDirs, libDirs, libs, flags, arch32bit, debug, 
         arch = "-m32" if arch32bit else ""
 
         incDirsArgs = [f"-I{incDir}" for incDir in incDirs]
-        libDirsArgs = [f"-L{intBinDir}" for libDir in libDirs]
-        libsArgs    = [f"-l{lib}"    for lib in libs]
+        libDirsArgs = [f"-L{libDir}" for libDir in libDirs]
+        staticLibsArgs = [f"-l{lib}" for lib in staticLibs]
+        sharedLibsArgs = [f"-l{lib}" for lib in sharedLibs]
         
         if tool == "gcc":
             if cLanguage:
@@ -212,12 +237,12 @@ def buildExe (target, srcList, incDirs, libDirs, libs, flags, arch32bit, debug, 
             else:
                 cmplr = "clang++ -std=c++17 -stdlib=libstdc++"
 
-        cmd = f"{cmplr} -Wall -Wextra -Werror {arch} {gFlag} {oFlag} {defs} {' '.join(incDirsArgs)} -o {intBinDir}/{target} {' '.join(src)} {' '.join(libDirsArgs)} {' '.join(libsArgs)}"
+        cmd = f'{cmplr} -Wall -Wextra -Werror {arch} {gFlag} {oFlag} {defs} {" ".join(incDirsArgs)} -o {intBinConfigDir}/{finalTarget} {" ".join(src)} {" ".join(libDirsArgs)} -Wl,-Bstatic {" ".join(staticLibsArgs)} -Wl,-Bdynamic {" ".join(sharedLibsArgs)} -Wl,-rpath,"\$ORIGIN"'
         res = doShellCommand(cmd)
         if res != 0:
             return res
         
-        cmd = f"cp {intBinDir}/{target} {binDir}/{finalTarget}"
+        cmd = f"cp {intBinConfigDir}/{finalTarget} {binDir}/{finalTarget}"
         return doShellCommand(cmd)
 
     cmd = 'echo "No build tools set. Select from \"gcc\" or \"clang\"."'
@@ -225,6 +250,7 @@ def buildExe (target, srcList, incDirs, libDirs, libs, flags, arch32bit, debug, 
 
 
 if __name__ == "__main__":
+    clean = False
     debug = False
     tool = ""
     arch32bit = False
@@ -235,9 +261,11 @@ if __name__ == "__main__":
     # 32-bit build on 64-bit arch requires sudo apt install gcc-multilib g++-multilib
 
     for arg in sys.argv:
-        if arg.startswith("-tool="):
+        if arg == "-clean":
+            clean = True
+        elif arg.startswith("-tool="):
             tool = arg.split('=')[1]
-        elif arg.startswith("-debug"):
+        elif arg == "-debug":
             debug = True
         elif arg == "-arch=":
             arch32bit = arg.split('=')[1] == '32'
@@ -261,6 +289,11 @@ if __name__ == "__main__":
             flags += ' -DHUMON_CAVEPERSON_DEBUGGING'
 #        elif arg == "-noLineCol":
 #            flags += ' -DHUMON_NO_LINE_COL'
+
+    if clean:
+        cmd = 'rm -rf build'
+        doShellCommand(cmd)
+        quit()
 
     if debug:
         flags += ' -DDEBUG'
@@ -307,14 +340,15 @@ if __name__ == "__main__":
                     "src/utils.c",
                     "src/vector.c"
                 ]
+
+                #targetName = f"humon{'-clang' if tool == 'clang' else '-gcc'}{'-32' if arch32bit else ''}{'-d' if debug else ''}"
+                #intBinConfigDir = intBinDir + '/' + targetName
                 
                 buildLib("humon", src, incDirs, flags, arch32bit, debug, True, tool)
             #    buildPythonLib( "humon", src, incDirs, flags, arch32bit, True, tool)
                 buildSo( "humon", src, incDirs, flags, arch32bit, debug, True, tool)
 
-                libName = f"humon{'-clang' if tool == 'clang' else '-gcc'}{'-32' if arch32bit else ''}{'-d' if debug else ''}"
-
-                print (f'{dk_yellow_fg}Generating test src in {lt_yellow_fg}./test{all_off}')
+                print (f'{ansi.dk_yellow_fg}Generating test src in {ansi.lt_yellow_fg}./test{ansi.all_off}')
                 doShellCommand("cd test && ./ztestMaker.py && cd ..")
                 
                 src = [
@@ -329,13 +363,19 @@ if __name__ == "__main__":
                 for test in tests:
                     src.append(''.join(["test/ztest/", test]))
 
-                buildExe("test", src, ["include"], [binDir], [libName], flags, arch32bit, debug, False, tool)
+                buildExe("test", src, ["include"], [binDir], ["humon"], [], flags, arch32bit, debug, False, tool)
 
                 src = ["apps/readmeSrc/usage.c"]
-                buildExe("readmeSrc-c", src, ["include"], [binDir], [libName], flags, arch32bit, debug, True, tool)
+                buildExe("readmeSrc-c", src, ["include"], [binDir], ["humon"], [], flags, arch32bit, debug, True, tool)
 
                 src = ["apps/readmeSrc/usage.cpp"]
-                buildExe("readmeSrc-cpp", src, ["include"], [binDir], [libName], flags, arch32bit, debug, False, tool)
+                buildExe("readmeSrc-cpp", src, ["include"], [binDir], ["humon"], [], flags, arch32bit, debug, False, tool)
 
                 src = ["apps/hux/hux.cpp"]
-                buildExe("hux", src, ["include"], [binDir], [libName], flags, arch32bit, debug, False, tool)
+                buildExe("hux", src, ["include"], [binDir], [], ["humon"], flags, arch32bit, debug, False, tool)
+
+    if not os.path.exists(docsDir):
+        os.mkdir(docsDir)
+
+    doxygen dox-humon-c
+    doxygen dox-humon-cpp

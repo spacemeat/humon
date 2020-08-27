@@ -108,7 +108,7 @@ or in C++:
 ### Installation
 If you're just using Humon files with some application you've installed, you don't need to do anything. However, the project contains a directory called `vscode/humon-lang` which contains a TextMate colorizer for VS Code. You can copy the `humon-lang` directory into your `~/.vscode/extensions` directory, and VS Code will make files with a ".hu" extension a bit more colorful.
 
-Building Humon in Linux is easy enough, but you need to have Python3 installed. Starting from the Humon project directory, you can build the binaries with gcc:
+Building Humon in Linux is easy enough, but you need to have Python3.7.5 or newer installed. Starting from the Humon project directory, you can build the binaries with gcc:
 
     ~/src/humon$ ./build-linux.py
 
@@ -118,7 +118,7 @@ or, if you want to use clang:
 
 > Currently the clang build uses gcc's standard library. A better build experience is in the works, but in the meantime it's trivial to modify the `build-linux.py` script to use whatever library you have.
 
-In Windows, you can open the root-level `humon.sln` file in Visual Studio 2017+, and build the targets you like.
+In Windows, you can open the root-level `humon.sln` file in Visual Studio 2017 or newer, and build the targets you like.
 
 There are a number of build options available to get just what you want: 32-bit architecture, debug vs release builds, and a few switches to customize the runtime. See [this here section here](#buildingHumon).
 
@@ -129,14 +129,14 @@ In Linux, you can install Humon into your system by invoking
 
     ~/src/humon$ sudo install-linux.py
 
-This will place the built headers and libraries into the appropriate places so build tools can find them. (Currently just the headers and static lib are installed; the .so install is coming soon.)
+This will place the built headers and libraries and the [hux tool](#hux) into the appropriate places so build tools can find them.
 
 As an alternative to installing, you can simply copy the lib from `build/bin` and the headers from `include/humon` into your application's code.
 
 If you're building a Windows project in Visual Studio, and you want to use the static library, simply #include <humon/humon.h> or <humon/humon.hpp>, and link against the lib. If you want to use the DLL, define the HUMON_USING_DLL preprocessor symbol (either with a preceding #define or by passing `-DHUMON_USING_DLL` to the build) and link against the import lib.
 
 ### Humon version
-Humon uses three values in its language/API versioning scheme: `major.minor.revision` For changes that do not affect the API, the revision is incremented. For changes that only add to the API but do not break builds or behaviors, the minor value is incremented. For breaking changes, the major value is incremented. The version will generally refer to the API version; the Humon format is considered stable. (Though of course, it's only Humon, and may not know of its own imperfections yet.)
+Humon uses semver in its language/API versioning scheme: `major.minor.patch` For changes that do not affect the API or correct behavior, the patch is incremented. For changes that only add to the API but do not break builds or behaviors, the minor value is incremented. For breaking changes, the major value is incremented. The version will generally refer to the C/C++ API version; the Humon format is considered stable. (Though of course, it's only Humon, and may not know of its own imperfections yet.)
 
 ## Design principles
 We're going to keep referencing JSON, as it's the model that Humon takes after. But we want it to be better, so the obvious thing to do is just fix the problems with JSON. Once we commit to designing a new format / language, we're free to make the rules. Rules should come from guiding principles:
@@ -825,18 +825,18 @@ Like asserted earlier, annotations are 100% open in their use. Humon doesn't use
 ## <a name="buildingHumon">Building Humon
 Humon builds on 64-bit and 32-bit architectures for Linux (so far, tested on Ubuntu) using GNU or Clang tools, and on 64-bit and 32-bit architectures in Visual Studio 2017+. The default build behaves as described above, but there are switches you can provide when you build Humon to change its behavior.
 
-For all builds, the binary artifacts are produced in `{humon directory}/build/bin`. Currently, you can just copy the built binaries and the headers from `{humon directory}/include/humon` for use in your projects.
+For each build config and target, the binary artifacts are produced in `{humon}/build/int/bin/{cfg}{target}`, where `{cfg}` consists of `{-gcc|-clang}{-32}?{-d}?`, depending on the build tool you specify, whether to build a 32-bit version (if you're on a 64-bit machine), and whether it is a debug build. You can specify these settings; see below. The necessary artifacts are then copied to `{humon directory}/build/bin`, which is where the installer will look for files to copy.
+
+For Linux development, you can install a successful build with `{humon}/install-linux.py`, run as superuser since it updates the library search cache. If that's not an option, you can simply copy the built binaries and the headers from `{humon}/include/humon` for use in your projects.
 
 The following are built in Linux:
 
-* libhumon{-target}.a               - static library for Linux
-* libhumon{-target}.so.ver.si.on    - shared library for Linux
-* test{-target}                     - test binary
-* hux{-target}                      - a command-line tool for transformatting and validating Humon data
-* readmeSrc-c{-target}              - a small sample with example code from this README.md
-* readmeSrc-cpp{-target}            - a less small sample with example code from this README.md
-
-where `{target}` consists of `{-gcc|-clang}{-32}?{-d}?`, depending on the build tool you specify, whether to build a 32-bit version (if you're on a 64-bit machine), and whether it is a debug build. You can specify these settings; see below.
+* libhumon.a               - static library for Linux
+* libhumon.so.0.1.0        - shared library for Linux
+* test                     - test binary
+* hux                      - a command-line tool for transformatting and validating Humon data
+* readmeSrc-c              - a small sample with example code from this README.md
+* readmeSrc-cpp            - a less small sample with example code from this README.md
 
 These files are built in Visual Studio 2017+:
 * humon-win32.lib               - optimized static library for 32-bit Windows
@@ -862,9 +862,9 @@ These files are built in Visual Studio 2017+:
 * hux.exe                       - a command-line tool for translating and validating Humon
 * hux.pdb                       - PDB for hux.exe
 
-The tests are built along with the libraries. Run them from the project root:
+The tests are built along with the libraries. Run them *from the project root*:
 
-    ~/src/humon$ build/bin/test-gcc-d
+    ~/src/humon$ build/bin/test
 
 or
 
@@ -936,8 +936,10 @@ There's a convenient script in the project directory that runs all the tests. Af
     ...
     ~/src/humon$ ./runAllTests.py
 
-## The future of Humonity
+## <a name="hux">The `hux` utility
+`hux` is a command line tool for printing (perhaps with color), validating, and whitespace-formatting Humon data. It can load files, stdin, or Humon tokens from the command line, and has formatting, tab, newline, and colorization options which match the API's printing functions. `hux` will also display a list of errors if the data cannot be loaded. `hux` is installed when you install Humon. Try it out; use `hux -?` to see what it can do.
 
+## The future of Humonity
 Near-future features include:
 * Language bindings for Python (in the works now)
 * Language bindings for .NET
