@@ -1,5 +1,5 @@
 DONE THIS CHECKIN:
-move docs to build/docs, and remove their CMakeLists.txts
+Improved the whole namespace-around-C-code situation.
 
 TODO:
 P1 doxygen
@@ -8,11 +8,9 @@ P2 consolidate deserializeOption unicode flags?
 P2 get readme to import text from other source
 P2 Improved error state transitions
 P2 vcpkg
-P2 string sizes should be size_t?
 P1-2 linting
 P2 more erroneous humon tests
 P2 UTF8 digits for addressing
 P2 consider sorting dict keys and doing BSP search.
-P2 allow user to spec index type (int32, int64, etc)
 P2 custom memory allocator fns
 P2 insertion ops

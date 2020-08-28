@@ -1,9 +1,7 @@
 #pragma once
 
-/// @cond
 #include <stdbool.h>
 #include <stdio.h>
-/// @endcond
 #include "version.h"
 
 #if defined(_WIN32) || defined(_WIN64)		//	if we're on Windows
@@ -58,6 +56,9 @@
 #endif
 
 #ifdef __cplusplus
+#ifdef HUMON_USENAMESPACE
+namespace hu { namespace capi { 
+#endif
 extern "C"
 {
 #endif
@@ -568,4 +569,7 @@ extern "C"
 
 #ifdef __cplusplus
 } // extern "C"
+#ifdef HUMON_USENAMESPACE
+}} // hu::capi::
+#endif
 #endif

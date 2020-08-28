@@ -4,7 +4,10 @@ def getVersion():
                 'patch': 0 }
     fi = open("include/humon/version.h", "rt")
     for l in fi.readlines():
-        if l.strip().startswith('#define '):
+        if len(l.strip()) == 0:
+            pass
+        
+        elif l.strip().startswith('#define '):
             vdef = l.strip().split()
             if vdef[1] == "HUMON_MAJOR_VERSION":
                 version['major'] = vdef[2]

@@ -11,6 +11,8 @@
 #include <optional>
 #include <variant>
 
+#define HUMON_USENAMESPACE
+#include "humon.h"
 
 // Defining this turns off noexcept decorations on most functions.
 #ifdef HUMON_SUPPRESS_NOEXCEPT
@@ -42,12 +44,6 @@
 /// The Humon namespace.
 namespace hu
 {
-    // This namespace contains the C API. Not included in doxygen on purpose.
-    namespace capi
-    {
-#include "humon.h"
-    }
-
     /// Specifies a UTFn text encoding.
     enum class Encoding : capi::huEnumType_t
     {
