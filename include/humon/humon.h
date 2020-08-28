@@ -1,3 +1,7 @@
+/** @file 
+ *  @brief This is the main header for the Humon C API. \#include this from your C code.
+ **/ 
+
 #pragma once
 
 #include <stdbool.h>
@@ -36,7 +40,6 @@
 #define HU_NULLNODE         NULL
 #define HU_NULLTROVE        NULL
 
-// For proper operation, these types must be signed.
 #ifndef HUMON_ENUM_TYPE
 #define HUMON_ENUM_TYPE     char
 #endif
@@ -47,6 +50,7 @@
 #define HUMON_COL_TYPE      long
 #endif
 
+// For proper operation, this type must be signed.
 #ifndef HUMON_SIZE_TYPE
 #if defined(HUMON_ENV64BIT)
 #define HUMON_SIZE_TYPE     long long
@@ -57,6 +61,8 @@
 
 #ifdef __cplusplus
 #ifdef HUMON_USENAMESPACE
+/// If this file is #included from humon.hpp, we wrap the C API in a namespace
+/// to avoid polluting global.
 namespace hu { namespace capi { 
 #endif
 extern "C"

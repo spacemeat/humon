@@ -1,8 +1,9 @@
 DONE THIS CHECKIN:
-Improved the whole namespace-around-C-code situation.
+doxygen version now comes from header.
 
 TODO:
 P1 doxygen
+P1 Version number in readme should be tied to version.h
 P2 32/64 bit /usr/local/bin locations?
 P2 consolidate deserializeOption unicode flags?
 P2 get readme to import text from other source

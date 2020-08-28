@@ -253,14 +253,17 @@ def buildDocs():
     if not os.path.exists(docsDir):
         os.mkdir(docsDir)
 
+    version = getVersion()
+    v3 = f"{version['major']}.{version['minor']}.{version['patch']}"
+
     print (f"{ansi.dk_yellow_fg}Building API documents {ansi.lt_yellow_fg}{docsDir}{ansi.all_off}")
 
     try:
         isit = subprocess.run('whereis doxygen', shell=True, check=False, capture_output=True)
         output = str(isit.stdout)
         if isit.returncode == 0 and ':' in output and len(output.split(':')[1]) > 0:
-            doShellCommand("doxygen dox-humon-c")
-            doShellCommand("doxygen dox-humon-cpp")
+            doShellCommand(f'( cat dox-humon-c ; echo "PROJECT_NUMBER={v3}" ) | doxygen -')
+            doShellCommand(f'( cat dox-humon-cpp ; echo "PROJECT_NUMBER={v3}" ) | doxygen -')
         else:
             print ("doxygen not detected")
     except:
@@ -358,9 +361,6 @@ if __name__ == "__main__":
                     "src/utils.c",
                     "src/vector.c"
                 ]
-
-                #targetName = f"humon{'-clang' if tool == 'clang' else '-gcc'}{'-32' if arch32bit else ''}{'-d' if debug else ''}"
-                #intBinConfigDir = intBinDir + '/' + targetName
                 
                 buildLib("humon", src, incDirs, flags, arch32bit, debug, True, tool)
             #    buildPythonLib( "humon", src, incDirs, flags, arch32bit, True, tool)

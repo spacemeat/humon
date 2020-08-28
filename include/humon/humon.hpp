@@ -1,3 +1,7 @@
+/** @file 
+ *  @brief This is the main header for the Humon C++ API. \#include this from your C++ code.
+ **/ 
+
 #pragma once
 
 #include <string_view>
