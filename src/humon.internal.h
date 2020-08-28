@@ -149,13 +149,13 @@ extern "C"
     void recordParseError(huTrove * trove, huEnumType_t errorCode, huToken const * pCur);
 
     /// Attempt to determine the Unicode encoding of a string in memory.
-    huEnumType_t swagEncodingFromString(huStringView const * data, huSize_t * numBomChars, huDeserializeOptions * DeserializeOptions);
+    huEnumType_t swagEncodingFromString(huStringView const * data, huSize_t * numBomChars, huDeserializeOptions * deserializeOptions);
     /// Attempt to determine the Unicode encoding of a file.
-    huEnumType_t swagEncodingFromFile(FILE * fp, huSize_t fileSize, huSize_t * numBomChars, huDeserializeOptions * DeserializeOptions);
+    huEnumType_t swagEncodingFromFile(FILE * fp, huSize_t fileSize, huSize_t * numBomChars, huDeserializeOptions * deserializeOptions);
     /// Transcode a string in memory from its native encoding to a UTF-8 memory buffer.
-    huEnumType_t transcodeToUtf8FromString(char * dest, huSize_t * numBytesEncoded, huStringView const * src, huDeserializeOptions * DeserializeOptions);
+    huEnumType_t transcodeToUtf8FromString(char * dest, huSize_t * numBytesEncoded, huStringView const * src, huDeserializeOptions * deserializeOptions);
     /// Transcode a file from its native encoding to a UTF-8 memory buffer.
-    huEnumType_t transcodeToUtf8FromFile(char * dest, huSize_t * numBytesEncoded, FILE * fp, huSize_t srcLen, huDeserializeOptions * DeserializeOptions);
+    huEnumType_t transcodeToUtf8FromFile(char * dest, huSize_t * numBytesEncoded, FILE * fp, huSize_t srcLen, huDeserializeOptions * deserializeOptions);
 
     /// Extracts the tokens from a token stream.
     void tokenizeTrove(huTrove * trove);
@@ -172,7 +172,7 @@ extern "C"
         huTrove const * trove;
         huVector * str;
 
-        huSerializeOptions * SerializeOptions;
+        huSerializeOptions * serializeOptions;
 
         huSize_t currentDepth;
         bool lastPrintWasNewline;
@@ -184,7 +184,7 @@ extern "C"
     /// This appends a string to a PrintTracker.
     void appendString(PrintTracker * printer, char const * addend, huSize_t size);
     /// This prints a trove to a whitespace-formatted string.
-    void troveToPrettyString(huTrove const * trove, huVector * str, huSerializeOptions * SerializeOptions);
+    void troveToPrettyString(huTrove const * trove, huVector * str, huSerializeOptions * serializeOptions);
 
 #ifdef __cplusplus
 } // extern "C"

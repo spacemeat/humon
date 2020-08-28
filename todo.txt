@@ -1,7 +1,4 @@
 DONE THIS CHECKIN:
-linux install - .so
-get hux to build with .so
-version number in header and build
 move docs to build/docs, and remove their CMakeLists.txts
 
 TODO:

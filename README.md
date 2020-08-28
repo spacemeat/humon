@@ -138,6 +138,8 @@ If you're building a Windows project in Visual Studio, and you want to use the s
 ### Humon version
 Humon uses semver in its language/API versioning scheme: `major.minor.patch` For changes that do not affect the API or correct behavior, the patch is incremented. For changes that only add to the API but do not break builds or behaviors, the minor value is incremented. For breaking changes, the major value is incremented. The version will generally refer to the C/C++ API version; the Humon format is considered stable. (Though of course, it's only Humon, and may not know of its own imperfections yet.)
 
+The version number is defined in the C/C++ API as `HUMON_MAJORVERSION`, `HUMON_MINORVERSION`, and `HUMON_PATCHVERSION`.
+
 ## Design principles
 We're going to keep referencing JSON, as it's the model that Humon takes after. But we want it to be better, so the obvious thing to do is just fix the problems with JSON. Once we commit to designing a new format / language, we're free to make the rules. Rules should come from guiding principles:
 

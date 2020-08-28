@@ -22,16 +22,16 @@ void appendString(PrintTracker * printer, char const * addend, huSize_t size)
 
 static void appendColor(PrintTracker * printer, huEnumType_t colorCode)
 {
-    if (printer->SerializeOptions->usingColors == false)
+    if (printer->serializeOptions->usingColors == false)
         { return; }
-    huStringView const * color = printer->SerializeOptions->colorTable + colorCode;
+    huStringView const * color = printer->serializeOptions->colorTable + colorCode;
     appendToVector(printer->str, color->ptr, color->size);
 }
 
 
 static void appendWs(PrintTracker * printer, huSize_t numChars)
 {
-    if (printer->SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_MINIMAL)
+    if (printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_MINIMAL)
         { numChars = max(numChars, 1); }
 
     char const spaces[] = "                "; // 16 spaces
@@ -69,12 +69,12 @@ static void appendTabs(PrintTracker * printer, huSize_t numTabs)
 
 static void appendIndent(PrintTracker * printer)
 {
-    if (printer->SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_MINIMAL || printer->lastPrintWasIndent)
+    if (printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_MINIMAL || printer->lastPrintWasIndent)
         { return; }
-    if (printer->SerializeOptions->indentWithTabs)
+    if (printer->serializeOptions->indentWithTabs)
         { appendTabs(printer, printer->currentDepth); }
     else
-        { appendWs(printer, printer->SerializeOptions->indentSize * printer->currentDepth); }
+        { appendWs(printer, printer->serializeOptions->indentSize * printer->currentDepth); }
     printer->lastPrintWasIndent = true;
     printer->lastPrintWasUnquotedWord = false;
     printer->lastPrintWasWhitespace = true;
@@ -85,7 +85,7 @@ static void appendNewline(PrintTracker * printer)
 {
     if (printer->lastPrintWasNewline)
         { return; }
-    appendString(printer, printer->SerializeOptions->newline.ptr, printer->SerializeOptions->newline.size);
+    appendString(printer, printer->serializeOptions->newline.ptr, printer->serializeOptions->newline.size);
     printer->lastPrintWasNewline = true;
     printer->lastPrintWasUnquotedWord = false;
     printer->lastPrintWasWhitespace = true;
@@ -119,19 +119,19 @@ static void appendColoredToken(PrintTracker * printer, huToken const * tok, huEn
 
 static void printForwardComment(PrintTracker * printer, huToken const * tok)
 {
-    if (printer->SerializeOptions->printComments == false)
+    if (printer->serializeOptions->printComments == false)
         { return; }
     appendIndent(printer);
     appendColoredToken(printer, tok, HU_COLORCODE_COMMENT);
     printer->lastPrintWasUnquotedWord = false;
-    if (tok->str.ptr[1] == '/' || printer->SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
+    if (tok->str.ptr[1] == '/' || printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
         { appendNewline(printer); }
 }
 
 
 static void printTrailingComment(PrintTracker * printer, huToken const * tok)
 {
-    if (printer->SerializeOptions->printComments == false)
+    if (printer->serializeOptions->printComments == false)
         { return; }
     appendColoredToken(printer, tok, HU_COLORCODE_COMMENT);
     printer->lastPrintWasUnquotedWord = false;
@@ -151,7 +151,7 @@ static huSize_t printAllPrecedingComments(PrintTracker * printer, huNode const *
         if (comm->line < tok->line ||
             (comm->line == tok->line && comm->col < tok->col))
         {
-            if (commentIdx == startingWith && printer->SerializeOptions->printComments)
+            if (commentIdx == startingWith && printer->serializeOptions->printComments)
                 { appendNewline(printer); }
             printForwardComment(printer, comm);
         }
@@ -173,8 +173,8 @@ static huSize_t printAllTrailingComments(PrintTracker * printer, huNode const * 
         huToken const * comm = huGetComment(node, commentIdx);
         if (comm->line == tok->line)
         {
-            if (printer->SerializeOptions->printComments &&
-                printer->SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
+            if (printer->serializeOptions->printComments &&
+                printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
                 { appendWs(printer, 1); }
 
             printTrailingComment(printer, comm);
@@ -196,7 +196,7 @@ static void printAnnotations(PrintTracker * printer, huVector const * annotation
     // if we're printing an annotation on a new line (because of a comment, say)
     if (printer->lastPrintWasNewline)
     {
-        if (printer->SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY && printer->currentDepth > 0)
+        if (printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY && printer->currentDepth > 0)
         {
             printer->currentDepth += 1;
             appendIndent(printer);
@@ -205,35 +205,35 @@ static void printAnnotations(PrintTracker * printer, huVector const * annotation
     }
     else
     {
-        if (printer->SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY && 
+        if (printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY && 
             (printer->currentDepth > 0 || isTroveAnnotations == false))
             { appendWs(printer, 1); }
     }
     
     appendColoredString(printer, "@", 1, HU_COLORCODE_PUNCANNOTATE);
-    if (printer->SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
+    if (printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
         { appendWs(printer, 1); }
 
     if (numAnnos > 1)
     {
         appendColoredString(printer, "{", 1, HU_COLORCODE_PUNCANNOTATEDICT);
-        if (printer->SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
+        if (printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
             { appendWs(printer, 1); }
     }
     for (huSize_t annoIdx = 0; annoIdx < numAnnos; ++annoIdx)
     {
-        if (annoIdx > 0 && printer->SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
+        if (annoIdx > 0 && printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
             { ensureWs(printer); }
         huAnnotation * anno = getVectorElement(annotations, annoIdx);
         appendColoredToken(printer, anno->key, HU_COLORCODE_ANNOKEY);
         appendColoredString(printer, ":", 1, HU_COLORCODE_PUNCANNOTATEKEYVALUESEP);
-        if (printer->SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
+        if (printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
             { appendWs(printer, 1); }
         appendColoredToken(printer, anno->value, HU_COLORCODE_ANNOVALUE);        
     }
     if (numAnnos > 1)
     {
-        if (printer->SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
+        if (printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
             { appendWs(printer, 1); }
         appendColoredString(printer, "}", 1, HU_COLORCODE_PUNCANNOTATEDICT);
     }
@@ -253,7 +253,7 @@ static void printNode(PrintTracker * printer, huNode const * node)
 
     //  if parent is a dict
     //      print key
-    if (printer->SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
+    if (printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
         { appendNewline(printer); }
     appendIndent(printer);
     huNode const * parentNode = huGetParent(node);
@@ -263,7 +263,7 @@ static void printNode(PrintTracker * printer, huNode const * node)
     {
         appendColoredToken(printer, node->keyToken, HU_COLORCODE_KEY);
         appendColoredString(printer, ":", 1, HU_COLORCODE_PUNCKEYVALUESEP);
-        if (printer->SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
+        if (printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
             { appendWs(printer, 1); }
     }
 
@@ -290,7 +290,7 @@ static void printNode(PrintTracker * printer, huNode const * node)
         commentIdx = printAllPrecedingComments(printer, node, node->lastValueToken, commentIdx);
         
         printer->currentDepth -= 1;
-        if (printer->SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
+        if (printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
             { appendNewline(printer); }
         appendIndent(printer);
         appendColoredString(printer, "]", 1, HU_COLORCODE_PUNCLIST);
@@ -317,7 +317,7 @@ static void printNode(PrintTracker * printer, huNode const * node)
         }
         commentIdx = printAllPrecedingComments(printer, node, node->lastValueToken, commentIdx);
         printer->currentDepth -= 1;
-        if (printer->SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
+        if (printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
             { appendNewline(printer); }
         appendIndent(printer);
         appendColoredString(printer, "}", 1, HU_COLORCODE_PUNCDICT);
@@ -339,7 +339,7 @@ static void printNode(PrintTracker * printer, huNode const * node)
     huSize_t startIdx = commentIdx;
     for (; commentIdx < numComments; ++commentIdx)
     {
-        if (commentIdx == startIdx && printer->SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY && printer->SerializeOptions->printComments)
+        if (commentIdx == startIdx && printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY && printer->serializeOptions->printComments)
             { appendNewline(printer); }
         huToken const * comm = huGetComment(node, commentIdx);
         {
@@ -352,12 +352,12 @@ static void printNode(PrintTracker * printer, huNode const * node)
 }
 
 
-void troveToPrettyString(huTrove const * trove, huVector * str, huSerializeOptions * SerializeOptions)
+void troveToPrettyString(huTrove const * trove, huVector * str, huSerializeOptions * serializeOptions)
 {
     PrintTracker printer = {
         .trove = trove,
         .str = str,
-        .SerializeOptions = SerializeOptions,
+        .serializeOptions = serializeOptions,
         .currentDepth = 0,
         .lastPrintWasNewline = true,
         .lastPrintWasIndent = false,
@@ -365,7 +365,7 @@ void troveToPrettyString(huTrove const * trove, huVector * str, huSerializeOptio
         .lastPrintWasWhitespace = false
     };
 
-    if (printer.SerializeOptions->printBom)
+    if (printer.serializeOptions->printBom)
     {
         printUtf8Bom(& printer);
     }
@@ -411,7 +411,7 @@ void troveToPrettyString(huTrove const * trove, huVector * str, huSerializeOptio
         printForwardComment(& printer, comm);
     }
 
-    if (printer.SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
+    if (printer.serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
         { appendNewline(& printer); }
     
     appendColor(& printer, HU_COLORCODE_TOKENSTREAMEND);

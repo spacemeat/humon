@@ -1,7 +1,9 @@
 #pragma once
 
+/// @cond
 #include <stdbool.h>
 #include <stdio.h>
+/// @endcond
 #include "version.h"
 
 #if defined(_WIN32) || defined(_WIN64)		//	if we're on Windows
@@ -32,9 +34,9 @@
 #endif
 #endif
 
-#define HU_NULLTOKEN        (NULL)
-#define HU_NULLNODE         (NULL)
-#define HU_NULLTROVE        (NULL)
+#define HU_NULLTOKEN        NULL
+#define HU_NULLNODE         NULL
+#define HU_NULLTROVE        NULL
 
 // For proper operation, these types must be signed.
 #ifndef HUMON_ENUM_TYPE
@@ -55,15 +57,16 @@
 #endif
 #endif
 
-typedef HUMON_ENUM_TYPE     huEnumType_t;
-typedef HUMON_LINE_TYPE     huLine_t;
-typedef HUMON_COL_TYPE      huCol_t;
-typedef HUMON_SIZE_TYPE     huSize_t;
-
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+    typedef HUMON_ENUM_TYPE     huEnumType_t;
+    typedef HUMON_LINE_TYPE     huLine_t;
+    typedef HUMON_COL_TYPE      huCol_t;
+    typedef HUMON_SIZE_TYPE     huSize_t;
+
     /// Specifies the supported Unicode encodings.
     enum huEncoding
     {
@@ -258,10 +261,10 @@ extern "C"
     /// Encapsulates a selection of parameters to control how Humon interprets the input for loading.
     typedef struct huDeserializeOptions_tag
     {
-        huEnumType_t encoding;
-        bool allowOutOfRangeCodePoints;
-        bool allowUtf16UnmatchedSurrogates;
-        huCol_t tabSize;
+        huEnumType_t encoding;                  ///< The Unicode encoding of the input. Can be `HU_ENCODING_UNKNOWN`.
+        bool allowOutOfRangeCodePoints;         ///< Whether to check whether input code points are outside legal ranges.
+        bool allowUtf16UnmatchedSurrogates;     ///< Whether to check whether UTF-16 input code points are unmatched surrogates.
+        huCol_t tabSize;                        ///< The tab size to assume for the input, for the purposes of reporting token column data.
     } huDeserializeOptions;
 
     /// Fill in a huDeserializeOptions struct quickly.
@@ -270,23 +273,23 @@ extern "C"
     /// Encapsulates a selection of parameters to control the serialization of a trove.
     typedef struct huSerializeOptions_tag
     {
-        huEnumType_t WhitespaceFormat;
-        huCol_t indentSize;
-        bool indentWithTabs;
-        bool usingColors;
-        huStringView const * colorTable;
-        bool printComments;
-        huStringView newline;
-        bool printBom;
+        huEnumType_t whitespaceFormat;      ///< The desired whitespace format of the output.
+        huCol_t indentSize;                 ///< The number of spaces to indent if not using tabs.
+        bool indentWithTabs;                ///< Whether to use `\t` for indentation.
+        bool usingColors;                   ///< Whether to inject color codes into the output.
+        huStringView const * colorTable;    ///< The color table to use, or NULL.
+        bool printComments;                 ///< Whether to print or skip printing comments.
+        huStringView newline;               ///< The string to use for newlines.
+        bool printBom;                      ///< Whether to print the UTF-8 BOM.
     } huSerializeOptions;
 
     struct huTrove_tag;
 
     /// Fill in a huSerializeOptions struct quickly.
-	HUMON_PUBLIC void huInitSerializeOptionsZ(huSerializeOptions * params, huEnumType_t WhitespaceFormat, huCol_t indentSize, bool indentWithTabs,
+	HUMON_PUBLIC void huInitSerializeOptionsZ(huSerializeOptions * params, huEnumType_t whitespaceFormat, huCol_t indentSize, bool indentWithTabs,
         bool usingColors, huStringView const * colorTable,  bool printComments, char const * newline, bool printBom);
     /// Fill in a huSerializeOptions struct quickly.
-	HUMON_PUBLIC void huInitSerializeOptionsN(huSerializeOptions * params, huEnumType_t WhitespaceFormat, huCol_t indentSize, bool indentWithTabs,
+	HUMON_PUBLIC void huInitSerializeOptionsN(huSerializeOptions * params, huEnumType_t whitespaceFormat, huCol_t indentSize, bool indentWithTabs,
         bool usingColors, huStringView const * colorTable,  bool printComments, char const * newline, huSize_t newlineSize, bool printBom);
 
     /// Encodes a Humon data node.
@@ -420,11 +423,11 @@ extern "C"
     } huTrove;
 
     /// Creates a trove from a NULL-terminated string of Humon text.
-	HUMON_PUBLIC huEnumType_t huDeserializeTroveZ(huTrove const ** trove, char const * data, huDeserializeOptions * DeserializeOptions, huEnumType_t errorResponse);
+	HUMON_PUBLIC huEnumType_t huDeserializeTroveZ(huTrove const ** trove, char const * data, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse);
     /// Creates a trove from a string view of Humon text.
-	HUMON_PUBLIC huEnumType_t huDeserializeTroveN(huTrove const ** trove, char const * data, huSize_t dataLen, huDeserializeOptions * DeserializeOptions, huEnumType_t errorResponse);
+	HUMON_PUBLIC huEnumType_t huDeserializeTroveN(huTrove const ** trove, char const * data, huSize_t dataLen, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse);
     /// Creates a trove from a file.
-	HUMON_PUBLIC huEnumType_t huDeserializeTroveFromFile(huTrove const ** trove, char const * path, huDeserializeOptions * DeserializeOptions, huEnumType_t errorResponse);
+	HUMON_PUBLIC huEnumType_t huDeserializeTroveFromFile(huTrove const ** trove, char const * path, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse);
 
     /// Reclaims all memory owned by a trove.
 	HUMON_PUBLIC void huDestroyTrove(huTrove const * trove);
@@ -555,10 +558,10 @@ extern "C"
 
     /// Serializes a trove to text.
     /** This function makes a new copy of the token steram, optionally with formatting options.*/
-	HUMON_PUBLIC huEnumType_t huSerializeTrove(huTrove const * trove, char * dest, huSize_t * destLength, huSerializeOptions * SerializeOptions);
+	HUMON_PUBLIC huEnumType_t huSerializeTrove(huTrove const * trove, char * dest, huSize_t * destLength, huSerializeOptions * serializeOptions);
     /// Serializes a trove to file.
     /** This function stores a new copy of the token steram to file, optionally with formatting options.*/
-	HUMON_PUBLIC huEnumType_t huSerializeTroveToFile(huTrove const * trove, char const * path, huSize_t * destLength, huSerializeOptions * SerializeOptions);
+	HUMON_PUBLIC huEnumType_t huSerializeTroveToFile(huTrove const * trove, char const * path, huSize_t * destLength, huSerializeOptions * serializeOptions);
 
     /// Fills an array of HU_COLORCODE_NUMCOLORS huStringViews with ANSI terminal color codes for printing to console.
 	HUMON_PUBLIC void huFillAnsiColorTable(huStringView table[]);

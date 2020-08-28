@@ -499,7 +499,7 @@ void huGetAddress(huNode const * node, char * dest, huSize_t * destLen)
     PrintTracker printer = {
         .trove = NULL,
         .str = & str,
-        .SerializeOptions = NULL,
+        .serializeOptions = NULL,
         .currentDepth = 0,
         .lastPrintWasNewline = false
     };

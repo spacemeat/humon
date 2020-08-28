@@ -957,7 +957,7 @@ huStringView huGetTroveTokenStream(huTrove const * trove)
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
 
 
-huEnumType_t huSerializeTrove(huTrove const * trove, char * dest, huSize_t * destLength, huSerializeOptions * SerializeOptions)
+huEnumType_t huSerializeTrove(huTrove const * trove, char * dest, huSize_t * destLength, huSerializeOptions * serializeOptions)
 {
     if (dest == NULL && destLength != NULL)
         { * destLength = 0; }
@@ -965,30 +965,30 @@ huEnumType_t huSerializeTrove(huTrove const * trove, char * dest, huSize_t * des
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || destLength == NULL)
         { return HU_ERROR_BADPARAMETER; }
-    if (SerializeOptions &&
-        (isNegative(SerializeOptions->WhitespaceFormat) || SerializeOptions->WhitespaceFormat >= 3 || 
-         isNegative(SerializeOptions->indentSize) || 
-         (SerializeOptions->usingColors && SerializeOptions->colorTable == NULL) ||
-         SerializeOptions->newline.ptr == NULL || SerializeOptions->newline.size < 1))
+    if (serializeOptions &&
+        (isNegative(serializeOptions->whitespaceFormat) || serializeOptions->whitespaceFormat >= 3 || 
+         isNegative(serializeOptions->indentSize) || 
+         (serializeOptions->usingColors && serializeOptions->colorTable == NULL) ||
+         serializeOptions->newline.ptr == NULL || serializeOptions->newline.size < 1))
         { return HU_ERROR_BADPARAMETER; }
 #endif
 
     huSerializeOptions localSerializeOptions;
-    if (SerializeOptions == NULL)
+    if (serializeOptions == NULL)
     {
         huInitSerializeOptionsN(& localSerializeOptions, HU_WHITESPACEFORMAT_PRETTY, 4, false, false, NULL, true, "\n", 1, false );
-        SerializeOptions = & localSerializeOptions;
+        serializeOptions = & localSerializeOptions;
     }
 
-    if (SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_CLONED)
+    if (serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_CLONED)
     {
         if (dest == NULL)
-            { * destLength = trove->dataStringSize + SerializeOptions->printBom * 3; }
+            { * destLength = trove->dataStringSize + serializeOptions->printBom * 3; }
         else
         {
             char * destWithBom = dest;
             int bomLen = 0;
-            if (SerializeOptions->printBom)
+            if (serializeOptions->printBom)
             {
                 char utf8bom[] = { 0xef, 0xbb, 0xbf };
                 memcpy(dest, utf8bom, 3);
@@ -998,11 +998,11 @@ huEnumType_t huSerializeTrove(huTrove const * trove, char * dest, huSize_t * des
             memcpy(destWithBom, trove->dataString, * destLength - bomLen);
         }
     }
-    else if (SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_PRETTY ||
-             SerializeOptions->WhitespaceFormat == HU_WHITESPACEFORMAT_MINIMAL)
+    else if (serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY ||
+             serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_MINIMAL)
     {
         // newline must be > 0; some things need a newline like // comments
-        if (SerializeOptions->newline.size < 1)
+        if (serializeOptions->newline.size < 1)
             { return HU_ERROR_BADPARAMETER; }
 
         huVector str;
@@ -1015,7 +1015,7 @@ huEnumType_t huSerializeTrove(huTrove const * trove, char * dest, huSize_t * des
             initVectorPreallocated(& str, dest, sizeof(char), * destLength);
         }
 
-        troveToPrettyString(trove, & str, SerializeOptions);
+        troveToPrettyString(trove, & str, serializeOptions);
         if (dest == NULL)
             { * destLength = str.numElements; }
     }
@@ -1025,16 +1025,16 @@ huEnumType_t huSerializeTrove(huTrove const * trove, char * dest, huSize_t * des
 
 #pragma GCC diagnostic pop
 
-huEnumType_t huSerializeTroveToFile(huTrove const * trove, char const * path, huSize_t * destLength, huSerializeOptions * SerializeOptions)
+huEnumType_t huSerializeTroveToFile(huTrove const * trove, char const * path, huSize_t * destLength, huSerializeOptions * serializeOptions)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || path == NULL)
         { return HU_ERROR_BADPARAMETER; }
-    if (SerializeOptions &&
-        (isNegative(SerializeOptions->WhitespaceFormat) || SerializeOptions->WhitespaceFormat >= 3 || 
-         isNegative(SerializeOptions->indentSize) || 
-         (SerializeOptions->usingColors && SerializeOptions->colorTable == NULL) ||
-         SerializeOptions->newline.ptr == NULL || SerializeOptions->newline.size < 1))
+    if (serializeOptions &&
+        (isNegative(serializeOptions->whitespaceFormat) || serializeOptions->whitespaceFormat >= 3 || 
+         isNegative(serializeOptions->indentSize) || 
+         (serializeOptions->usingColors && serializeOptions->colorTable == NULL) ||
+         serializeOptions->newline.ptr == NULL || serializeOptions->newline.size < 1))
         { return HU_ERROR_BADPARAMETER; }
 #endif
 
@@ -1042,7 +1042,7 @@ huEnumType_t huSerializeTroveToFile(huTrove const * trove, char const * path, hu
         { * destLength = 0; }
 
     huSize_t strLength = 0;
-    huEnumType_t error = huSerializeTrove(trove, NULL, & strLength, SerializeOptions);
+    huEnumType_t error = huSerializeTrove(trove, NULL, & strLength, serializeOptions);
     if (error != HU_ERROR_NOERROR)
         { return error; }
 
@@ -1050,7 +1050,7 @@ huEnumType_t huSerializeTroveToFile(huTrove const * trove, char const * path, hu
     if (str == NULL)
         { return HU_ERROR_OUTOFMEMORY; }
 
-    error = huSerializeTrove(trove, str, & strLength, SerializeOptions);
+    error = huSerializeTrove(trove, str, & strLength, serializeOptions);
     if (error != HU_ERROR_NOERROR)
         { free(str); return error; }
 

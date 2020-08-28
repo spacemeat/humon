@@ -30,13 +30,13 @@
 /// Defining this enables throwin exceptions on hu::Token and hu::Trove member
 /// functions. Normally these don't throw, but you can enable this to help find
 /// where othewise silent failure are occurring.
-/// #define HUMON_USE_NULLISH_EXCEPTIONS
+/// \#define HUMON_USE_NULLISH_EXCEPTIONS
 
 /// Defining this enables exceptions to be thrown on unfound path calls 
 /// (hu::Trove::nodeByAddress, huNode::nodeByAddress, hu::Trove::operator/
 /// or hu::Node::operator/); Normally these silently fail, and it can be
 /// difficult to determine where.
-/// #define HUMON_USE_NODE_PATH_EXCEPTIONS
+/// \#define HUMON_USE_NODE_PATH_EXCEPTIONS
 
 
 /// The Humon namespace.
@@ -193,6 +193,7 @@ namespace hu
     template <class T>
     struct val<T, typename std::enable_if_t<std::is_integral_v<T>>>
     {
+        /// Extract the value from the string.
         static inline T extract(std::string_view valStr) HUMON_PATH_NOEXCEPT
         {
             T value;
@@ -208,6 +209,7 @@ namespace hu
     template <class T>
     struct val<T, typename std::enable_if_t<std::is_floating_point_v<T>>>
     {
+        /// Extract the value from the string.
         static inline T extract(std::string_view valStr) HUMON_PATH_NOEXCEPT
         {
             // TODO: (gcc): Once std::from_chars(..T&) is complete, use this or remove this specialization. We're making a useless string here and it maketh me to bite metal. Don't forget to HUMON_NOEXCEPT.
@@ -228,6 +230,7 @@ namespace hu
     template <>
     struct val<std::string_view>
     {
+        /// Extract the value from the string.
         static inline std::string_view extract(std::string_view valStr) HUMON_PATH_NOEXCEPT
         {
             return valStr;
@@ -238,6 +241,7 @@ namespace hu
     template <>
     struct val<std::string>
     {
+        /// Extract the value from the string.
         static inline std::string extract(std::string_view valStr) HUMON_PATH_NOEXCEPT
         {
             return std::string(valStr);
@@ -248,6 +252,7 @@ namespace hu
     template <>
     struct val<bool>
     {
+        /// Extract the value from the string.
         static inline bool extract(std::string_view valStr) HUMON_PATH_NOEXCEPT
         {
             if (valStr[0] != 't' && valStr[0] != 'T')
@@ -265,12 +270,13 @@ namespace hu
         }
     };
 
-    // Conversion from capi::huStringView to std::string_view. Mostly internal, no doxygen.
+    /// Conversion from capi::huStringView to std::string_view.
     inline std::string_view make_sv(capi::huStringView const & husv) HUMON_NOEXCEPT
     {
         return std::string_view(husv.ptr, husv.size);
     }
 
+    /// Describes a color table for printing.
     using ColorTable = std::array<std::string_view, capi::HU_COLORCODE_NUMCOLORS>;
 
     /// Encapsulates a selection of parameters to control how Humon interprets the input for loading.
@@ -324,7 +330,7 @@ namespace hu
         }
 
         /// Set the whitespace formatting.
-        void setFormat(WhitespaceFormat WhitespaceFormat) HUMON_NOEXCEPT { cparams.WhitespaceFormat = static_cast<capi::huEnumType_t>(WhitespaceFormat); }
+        void setFormat(WhitespaceFormat WhitespaceFormat) HUMON_NOEXCEPT { cparams.whitespaceFormat = static_cast<capi::huEnumType_t>(WhitespaceFormat); }
         /// Set the number of spaces to use for indentation.
         void setIndentSize(capi::huCol_t indentSize) HUMON_NOEXCEPT { cparams.indentSize = indentSize; }
         /// Use tab instead of spaces for indentation.
@@ -364,7 +370,7 @@ namespace hu
         }
 
         /// Get the whitespace formatting.
-        WhitespaceFormat whitespaceFormat() const HUMON_NOEXCEPT { return static_cast<WhitespaceFormat>(cparams.WhitespaceFormat); }
+        WhitespaceFormat whitespaceFormat() const HUMON_NOEXCEPT { return static_cast<WhitespaceFormat>(cparams.whitespaceFormat); }
         /// Get the number of spaces to use for indentation.
         capi::huSize_t indentSize() { return cparams.indentSize; }
         /// Get whether to use tabs instead of spaces for indentation.
@@ -393,12 +399,16 @@ namespace hu
 
         /// Aggregated C struct.
         capi::huSerializeOptions cparams;
+        /// Aggregated C color table.
         capi::huStringView capiColorTable[capi::HU_COLORCODE_NUMCOLORS];
     };
 
     class Trove;
 
+    /// Describes the result type of a deserialize (load) operation.
     typedef std::variant<Trove, ErrorCode> DeserializeResult;
+
+    /// Describes the result type of a serialize (print) operation.
     typedef std::variant<std::string, ErrorCode> SerializeResult;
 
     // Either throws or returns false.
@@ -419,6 +429,9 @@ namespace hu
     class Token
     {
     public:
+        /// Create a nullish token.
+        Token() HUMON_NOEXCEPT { }
+        /// Create a token that wraps a `huToken const *`.
         Token(capi::huToken const * ctoken) HUMON_NOEXCEPT : ctoken(ctoken) { }
         bool isValid() const HUMON_NOEXCEPT           ///< Returns whether the token is valid (not nullish).
             { return ctoken != nullptr; }
@@ -442,6 +455,7 @@ namespace hu
         operator std::string_view() HUMON_NOEXCEPT    ///< String view conversion.
             { return str(); }
 
+        /// Prints the string value of the token to a stream.
         friend std::ostream & operator <<(std::ostream & out, Token rhs) HUMON_NOEXCEPT
         {
             out << rhs.str();
@@ -450,7 +464,7 @@ namespace hu
     private:
         void check() const HUMON_NOEXCEPT { checkNotNull(ctoken); }
 
-        capi::huToken const * ctoken;
+        capi::huToken const * ctoken = nullptr;
     };
 
     /// References a node's parent in an object-based lookup.
@@ -467,7 +481,9 @@ namespace hu
     class Node
     {
     public:
-        Node() HUMON_NOEXCEPT : cnode(HU_NULLNODE) { }
+        /// Constructs a nullish node.
+        Node() HUMON_NOEXCEPT { }
+        /// Constructs a node which wraps a `huNode const *`.
         Node(capi::huNode const * cnode) HUMON_NOEXCEPT : cnode(cnode) { }
         /// Return whether two Node objects refer to the same node.
         friend bool operator == (Node const & lhs, Node const & rhs) HUMON_NOEXCEPT
@@ -480,9 +496,9 @@ namespace hu
             { return cnode != nullptr; }
         bool isNullish() const HUMON_NOEXCEPT             ///< Returns whether the node is nullish (not valid).
             { return cnode == nullptr; }
-        operator bool()                             ///< Implicit validity test.
+        operator bool() const                           ///< Implicit validity test.
             { return isValid(); }
-        bool isRoot() const HUMON_NOEXCEPT
+        bool isRoot() const HUMON_NOEXCEPT              ///< Returns whether is node is the root node.
             { check(); return nodeIndex() == 0; }
         capi::huSize_t nodeIndex() const HUMON_NOEXCEPT              ///< Returns the node index within the trove. Rarely needed.
             { check(); return isValid() ? cnode->nodeIdx : -1; }
@@ -496,7 +512,7 @@ namespace hu
         Token lastValueToken() const HUMON_NOEXCEPT       ///< Returns the last token of this node's actual value; for a container, it points to the closing brac(e|ket).
             { check(); return Token(isValid() ? cnode->lastValueToken : HU_NULLTOKEN); }
         Token lastToken() const HUMON_NOEXCEPT            ///< Returns the last token of this node, including any annotation and comment tokens.
-            { check(); return Token(isValid() ? cnode->lastToken :  HU_NULLTOKEN); }
+            { check(); return Token(isValid() ? cnode->lastToken : HU_NULLTOKEN); }
         Node parent() const HUMON_NOEXCEPT                ///< Returns the parent node of this node, or the null node if this is the root.
             { check(); return Node(capi::huGetParent(cnode)); }
         capi::huSize_t childOrdinal() const HUMON_NOEXCEPT           ///< Returns the index of this node vis a vis its sibling nodes (starting at 0).
@@ -658,6 +674,7 @@ namespace hu
             return vec;
         }
 
+        /// Returns whether this node any comments containing the specified substring.
         bool hasCommentsContaining(std::string_view containedString) const HUMON_NOEXCEPT
         {
             check();
@@ -813,7 +830,7 @@ namespace hu
     private:
         void check() const HUMON_NOEXCEPT { checkNotNull(cnode); }
 
-        capi::huNode const * cnode;
+        capi::huNode const * cnode = nullptr;
     };
 
 
@@ -897,9 +914,9 @@ namespace hu
          * is in a legal Humon format, the Trove will come back without errors, and fully
          * ready to use. Otherwise the Trove will be in an erroneous state; it will not 
          * be a null trove, but rather will be loaded with no nodes, and errors marking 
-         * tokens. This function does not close the stream once it has finished reading.
+         * tokens. This function does **not** close the stream once it has finished reading.
          * 
-         * \maxNumBytes: If 0, `fromIstream` reads the stream until EOF is encountered.*/
+         * If maxNumBytes == 0, `fromIstream` reads the stream until EOF is encountered.*/
         [[nodiscard]] static DeserializeResult fromIstream(std::istream & in, 
             DeserializeOptions deserializeOptions = { Encoding::unknown }, capi::huSize_t maxNumBytes = 0, 
             ErrorResponse errorResponse = ErrorResponse::stderrAnsiColor) HUMON_NOEXCEPT
@@ -921,13 +938,14 @@ namespace hu
         }
     
     public:
-        /// Construct a Trove which decorates a null trove. Useful for collections of troves.
+        /// Construct a nullish Trove.
         Trove() HUMON_NOEXCEPT { }
     private:
         /// Construction from static member functions.
         Trove(capi::huTrove const * ctrove) HUMON_NOEXCEPT : ctrove(ctrove) { }
  
     public:
+        /// Move-construct a temporary trove object.
         Trove(Trove && rhs) HUMON_NOEXCEPT
         {
             ctrove = HU_NULLTROVE;
@@ -944,6 +962,7 @@ namespace hu
         Trove(Trove const & rhs) = delete;
         Trove & operator = (Trove const & rhs) = delete;
 
+        /// Move-assign a temporary trove object.
         Trove & operator = (Trove && rhs) HUMON_NOEXCEPT
         {
             if (ctrove)
@@ -955,8 +974,10 @@ namespace hu
             return * this;
         }
 
+        /// Returns whether two trove objects reference the same `huTrove const *`.
         friend bool operator == (Trove const & lhs, Trove const & rhs) HUMON_NOEXCEPT
             { return lhs.ctrove == rhs.ctrove; }
+        /// Returns whether two trove objects reference different `huTrove const *`s.
         friend bool operator != (Trove const & lhs, Trove const & rhs) HUMON_NOEXCEPT
             { return lhs.ctrove != rhs.ctrove; }
         // C++20: <=> when it's available.

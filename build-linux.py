@@ -249,6 +249,24 @@ def buildExe (target, srcList, incDirs, libDirs, staticLibs, sharedLibs, flags, 
     return doShellCommand(cmd)
 
 
+def buildDocs():
+    if not os.path.exists(docsDir):
+        os.mkdir(docsDir)
+
+    print (f"{ansi.dk_yellow_fg}Building API documents {ansi.lt_yellow_fg}{docsDir}{ansi.all_off}")
+
+    try:
+        isit = subprocess.run('whereis doxygen', shell=True, check=False, capture_output=True)
+        output = str(isit.stdout)
+        if isit.returncode == 0 and ':' in output and len(output.split(':')[1]) > 0:
+            doShellCommand("doxygen dox-humon-c")
+            doShellCommand("doxygen dox-humon-cpp")
+        else:
+            print ("doxygen not detected")
+    except:
+        print ("doxygen not detected")
+   
+
 if __name__ == "__main__":
     clean = False
     debug = False
@@ -374,8 +392,4 @@ if __name__ == "__main__":
                 src = ["apps/hux/hux.cpp"]
                 buildExe("hux", src, ["include"], [binDir], [], ["humon"], flags, arch32bit, debug, False, tool)
 
-    if not os.path.exists(docsDir):
-        os.mkdir(docsDir)
-
-    doxygen dox-humon-c
-    doxygen dox-humon-cpp
+    buildDocs()

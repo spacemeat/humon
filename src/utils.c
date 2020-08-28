@@ -196,7 +196,7 @@ void huInitDeserializeOptions(huDeserializeOptions * params, huEnumType_t encodi
 }
 
 
-void huInitSerializeOptionsZ(huSerializeOptions * params, huEnumType_t WhitespaceFormat, huCol_t indentSize,
+void huInitSerializeOptionsZ(huSerializeOptions * params, huEnumType_t whitespaceFormat, huCol_t indentSize,
     bool indentWithTabs, bool usingColors, huStringView const * colorTable,  bool printComments, 
     char const * newline, bool printBom)
 {
@@ -204,16 +204,16 @@ void huInitSerializeOptionsZ(huSerializeOptions * params, huEnumType_t Whitespac
     if (newlineLenC > maxOfType(huSize_t))
         { newlineLenC = maxOfType(huSize_t); }
 
-    huInitSerializeOptionsN(params, WhitespaceFormat, indentSize, indentWithTabs, usingColors, colorTable, 
+    huInitSerializeOptionsN(params, whitespaceFormat, indentSize, indentWithTabs, usingColors, colorTable, 
         printComments, newline, (huSize_t) newlineLenC, printBom);
 }
 
 
-void huInitSerializeOptionsN(huSerializeOptions * params, huEnumType_t WhitespaceFormat, huCol_t indentSize,
+void huInitSerializeOptionsN(huSerializeOptions * params, huEnumType_t whitespaceFormat, huCol_t indentSize,
     bool indentWithTabs, bool usingColors, huStringView const * colorTable,  bool printComments, 
     char const * newline, huSize_t newlineSize, bool printBom)
 {
-    params->WhitespaceFormat = WhitespaceFormat;
+    params->whitespaceFormat = whitespaceFormat;
     params->indentSize = indentSize;
     params->indentWithTabs = indentWithTabs;
     params->usingColors = usingColors;
