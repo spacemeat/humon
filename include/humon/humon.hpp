@@ -15,10 +15,13 @@
 #include <optional>
 #include <variant>
 
+// This macro wraps the C API in namespace hu::capi to keep global space pristine.
+// Because it's also extern "C", the namespace names are dropped from the linkage,
+// so we can still link against the C library.
 #define HUMON_USENAMESPACE
 #include "humon.h"
 
-// Defining this turns off noexcept decorations on most functions.
+// Defining this turns off noexcept decorations on most functions. See the README.
 #ifdef HUMON_SUPPRESS_NOEXCEPT
 #define HUMON_NOEXCEPT
 #else
@@ -26,7 +29,7 @@
 #endif
 
 /// Defining this turns off noexcept decorations on path functions 
-/// (operator /, etc).
+/// (operator /, etc). See the README.
 #ifdef HUMON_SUPPRESS_PATH_NOEXCEPT
 #define HUMON_PATH_NOEXCEPT
 #else
@@ -35,13 +38,13 @@
 
 /// Defining this enables throwin exceptions on hu::Token and hu::Trove member
 /// functions. Normally these don't throw, but you can enable this to help find
-/// where othewise silent failure are occurring.
+/// where othewise silent failure are occurring. See the README.
 /// \#define HUMON_USE_NULLISH_EXCEPTIONS
 
 /// Defining this enables exceptions to be thrown on unfound path calls 
 /// (hu::Trove::nodeByAddress, huNode::nodeByAddress, hu::Trove::operator/
 /// or hu::Node::operator/); Normally these silently fail, and it can be
-/// difficult to determine where.
+/// difficult to determine where. See the README.
 /// \#define HUMON_USE_NODE_PATH_EXCEPTIONS
 
 

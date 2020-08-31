@@ -1,5 +1,6 @@
-#include <humon/humon.hpp>
 #include <iostream>
+#include <sstream>
+#include <humon/humon.hpp>
 
 using namespace std;
 using namespace std::literals;
@@ -87,7 +88,7 @@ private:
 
 using V3 = Version<3>;
 
-
+//!!! val1
 template <>
 struct hu::val<V3>
 {
@@ -96,77 +97,101 @@ struct hu::val<V3>
         return V3(valStr);
     }
 };
-
+//!!!
 
 int main()
 {
+    ostringstream out;
+
     {
+//!!! materials
         auto desRes = hu::Trove::fromFile("apps/readmeSrc/materials.hu"sv);
         if (auto trove = std::get_if<hu::Trove>(& desRes))
         {
             auto extentsNode = trove->nodeByAddress("/assets/brick-diffuse/importData/extents"sv);
             tuple xyExtents = { extentsNode / 0 / hu::val<int>{}, 
                                 extentsNode / 1 / hu::val<int>{} };
-            std::cout << "Extents: (" << get<0>(xyExtents) << ", " << get<1>(xyExtents) << ")\n";
+            // ...
+//!!!
+            out << "Extents: (" << get<0>(xyExtents) << ", " << get<1>(xyExtents) << ")\n";
         }
     }
 
     {
-        auto desRes = hu::Trove::fromFile("apps/readmeSrc/materials.hu"sv, { hu::Encoding::utf8});
+//!!! materials2
+        auto desRes = hu::Trove::fromFile("apps/readmeSrc/materials.hu"sv, 
+            { hu::Encoding::utf8, false });     // UTF-8, and disable Unicode checks
         if (auto trove = std::get_if<hu::Trove>(& desRes))
         {
-            std::cout << std::get<string>(trove->toPrettyString());
+            // ...
+//!!!
+            out << std::get<string>(trove->toPrettyString());
         }
     }
 
     {
+//!!! statics
         auto desResFromRam = hu::Trove::fromString("{foo: [100, 200]}"sv);
         auto DesResFromFile = hu::Trove::fromFile("apps/readmeSrc/materials.hu"sv);
-
+//!!!
+//!!! roots
         auto & trove = std::get<hu::Trove>(desResFromRam);
 
-        auto rootNode = trove.root();           cout << "rootNode: " << rootNode.address() << "\n";
+        auto rootNode = trove.root();           /*!!!eol*/out << "rootNode: " << rootNode.address() << "\n";
         // or
-        rootNode = trove.nodeByAddress("/");    cout << "rootNode: " << rootNode.address() << "\n";
+        rootNode = trove.nodeByAddress("/");    /*!!!eol*/out << "rootNode: " << rootNode.address() << "\n";
         // or
-        rootNode = trove.nodeByIndex(0);        cout << "rootNode: " << rootNode.address() << "\n";
-
-        auto node = rootNode / "foo" / 0;       cout << "node: " << node.address() << "\n";
+        rootNode = trove.nodeByIndex(0);        /*!!!eol*/out << "rootNode: " << rootNode.address() << "\n";
+//!!!
+//!!! drill
+        auto node = rootNode / "foo" / 0;       /*!!!eol*/out << "node: " << node.address() << "\n";
         // or
-        node = trove / "foo" / 0;               cout << "node: " << node.address() << "\n";
+        node = trove / "foo" / 0;               /*!!!eol*/out << "node: " << node.address() << "\n";
         // or
-        node = trove / "foo" / 1 / hu::Parent{} / 0;
-                                                cout << "node: " << node.address() << "\n";
+        node = trove / "foo" / 1 / hu::Parent{} / 0; /*!!!eol*/out << "node: " << node.address() << "\n";
         // or
-        node = rootNode.nodeByAddress("foo/0"); cout << "node: " << node.address() << "\n";
+        node = rootNode.nodeByAddress("foo/0"); /*!!!eol*/out << "node: " << node.address() << "\n";
         // or
-        node = trove.nodeByAddress("/foo/0");   cout << "node: " << node.address() << "\n";
+        node = trove.nodeByAddress("/foo/0");   /*!!!eol*/out << "node: " << node.address() << "\n";
         // or
-        node = rootNode.child("foo").child(0);  cout << "node: " << node.address() << "\n";
-
-
+        node = rootNode.child("foo").child(0);  /*!!!eol*/out << "node: " << node.address() << "\n";
+//!!!
+//!!! child1
         // has a child with key 'foo'
-        bool hasFoo = rootNode % "foo";                         cout << "hasFoo: " << hasFoo << "\n";
+        bool hasFoo = rootNode % "foo";                         /*!!!eol*/out << "hasFoo: " << hasFoo << "\n";
         // has a child with index 1 (so at least two children)
-        bool hasFoosStuff = hasFoo && rootNode / "foo" % 1;     cout << "hasFoosStuff: " << hasFoosStuff << "\n";
-
-        hasFoo = rootNode % "foo";                              cout << "hasFoo: " << hasFoo << "\n";
+        bool hasFoosStuff = hasFoo && rootNode / "foo" % 1;     /*!!!eol*/out << "hasFoosStuff: " << hasFoosStuff << "\n";
+//!!!
+//!!! child2
         auto fooNode = rootNode / "foo";
-        hasFoosStuff = rootNode / "foo" % 1;                    cout << "hasFoosStuff: " << hasFoosStuff << "\n";
-
+        hasFoosStuff = rootNode / "foo" % 1;                    /*!!!eol*/out << "hasFoosStuff: " << hasFoosStuff << "\n";
+//!!!
+//!!! child3
         fooNode = rootNode / "foo";
-        hasFoosStuff = fooNode ? fooNode % 1 : false;           cout << "hasFoosStuff: " << hasFoosStuff << "\n";
-
-        hasFoosStuff = rootNode / "foo" % 1;                    cout << "hasFoosStuff: " << hasFoosStuff << "\n";
-
-        auto foosStuff = rootNode / "foo" / 1;                  cout << "foosStuff exists: " << foosStuff << "\n";
-        if (foosStuff) { cout << "foosStuff: " << foosStuff / hu::val<int>{} << "\n"; }
-
-        string address = node.address();                        cout << "address: " << address << "\n";
+        hasFoosStuff = fooNode ? fooNode % 1 : false;           /*!!!eol*/out << "hasFoosStuff: " << hasFoosStuff << "\n";
+//!!!
+//!!! child4
+        hasFoosStuff = rootNode / "foo" % 1;                    /*!!!eol*/out << "hasFoosStuff: " << hasFoosStuff << "\n";
+//!!!
+//!!! child5
+        auto foosStuff = rootNode / "foo" / 1;                  /*!!!eol*/out << "foosStuff exists: " << foosStuff << "\n";
+        if (foosStuff)
+        { 
+            // ... 
+//!!!
+            out << "foosStuff: " << foosStuff / hu::val<int>{} << "\n";
+        }
+//!!! child6
+        string address = node.address();                        /*!!!eol*/out << "address: " << address << "\n";
+//!!!
+//!!! child7
+        node = trove.nodeByAddress("/foo/0");
+//!!!
     }
 
     {
         auto src = R"(
+//!!! addressWeird1
 {
     bufferSources: {
         res/"game\ assets"/meshes.hu: {
@@ -187,58 +212,70 @@ int main()
         }
     }
 }
+//!!!
 )"sv;
 
-        auto trove = move(get<hu::Trove>(hu::Trove::fromString(src)));
-        auto requiredNode = trove / 0 / 0 / "required";             cout << "required's address: " << requiredNode.address() << "\n";
-        
-        auto relativeNode = requiredNode.nodeByAddress("../.. / .. /1 / 0"); cout << "relative node address: " << relativeNode.address() << "\n";
-
+//!!! addressWeird2
+        auto trove = get<hu::Trove>(hu::Trove::fromString(src));
+        auto requiredNode = trove / 0 / 0 / "required";             /*!!!eol*/out << "required's address: " << requiredNode.address() << "\n";
+//!!!
+//!!! addressWeird3
+        auto relativeNode = requiredNode.nodeByAddress("../.. / .. /1 / 0"); /*!!!eol*/out << "relative node address: " << relativeNode.address() << "\n";
+//!!!
+//!!! getNode
         // get the root node
         auto root = trove.root();
     
         // get its second child (index 1)
-        auto node = root.child(1);                                  cout << "node: " << node.address() << "\n";
+        auto node = root.child(1);                                  /*!!!eol*/out << "node: " << node.address() << "\n";
         
         // or, get its child by key
-        node = root.child("pipelineSources"sv);                     cout << "node: " << node.address() << "\n";
+        node = root.child("pipelineSources"sv);                     /*!!!eol*/out << "node: " << node.address() << "\n";
 
         // cycle through each of root's child nodes
         auto childNode = trove.root().firstChild();                 
         do
-        {                                                           cout << "childNode: " << childNode.address() << "\n";
+        {                                                           /*!!!eol*/out << "childNode: " << childNode.address() << "\n";
             // ...do something with childNode
             childNode = childNode.nextSibling();
         }
         while (childNode);
 
         // call your mom
-        node = node.parent();                                       cout << "node: " << node.address() << "\n";
-
+        node = node.parent();                                       /*!!!eol*/out << "node: " << node.address() << "\n";
+//!!!
+//!!! getValue
         node = trove / "bufferSources" / 0 / "monitoredForChanges";
-        string_view valStr = node.value();                          cout << "valStr: " << valStr << "\n";
+        string_view valStr = node.value();       /* [1] */          /*!!!eol*/out << "valStr: " << valStr << "\n";            
         // or
-        bool valBool = node / hu::val<bool>{};                      cout << "valBool: " << valBool << "\n";
+        bool valBool = node / hu::val<bool>{};   /* [2] */          /*!!!eol*/out << "valBool: " << valBool << "\n";
+//!!!
     }
 
     {
         auto src = R"(
 {
+//!!! val2
     dependencies: {
         gcc: 9.2.1
     }
+//!!!
 }
 )"sv;
 
-        auto trove = move(get<hu::Trove>(hu::Trove::fromString(src)));
-        auto gccVersion = trove / "dependencies" / "gcc" / hu::val<V3>{};
-                                                                    cout << "gccVersion: " << gccVersion << "\n";
+        auto trove = get<hu::Trove>(hu::Trove::fromString(src));
+//!!! val3
+        auto gccVersion = trove / "dependencies" / "gcc" / hu::val<V3>{}; /*!!!eol*/out << "gccVersion: " << gccVersion << "\n";
+//!!!
+//!!! val4                                                                    
         auto const literalVersion = "9.2.1";                        
-        auto toolVersion = hu::val<V3>::extract(literalVersion);    cout << "toolVersion: " << toolVersion << "\n";
+        auto toolVersion = hu::val<V3>::extract(literalVersion);    /*!!!eol*/out << "toolVersion: " << toolVersion << "\n";
+//!!!
     }
 
     {
         auto src = R"(
+//!!! anno1
 {
     definitions: { 
         player: {
@@ -252,46 +289,51 @@ int main()
         }
     }
 }
+//!!!
 )"sv;
 
         auto trove = move(get<hu::Trove>(hu::Trove::fromString(src)));
+//!!! anno2
         auto node = trove.nodeByAddress("/definitions/player/maxHp/type");
 
-        int numAnnos = node.numAnnotations();               cout << "num annos: " << numAnnos << "\n";
+        int numAnnos = node.numAnnotations();               /*!!!eol*/out << "num annos: " << numAnnos << "\n";
         for (int i = 0; i < numAnnos; ++i)
         {
-            auto [k, v] = node.annotation(i);               cout << "k: " << k << "  v: " << v << "\n";
+            auto [k, v] = node.annotation(i);               /*!!!eol*/out << "k: " << k << "  v: " << v << "\n";
             if (k == "numBits"sv) { /*...*/ }
             else if (k == "numBytes"sv) { /*...*/ }
         }
         // or (slower; hu::Node::allAnnotations() allocates a std::vector):
         for (auto [k, v] : node.allAnnotations())
-        {                                                   cout << "k: " << k << "  v: " << v << "\n";
+        {                                                   /*!!!eol*/out << "k: " << k << "  v: " << v << "\n";
             if (k == "numBits"sv) { /*...*/ }
             else if (k == "numBytes"sv) { /*...*/ }
         }
 
         bool hasNumBits = node.hasAnnotation("numBits"sv);  // verify annotation by key
-                                                            cout << "hasNumBits: " << hasNumBits << "\n";
+                                                            /*!!!eol*/out << "hasNumBits: " << hasNumBits << "\n";
         auto annoValue = node.annotation("numBits"sv);      // get annotation by key
-                                                            cout << "annoValue: " << annoValue << "\n";
+                                                            /*!!!eol*/out << "annoValue: " << annoValue << "\n";
         // many annotations in a single node might have the same value; run through them all
         for (auto & annoKey: node.annotationsWithValue("32"sv))
         {
             //...
-                                                            cout << "annoKey: " << annoKey << "\n";
+//!!!                                                            
+                                                            /*!!!eol*/out << "annoKey: " << annoKey << "\n";
         }
-
+//!!! anno3
         auto all32BitTypeNodes = trove.findNodesWithAnnotationKeyValue("numBits"sv, "32"sv);
         for (auto & node : all32BitTypeNodes)
         {
             //...
-                                                            cout << "node: " << node.address() << "\n";
+//!!!                                                            
+                                                            /*!!!eol*/out << "node: " << node.address() << "\n";
         }
-
+//!!! print1
         hu::SerializeOptions opts {};
         auto tokStr = trove.toString(opts);
-
+//!!!
+//!!! print2
         // Output the exact token stream used to build the trove. Fast.
         tokStr = trove.toClonedString();
 
@@ -301,21 +343,24 @@ int main()
         
         // Minimal whitespace, with old style HTML linebreaks.
         tokStr = trove.toMinimalString({}, true, "<br />");
-
+//!!!
+//!!! print3
         hu::ColorTable colorTable = hu::getAnsiColorTable();
 
         // You can specify minimal whitespace and still use a color table for the tokens--see below.
         tokStr = trove.toMinimalString(colorTable, false, "\n");
         if (auto str = std::get_if<std::string>(& tokStr))
-            { cout << * str; }
+            { out << * str; }
 
         // Pretty. Use an indentation of 4 spaces to format nested depths.
         tokStr = trove.toPrettyString(4, false, colorTable, false, "\n");
         if (auto str = std::get_if<std::string>(& tokStr))
-            { cout << * str; }
+            { out << * str; }
+//!!!
     }
 
     {
+//!!! hudo
         auto desRes = hu::Trove::fromFile("apps/readmeSrc/hudo.hu"sv);
         if (auto trove = std::get_if<hu::Trove>(& desRes))
         {
@@ -324,12 +369,21 @@ int main()
 
             auto versionString = trove->troveAnnotation("hudo-version");
             auto version = V3 { versionString.str() };
-            if      (version < V3 { 0, 1, 0 }) { std::cout << "Using version 0.0.x\n"; /*...*/ }
-            else if (version < V3 { 0, 2, 0 }) { std::cout << "Using version 0.1.x\n"; /*...*/ }
-            else { std::cout << "Using latest version 0.2.x\n"; /*...*/ }
+            if      (version < V3 { 0, 1, 0 }) { out << "Using version 0.0.x\n"; /*...*/ }
+            else if (version < V3 { 0, 2, 0 }) { out << "Using version 0.1.x\n"; /*...*/ }
+            else { out << "Using latest version 0.2.x\n"; /*...*/ }
             // ...
+//!!!
         }
     }
+
+    ifstream expStr("apps/readmeSrc/usage_cpp_out.txt");
+    string expected((std::istreambuf_iterator<char>(expStr)), std::istreambuf_iterator<char>());
+    auto output = out.str();
+    if (expected == output)
+        { printf("Copasetic, my sisters and brothers.\n"); return 0; }
+    else
+        { printf("Epic fail: %s vs %s", expected.data(), output.data()); return 1; }
 
     return 0;
 }

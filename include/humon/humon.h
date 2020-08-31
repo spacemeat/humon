@@ -205,8 +205,8 @@ extern "C"
      * memory in `buffer`; it remains set to NULL.*/
     typedef struct huVector_tag
     {
-        huEnumType_t kind;              ///< The kind of vector this is. Determines growth and capacity behavior.
-        char * buffer;                  ///< The owned buffer for the array.
+        huEnumType_t kind;            ///< The kind of vector this is. Determines growth and capacity behavior.
+        char * buffer;                ///< The owned buffer for the array.
         huSize_t elementSize;         ///< The size of one element of the array. If set to 0, the vector does not manage memory.
         huSize_t numElements;         ///< The number of elements currently managed by the array.
         huSize_t vectorCapacity;      ///< The maximum capacity of the array.
@@ -217,7 +217,7 @@ extern "C"
      * It is also not likely to point directly to an allocation, but to a substring. */
     typedef struct huStringView_tag
     {
-        char const * ptr;       ///< The beginning of the string in memory.
+        char const * ptr;     ///< The beginning of the string in memory.
         huSize_t size;        ///< The size of the string in bytes.
     } huStringView;
 
@@ -307,7 +307,7 @@ extern "C"
     typedef struct huNode_tag
     {
         struct huTrove_tag const * trove;   ///< The trove tracking this node.
-        huSize_t nodeIdx;              ///< The index of this node in its trove's tracking array.
+        huSize_t nodeIdx;                   ///< The index of this node in its trove's tracking array.
         huEnumType_t kind;                  ///< A huNodeKind value.
         huToken const * firstToken;         ///< The first token which contributes to this node, including any annotation and comment tokens.
         huToken const * keyToken;           ///< The key token if the node is inside a dict.
@@ -315,8 +315,8 @@ extern "C"
         huToken const * lastValueToken;     ///< The last token of this node's actual value; for a container, it points to the closing brac(e|ket).
         huToken const * lastToken;          ///< The last token of this node, including any annotation and comment tokens.
 
-        huSize_t parentNodeIdx;        ///< The parent node's index, or -1 if this node is the root.
-        huSize_t childOrdinal;         ///< The index of this node vis a vis its sibling nodes (starting at 0).
+        huSize_t parentNodeIdx;             ///< The parent node's index, or -1 if this node is the root.
+        huSize_t childOrdinal;              ///< The index of this node vis a vis its sibling nodes (starting at 0).
 
         huVector childNodeIdxs;             ///< Manages a huSize_t []. Stores the node inexes of each child node, if this node is a collection.
         huVector annotations;               ///< Manages a huAnnotation []. Stores the annotations associated to this node.
@@ -418,7 +418,7 @@ extern "C"
     {
         huEnumType_t encoding;          ///< The input Unicode encoding for loads.
         char const * dataString;        ///< The buffer containing the Humon text as loaded. Owned by the trove. Humon takes care to NULL-terminate this string.
-        huSize_t dataStringSize;   ///< The size of the buffer.
+        huSize_t dataStringSize;        ///< The size of the buffer.
         huVector tokens;                ///< Manages a huToken []. This is the array of tokens lexed from the Humon text.
         huVector nodes;                 ///< Manages a huNode []. This is the array of node objects parsed from tokens.
         huVector errors;                ///< Manages a huError []. This is an array of errors encountered during load.

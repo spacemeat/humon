@@ -16,6 +16,7 @@ int strntol(char const * str, int strLen, char const ** end, int radix)
 
 int main()
 {
+//!!! materials
     huTrove const * trove = NULL;
     int error = huDeserializeTroveFromFile(& trove, "apps/readmeSrc/materials.hu", NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
     if (error == HU_ERROR_NOERROR && huGetNumErrors(trove) == 0)
@@ -27,7 +28,15 @@ int main()
         valueNode = huGetChildByIndex(extentsNode, 1);
         sExt = valueNode ? & valueNode->valueToken->str : NULL;
         int extY = sExt ? strntol(sExt->ptr, sExt->size, NULL, 10) : 0;
+//!!!
 
-        printf("Extents: (%d, %d)\n", extX, extY);
+        char output[128];
+        char expect[] = "Extents: (1024, 1024)\n";
+        snprintf(output, 128, "Extents: (%d, %d)\n", extX, extY);
+
+        if (strncmp(output, expect, 128) == 0)
+            { printf("Copasetic, my sisters and brothers.\n"); return 0; }
+        else
+            { printf("Epic fail: %s vs %s", expect, output); return 1; }
     }
 }

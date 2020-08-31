@@ -270,6 +270,10 @@ def buildDocs():
         print ("doxygen not detected")
    
 
+def buildReadme():
+    print (f"{ansi.dk_yellow_fg}Building {ansi.lt_yellow_fg}README.md{ansi.all_off}")
+    doShellCommand(f'./updateReadme.py')
+
 if __name__ == "__main__":
     clean = False
     debug = False
@@ -393,3 +397,4 @@ if __name__ == "__main__":
                 buildExe("hux", src, ["include"], [binDir], [], ["humon"], flags, arch32bit, debug, False, tool)
 
     buildDocs()
+    buildReadme()
