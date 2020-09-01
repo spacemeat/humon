@@ -215,7 +215,7 @@ void * ourRealloc(huAllocator const * allocator, void * alloc, size_t len)
 
 void ourFree(huAllocator const * allocator, void * alloc)
 {
-    return allocator->memFree(allocator->manager, alloc);
+    allocator->memFree(allocator->manager, alloc);
 }
 
 
