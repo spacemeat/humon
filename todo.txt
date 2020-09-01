@@ -1,5 +1,5 @@
 DONE THIS CHECKIN:
-Added custom memory management functions.
+Fixed VS Code include paths.
 
 TODO:
 P1 finish the python package
