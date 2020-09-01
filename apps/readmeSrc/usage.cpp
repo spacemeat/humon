@@ -99,6 +99,34 @@ struct hu::val<V3>
 };
 //!!!
 
+class YourMemoryManager
+{
+public:
+
+    YourMemoryManager(ostringstream & out) : out(out) { }
+
+    void * alloc(::size_t len) 
+    { 
+        out << "Alloc: #" << ++numAllocs << " - " << len << " bytes\n";
+        return ::malloc(len);
+    }
+    void * realloc(void * alloc, ::size_t len)
+    { 
+        out << "Realloc: #" << ++numReallocs << " - " << len << " bytes\n";
+        return ::realloc(alloc, len);
+    }
+    void free(void * alloc)
+    { 
+        out << "Free: #" << ++numFrees << "\n";
+        return ::free(alloc);
+    }
+
+    ostringstream & out;
+    int numAllocs = 0;
+    int numReallocs = 0;
+    int numFrees = 0;
+};
+
 int main()
 {
     ostringstream out;
@@ -133,6 +161,26 @@ int main()
 //!!! statics
         auto desResFromRam = hu::Trove::fromString("{foo: [100, 200]}"sv);
         auto DesResFromFile = hu::Trove::fromFile("apps/readmeSrc/materials.hu"sv);
+//!!!
+    }
+
+
+    {
+//!!! loadOptions
+        YourMemoryManager memMan(out);
+        //...
+        auto alloc = hu::Allocator
+        {
+            & memMan,
+            // These are fn pointers, so no captures allowed.
+            [](void * memMan, ::size_t len )
+                { return ((YourMemoryManager *) memMan)->alloc(len); },
+            [](void * memMan, void * alloc, ::size_t len )
+                { return ((YourMemoryManager *) memMan)->realloc(alloc, len); },
+            [](void * memMan, void * alloc )
+                { return ((YourMemoryManager *) memMan)->free(alloc); }
+        };
+        auto desResFromRam = hu::Trove::fromString("{foo: [100, 200]}"sv, { hu::Encoding::unknown, true, 4, alloc});
 //!!!
 //!!! roots
         auto & trove = std::get<hu::Trove>(desResFromRam);

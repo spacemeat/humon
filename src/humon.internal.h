@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdlib.h>
 #include "humon/humon.h"
 #include "humon/ansiColors.h"
 
@@ -74,6 +75,14 @@ extern "C"
 	huSize_t min(huSize_t a, huSize_t b);
 	huSize_t max(huSize_t a, huSize_t b);
 
+    void * sysAlloc(void * allocator, size_t len);
+    void * sysRealloc(void * allocator, void * alloc, size_t len);
+    void sysFree(void * allocator, void * alloc);
+
+    void * ourAlloc(huAllocator const * allocator, size_t len);
+    void * ourRealloc(huAllocator const * allocator, void * alloc, size_t len);
+    void ourFree(huAllocator const * allocator, void * alloc);
+
     void printError(huEnumType_t errorResponse, char const * msg);
 
     FILE * openFile(char const * path, char const * mode);
@@ -87,7 +96,7 @@ extern "C"
     /// Initializes a vector with a preallocated buffer. Does not allocate, and cannot grow.
     void initVectorPreallocated(huVector * vector, void * buffer, huSize_t elementSize, huSize_t numElements);
     /// Initializes a vector to zero size. Does not allocate yet.
-    void initGrowableVector(huVector * vector, huSize_t elementSize);
+    void initGrowableVector(huVector * vector, huSize_t elementSize, huAllocator const * allocator);
     /// Frees the memory owned by a huVector.
     void destroyVector(huVector const * vector);
     /// Returns the number of elements in a huVector.

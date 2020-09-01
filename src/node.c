@@ -16,9 +16,9 @@ void initNode(huNode * node, huTrove const * trove)
     node->lastToken = HU_NULLTOKEN;
     node->childOrdinal = 0;
     node->parentNodeIdx = -1;
-    initGrowableVector(& node->childNodeIdxs, sizeof(huSize_t));
-    initGrowableVector(& node->annotations, sizeof(huAnnotation));
-    initGrowableVector(& node->comments, sizeof(huComment));
+    initGrowableVector(& node->childNodeIdxs, sizeof(huSize_t), & trove->allocator);
+    initGrowableVector(& node->annotations, sizeof(huAnnotation), & trove->allocator);
+    initGrowableVector(& node->comments, sizeof(huComment), & trove->allocator);
 }
 
 
@@ -317,7 +317,7 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
                 char * ptrKey = trKey;
                 huSize_t trCursor = 0;
                 if (len < HUMON_ADDRESS_BLOCKSIZE)   // We have a static buffer, but if it's not big enough, make a sufficiently huge one.
-                    { ptrKey = malloc(len); }
+                    { ptrKey = ourAlloc(& node->trove->allocator, len); }
                 // extract the key
                 for (char const * pc = wordStart; pc < wordStart + len; ++pc)
                 {
@@ -328,7 +328,7 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
                 }
                 nextNode = huGetChildByKeyN(node, trKey, trCursor);
                 if (len < HUMON_ADDRESS_BLOCKSIZE)   // If we had to make a bigger buffer, dispose of it.
-                    { free(ptrKey); }
+                    { ourFree(& node->trove->allocator, ptrKey); }
             }
             else
                 { nextNode = huGetChildByKeyN(node, wordStart, len); }

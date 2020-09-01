@@ -282,14 +282,36 @@ namespace hu
     /// Describes a color table for printing.
     using ColorTable = std::array<std::string_view, capi::HU_COLORCODE_NUMCOLORS>;
 
+    class Allocator : public capi::huAllocator
+    {
+    public:
+        Allocator(void * manager = NULL, capi::huMemAlloc memAlloc = NULL, capi::huMemRealloc memRealloc = NULL, capi::huMemFree memFree = NULL) HUMON_NOEXCEPT
+        : capi::huAllocator({manager, memAlloc, memRealloc, memFree})
+        { }
+
+        Allocator(capi::huAllocator const & alloc)
+        : capi::huAllocator({alloc.manager, alloc.memAlloc, alloc.memRealloc, alloc.memFree})
+        { }
+
+        void setManager(void * manager) HUMON_NOEXCEPT { this->manager = manager; }
+        void setAllocFn(capi::huMemAlloc memAlloc = NULL) HUMON_NOEXCEPT { this->memAlloc = memAlloc; }
+        void setReallocFn(capi::huMemRealloc memRealloc = NULL) HUMON_NOEXCEPT { this->memRealloc = memRealloc; }
+        void setFreeFn(capi::huMemFree memFree = NULL) HUMON_NOEXCEPT { this->memFree = memFree; }
+
+        void * getManager() HUMON_NOEXCEPT { return this->manager; }
+        capi::huMemAlloc getAllocFn() HUMON_NOEXCEPT { return this->memAlloc; }
+        capi::huMemRealloc getReallocFn() HUMON_NOEXCEPT { return this->memRealloc; }
+        capi::huMemFree getFreeFn() HUMON_NOEXCEPT { return this->memFree; }
+    };
+
     /// Encapsulates a selection of parameters to control how Humon interprets the input for loading.
     class DeserializeOptions
     {
     public:
         /// Construct with sane defaults.
-        DeserializeOptions(Encoding encoding = Encoding::unknown, bool strictUnicode = true, capi::huCol_t tabSize = 4) HUMON_NOEXCEPT
+        DeserializeOptions(Encoding encoding = Encoding::unknown, bool strictUnicode = true, capi::huCol_t tabSize = 4, Allocator allocator = {}) HUMON_NOEXCEPT
         {
-            capi::huInitDeserializeOptions(& cparams, static_cast<capi::huEnumType_t>(encoding), strictUnicode, tabSize);
+            capi::huInitDeserializeOptions(& cparams, static_cast<capi::huEnumType_t>(encoding), strictUnicode, tabSize, & allocator);
         }
 
         /// Expect a particular Unicode encoding, or Encoding::unknown.
@@ -300,7 +322,11 @@ namespace hu
         void setAllowUtf16UnmatchedSurrogates(bool shallWe) HUMON_NOEXCEPT { cparams.allowUtf16UnmatchedSurrogates = shallWe; }
         /// Use this tab size when computing the column of a token and the token stream contains tabs.
         void setTabSize(capi::huCol_t tabSize) HUMON_NOEXCEPT { cparams.tabSize = tabSize; }
-
+        /// Customize the memory allocation functions used in all of Humon's API.
+        void setAllocator(Allocator allocator) HUMON_NOEXCEPT
+        {
+            cparams.allocator = allocator;
+        }
         /// Get the encoding to expect.
         Encoding encoding() const HUMON_NOEXCEPT { return static_cast<Encoding>(cparams.encoding); }
         /// Get whether out-of-range Unicode code points are allowed.
@@ -309,6 +335,8 @@ namespace hu
         bool allowUtf16UnmatchedSurrogates() const HUMON_NOEXCEPT { return cparams.allowUtf16UnmatchedSurrogates; }
         /// Get the tab size used to compute column information in token streams that contain tabs.
         capi::huCol_t tabSize() const HUMON_NOEXCEPT { return cparams.tabSize; }
+        /// Get the allocator used to handle memory.
+        Allocator getAllocator() const HUMON_NOEXCEPT { return Allocator { cparams.allocator }; }
 
         /// Aggregated C structure.
         capi::huDeserializeOptions cparams;

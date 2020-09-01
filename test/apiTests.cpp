@@ -2187,20 +2187,6 @@ TEST(huGetAddress, pathological)
 
 TEST_GROUP(huDeserializeTrove)
 {
-    htd_listOfLists l;
-    htd_dictOfDicts d;
-
-    void setup()
-    {
-        l.setup();
-        d.setup();
-    }
-
-    void teardown()
-    {
-        d.teardown();
-        l.teardown();
-    }
 };
 
 // Patho cases only for this method. Used extensively elsewhere.
@@ -2209,7 +2195,7 @@ TEST(huDeserializeTrove, pathological)
     huTrove const * trove = HU_NULLTROVE;
     int error = HU_ERROR_NOERROR;
     huDeserializeOptions params;
-    huInitDeserializeOptions(& params, HU_ENCODING_UTF8, true, 4);
+    huInitDeserializeOptions(& params, HU_ENCODING_UTF8, true, 4, NULL);
 
     error = huDeserializeTroveZ(NULL, "", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
@@ -2262,29 +2248,59 @@ TEST(huDeserializeTrove, pathological)
 
 TEST_GROUP(huDeserializeTroveFromFile)
 {
-    htd_listOfLists l;
-    htd_dictOfDicts d;
-
-    void setup()
-    {
-        l.setup();
-        d.setup();
-    }
-
-    void teardown()
-    {
-        d.teardown();
-        l.teardown();
-    }
+    int numAllocs = 0;
+    int numReallocs = 0;
+    int numFrees = 0;
 };
 
-// Patho cases only for this method. Used extensively elsewhere.
+void * myalloc(void * allocator, size_t len)
+{
+    auto allocatorator = (TestGroup_huDeserializeTroveFromFile *) allocator;
+    allocatorator->numAllocs += 1;
+    return malloc(len);
+}
+
+void * myrealloc(void * allocator, void * alloc, size_t len)
+{
+    auto allocatorator = (TestGroup_huDeserializeTroveFromFile *) allocator;
+    allocatorator->numReallocs += 1;
+    return realloc(alloc, len);
+}
+
+void myfree(void * allocator, void * alloc)
+{
+    auto allocatorator = (TestGroup_huDeserializeTroveFromFile *) allocator;
+    allocatorator->numFrees += 1;
+    return free(alloc);
+}
+
+TEST(huDeserializeTroveFromFile, malloc)
+{
+    huTrove const * trove = HU_NULLTROVE;
+    int error = HU_ERROR_NOERROR;
+    huDeserializeOptions params;
+    huAllocator alloc;
+    alloc.manager = this;
+    alloc.memAlloc = myalloc;
+    alloc.memRealloc = myrealloc;
+    alloc.memFree = myfree;
+    huInitDeserializeOptions(& params, HU_ENCODING_UTF8, true, 4, & alloc);
+
+    error = huDeserializeTroveFromFile(& trove, "test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_MUM);
+    LONGS_EQUAL(HU_ERROR_NOERROR, error);
+    huDestroyTrove(trove);
+
+    LONGS_EQUAL(12, numAllocs);
+    LONGS_EQUAL(2, numReallocs);
+    LONGS_EQUAL(12, numFrees);
+}
+
 TEST(huDeserializeTroveFromFile, pathological)
 {
     huTrove const * trove = HU_NULLTROVE;
     int error = HU_ERROR_NOERROR;
     huDeserializeOptions params;
-    huInitDeserializeOptions(& params, HU_ENCODING_UTF8, true, 4);
+    huInitDeserializeOptions(& params, HU_ENCODING_UTF8, true, 4, NULL);
 
     error = huDeserializeTroveFromFile(NULL, "", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);

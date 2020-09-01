@@ -137,7 +137,7 @@ As an alternative to installing, you can simply copy the lib from `build/bin` an
 If you're building a Windows project in Visual Studio, and you want to use the static library, simply #include <humon/humon.h> or <humon/humon.hpp>, and link against the lib. If you want to use the DLL, define the HUMON_USING_DLL preprocessor symbol (either with a preceding #define or by passing `-DHUMON_USING_DLL` to the build) and link against the import lib.
 
 ### Humon version
-Humon uses semver in its language/API versioning scheme: `major.minor.patch` For changes that do not affect the API or correct behavior, the patch is incremented. For changes that only add to the API but do not break builds or behaviors, the minor value is incremented. For breaking changes, the major value is incremented. The version will generally refer to the C/C++ API version; the Humon format is considered stable. (Though of course, it's only Humon, and may not know of its own imperfections yet.)
+Humon uses semver in its language/API versioning scheme: `major.minor.patch` For changes that do not affect the API or correct behavior, the patch is incremented. For changes that only add to the API but do not break builds or behaviors, the minor value is incremented. For breaking changes, the major value is incremented. The version refers to the C/C++ API version; the Humon *format* is considered stable.
 
 The version number is defined in the C/C++ API as `HUMON_MAJORVERSION`, `HUMON_MINORVERSION`, and `HUMON_PATCHVERSION`.
 
@@ -371,6 +371,30 @@ These each return a `std::variant<hu::Trove, hu::ErrorCode>` object. Once you ha
 > The error code is set if there was a problem loading the token stream before tokenization could begin. Bad parameters or an unusable encoding will disallow a trove from even being created. Beyond that point, a trove is made and returned, and will contain all the tokenization and parsing errors in the token stream.
 
 The `hu::Trove` class is move-constructable and move-assignable. When it is destroyed, it will destroy the underlying trove data.
+
+#### Loading options
+There are some options you can give the loader:
+
+    YourMemoryManager memMan(out);
+    //...
+    auto alloc = hu::Allocator
+    {
+        & memMan,
+        // These are fn pointers, so no captures allowed.
+        [](void * memMan, ::size_t len )
+            { return ((YourMemoryManager *) memMan)->alloc(len); },
+        [](void * memMan, void * alloc, ::size_t len )
+            { return ((YourMemoryManager *) memMan)->realloc(alloc, len); },
+        [](void * memMan, void * alloc )
+            { return ((YourMemoryManager *) memMan)->free(alloc); }
+    };
+    auto desResFromRam = hu::Trove::fromString("{foo: [100, 200]}"sv, { hu::Encoding::unknown, true, 4, alloc});
+
+The object constructed in the call is a `hu::DeserializeOptions`, which takes four values:
+* a `hu::Encoding` specifying the anticipated Unicode encoding of the input. For loading from files, this defaults to `hu::Encoding::unknown`, in which case Humon will attempt to guess the encoding. For loading from memory, it defaults to `hu::Encoding::utf8`.
+* a `bool` specifying whether to be strict about Unicode encodings. Defaults to `true`.
+* an integer type specifying the tab size. `\t` characters modulate whitespace on this value. It's useful for matching column data in errors and tokens to what a text editor thinks is spatially correct in the token stream. Defaults to `4`.
+* a reference to a `hu::Allocator` that you can set with custom memory allocation functions and context. The default allocator uses stdio.h's `malloc()`, `realloc()` and `free()`. Above, we're using a hypothetical context called `YourMemoryManager`, but you'd use your own.
 
 ### Getting nodes
 
@@ -917,18 +941,22 @@ If you think Humon is doing wrong things, you can check out its analysis in the 
 Pass `-noLineCol` (which then passes `-DHUMON_NOLINECOL` to the build tool) to turn off tracking and storage of line and column data in tokens. This simply removes that data from the huToken structure, freeing up a bunch of RAM. Doing this turns *off* line/column reporting in errors and disables comment associations--all comments are associated to the trove. Since this macro affects types defined in the public `humon.h` header, it's important to use the same macros when building Humon and using it in another application, probably by passing `-DHUMON_NOLINECOL` to the compiler.
 
 ## <a name="testingHumon">Testing Humon builds
-You can run the unit tests from a shell at the Humon project root, as mentioned above. The tests are organized in a file/group/test hierarchy, and coincidentally look a lot like CPPUTest files. Files under `test/ztest/` are for the test harness and some generated test framework code.
+You can run the unit tests from a shell at the Humon project root, as mentioned above:
+
+    ~/src/humon$ build/bin/test
+
+The test code under `{humon}/test` is organized in a file/group/test hierarchy, and coincidentally look a lot like CPPUTest files. Files under `{humon}/test/ztest/` are for the test harness and some generated test framework code.
 
 > I migrated away from CPPUTest because I wanted to remove the only external package dependency, and because I wanted to natively build the test code to match the target architecture. So I hacked a little test harness to reuse the test source files and it was fun times.
 
-The generated test runs a bunch of checks to test the Humon API's correctness. You can focus on specific source files, test groups, or tests with command line switches. Pass `-?` to get the skinny on that.
+The test runs a bunch of checks to test the Humon API's correctness. You can focus on specific source files, test groups, or tests with command line switches. Pass `-?` to get the skinny on that.
 
-It's important to note that changing some build parameters will invalidate some tests. Specifically, if you set `-noChecks` in the build process, you'll want to disable running the `pathological` tests which test for invalid parameters.
+It's important to note that changing some build parameters will invalidate some tests. Specifically, if you set `-noChecks` in the build process, you'll want to disable running the `pathological` tests which test for behavior with invalid parameters.
 
     ~/src/humon$ build-linux.py -noChecks
-    ~/src/humon$ build/bin/test-gcc -xt pathological
+    ~/src/humon$ build/bin/test -xt pathological
 
-There's a convenient script in the project directory that runs all the tests. After building with `-buildAll`, test all the targets at once:
+There's a convenient script in the project directory that runs the tests for all targeted builds. After building with `-buildAll`, test all the targets at once:
 
     ~/src/humon$ build-linux.py -buildAll
     Building static library libhumon-gcc-32-d.a
@@ -944,10 +972,8 @@ Near-future features include:
 * Language bindings for .NET
 * Language bindings for Node
 * Language bindings for Rust
-* Accept alloc/free alternatives in the C lib
 * Modules for C++
 * Single-header-ify the C++ (as an alternative to modules)
 * Constexpr All The Things in the single-header version. Kind of a research project.
-* Type overrides for some of the runtime data elements like line/column data
-* Better build process. Considering CMake, but that's not set in stone.
+* Better build process. Considering CMake, but that's not set in stone. Frankly, it is not my very favorite.
 * C++ Range views for depth- and breadth-first node visitation

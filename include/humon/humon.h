@@ -191,25 +191,35 @@ extern "C"
         HU_VECTORKIND_GROWABLE          ///< The vector is set up with an unbounded growable buffer.
     };
 
+    typedef void * (*huMemAlloc)(void * manager, size_t len);             ///< Custom memory allocator.
+    typedef void * (*huMemRealloc)(void * allocator, void *, size_t len);   ///< Custom memory reallocator.
+    typedef void (*huMemFree)(void * manager, void * alloc);              ///< Custom memory deallocator.
+
+    /// Describes memory allocation context and functions that Humon can use in lieu of malloc/realloc/free.
+    /** You can create and pass one of these to the deserialize functions, and 
+     * the trove will use them instead of malloc, realloc, and free from stdlib.h.
+     * The allocator is an opaque pointer, which is simply passed to the memory
+     * functions whenever they're called, and is otehrwise unused by Humon.*/
+    typedef struct huAllocator_tag
+    {
+        void * manager;                             ///< Custom memory manager. This is passed as the first parameter to the custom memory functions.
+        huMemAlloc memAlloc;                        ///< Custom memory allocator.
+        huMemRealloc memRealloc;                    ///< Custom memory reallocator.
+        huMemFree memFree;                          ///< Custom memory deallocator.
+    } huAllocator;
+
     /// Describes and owns an array of memory elements.
-    /** Wraps a buffer and operates it as an array, tracking
-     * the size and capacity of the array, and the size of its
-     * elements. Several Humon functions return huVectors, which 
-     * own allocated heap memory to represent an array of
-     * arbitrary-sized objects. No functions take them as 
-     * parameters, and there is no HUMON_PUBLIC functions that
-     * initialize a huVector. The huVector object always owns
-     * its memory buffer, so when one goes out of scope, the
-     * user should free() the buffer pointer.
-     * If the elementSize is set to 0, the vector does not track
-     * memory in `buffer`; it remains set to NULL.*/
+    /** Owns and manages a buffer and operates it as an array, tracking the 
+     * size and capacity of the array, and the size of its elements. It's for
+     * internal API storage, and thus there are no public functions to use it.*/
     typedef struct huVector_tag
     {
-        huEnumType_t kind;            ///< The kind of vector this is. Determines growth and capacity behavior.
-        char * buffer;                ///< The owned buffer for the array.
-        huSize_t elementSize;         ///< The size of one element of the array. If set to 0, the vector does not manage memory.
-        huSize_t numElements;         ///< The number of elements currently managed by the array.
-        huSize_t vectorCapacity;      ///< The maximum capacity of the array.
+        huEnumType_t kind;                          ///< The kind of vector this is. Determines growth and capacity behavior.
+        huAllocator const * allocator;              ///< A custom memory allocator.
+        char * buffer;                              ///< The owned buffer for the array.
+        huSize_t elementSize;                       ///< The size of one element of the array. If set to 0, the vector does not manage memory.
+        huSize_t numElements;                       ///< The number of elements currently managed by the array.
+        huSize_t vectorCapacity;                    ///< The maximum capacity of the array.
     } huVector;
 
     /// Stores a pointer to a string, and its size. Does not own the string.
@@ -268,14 +278,15 @@ extern "C"
     /// Encapsulates a selection of parameters to control how Humon interprets the input for loading.
     typedef struct huDeserializeOptions_tag
     {
-        huEnumType_t encoding;                  ///< The Unicode encoding of the input. Can be `HU_ENCODING_UNKNOWN`.
-        bool allowOutOfRangeCodePoints;         ///< Whether to check whether input code points are outside legal ranges.
-        bool allowUtf16UnmatchedSurrogates;     ///< Whether to check whether UTF-16 input code points are unmatched surrogates.
-        huCol_t tabSize;                        ///< The tab size to assume for the input, for the purposes of reporting token column data.
+        huEnumType_t encoding;                      ///< The Unicode encoding of the input. Can be `HU_ENCODING_UNKNOWN`.
+        bool allowOutOfRangeCodePoints;             ///< Whether to check whether input code points are outside legal ranges.
+        bool allowUtf16UnmatchedSurrogates;         ///< Whether to check whether UTF-16 input code points are unmatched surrogates.
+        huCol_t tabSize;                            ///< The tab size to assume for the input, for the purposes of reporting token column data.
+        huAllocator allocator;                      ///< A memory allocator.
     } huDeserializeOptions;
 
-    /// Fill in a huDeserializeOptions struct quickly.
-	HUMON_PUBLIC void huInitDeserializeOptions(huDeserializeOptions * params, huEnumType_t encoding, bool strictUnicode, huCol_t tabSize);
+    /// Fill in a huDeserializeOptions struct quickly. You can pass NULL for the allocator, in which case stdlib will be used.
+	HUMON_PUBLIC void huInitDeserializeOptions(huDeserializeOptions * params, huEnumType_t encoding, bool strictUnicode, huCol_t tabSize, huAllocator * allocator);
 
     /// Encapsulates a selection of parameters to control the serialization of a trove.
     typedef struct huSerializeOptions_tag
@@ -416,17 +427,18 @@ extern "C"
      * string, and can output Humon to file or string as well. */
     typedef struct huTrove_tag
     {
-        huEnumType_t encoding;          ///< The input Unicode encoding for loads.
-        char const * dataString;        ///< The buffer containing the Humon text as loaded. Owned by the trove. Humon takes care to NULL-terminate this string.
-        huSize_t dataStringSize;        ///< The size of the buffer.
-        huVector tokens;                ///< Manages a huToken []. This is the array of tokens lexed from the Humon text.
-        huVector nodes;                 ///< Manages a huNode []. This is the array of node objects parsed from tokens.
-        huVector errors;                ///< Manages a huError []. This is an array of errors encountered during load.
-        huEnumType_t errorResponse;     ///< How the trove respones to errors during load.
-		huCol_t inputTabSize;			///< The tab length Humon uses to compute column values for tokens.
-        huVector annotations;           ///< Manages a huAnnotation []. Contains the annotations associated to the trove.
-        huVector comments;              ///< Manages a huComment[]. Contains the comments associated to the trove.
-        huToken const * lastAnnoToken;  ///< Token referencing the last token of any trove annotations.
+        huEnumType_t encoding;                      ///< The input Unicode encoding for loads.
+        char const * dataString;                    ///< The buffer containing the Humon text as loaded. Owned by the trove. Humon takes care to NULL-terminate this string.
+        huSize_t dataStringSize;                    ///< The size of the buffer.
+        huAllocator allocator;                      ///< A custom memory allocator.
+        huVector tokens;                            ///< Manages a huToken []. This is the array of tokens lexed from the Humon text.
+        huVector nodes;                             ///< Manages a huNode []. This is the array of node objects parsed from tokens.
+        huVector errors;                            ///< Manages a huError []. This is an array of errors encountered during load.
+        huEnumType_t errorResponse;                 ///< How the trove respones to errors during load.
+		huCol_t inputTabSize;			            ///< The tab length Humon uses to compute column values for tokens.
+        huVector annotations;                       ///< Manages a huAnnotation []. Contains the annotations associated to the trove.
+        huVector comments;                          ///< Manages a huComment[]. Contains the comments associated to the trove.
+        huToken const * lastAnnoToken;              ///< Token referencing the last token of any trove annotations.
     } huTrove;
 
     /// Creates a trove from a NULL-terminated string of Humon text.

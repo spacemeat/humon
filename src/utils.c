@@ -180,6 +180,45 @@ huSize_t max(huSize_t a, huSize_t b)
 }
 
 
+void * sysAlloc(void * allocator, size_t len)
+{
+    (void) allocator;
+    return malloc(len);
+}
+
+
+void * sysRealloc(void * allocator, void * alloc, size_t len)
+{
+    (void) allocator;
+    return realloc(alloc, len);
+}
+
+
+void sysFree(void * allocator, void * alloc)
+{
+    (void) allocator;
+    free(alloc);
+}
+
+
+void * ourAlloc(huAllocator const * allocator, size_t len)
+{
+    return allocator->memAlloc(allocator->manager, len);
+}
+
+
+void * ourRealloc(huAllocator const * allocator, void * alloc, size_t len)
+{
+    return allocator->memRealloc(allocator->manager, alloc, len);
+}
+
+
+void ourFree(huAllocator const * allocator, void * alloc)
+{
+    return allocator->memFree(allocator->manager, alloc);
+}
+
+
 bool isMachineBigEndian()
 {
     uint16_t i = 0xff;
@@ -187,12 +226,23 @@ bool isMachineBigEndian()
 }
 
 
-void huInitDeserializeOptions(huDeserializeOptions * params, huEnumType_t encoding, bool strictUnicode, huCol_t tabSize)
+void huInitDeserializeOptions(huDeserializeOptions * params, huEnumType_t encoding, bool strictUnicode, huCol_t tabSize, huAllocator * customAllocator)
 {
     params->encoding = encoding;
     params->allowOutOfRangeCodePoints = ! strictUnicode;
     params->allowUtf16UnmatchedSurrogates = ! strictUnicode;
     params->tabSize = tabSize;
+    if (customAllocator)
+        { params->allocator = * customAllocator; }
+    else
+    {
+        params->allocator = (huAllocator) {
+            .manager = NULL,
+            .memAlloc = & sysAlloc,
+            .memRealloc = & sysRealloc,
+            .memFree = & sysFree
+        };
+    }
 }
 
 

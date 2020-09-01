@@ -106,7 +106,11 @@ TEST(huVectorTests, initVectorPreallocated)
 TEST(huVectorTests, initGrowableVector)
 {
     huVector v;
-    initGrowableVector(&v, 1);
+    huAllocator allocator;
+    allocator.memAlloc = [](void *, ::size_t n){ return malloc(n); };
+    allocator.memRealloc = [](void *, void * alloc, ::size_t n){ return realloc(alloc, n); };
+    allocator.memFree = [](void *, void * alloc){ return free(alloc); };
+    initGrowableVector(&v, 1, & allocator);
 
     POINTERS_EQUAL(NULL, v.buffer);
     LONGS_EQUAL(1, v.elementSize);

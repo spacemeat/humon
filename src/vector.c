@@ -10,6 +10,7 @@ void initVectorForCounting(huVector * vector)
     vector->elementSize = 0;    // <- This is how we know we're counting only
     vector->numElements = 0;
     vector->vectorCapacity = 0;
+    vector->allocator = NULL;
 }
 
 
@@ -20,16 +21,18 @@ void initVectorPreallocated(huVector * vector, void * buffer, huSize_t elementSi
     vector->elementSize = elementSize;
     vector->numElements = 0;
     vector->vectorCapacity = numElements;
+    vector->allocator = NULL;
 }
 
 
-void initGrowableVector(huVector * vector, huSize_t elementSize)
+void initGrowableVector(huVector * vector, huSize_t elementSize, huAllocator const * allocator)
 {
     vector->kind = HU_VECTORKIND_GROWABLE;
     vector->buffer = NULL;
     vector->elementSize = elementSize;
     vector->numElements = 0;
     vector->vectorCapacity = 0;
+    vector->allocator = allocator;
 }
 
 
@@ -40,7 +43,7 @@ void destroyVector(huVector const * vector)
         vector->buffer != NULL)
     {
         huVector * ncVector = (huVector *) vector;
-        free(ncVector->buffer);
+        ourFree(ncVector->allocator, ncVector->buffer);
     }
 }
 
@@ -57,7 +60,7 @@ void resetVector(huVector * vector)
         break;
     case HU_VECTORKIND_GROWABLE:
         destroyVector(vector);    // doesn't change .elementSize
-        initGrowableVector(vector, vector->elementSize);
+        initGrowableVector(vector, vector->elementSize, vector->allocator);
         break;
     }
 }
@@ -104,7 +107,7 @@ void * growVector(huVector * vector, huSize_t * numElements)
             vector->numElements = numToAppend;
             vector->vectorCapacity = cap;
 
-            vector->buffer = malloc(vector->vectorCapacity * vector->elementSize);
+            vector->buffer = ourAlloc(vector->allocator, vector->vectorCapacity * vector->elementSize);
             next = vector->buffer;
         }
         else
@@ -118,7 +121,10 @@ void * growVector(huVector * vector, huSize_t * numElements)
 
             // if we grew, realloc
             if (vector->vectorCapacity > cap)
-                { vector->buffer = realloc(vector->buffer, vector->vectorCapacity * vector->elementSize); }
+            {
+                vector->buffer = ourRealloc(vector->allocator, vector->buffer, 
+                    vector->vectorCapacity * vector->elementSize);
+            }
 
             vector->numElements += numToAppend;
             next = vector->buffer + nextOffset;

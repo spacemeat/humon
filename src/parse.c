@@ -841,7 +841,7 @@ void parseTrove(huTrove * trove)
 #endif
 
     huVector commentQueue;
-    initGrowableVector(& commentQueue, sizeof(huToken *));
+    initGrowableVector(& commentQueue, sizeof(huToken *), & trove->allocator);
 
     huSize_t tokenIdx = 0;
     parseTroveRecursive(trove, & tokenIdx, NULL, 0, PS_TOP_LEVEL_EXPECT_START_OR_VALUE, & commentQueue);

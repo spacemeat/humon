@@ -8,17 +8,17 @@ void initTrove(huTrove * trove, huDeserializeOptions * deserializeOptions, huEnu
 {
     trove->dataString = NULL;
     trove->dataStringSize = 0;
-    trove->encoding = deserializeOptions->encoding;
+    trove->allocator = deserializeOptions->allocator;
 
-    initGrowableVector(& trove->tokens, sizeof(huToken));
-    initGrowableVector(& trove->nodes, sizeof(huNode));
-    initGrowableVector(& trove->errors, sizeof(huError));
+    initGrowableVector(& trove->tokens, sizeof(huToken), & trove->allocator);
+    initGrowableVector(& trove->nodes, sizeof(huNode), & trove->allocator);
+    initGrowableVector(& trove->errors, sizeof(huError), & trove->allocator);
 
     trove->errorResponse = errorResponse;
     trove->inputTabSize = deserializeOptions->tabSize;
 
-    initGrowableVector(& trove->annotations, sizeof(huAnnotation));
-    initGrowableVector(& trove->comments, sizeof(huComment));
+    initGrowableVector(& trove->annotations, sizeof(huAnnotation), & trove->allocator);
+    initGrowableVector(& trove->comments, sizeof(huComment), & trove->allocator);
 
     trove->lastAnnoToken = NULL;
 }
@@ -80,9 +80,16 @@ huEnumType_t huDeserializeTroveN(huTrove const ** trovePtr, char const * data, h
     huDeserializeOptions localDeserializeOptions;
     if (deserializeOptions == NULL)
     {
-        huInitDeserializeOptions(& localDeserializeOptions, HU_ENCODING_UTF8, true, 4);
+        huInitDeserializeOptions(& localDeserializeOptions, HU_ENCODING_UTF8, true, 4, NULL);
         deserializeOptions = & localDeserializeOptions;
     }
+
+    if (deserializeOptions->allocator.memAlloc == NULL)
+        { deserializeOptions->allocator.memAlloc = & sysAlloc; }
+    if (deserializeOptions->allocator.memRealloc == NULL)
+        { deserializeOptions->allocator.memRealloc = & sysRealloc; }
+    if (deserializeOptions->allocator.memFree == NULL)
+        { deserializeOptions->allocator.memFree = & sysFree; }
 
     huStringView inputDataView = { data, dataLen };
 
@@ -97,7 +104,7 @@ huEnumType_t huDeserializeTroveN(huTrove const ** trovePtr, char const * data, h
         }
     }
     
-    huTrove * trove = malloc(sizeof(huTrove));
+    huTrove * trove = ourAlloc(& deserializeOptions->allocator, sizeof(huTrove));
     if (trove == HU_NULLTROVE)
     {
         printError(errorResponse, "Error: Out of memory.");
@@ -114,10 +121,11 @@ huEnumType_t huDeserializeTroveN(huTrove const ** trovePtr, char const * data, h
     huSize_t sizeFactor = deserializeOptions->allowUtf16UnmatchedSurrogates == false && 
                                (deserializeOptions->encoding == HU_ENCODING_UTF16_BE ||
                                 deserializeOptions->encoding == HU_ENCODING_UTF16_LE) ? 2 : 1;
-    char * newData = malloc(dataLen * sizeFactor + 4);  // padding with 4 bytes of null at the end.
+    char * newData = ourAlloc(& deserializeOptions->allocator,
+        dataLen * sizeFactor + 4);  // padding with 4 bytes of null at the end.
     if (newData == NULL)
     {
-        free(trove);
+        ourFree(& deserializeOptions->allocator, trove);
         printError(errorResponse, "Out of memory.");
         return HU_ERROR_OUTOFMEMORY;
     }
@@ -126,8 +134,8 @@ huEnumType_t huDeserializeTroveN(huTrove const ** trovePtr, char const * data, h
     huEnumType_t error = transcodeToUtf8FromString(newData, & transcodedLen, & inputDataView, deserializeOptions);
     if (error != HU_ERROR_NOERROR)
     {
-        free(newData);
-        free(trove);
+        ourFree(& deserializeOptions->allocator, newData);
+        ourFree(& deserializeOptions->allocator, trove);
         printError(errorResponse, "Transcoding failed.");
         return error;
     }
@@ -172,9 +180,16 @@ huEnumType_t huDeserializeTroveFromFile(huTrove const ** trovePtr, char const * 
     huDeserializeOptions localDeserializeOptions;
     if (deserializeOptions == NULL)
     {
-        huInitDeserializeOptions(& localDeserializeOptions, HU_ENCODING_UNKNOWN, true, 4);
+        huInitDeserializeOptions(& localDeserializeOptions, HU_ENCODING_UNKNOWN, true, 4, NULL);
         deserializeOptions = & localDeserializeOptions;
     }
+
+    if (deserializeOptions->allocator.memAlloc == NULL)
+        { deserializeOptions->allocator.memAlloc = & sysAlloc; }
+    if (deserializeOptions->allocator.memRealloc == NULL)
+        { deserializeOptions->allocator.memRealloc = & sysRealloc; }
+    if (deserializeOptions->allocator.memFree == NULL)
+        { deserializeOptions->allocator.memFree = & sysFree; }
 
 	FILE * fp = openFile(path, "rb");
 	if (fp == NULL)
@@ -205,7 +220,7 @@ huEnumType_t huDeserializeTroveFromFile(huTrove const ** trovePtr, char const * 
         rewind(fp);
     }
     
-    huTrove * trove = malloc(sizeof(huTrove));
+    huTrove * trove = ourAlloc(& deserializeOptions->allocator, sizeof(huTrove));
     if (trove == HU_NULLTROVE)
     {
         fclose(fp);
@@ -223,7 +238,8 @@ huEnumType_t huDeserializeTroveFromFile(huTrove const ** trovePtr, char const * 
     huSize_t sizeFactor = deserializeOptions->allowUtf16UnmatchedSurrogates == false &&
                                (deserializeOptions->encoding == HU_ENCODING_UTF16_BE ||
                                 deserializeOptions->encoding == HU_ENCODING_UTF16_LE) ? 2 : 1;
-    char * newData = malloc(dataLen * sizeFactor + 4); // padding with 4 bytes of null at the end
+    char * newData = ourAlloc(& deserializeOptions->allocator,
+        dataLen * sizeFactor + 4); // padding with 4 bytes of null at the end
     if (newData == NULL)
     {
         fclose(fp);
@@ -236,7 +252,7 @@ huEnumType_t huDeserializeTroveFromFile(huTrove const ** trovePtr, char const * 
     fclose(fp);
     if (error != HU_ERROR_NOERROR)
     {
-        free(newData);
+        ourFree(& deserializeOptions->allocator, newData);
         printError(errorResponse, "Transcoding failed.");
         return error;
     }
@@ -268,9 +284,12 @@ void huDestroyTrove(huTrove const * trove)
 
     huTrove * ncTrove = (huTrove *) trove;
 
+    for (int i = 0; i < ncTrove->nodes.numElements; ++i)
+        { destroyNode(huGetNodeByIndex(ncTrove, i)); }
+
     if (ncTrove->dataString != NULL)
     {
-        free((char *) ncTrove->dataString);
+        ourFree(& ncTrove->allocator, (char *) ncTrove->dataString);
         ncTrove->dataString = NULL;
         ncTrove->dataStringSize = 0;
     }
@@ -282,7 +301,7 @@ void huDestroyTrove(huTrove const * trove)
     destroyVector(& ncTrove->annotations);
     destroyVector(& ncTrove->comments);
 
-    free(ncTrove);
+    ourFree(& ncTrove->allocator, ncTrove);
 }
 
 
@@ -926,12 +945,12 @@ void recordParseError(huTrove * trove, huEnumType_t errorCode, huToken const * p
     if (trove->errorResponse == HU_ERRORRESPONSE_STDERR ||
         trove->errorResponse == HU_ERRORRESPONSE_STDOUT)
     {
-        fprintf (stream, "Error: line: %llu    col: %llu    %s\n", 
+        fprintf(stream, "Error: line: %llu    col: %llu    %s\n", 
             (unsigned long long) pCur->line, (unsigned long long) pCur->col, huOutputErrorToString(errorCode));
     }
     else
     {
-        fprintf (stream, "%sError%s: line: %llu    col: %llu    %s\n", ansi_lightRed, ansi_off, 
+        fprintf(stream, "%sError%s: line: %llu    col: %llu    %s\n", ansi_lightRed, ansi_off, 
             (unsigned long long) pCur->line, (unsigned long long) pCur->col, huOutputErrorToString(errorCode));
     }
 }
@@ -1046,20 +1065,20 @@ huEnumType_t huSerializeTroveToFile(huTrove const * trove, char const * path, hu
     if (error != HU_ERROR_NOERROR)
         { return error; }
 
-    char * str = malloc(strLength);
+    char * str = ourAlloc(& trove->allocator, strLength);
     if (str == NULL)
         { return HU_ERROR_OUTOFMEMORY; }
 
     error = huSerializeTrove(trove, str, & strLength, serializeOptions);
     if (error != HU_ERROR_NOERROR)
-        { free(str); return error; }
+        { ourFree(& trove->allocator, str); return error; }
 
 	FILE * fp = openFile(path, "wb");
 	if (fp == NULL)
-	    { free(str); return HU_ERROR_BADFILE; }
+        { ourFree(& trove->allocator, str); return error; }
 
     huSize_t writeLength = (huSize_t) fwrite(str, sizeof(char), strLength, fp);
-    free(str);
+    ourFree(& trove->allocator, str);
     if (writeLength != strLength)
         { return HU_ERROR_BADFILE; }
 
