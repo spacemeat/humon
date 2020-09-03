@@ -37,7 +37,7 @@ static int Trove_init(TroveObject * self, PyObject * args, PyObject * kwds)
 
     char const * string = NULL;
     Py_ssize_t stringLen = 0;
-    int tabSize = 4;
+    huCol_t tabSize = 4;
     
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "s#|i", keywords,
         & string, & stringLen, & tabSize))
@@ -50,8 +50,8 @@ static int Trove_init(TroveObject * self, PyObject * args, PyObject * kwds)
     }
 
     huDeserializeOptions params;
-    huInitDeserializeOptions(& params, HU_ENCODING_UTF8, false, tabSize);
-    int error = huDeserializeTroveN(& self->trovePtr, string, stringLen, & params, HU_ERRORRESPONSE_STDERRANSICOLOR);
+    huInitDeserializeOptions(& params, HU_ENCODING_UTF8, false, tabSize, NULL);
+    huEnumType_t error = huDeserializeTroveN(& self->trovePtr, string, stringLen, & params, HU_ERRORRESPONSE_STDERRANSICOLOR);
     switch(error)
     {
     case HU_ERROR_NOERROR:
@@ -145,7 +145,7 @@ static PyObject * Trove_getToken(TroveObject * self, PyObject * args)
     if (!PyArg_ParseTuple(args, "i", & idx))
         { return NULL; }
 
-    huToken const * token = huGetToken(self->trovePtr, idx);
+    huToken const * token = huGetToken(self->trovePtr, (huSize_t) idx);
     PyObject * tokenObj = makeToken(token);
     if (tokenObj == NULL)
         { return NULL; }
@@ -163,7 +163,7 @@ static PyObject * Trove_getNodeByIndex(TroveObject * self, PyObject * args)
     if (!PyArg_ParseTuple(args, "i", & idx))
         { return NULL; }
 
-    huNode const * node = huGetNodeByIndex(self->trovePtr, idx);
+    huNode const * node = huGetNodeByIndex(self->trovePtr, (huSize_t) idx);
     PyObject * nodeObj = makeNode((PyObject *) self, node);
     if (nodeObj == NULL)
         { return NULL; }
@@ -178,7 +178,7 @@ static PyObject * Trove_getNodeByAddress(TroveObject * self, PyObject * args)
         { return NULL; }
 
     char * address = NULL;
-    int addressLen = 0;
+    huSize_t addressLen = 0;
     if (!PyArg_ParseTuple(args, "s#", & address, & addressLen))
         { return NULL; }
 
@@ -195,7 +195,7 @@ static PyObject * Trove_getError(TroveObject * self, PyObject * args)
     if (!PyArg_ParseTuple(args, "i", & idx))
         { return NULL; }
 
-    huError const * err = huGetError(self->trovePtr, idx);
+    huError const * err = huGetError(self->trovePtr, (huSize_t) idx);
     return Py_BuildValue("(OO)", getEnumValue("ErrorCode", err->errorCode), makeToken(err->token));
 }
 
@@ -217,7 +217,7 @@ static PyObject * Trove_getTroveAnnotations(TroveObject * self, PyObject * args,
     if (key && ! value)
     {
         // look up by key, return one token
-        huToken const * tok = huGetTroveAnnotationWithKeyN(self->trovePtr, key, keyLen);
+        huToken const * tok = huGetTroveAnnotationWithKeyN(self->trovePtr, key, (huSize_t) keyLen);
         return makeToken(tok);
     }
     else if (! key && value)
@@ -228,11 +228,11 @@ static PyObject * Trove_getTroveAnnotations(TroveObject * self, PyObject * args,
         if (list == NULL)
             { return NULL; }
 
-        int cursor = 0;
+        huSize_t cursor = 0;
         huToken const * tok = NULL;
         do
         {
-            tok = huGetTroveAnnotationWithValueN(self->trovePtr, value, valueLen, & cursor);
+            tok = huGetTroveAnnotationWithValueN(self->trovePtr, value, (huSize_t) valueLen, & cursor);
             if (tok)
             {
                 if (PyList_Append(list, makeToken(tok)) < 0)
@@ -254,8 +254,8 @@ static PyObject * Trove_getTroveAnnotations(TroveObject * self, PyObject * args,
     else if (key && value)
     {
         // look up by key, return whether key->value (bool)
-        huToken const * tok = huGetTroveAnnotationWithKeyN(self->trovePtr, key, keyLen);
-        return PyBool_FromLong(strncmp(tok->str.ptr, value, min(tok->str.size, valueLen)) == 0);
+        huToken const * tok = huGetTroveAnnotationWithKeyN(self->trovePtr, key, (huSize_t) keyLen);
+        return PyBool_FromLong(strncmp(tok->str.ptr, value, min(tok->str.size, (huSize_t) valueLen)) == 0);
     }
 
     return NULL;
@@ -275,7 +275,7 @@ static PyObject * Trove_getTroveComment(TroveObject * self, PyObject * args)
     if (idx < 0)
         { return NULL; }
 
-    return makeToken(huGetTroveComment(self->trovePtr, idx));
+    return makeToken(huGetTroveComment(self->trovePtr, (huSize_t) idx));
 }
 
 
@@ -297,7 +297,7 @@ static PyObject * Trove_findNodesWithAnnotations(TroveObject * self, PyObject * 
     if (list == NULL)
         { return NULL; }
 
-    int cursor = 0;
+    huSize_t cursor = 0;
     huNode const * node = NULL;
 
     if (key && ! value)
@@ -305,7 +305,7 @@ static PyObject * Trove_findNodesWithAnnotations(TroveObject * self, PyObject * 
         // look up by key
         do
         {
-            node = huFindNodesWithAnnotationKeyN(self->trovePtr, key, keyLen, & cursor);
+            node = huFindNodesWithAnnotationKeyN(self->trovePtr, key, (huSize_t) keyLen, & cursor);
             if (node)
             {
                 if (PyList_Append(list, makeNode((PyObject *) self, node)) < 0)
@@ -321,7 +321,7 @@ static PyObject * Trove_findNodesWithAnnotations(TroveObject * self, PyObject * 
         // look up by value
         do
         {
-            node = huFindNodesWithAnnotationValueN(self->trovePtr, value, valueLen, & cursor);
+            node = huFindNodesWithAnnotationValueN(self->trovePtr, value, (huSize_t) valueLen, & cursor);
             if (node)
             {
                 if (PyList_Append(list, makeNode((PyObject *) self, node)) < 0)
@@ -337,7 +337,7 @@ static PyObject * Trove_findNodesWithAnnotations(TroveObject * self, PyObject * 
         // look up by key and value
         do
         {
-            node = huFindNodesWithAnnotationKeyValueNN(self->trovePtr, key, keyLen, value, valueLen, & cursor);
+            node = huFindNodesWithAnnotationKeyValueNN(self->trovePtr, key, (huSize_t) keyLen, value, (huSize_t) valueLen, & cursor);
             if (node)
             {
                 if (PyList_Append(list, makeNode((PyObject *) self, node)) < 0)
@@ -373,12 +373,12 @@ static PyObject * Trove_findNodesByCommentContaining(TroveObject * self, PyObjec
     if (list == NULL)
         { return NULL; }
 
-    int cursor = 0;
+    huSize_t cursor = 0;
     huNode const * node = NULL;
 
     do
     {
-        node = huFindNodesByCommentContainingN(self->trovePtr, text, textLen, & cursor);
+        node = huFindNodesByCommentContainingN(self->trovePtr, text, (huSize_t) textLen, & cursor);
         if (node)
         {
             if (PyList_Append(list, makeNode((PyObject *) self, node)) < 0)

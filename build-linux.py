@@ -97,31 +97,6 @@ def buildLib (target, srcList, incDirs, flags, arch32bit, debug, cLanguage, tool
     return doShellCommand(cmd)
 
 
-def buildPythonLib (target, srcList, incDirc, flags, arch32bit, debug, tool):
-    global intDir
-
-    target=f"lib{target}{'-py'}.a"
-
-    print (f"{ansi.dk_yellow_fg}Building static relocatable library {ansi.lt_yellow_fg}{target}{ansi.all_off}")
-    
-    dotos = []
-    canProceed = True
-    for src in srcList:
-        doto = f"{intDir}/{os.path.basename(src)}{'-rd' if debug else '-r'}.o"
-        dotos.append(doto)
-        if buildObj(doto, src, incDirs, flags, arch32bit, debug, True, True, tool) != 0:
-            canProceed = False
-
-    if canProceed:
-        cmd = 'echo "No build tools set. Select from \"gcc\" or \"clang\"."'
-        if tool in ["gcc", "clang"]:
-            cmd = f"ar cr -o {intBinDir}/{target} {' '.join(dotos)}"
-            return doShellCommand(cmd)
-
-    cmd = 'echo "Failure to build target. Aborting."'
-    return doShellCommand(cmd)
-
-
 def buildSo (target, srcList, incDirs, flags, arch32bit, debug, cLanguage, tool):
     global intDir
     global intBinDir
@@ -135,7 +110,6 @@ def buildSo (target, srcList, incDirs, flags, arch32bit, debug, cLanguage, tool)
     linkername = f"lib{target}.so"
     soname = linkername + f".{v1}"
     finalTarget = linkername + f".{v3}"
-    #target=f"lib{target}{'-clang' if tool == 'clang' else '-gcc'}{'-32' if arch32bit else ''}{'-d' if debug else ''}.so.{v3}"
     target = linkername
 
     intConfigDir = f"{intDir}/cfg{'-clang' if tool == 'clang' else '-gcc'}{'-32' if arch32bit else ''}{'-d' if debug else ''}"
@@ -205,7 +179,6 @@ def buildExe (target, srcList, incDirs, libDirs, staticLibs, sharedLibs, flags, 
     global binDir
 
     finalTarget = target
-    #target=f"{target}{'-clang' if tool == 'clang' else '-gcc'}{'-32' if arch32bit else ''}{'-d' if debug else ''}"
 
     intBinConfigDir = f"{intBinDir}/cfg{'-clang' if tool == 'clang' else '-gcc'}{'-32' if arch32bit else ''}{'-d' if debug else ''}"
     if not os.path.exists(intBinConfigDir):
@@ -367,7 +340,6 @@ if __name__ == "__main__":
                 ]
                 
                 buildLib("humon", src, incDirs, flags, arch32bit, debug, True, tool)
-            #    buildPythonLib( "humon", src, incDirs, flags, arch32bit, True, tool)
                 buildSo( "humon", src, incDirs, flags, arch32bit, debug, True, tool)
 
                 print (f'{ansi.dk_yellow_fg}Generating test src in {ansi.lt_yellow_fg}./test{ansi.all_off}')

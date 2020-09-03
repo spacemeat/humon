@@ -15,7 +15,7 @@ static void Token_dealloc(TokenObject * self)
     else
     {
         printf("%sToken dealloc - %.*s%s\n", ansi_darkBlue, 
-            self->tokenPtr->str.size, self->tokenPtr->str.ptr, ansi_off);
+            (int) self->tokenPtr->str.size, self->tokenPtr->str.ptr, ansi_off);
     }
     
     Py_TYPE(self)->tp_free((PyObject *) self);
@@ -91,7 +91,7 @@ static PyObject * Token_get_isNullish(TokenObject * self, void * closure)
 
 static PyObject * Token_get_kind(TokenObject * self, void * closure)
 {
-    int kind = HU_TOKENKIND_NULL;
+    huEnumType_t kind = HU_TOKENKIND_NULL;
     if (self->tokenPtr)
         { kind = self->tokenPtr->kind; }
 

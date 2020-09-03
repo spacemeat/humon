@@ -15,7 +15,7 @@ static void Node_dealloc(NodeObject * self)
         { printf("%sNode dealloc - <null>%s\n", ansi_darkBlue, ansi_off); }
     else
     {
-        int strLen = 0;
+        huSize_t strLen = 0;
         char * str = NULL;
         huGetAddress(self->nodePtr, str, & strLen);
         str = malloc(strLen + 1);
@@ -200,7 +200,7 @@ static PyObject * Node_get_address(NodeObject * self, void * closure)
     if (! checkYourSelf(self))
         { return NULL; }
 
-    int strLen = 0;
+    huSize_t strLen = 0;
     char * str = NULL;
     huGetAddress(self->nodePtr, str, & strLen);
     str = malloc(strLen + 1);
@@ -291,7 +291,7 @@ static PyObject * Node_getRelative(NodeObject * self, PyObject * args)
     if (!PyArg_ParseTuple(args, "s#", & arg, & argLen))
         { return NULL; }
     
-    huNode const * node = huGetNodeByRelativeAddressN(self->nodePtr, arg, argLen);
+    huNode const * node = huGetNodeByRelativeAddressN(self->nodePtr, arg, (huSize_t) argLen);
     PyObject * nodeObj = makeNode((PyObject *) self->trove, node);
     if (nodeObj == NULL)
         { return NULL; }
@@ -308,9 +308,9 @@ static PyObject * Node_getAnnotations(NodeObject * self, PyObject * args, PyObje
     static char * keywords[] = { "key", "value", NULL };
 
     char * key = NULL;
-    int keyLen = 0;
+    huSize_t keyLen = 0;
     char * value = NULL;
-    int valueLen = 0;
+    huSize_t valueLen = 0;
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|s#s#", keywords, & key, & keyLen, & value, & valueLen))
         { return NULL; }
 
@@ -327,7 +327,7 @@ static PyObject * Node_getAnnotations(NodeObject * self, PyObject * args, PyObje
         if (list == NULL)
             { return NULL; }
 
-        int cursor = 0;
+        huSize_t cursor = 0;
         huToken const * tok = NULL;
         do
         {
@@ -382,7 +382,7 @@ static PyObject * Node_getComment(NodeObject * self, PyObject * args)
         return NULL;
     }
 
-    return makeToken(huGetComment(self->nodePtr, idx));
+    return makeToken(huGetComment(self->nodePtr, (huSize_t) idx));
 }
 
 
@@ -397,11 +397,11 @@ static PyObject * Node_getCommentsContaining(NodeObject * self, PyObject * args,
         { return NULL; }
 
     PyObject * list = Py_BuildValue("[]");
-    int cursor = 0;
+    huSize_t cursor = 0;
     huToken const * tok = NULL;
     do
     {
-        tok = huGetCommentsContainingN(self->nodePtr, str, strLen, & cursor);
+        tok = huGetCommentsContainingN(self->nodePtr, str, (huSize_t) strLen, & cursor);
         if (tok)
         {
             PyObject * pytok = makeToken(tok);

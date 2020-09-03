@@ -1,7 +1,7 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <structmember.h>
-#include "humon.h"
+#include "humon/humon.h"
 
 
 void AddEnumConstantsToModule(PyObject * module)

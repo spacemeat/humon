@@ -1,8 +1,8 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <structmember.h>
-#include "humon.h"
-#include "ansiColors.h"
+#include "humon/humon.h"
+#include "humon/ansiColors.h"
 
 enum VectorElementTypeEnum
 {

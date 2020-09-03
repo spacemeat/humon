@@ -1,5 +1,5 @@
 DONE THIS CHECKIN:
-Fixed VS Code include paths.
+Caught python project up to latest.
 
 TODO:
 P1 finish the python package
