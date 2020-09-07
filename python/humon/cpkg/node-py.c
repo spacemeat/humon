@@ -500,40 +500,38 @@ static PyMemberDef Node_members[] =
 
 static PyGetSetDef Node_getsetters[] = 
 {
-    { "isNullish",      (getter) Node_get_isNullish, (setter) NULL, "Whether the node is nullish.", NULL },
-    { "trove",          (getter) Node_get_trove, (setter) NULL, "The trove tracking this node.", NULL },
-    { "nodeIdx",        (getter) Node_get_nodeIdx, (setter) NULL, "The index of this node in its trove's tracking array.", NULL },
-    { "kind",           (getter) Node_get_kind, (setter) NULL, "The kind of node this is.", NULL },
-    { "firstToken",     (getter) Node_get_firstToken, (setter) NULL, "The first token which contributes to this node, including any annotation and comment tokens.", NULL },
-    { "keyToken",       (getter) Node_get_keyToken, (setter) NULL, "The key token if the node is inside a dict.", NULL },
-    { "valueToken",     (getter) Node_get_valueToken, (setter) NULL, "The first token of this node's actual value; for a container, it points to the opening brac(e|ket).", NULL },
-    { "lastValueToken", (getter) Node_get_lastValueToken, (setter) NULL, "The last token of this node's actual value; for a container, it points to the closing brac(e|ket).", NULL },
-    { "lastToken",      (getter) Node_get_lastToken, (setter) NULL, "The last token of this node, including any annotation and comment tokens.", NULL },
-    { "parentNodeIdx",  (getter) Node_get_parentNodeIdx, (setter) NULL, "The parent node's index, or -1 if this node is the root.", NULL },
-    { "parent",         (getter) Node_get_parent, (setter) NULL, "The node's parent.", NULL },
-    { "childOrdinal",   (getter) Node_get_childOrdinal, (setter) NULL, "The index of this node vis a vis its sibling nodes (starting at 0).", NULL },
-    { "numChildren",    (getter) Node_get_numChildren, (setter) NULL, "The number of children a node has.", NULL },
-    { "firstChild",     (getter) Node_get_firstChild, (setter) NULL, "The first child of node (index 0).", NULL },
-    { "nextSibling",    (getter) Node_get_nextSibling, (setter) NULL, "The next sibling in the child index order of a node.", NULL },
-    { "address",        (getter) Node_get_address, (setter) NULL, "The full address of a node.", NULL },
-    { "hasKey",         (getter) Node_get_hasKey, (setter) NULL, "Returns whether a node has a key token tracked. (If it's a member of a dict.)", NULL },
-    { "tokenStream",    (getter) Node_get_tokenStream, (setter) NULL, "The entire nested text of a node, including child nodes and associated comments and annotations.", NULL },
-    { "numAnnotations", (getter) Node_get_numAnnotations, (setter) NULL, "Return the number of annotations associated to a node.", NULL },
-    { "numComments",    (getter) Node_get_numComments, (setter) NULL, "Return the number of comments associated to a node.", NULL },
+    { "isNullish",      (getter) Node_get_isNullish, (setter) NULL, PyDoc_STR("Whether the node is nullish."), NULL },
+    { "trove",          (getter) Node_get_trove, (setter) NULL, PyDoc_STR("The trove tracking this node."), NULL },
+    { "nodeIdx",        (getter) Node_get_nodeIdx, (setter) NULL, PyDoc_STR("The index of this node in its trove's tracking array."), NULL },
+    { "kind",           (getter) Node_get_kind, (setter) NULL, PyDoc_STR("The kind of node this is."), NULL },
+    { "firstToken",     (getter) Node_get_firstToken, (setter) NULL, PyDoc_STR("The first token which contributes to this node, including any annotation and comment tokens."), NULL },
+    { "keyToken",       (getter) Node_get_keyToken, (setter) NULL, PyDoc_STR("The key token if the node is inside a dict."), NULL },
+    { "valueToken",     (getter) Node_get_valueToken, (setter) NULL, PyDoc_STR("The first token of this node's actual value; for a container, it points to the opening brac(e|ket)."), NULL },
+    { "lastValueToken", (getter) Node_get_lastValueToken, (setter) NULL, PyDoc_STR("The last token of this node's actual value; for a container, it points to the closing brac(e|ket)."), NULL },
+    { "lastToken",      (getter) Node_get_lastToken, (setter) NULL, PyDoc_STR("The last token of this node, including any annotation and comment tokens."), NULL },
+    { "parentNodeIdx",  (getter) Node_get_parentNodeIdx, (setter) NULL, PyDoc_STR("The parent node's index, or -1 if this node is the root."), NULL },
+    { "parent",         (getter) Node_get_parent, (setter) NULL, PyDoc_STR("The node's parent."), NULL },
+    { "childOrdinal",   (getter) Node_get_childOrdinal, (setter) NULL, PyDoc_STR("The index of this node vis a vis its sibling nodes (starting at 0)."), NULL },
+    { "numChildren",    (getter) Node_get_numChildren, (setter) NULL, PyDoc_STR("The number of children a node has."), NULL },
+    { "firstChild",     (getter) Node_get_firstChild, (setter) NULL, PyDoc_STR("The first child of node (index 0)."), NULL },
+    { "nextSibling",    (getter) Node_get_nextSibling, (setter) NULL, PyDoc_STR("The next sibling in the child index order of a node."), NULL },
+    { "address",        (getter) Node_get_address, (setter) NULL, PyDoc_STR("The full address of a node."), NULL },
+    { "hasKey",         (getter) Node_get_hasKey, (setter) NULL, PyDoc_STR("Returns whether a node has a key token tracked. (If it's a member of a dict.)"), NULL },
+    { "tokenStream",    (getter) Node_get_tokenStream, (setter) NULL, PyDoc_STR("The entire nested text of a node, including child nodes and associated comments and annotations."), NULL },
+    { "numAnnotations", (getter) Node_get_numAnnotations, (setter) NULL, PyDoc_STR("Return the number of annotations associated to a node."), NULL },
+    { "numComments",    (getter) Node_get_numComments, (setter) NULL, PyDoc_STR("Return the number of comments associated to a node."), NULL },
     { NULL }
 };
 
-
-static PyMethodDef Node_methods[] = 
+static PyMethodDef Node_methods[] =
 {
-    { "getChild",               (PyCFunction) Node_getChild,                METH_VARARGS | METH_KEYWORDS,   "Get a node's parent." },
-    { "getRelative",            (PyCFunction) Node_getRelative,             METH_VARARGS,                   "Get a node by relative address." },
-    { "getAnnotations",         (PyCFunction) Node_getAnnotations,          METH_VARARGS | METH_KEYWORDS,   "Get a node's annotations." },
-    { "getComment",             (PyCFunction) Node_getComment,              METH_VARARGS,                   "Get a node's comment by index." },
-    { "getCommentsContaining",  (PyCFunction) Node_getCommentsContaining,   METH_VARARGS,                   "Get a node's comments which contain the specified substring." },
+    { "getChild", (PyCFunction)Node_getChild, METH_VARARGS | METH_KEYWORDS, PyDoc_STR("Get a node's parent.") },
+    { "getRelative", (PyCFunction)Node_getRelative, METH_VARARGS, PyDoc_STR("Get a node by relative address.") },
+    { "getAnnotations", (PyCFunction)Node_getAnnotations, METH_VARARGS | METH_KEYWORDS, PyDoc_STR("Get a node's annotations.") },
+    { "getComment", (PyCFunction)Node_getComment, METH_VARARGS, PyDoc_STR("Get a node's comment by index.") },
+    { "getCommentsContaining", (PyCFunction)Node_getCommentsContaining, METH_VARARGS, PyDoc_STR("Get a node's comments which contain the specified substring.") },
     { NULL }
 };
-
 
 static PyNumberMethods numberMethods = 
 {
@@ -545,7 +543,7 @@ PyTypeObject NodeType =
 {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "humon.humon.Node",
-    .tp_doc = "Encodes a Humon data node.",
+    .tp_doc = PyDoc_STR("Encodes a Humon data node."),
     .tp_basicsize = sizeof(NodeObject),
     .tp_itemsize = 0,
     .tp_flags = Py_TPFLAGS_DEFAULT,

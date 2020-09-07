@@ -22,9 +22,12 @@ extern PyTypeObject TokenType;
 extern PyTypeObject NodeType;
 extern PyTypeObject TroveType;
 
+void AddEnumConstantsToModule(PyObject * module);
+
 PyObject * getEnumValue(char const * enumName, int value);
 PyObject * makeToken(huToken const * token);
 PyObject * makeNode(PyObject * trove, huNode const * node);
+PyObject * makeTrove(huTrove const * trove);
 
 
 int RegisterTokenType(PyObject * module);

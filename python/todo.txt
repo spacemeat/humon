@@ -1,0 +1,9 @@
+Done:
+Some package reorganization. Not dialed in yet.
+
+Doing:
+PyDoc strings with foo => bar type text.
+Use python memory management
+Trove_findNodesByCommentContaining and others aren't using kwargs
+Do basic test suite hitting all function points
+Version in setup.py from include/humon/version.h

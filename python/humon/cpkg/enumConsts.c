@@ -69,24 +69,3 @@ void AddEnumConstantsToModule(PyObject * module)
     PyModule_AddIntConstant(module, "HU_VECTORKIND_PREALLOCATED", HU_VECTORKIND_PREALLOCATED);
     PyModule_AddIntConstant(module, "HU_VECTORKIND_GROWABLE", HU_VECTORKIND_GROWABLE);
 }
-
-
-static PyModuleDef enumConstsModule =
-{
-    PyModuleDef_HEAD_INIT,
-    .m_name = "humon._enumConsts",
-    .m_doc = "enum constants for Humon",
-    .m_size = -1
-};
-
-
-PyMODINIT_FUNC PyInit__enumConsts(void)
-{
-    PyObject * module = PyModule_Create(& enumConstsModule);
-    if (module == NULL)
-        { return NULL; }
-    
-    AddEnumConstantsToModule(module);
-
-    return module;
-}

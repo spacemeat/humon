@@ -15,6 +15,16 @@ PyMODINIT_FUNC PyInit_humon(void)
     PyObject * module = PyModule_Create(& humonModule);
     if (module == NULL)
         { return NULL; }
+
+    AddEnumConstantsToModule(module);
+
+    PyObject * enums = PyImport_ImportModule("humon.enums");
+    if (enums == NULL) {
+        Py_DECREF(module);
+        return NULL;
+    }    
+
+    Py_DECREF(enums);
     
     if (RegisterTokenType(module) < 0)
     {
@@ -32,13 +42,5 @@ PyMODINIT_FUNC PyInit_humon(void)
         return NULL;
     }
 
-    PyObject * enums = PyImport_ImportModule("humon.enums");
-    if (enums == NULL) {
-        Py_DECREF(module);
-        return NULL;
-    }
-
-    Py_DECREF(enums);
-    
     return module;
 }

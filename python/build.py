@@ -30,4 +30,4 @@ def doShellCommand(cmd):
 
 
 if __name__ == "__main__":
-    doShellCommand("python3 setup.py build")
+    doShellCommand("python3 setup.py build_ext --inplace")

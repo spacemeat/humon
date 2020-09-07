@@ -4,7 +4,7 @@ from pprint import pprint
 
 from humon import humon
 
-t = humon.Trove('@bug:ant{foo:bar}@baz:cat//cow\n//pig')
+t = humon.Trove.fromString('@bug:ant{foo:bar}@baz:cat//cow\n//pig')
 r = t.root
 #print (f"\t\tdir(r): '{dir(r)}'")
 #print (f"\t\trepr(r): '{repr(r)}'")

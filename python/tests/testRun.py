@@ -2,7 +2,7 @@ import faulthandler
 faulthandler.enable()
 from pprint import pprint
 
-from humon import humon
+from .context import humon
 
 t = humon.Trove('@bug:ant{foo:bar}@{baz:cat moo:cat}//cow\n//pig')
 print (f"trove token stream: {t.tokenStream}")

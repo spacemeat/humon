@@ -188,12 +188,12 @@ static PyMemberDef Token_members[] =
 
 static PyGetSetDef Token_getsetters[] = 
 {
-    { "isNullish", (getter) Token_get_isNullish, (setter) NULL, "Whether the token is nullish.", NULL },
-    { "kind", (getter) Token_get_kind, (setter) NULL, "The kind of token this is.", NULL},
-    { "line", (getter) Token_get_line, (setter) NULL, "The line number in the file where the token begins.", NULL},
-    { "col", (getter) Token_get_col, (setter) NULL, "The column number in the file where the token begins.", NULL},
-    { "endLine", (getter) Token_get_endLine, (setter) NULL, "The line number in the file where the token ends.", NULL},
-    { "endCol", (getter) Token_get_endCol, (setter) NULL, "The column number in the file where the token ends.", NULL},
+    { "isNullish", (getter) Token_get_isNullish, (setter) NULL, PyDoc_STR("Whether the token is nullish."), NULL },
+    { "kind", (getter) Token_get_kind, (setter) NULL, PyDoc_STR("The kind of token this is."), NULL},
+    { "line", (getter) Token_get_line, (setter) NULL, PyDoc_STR("The line number in the file where the token begins."), NULL},
+    { "col", (getter) Token_get_col, (setter) NULL, PyDoc_STR("The column number in the file where the token begins."), NULL},
+    { "endLine", (getter) Token_get_endLine, (setter) NULL, PyDoc_STR("The line number in the file where the token ends."), NULL},
+    { "endCol", (getter) Token_get_endCol, (setter) NULL, PyDoc_STR("The column number in the file where the token ends."), NULL},
     { NULL }
 };
 
@@ -214,7 +214,7 @@ PyTypeObject TokenType =
 {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "humon.humon.Token",
-    .tp_doc = "Encodes a Humon data token.",
+    .tp_doc = PyDoc_STR("Encodes a Humon data token."),
     .tp_basicsize = sizeof(TokenObject),
     .tp_itemsize = 0,
     .tp_flags = Py_TPFLAGS_DEFAULT,
