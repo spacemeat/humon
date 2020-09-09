@@ -330,9 +330,11 @@ huToken const * huGetToken(huTrove const * trove, huSize_t tokenIdx)
 }
 
 
-huToken * allocNewToken(huTrove * trove, huEnumType_t kind, char const * str, 
-    huSize_t size, huLine_t line, huCol_t col, huLine_t endLine, 
-    huCol_t endCol, char quoteChar)
+huToken * allocNewToken(huTrove * trove, huEnumType_t kind, 
+    char const * str, huSize_t size, 
+    huLine_t line, huCol_t col, huLine_t endLine, huCol_t endCol, 
+    huHeretagSize_t offsetIn, huHeretagSize_t offsetOut,
+    char quoteChar)
 {
     huSize_t num = 1;
     huToken * newToken = growVector(& trove->tokens, & num);
@@ -341,8 +343,10 @@ huToken * allocNewToken(huTrove * trove, huEnumType_t kind, char const * str,
 
     newToken->kind = kind;
     newToken->quoteChar = quoteChar;
-    newToken->str.ptr = str;
-    newToken->str.size = size;
+    newToken->rawStr.ptr = str;
+    newToken->rawStr.size = size;
+    newToken->str.ptr = str + (huSize_t) offsetIn;
+    newToken->str.size = size - (huSize_t) offsetIn - (huSize_t) offsetOut;
     newToken->line = line;
     newToken->col = col;
     newToken->endLine = endLine;
@@ -425,21 +429,22 @@ huNode const * huGetNodeByAddressN(huTrove const * trove, char const * address, 
         { return HU_NULLNODE; }
 
     huScanner scanner;
-    initScanner(& scanner, NULL, address, addressLen);
-    huLine_t line = 0;  // unused
-    huCol_t col = 0;
+    initScanner(& scanner, NULL, 1, address, addressLen);
 
-    eatWs(& scanner, 1, & line, & col);
-    char const * wordStart = scanner.curCursor->character;
+    eatWs(& scanner);
 
     if (scanner.curCursor->codePoint != '/')
         { return HU_NULLNODE; }
+
+    nextCharacter(& scanner);
+
+    char const * wordStart = scanner.curCursor->character;
 
     huNode const * root = huGetRootNode(trove);
     if (root->kind == HU_NODEKIND_NULL)
         { return HU_NULLNODE; }
 
-    return huGetNodeByRelativeAddressN(root, wordStart + 1, addressLen - col - 1);
+    return huGetNodeByRelativeAddressN(root, wordStart, addressLen - scanner.len);
 }
 
 

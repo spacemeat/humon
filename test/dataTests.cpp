@@ -7,7 +7,6 @@ using namespace std::literals;
 
 
 TEST_GROUP(emptyString)
-//struct TestGroup_emptyString : public TestGroup
 {
   huTrove const * trove = NULL;
 
@@ -23,16 +22,6 @@ TEST_GROUP(emptyString)
       { huDestroyTrove(trove); }
   }
 };
-
-/*
-struct Test_emptyString_numTokens : public TestGroup_emptyString
-{
-    virtual void runTest();
-};
-void Test_emptyString_numTokens::runTest()
-{
-  if ((1) != (this->trove->tokens.numElements)) { fail("tokens.num"); return; }
-}*/
 
 
 TEST(emptyString, numTokens)
@@ -1680,3 +1669,153 @@ TEST(oneValueDictFourAnno, values)
   LONGS_EQUAL_TEXT(1, anno->value->str.size, "h val len");
   STRNCMP_EQUAL_TEXT("h", anno->value->str.ptr, 1, "h val val");
 }
+
+
+TEST_GROUP(heredocs)
+{
+  huTrove const * trove = NULL;
+
+  void setup()
+  {
+    auto humon = 
+R"({
+    ^^fkey0^^: value
+    ^^"fkey1"^^: value
+    ^PSYCHOBILLYFREAKOUT^fkey2^PSYCHOBILLYFREAKOUT^: value
+    ^a b c^fkey3^a b c^: value
+    ^^
+fkey4^^: value
+    ^^
+ fkey5^^: value
+    ^^ fkey6^^: value
+    ^^
+
+fkey7
+^^: value
+
+    key0: ^^value^^
+    key1: ^^"value"^^
+    key2: ^PSYCHOBILLYFREAKOUT^value^PSYCHOBILLYFREAKOUT^
+    key3: ^a b c^value^a b c^
+    key4: ^^
+value^^
+    key5: ^^
+ value^^
+    key6: ^^ value^^
+    key7: ^^
+
+value
+^^
+})"sv;
+    huDeserializeTroveN(& trove, humon.data(), (int) humon.size(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
+  }
+
+  void teardown()
+  {
+    if (trove)
+      { huDestroyTrove(trove); }
+  }
+};
+
+TEST(heredocs, keys)
+{
+  auto exp = "fkey0"sv;
+  auto r = huGetRootNode(trove);
+  auto n = huGetChildByIndex(r, 0);
+  auto t = huGetKey(n);
+  LONGS_EQUAL_TEXT(exp.size(), t->str.size, "key0 sz");
+  STRNCMP_EQUAL_TEXT(exp.data(), t->str.ptr, t->str.size, "key0 val");
+
+  exp = "\"fkey1\""sv;
+  n = huGetChildByIndex(r, 1);
+  t = huGetKey(n);
+  LONGS_EQUAL_TEXT(exp.size(), t->str.size, "key1 sz");
+  STRNCMP_EQUAL_TEXT(exp.data(), t->str.ptr, t->str.size, "key1 val");
+
+  exp = "fkey2"sv;
+  n = huGetChildByIndex(r, 2);
+  t = huGetKey(n);
+  LONGS_EQUAL_TEXT(exp.size(), t->str.size, "key2 sz");
+  STRNCMP_EQUAL_TEXT(exp.data(), t->str.ptr, t->str.size, "key2 val");
+
+  exp = "fkey3"sv;
+  n = huGetChildByIndex(r, 3);
+  t = huGetKey(n);
+  LONGS_EQUAL_TEXT(exp.size(), t->str.size, "key3 sz");
+  STRNCMP_EQUAL_TEXT(exp.data(), t->str.ptr, t->str.size, "key3 val");
+
+  exp = "fkey4"sv;
+  n = huGetChildByIndex(r, 4);
+  t = huGetKey(n);
+  LONGS_EQUAL_TEXT(exp.size(), t->str.size, "key4 sz");
+  STRNCMP_EQUAL_TEXT(exp.data(), t->str.ptr, t->str.size, "key4 val");
+
+  exp = " fkey5"sv;
+  n = huGetChildByIndex(r, 5);
+  t = huGetKey(n);
+  LONGS_EQUAL_TEXT(exp.size(), t->str.size, "key5 sz");
+  STRNCMP_EQUAL_TEXT(exp.data(), t->str.ptr, t->str.size, "key5 val");
+
+  exp = " fkey6"sv;
+  n = huGetChildByIndex(r, 6);
+  t = huGetKey(n);
+  LONGS_EQUAL_TEXT(exp.size(), t->str.size, "key6 sz");
+  STRNCMP_EQUAL_TEXT(exp.data(), t->str.ptr, t->str.size, "key6 val");
+ 
+  exp = "\nfkey7\n"sv;
+  n = huGetChildByIndex(r, 7);
+  t = huGetKey(n);
+  LONGS_EQUAL_TEXT(exp.size(), t->str.size, "key7 sz");
+  STRNCMP_EQUAL_TEXT(exp.data(), t->str.ptr, t->str.size, "key7 val");
+}
+
+
+TEST(heredocs, values)
+{
+  auto exp = "value"sv;
+  auto r = huGetRootNode(trove);
+  auto n = huGetChildByIndex(r, 8);
+  auto t = huGetValue(n);
+  LONGS_EQUAL_TEXT(exp.size(), t->str.size, "key0 sz");
+  STRNCMP_EQUAL_TEXT(exp.data(), t->str.ptr, t->str.size, "key0 val");
+
+  exp = "\"value\""sv;
+  n = huGetChildByIndex(r, 9);
+  t = huGetValue(n);
+  LONGS_EQUAL_TEXT(exp.size(), t->str.size, "key1 sz");
+  STRNCMP_EQUAL_TEXT(exp.data(), t->str.ptr, t->str.size, "key1 val");
+
+  exp = "value"sv;
+  n = huGetChildByIndex(r, 10);
+  t = huGetValue(n);
+  LONGS_EQUAL_TEXT(exp.size(), t->str.size, "key2 sz");
+  STRNCMP_EQUAL_TEXT(exp.data(), t->str.ptr, t->str.size, "key2 val");
+
+  n = huGetChildByIndex(r, 11);
+  t = huGetValue(n);
+  LONGS_EQUAL_TEXT(exp.size(), t->str.size, "key3 sz");
+  STRNCMP_EQUAL_TEXT(exp.data(), t->str.ptr, t->str.size, "key3 val");
+
+  n = huGetChildByIndex(r, 12);
+  t = huGetValue(n);
+  LONGS_EQUAL_TEXT(exp.size(), t->str.size, "key4 sz");
+  STRNCMP_EQUAL_TEXT(exp.data(), t->str.ptr, t->str.size, "key4 val");
+
+  exp = " value"sv;
+  n = huGetChildByIndex(r, 13);
+  t = huGetValue(n);
+  LONGS_EQUAL_TEXT(exp.size(), t->str.size, "key5 sz");
+  STRNCMP_EQUAL_TEXT(exp.data(), t->str.ptr, t->str.size, "key5 val");
+
+  n = huGetChildByIndex(r, 14);
+  t = huGetValue(n);
+  LONGS_EQUAL_TEXT(exp.size(), t->str.size, "key6 sz");
+  STRNCMP_EQUAL_TEXT(exp.data(), t->str.ptr, t->str.size, "key6 val");
+ 
+  exp = "\nvalue\n"sv;
+  n = huGetChildByIndex(r, 15);
+  t = huGetValue(n);
+  LONGS_EQUAL_TEXT(exp.size(), t->str.size, "key7 sz");
+  STRNCMP_EQUAL_TEXT(exp.data(), t->str.ptr, t->str.size, "key7 val");
+}
+

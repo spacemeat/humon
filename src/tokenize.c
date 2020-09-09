@@ -92,7 +92,7 @@ static void analyzeWhitespace(huScanner * scanner)
 }
 
 
-void nextCharacter(huScanner * scanner)
+void swapAndReadNext(huScanner * scanner)
 {
     // swap the cursor buffers
     huCursor * tempCursor = scanner->nextCursor;
@@ -112,10 +112,34 @@ void nextCharacter(huScanner * scanner)
 }
 
 
-void initScanner(huScanner * scanner, huTrove * trove, char const * str, huSize_t strLen)
+void nextCharacter(huScanner * scanner)
+{
+    // track row/column/len
+    if (scanner->curCursor->isNewline)
+    {
+        scanner->col = 1;
+        scanner->line += 1;
+    }
+    else if (scanner->curCursor->isTab)
+    {
+        scanner->col += scanner->tabLen - ((scanner->col - 1) % scanner->tabLen);
+    }
+    else
+    {
+        scanner->col += 1;
+    }
+
+    scanner->len += scanner->curCursor->charLength;
+
+    swapAndReadNext(scanner);
+}
+
+
+void initScanner(huScanner * scanner, huTrove * trove, huCol_t tabLen, char const * str, huSize_t strLen)
 {
     * scanner = (huScanner) {
         .trove = trove, 
+        .tabLen = tabLen,
         .inputStr = str,
         .inputStrLen = strLen,
         .nextCursor = NULL,
@@ -146,59 +170,50 @@ void initScanner(huScanner * scanner, huTrove * trove, char const * str, huSize_
     scanner->curCursor = & scanner->cursors[1];
     scanner->nextCursor = & scanner->cursors[0];
 
+    scanner->line = 1;
+    scanner->col = 1;
+    scanner->len = 0;
+
     char bom[3] = { 0xef, 0xbb, 0xbf };
     if (memcmp(str, bom, 3) == 0)
-        { scanner->nextCursor->character += 3; }
+    {
+        scanner->nextCursor->character += 3;
+        scanner->len += 3;
+    }
 
     analyzeCharacter(scanner);
-    if (scanner->curCursor->isError == false)
-    {
-        analyzeWhitespace(scanner);
-        nextCharacter(scanner);
-    }
+    analyzeWhitespace(scanner);
+    swapAndReadNext(scanner);
 }
 
 
-void eatWs(huScanner * scanner, huCol_t tabSize, huLine_t * line, huCol_t * col)
+void eatWs(huScanner * scanner)
 {
     bool eating = true;
     while (eating)
     {
         if (scanner->curCursor->isError)
-        {
-            eating = false;
-        }
-        else if (scanner->curCursor->isSpace)
-        {
-            * col += 1;
-            nextCharacter(scanner);
-        }
-        else if(scanner->curCursor->isTab)
-        {
-            * col += tabSize - ((* col - 1) % tabSize);
-            nextCharacter(scanner);
-        }
-        else if (scanner->curCursor->isNewline)
-        {
-            * col = 1;
-            * line += 1;
-            nextCharacter(scanner);
-        }
+            { eating = false; }
+        else if (scanner->curCursor->isSpace ||
+                 scanner->curCursor->isTab ||
+                 scanner->curCursor->isNewline)
+            { nextCharacter(scanner); }
         else
             { eating = false; }
     }
 }
 
 
-static void eatDoubleSlashComment(huScanner * scanner, huCol_t tabSize, huSize_t * len, huCol_t * col)
+static void eatDoubleSlashComment(huScanner * scanner, huSize_t * offsetIn)
 {
+    huSize_t len = scanner->len;
+
     // The first two characters are already confirmed //, so, next please.
-    * len += scanner->curCursor->charLength;
-    * col += 1;
     nextCharacter(scanner);
-    * len += scanner->curCursor->charLength;
-    * col += 1;
     nextCharacter(scanner);
+
+    eatWs(scanner);
+    * offsetIn = scanner->len - len;
 
     bool eating = true;
     while (eating)
@@ -206,32 +221,21 @@ static void eatDoubleSlashComment(huScanner * scanner, huCol_t tabSize, huSize_t
         if (scanner->curCursor->isNewline == false && 
             scanner->curCursor->isError == false &&
             scanner->curCursor->isEof == false)
-        {
-            * len += scanner->curCursor->charLength;
-            if (scanner->curCursor->isTab)
-                { * col += tabSize - ((* col - 1) % tabSize); }
-            else
-                { * col += 1; }
-            nextCharacter(scanner);
-        }
+            { nextCharacter(scanner); }
         else
             { eating = false; }
     }
 }
 
 
-static void eatCStyleComment(huScanner * scanner, huCol_t tabSize, huSize_t * len, huLine_t * line, huCol_t * col)
+static void eatCStyleComment(huScanner * scanner)
 {
     // record the location for error reporting
-    huLine_t tokenStartLine = * line;
-    huCol_t tokenStartCol = * col;
+    huLine_t tokenStartLine = scanner->line;
+    huCol_t tokenStartCol = scanner->col;
 
     // The first two characters are already confirmed /*, so, next please.    
-    * len += scanner->curCursor->charLength;
-    * col += 1;
     nextCharacter(scanner);
-    * len += scanner->curCursor->charLength;
-    * col += 1;
     nextCharacter(scanner);
 
     bool eating = true;
@@ -249,44 +253,30 @@ static void eatCStyleComment(huScanner * scanner, huCol_t tabSize, huSize_t * le
         }
         else if (scanner->curCursor->isNewline)
         {
-            * len += scanner->curCursor->charLength;
-            * col = 1;
-            * line += 1;
             nextCharacter(scanner);
         }
         else if (scanner->curCursor->codePoint == '*')
         {
-            * len += scanner->curCursor->charLength;
-            * col += 1;
             nextCharacter(scanner);
 
             // look ahead
             if (scanner->curCursor->codePoint == '/')
             {
-                * len += scanner->curCursor->charLength;
-                * col += 1;
                 nextCharacter(scanner);
                 eating = false;
             }
         }
         else
         {
-            * len += scanner->curCursor->charLength;
-            if (scanner->curCursor->isTab)
-                { * col += tabSize - ((* col - 1) % tabSize); }
-            else
-                { * col += 1; }
             nextCharacter(scanner);
         }
     }
 }
 
 
-static void eatWord(huScanner * scanner, huSize_t * len, huCol_t * col)
+static void eatWord(huScanner * scanner)
 {
     // The first character is already confirmed a word char, so, next please.
-    * len += scanner->curCursor->charLength;
-    * col += 1;
     nextCharacter(scanner);
 
     bool eating = true;
@@ -301,14 +291,10 @@ static void eatWord(huScanner * scanner, huSize_t * len, huCol_t * col)
 
         else if (scanner->curCursor->codePoint == '\\')
         {
-            * len += scanner->curCursor->charLength;
-            * col += 1;
             nextCharacter(scanner);
             if (scanner->curCursor->isEof == false &&
                 scanner->curCursor->codePoint != '\n')
             {
-                * len += scanner->curCursor->charLength;
-                * col += 1;
                 nextCharacter(scanner);
             }
         }
@@ -320,8 +306,6 @@ static void eatWord(huScanner * scanner, huSize_t * len, huCol_t * col)
                 { eating = false; }
             else
             {
-                * len += scanner->curCursor->charLength;
-                * col += 1;
                 nextCharacter(scanner);
             }
         }
@@ -334,8 +318,6 @@ static void eatWord(huScanner * scanner, huSize_t * len, huCol_t * col)
                 eating = false;
                 break;
             default:
-                * len += scanner->curCursor->charLength;
-                * col += 1;
                 nextCharacter(scanner);
                 break;
             }
@@ -344,16 +326,15 @@ static void eatWord(huScanner * scanner, huSize_t * len, huCol_t * col)
 }
 
 
-static void eatQuotedWord(huScanner * scanner, huCol_t tabSize, huSize_t * len, huLine_t * line, huCol_t * col)
+static void eatQuotedWord(huScanner * scanner)
 {
     // record the location for error reporting
-    huLine_t tokenStartLine = * line;
-    huCol_t tokenStartCol = * col;
+    huLine_t tokenStartLine = scanner->line;
+    huCol_t tokenStartCol = scanner->col;
 
     uint32_t quoteChar = scanner->curCursor->codePoint;
 
     // The first character is already confirmed quoteChar, so, next please.
-    * col += 1;
     nextCharacter(scanner);
 
     bool eating = true;
@@ -365,34 +346,23 @@ static void eatQuotedWord(huScanner * scanner, huCol_t tabSize, huSize_t * len, 
         }
         else if (scanner->curCursor->isEof)
         {
-          eating = false;
-          recordTokenizeError(scanner->trove, HU_ERROR_UNFINISHEDQUOTE, 
-            tokenStartLine, tokenStartCol);
+            eating = false;
+            recordTokenizeError(scanner->trove, HU_ERROR_UNFINISHEDQUOTE, 
+                tokenStartLine, tokenStartCol);
         }
         else if (scanner->curCursor->isNewline)
         {
-            * len += scanner->curCursor->charLength;
-            * col = 1;
-            * line += 1;
             nextCharacter(scanner);
         }
         else
         {
-            if (scanner->curCursor->isTab)
-                { * col += tabSize - ((* col - 1) % tabSize); }
-            else
-                { * col += 1; }
-
             if (scanner->curCursor->codePoint == '\\')
             {
-                // always eat the '\'
-                * len += scanner->curCursor->charLength;
                 nextCharacter(scanner);
 
                 // skip over the escaped quote so we don't encounter it and end the string
                 if (scanner->curCursor->codePoint == quoteChar)
                 {
-                    * len += scanner->curCursor->charLength;
                     nextCharacter(scanner);
                 }
             }
@@ -403,9 +373,129 @@ static void eatQuotedWord(huScanner * scanner, huCol_t tabSize, huSize_t * len, 
             }
             else
             {
-                * len += scanner->curCursor->charLength;
                 nextCharacter(scanner);
             }
+        }
+    }
+}
+
+
+static void eatHeredocTag(huScanner * scanner, huHeretagSize_t * tagLen)
+{
+    // record the location for error reporting
+    huLine_t tokenStartLine = scanner->line;
+    huCol_t tokenStartCol = scanner->col;
+
+    // The first character is already confirmed caret, so, next please.
+    * tagLen += scanner->curCursor->charLength;
+    nextCharacter(scanner);
+
+    bool eating = true;
+    while (eating)
+    {
+        if (scanner->curCursor->isError)
+        {
+            eating = false;
+        }
+        else if (scanner->curCursor->isEof)
+        {
+            eating = false;
+            recordTokenizeError(scanner->trove, HU_ERROR_UNFINISHEDQUOTE, 
+                tokenStartLine, tokenStartCol);
+        }
+        else
+        {
+            * tagLen += scanner->curCursor->charLength;
+
+            if (scanner->curCursor->codePoint == '^')
+            {
+                eating = false;
+            }
+            nextCharacter(scanner);
+        }
+    }
+}
+
+
+static void eatMatch(huScanner * scanner, huSize_t matchLen)
+{
+    huSize_t matchedLen = 0;
+    bool eating = true;
+    while (eating)
+    {
+        // One char at a time so we can keep column counts, etc.
+        // Everything has to be nextCharacter()'d.
+        matchedLen += scanner->curCursor->charLength;
+        if (matchedLen == matchLen)
+            { eating = false; }
+
+        nextCharacter(scanner);
+    }
+}
+
+
+static void eatHeredoc(huScanner * scanner, huSize_t * offsetIn, huSize_t * offsetOut)
+{
+    // record the location for error reporting
+    huLine_t tokenStartLine = scanner->line;
+    huCol_t tokenStartCol = scanner->col;
+
+    char const * tagStart = scanner->curCursor->character;
+    huHeretagSize_t tagLen = 0;
+
+    char const * tokenRawStart = scanner->curCursor->character;
+
+    eatHeredocTag(scanner, & tagLen);
+
+    char const * tokenStart = scanner->curCursor->character;
+
+    bool seenNewline = false;
+    bool seenOnlySpaces = true;
+
+    bool eating = true;
+    while (eating)
+    {
+        bool match = memcmp(scanner->curCursor->character, tagStart, tagLen) == 0;
+        
+        if (scanner->curCursor->isError)
+        {
+            eating = false;
+        }
+        else if (scanner->curCursor->isEof)
+        {
+            eating = false;
+            recordTokenizeError(scanner->trove, HU_ERROR_UNFINISHEDQUOTE, 
+                tokenStartLine, tokenStartCol);
+        }
+        else if (match)
+        {
+            eatMatch(scanner, tagLen);
+            * offsetIn = tokenStart - tokenRawStart;
+            * offsetOut = tagLen;
+            eating = false;
+        }
+        else if (scanner->curCursor->isNewline)
+        {
+            nextCharacter(scanner);
+            if (seenNewline == false)
+            {
+                if (seenOnlySpaces == true)
+                {
+                    // start the token *after* the nextCharacter() call
+                    tokenStart = scanner->curCursor->character;
+                }
+
+                seenNewline = true;
+            }
+        }
+        else if (scanner->curCursor->isSpace)
+        {
+            nextCharacter(scanner);
+        }
+        else
+        {
+            seenOnlySpaces = false;
+            nextCharacter(scanner);
         }
     }
 }
@@ -418,19 +508,18 @@ void tokenizeTrove(huTrove * trove)
     char const * beg = trove->dataString;
 
     huScanner scanner;
-    initScanner(& scanner, trove, beg, trove->dataStringSize);
+    initScanner(& scanner, trove, trove->inputTabSize, beg, trove->dataStringSize);
 
-    huLine_t line = 1;
-    huCol_t col = 1;
     bool scanning = true;
 
     // lexi scan
     while (scanning && scanner.curCursor->isError == false)
     {
-        eatWs(& scanner, trove->inputTabSize, & line, & col);
-        huSize_t len = 0;
-        huLine_t lineM = line;
-        huCol_t colM = col;
+        eatWs(& scanner);
+
+        huLine_t line = scanner.line;
+        huCol_t col = scanner.col;
+        huSize_t len = scanner.len;
 
         huCursor * cur = scanner.curCursor;
         char const * tokenStart = cur->character;
@@ -438,59 +527,50 @@ void tokenizeTrove(huTrove * trove)
         switch(scanner.curCursor->codePoint)
         {
         case '\0':
-            allocNewToken(trove, HU_TOKENKIND_EOF, tokenStart, 0, line, col, line, col, '\0');
+            allocNewToken(trove, HU_TOKENKIND_EOF, tokenStart, 0, line, col, line, col, 0, 0, '\0');
             scanning = false;
             break;
         case '{':
-            allocNewToken(trove, HU_TOKENKIND_STARTDICT, tokenStart, cur->charLength, line, col, line, col + 1, '\0');
-            col += 1;
+            allocNewToken(trove, HU_TOKENKIND_STARTDICT, tokenStart, cur->charLength, line, col, line, col + 1, 0, 0, '\0');
             nextCharacter(& scanner);
             break;
         case '}':
-            allocNewToken(trove, HU_TOKENKIND_ENDDICT, tokenStart, cur->charLength, line, col, line, col + 1, '\0');
-            col += 1;
+            allocNewToken(trove, HU_TOKENKIND_ENDDICT, tokenStart, cur->charLength, line, col, line, col + 1, 0, 0, '\0');
             nextCharacter(& scanner);
             break;
         case '[':
-            allocNewToken(trove, HU_TOKENKIND_STARTLIST, tokenStart, cur->charLength, line, col, line, col + 1, '\0');
-            col += 1;
+            allocNewToken(trove, HU_TOKENKIND_STARTLIST, tokenStart, cur->charLength, line, col, line, col + 1, 0, 0, '\0');
             nextCharacter(& scanner);
             break;
         case ']':
-            allocNewToken(trove, HU_TOKENKIND_ENDLIST, tokenStart, cur->charLength, line, col, line, col + 1, '\0');
-            col += 1;
+            allocNewToken(trove, HU_TOKENKIND_ENDLIST, tokenStart, cur->charLength, line, col, line, col + 1, 0, 0, '\0');
             nextCharacter(& scanner);
             break;
         case ':':
-            allocNewToken(trove, HU_TOKENKIND_KEYVALUESEP, tokenStart, cur->charLength, line, col, line, col + 1, '\0');
-            col += 1;
+            allocNewToken(trove, HU_TOKENKIND_KEYVALUESEP, tokenStart, cur->charLength, line, col, line, col + 1, 0, 0, '\0');
             nextCharacter(& scanner);
             break;
         case '@':
-            allocNewToken(trove, HU_TOKENKIND_ANNOTATE, tokenStart, cur->charLength, line, col, line, col + 1, '\0');
-            col += 1;
+            allocNewToken(trove, HU_TOKENKIND_ANNOTATE, tokenStart, cur->charLength, line, col, line, col + 1, 0, 0, '\0');
             nextCharacter(& scanner);
             break;
         case '/':
             if (scanner.nextCursor->codePoint == '/')
             {
-                eatDoubleSlashComment(& scanner, trove->inputTabSize, & len, & colM);
-                allocNewToken(trove, HU_TOKENKIND_COMMENT, tokenStart, len, line, col, line, colM, '\0');
-                col = colM;
+                huSize_t offsetIn = 0;
+                eatDoubleSlashComment(& scanner, & offsetIn);
+                allocNewToken(trove, HU_TOKENKIND_COMMENT, tokenStart, scanner.len - len, line, col, line, scanner.col, offsetIn, 0, '\0');
             }
             else if (scanner.nextCursor->codePoint == '*')
             {
-                eatCStyleComment(& scanner, trove->inputTabSize, & len, & lineM, & colM);
-                allocNewToken(trove, HU_TOKENKIND_COMMENT, tokenStart, len, line, col, lineM, colM, '\0');
-                line = lineM;
-                col = colM;
+                eatCStyleComment(& scanner);
+                allocNewToken(trove, HU_TOKENKIND_COMMENT, tokenStart, scanner.len - len, line, col, scanner.line, scanner.col, 2, 2, '\0');
             }
             else
             {
                 // else treat like a word char
-                eatWord(& scanner, & len, & colM);
-                allocNewToken(trove, HU_TOKENKIND_WORD, tokenStart, len, line, col, line, colM, '\0');
-                col = colM;
+                eatWord(& scanner);
+                allocNewToken(trove, HU_TOKENKIND_WORD, tokenStart, scanner.len - len, line, col, scanner.line, scanner.col, 0, 0, '\0');
             }
             break;
         case '\'':
@@ -498,16 +578,20 @@ void tokenizeTrove(huTrove * trove)
         case '`':
             {
                 char quoteChar = cur->codePoint;
-                eatQuotedWord(& scanner, trove->inputTabSize, & len, & lineM, & colM);
-                allocNewToken(trove, HU_TOKENKIND_WORD, tokenStart + 1, len, line, col, lineM, colM, quoteChar);
-                line = lineM;
-                col = colM;
+                eatQuotedWord(& scanner);
+                allocNewToken(trove, HU_TOKENKIND_WORD, tokenStart, scanner.len - len, line, col, scanner.line, scanner.col, 1, 1, quoteChar);
+            }
+            break;
+        case '^':
+            {
+                huSize_t offsetIn = 0, offsetOut = 0;
+                eatHeredoc(& scanner, & offsetIn, & offsetOut);
+                allocNewToken(trove, HU_TOKENKIND_WORD, tokenStart, scanner.len - len, line, col, scanner.line, scanner.col, offsetIn, offsetOut, '^');
             }
             break;
         default: // word char
-            eatWord(& scanner, & len, & colM);
-            allocNewToken(trove, HU_TOKENKIND_WORD, tokenStart, len, line, col, line, colM, '\0');
-            col = colM;
+            eatWord(& scanner);
+            allocNewToken(trove, HU_TOKENKIND_WORD, tokenStart, scanner.len - len, line, col, scanner.line, scanner.col, 0, 0, '\0');
             break;
         }
     }

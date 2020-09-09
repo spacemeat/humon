@@ -49,6 +49,9 @@
 #ifndef HUMON_COL_TYPE
 #define HUMON_COL_TYPE      long
 #endif
+#ifndef HUMON_HERETAGSIZE_TYPE
+#define HUMON_HERETAGSIZE_TYPE      char
+#endif
 
 // For proper operation, this type must be signed.
 #ifndef HUMON_SIZE_TYPE
@@ -69,10 +72,11 @@ extern "C"
 {
 #endif
 
-    typedef HUMON_ENUM_TYPE     huEnumType_t;
-    typedef HUMON_LINE_TYPE     huLine_t;
-    typedef HUMON_COL_TYPE      huCol_t;
-    typedef HUMON_SIZE_TYPE     huSize_t;
+    typedef HUMON_ENUM_TYPE         huEnumType_t;
+    typedef HUMON_LINE_TYPE         huLine_t;
+    typedef HUMON_COL_TYPE          huCol_t;
+    typedef HUMON_HERETAGSIZE_TYPE  huHeretagSize_t;
+    typedef HUMON_SIZE_TYPE         huSize_t;
 
     /// Specifies the supported Unicode encodings.
     enum huEncoding
@@ -236,13 +240,14 @@ extern "C"
      * particular token in a Humon file. Every token is read and tracked with a huToken. */
     typedef struct huToken_tag
     {
-        short kind;             ///< The kind of token this is (huTokenKind).
-        char quoteChar;         ///< Whether the token is a quoted string.
-        huStringView str;       ///< A view of the token string.
-        huLine_t line;          ///< The line number in the file where the token begins.
-        huCol_t col;            ///< The column number in the file where the token begins.
-        huLine_t endLine;       ///< The line number in the file where the token ends.
-        huCol_t endCol;         ///< the column number in the file where the token end.
+        short kind;                 ///< The kind of token this is (huTokenKind).
+        char quoteChar;             ///< Whether the token is a quoted string.
+        huStringView rawStr;        ///< A view of the token raw string.
+        huStringView str;           ///< A view of the token unenquoted string.
+        huLine_t line;              ///< The line number in the file where the token begins.
+        huCol_t col;                ///< The column number in the file where the token begins.
+        huLine_t endLine;           ///< The line number in the file where the token ends.
+        huCol_t endCol;             ///< The column number in the file where the token end.
     } huToken;
 
     /// Encodes an annotation entry for a node or trove.
@@ -359,6 +364,12 @@ extern "C"
 
     /// Returns whether a node has a key token tracked. (If it's a member of a dict.)
 	HUMON_PUBLIC bool huHasKey(huNode const * node);
+
+    /// Returns the key token for this node, or NULL if this node is not a child of a dict.
+	HUMON_PUBLIC huToken const * huGetKey(huNode const * node);
+
+    /// Returns the value token for this node.
+	HUMON_PUBLIC huToken const * huGetValue(huNode const * node);
 
     /// Returns the entire nested text of a node, including child nodes and associated comments and annotations.
 	HUMON_PUBLIC huStringView huGetTokenStream(huNode const * node);

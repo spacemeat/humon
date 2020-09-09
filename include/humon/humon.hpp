@@ -473,6 +473,8 @@ namespace hu
         TokenKind kind() const HUMON_NOEXCEPT         ///< Returns the kind of token this is.
             { check(); return isValid() ? static_cast<TokenKind>(ctoken->kind) 
                                         : static_cast<TokenKind>(capi::HU_TOKENKIND_NULL); }
+        std::string_view rawStr() const HUMON_NOEXCEPT   ///< Returns the raw string value of the token, including quotes or heredoc tags.
+            { check(); return isValid() ? make_sv(ctoken->rawStr) : ""; }
         std::string_view str() const HUMON_NOEXCEPT   ///< Returns the string value of the token.
             { check(); return isValid() ? make_sv(ctoken->str) : ""; }
         capi::huLine_t line() const HUMON_NOEXCEPT               ///< Returns the line number of the first character of the token in the file.

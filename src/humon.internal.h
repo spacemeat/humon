@@ -125,11 +125,15 @@ extern "C"
     typedef struct huScanner_tag
     {
         huTrove * trove;
+        huCol_t tabLen;
         char const * inputStr;
         huSize_t inputStrLen;
         huCursor * curCursor;
         huCursor * nextCursor;
         huCursor cursors[2];
+        huLine_t line;
+        huCol_t col;
+        huSize_t len;
     } huScanner;
 
     /// Return if the CPU is a big-endian CPU.
@@ -138,9 +142,9 @@ extern "C"
     /// Move the scanner's character cursor by one.
     void nextCharacter(huScanner * cursor);
     /// Initialize a huScanner.
-    void initScanner(huScanner * scanner, huTrove * trove, char const * str, huSize_t strLen);
+    void initScanner(huScanner * scanner, huTrove * trove, huCol_t tabLen, char const * str, huSize_t strLen);
     /// Move the scanner's character cursor past any whitespace.
-    void eatWs(huScanner * cursor, huCol_t tabSize, huLine_t * line, huCol_t * col);
+    void eatWs(huScanner * cursor);
 
     /// Initialize a huNode object.
     void initNode(huNode * node, huTrove const * trove);
@@ -148,7 +152,9 @@ extern "C"
     void destroyNode(huNode const * node);
 
     /// Add a huToken to a trove's token array.
-    huToken * allocNewToken(huTrove * trove, huEnumType_t kind, char const * str, huSize_t size, huLine_t line, huCol_t col, huLine_t endLine, huCol_t endCol, char quoteChar);
+    huToken * allocNewToken(huTrove * trove, huEnumType_t kind, char const * str, huSize_t size, 
+        huLine_t line, huCol_t col, huLine_t endLine, huCol_t endCol, 
+        huHeretagSize_t offsetIn, huHeretagSize_t offsetOut, char quoteChar);
     /// Add a huNode to a trove's node array.
     huNode * allocNewNode(huTrove * trove, huEnumType_t nodeKind, huToken const * firstToken);
 

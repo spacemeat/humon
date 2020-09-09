@@ -1,5 +1,5 @@
 Done:
-Some package reorganization. Not dialed in yet.
+
 
 Doing:
 PyDoc strings with foo => bar type text.

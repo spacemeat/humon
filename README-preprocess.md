@@ -121,9 +121,11 @@ Human authors and maintainers are one of the two primary customers. Reading, mod
 Computing machines are the other primary customer. Software written against the language must run quick, and the language must promote simple interfaces and consistent operation. There must be adequate facilities for programmed machines to utilize the data exposed by Humon. Resource usage for grokking Humon objects must be reasonable.
 1. **We are serving humans who are serving machines with this language.**
 The APIs are the conjunction of human and machine. The machine has been taught how to use them. We can learn the same. API design must be convenient and unsurprising, consistent and unambiguous.
+1. **Humon is domain-neutral**
+There are no assumptions made about the structure, use of the structure, or meaning of any tokens or comments or annotations. Applications will use Humon to describe their own domain-specific structure, as determined by the app designer. A Humon token stream that is syntactically legal per the language rules is valid Humon; whether it is a valid structure for the app using Humon is up to the app to determine.
 
 ### Principles in the language
-No more required quotes. Commas are optional. When you do quote keys or values, you can use any quote character `` ' " ` ``. Keys and values are just text data. Quoted strings can contain newlines. Annotations and comments can provide "human hooks" into the data without the need to muck with the structure design, and without polluting the data structure expected by an extant application. Humon files are *intended* to be authored and modified in text editing tools, by humans, and also be simple enough for a machine to generate as well.
+No more required quotes. Commas are optional. When you do quote keys or values, you can use any quote character `` ' " ` ``. Heredoc-style quotes are supported. Keys and values are just text data. Quoted and heredoc strings can contain newlines. Annotations and comments can provide "human hooks" into the data without the need to muck with the structure design, and without polluting the data structure expected by an application. Humon files are *intended* to be authored and modified in text editing tools, by humans, and also be simple enough for a machine to generate as well.
 
 ### Principles in the APIs
 Most of the interesting use cases for Humon involve a machine reading data authored by either a machine or a human. The performance characteristics of the implementation reflect this; loaded Humon troves are *immutable*. Searching and scanning through Humon data is quick, and references to internal data do not go bad for the life of the trove.
@@ -139,22 +141,24 @@ I happen to love me some JSON. To my mind, it has the best syntax for describing
 
 As we all know, JSON has some creaky bits. Some of them are merely annoying, like nitpicky punctuation--during a creative editing session, worrying about maintaining commas in just the right places while developing the structure is Flowus Interruptus. But some of JSON's shortcomings inhibit some more practical use cases, like the lack of comment support. Editing apps and other environments oftentimes include their own custom JSON parser, just to accept comments in configuration files, say.
 
-I mean, JSON wasn't designed for these things. It was made to communicate between JavaScript processes over a wire. It doesn't *have* to be these things for me to appreciate what it can do. But that doesn't mean it should be the thing to do the things we do make it do. Let's design a language that can always do those things, and serve *all* its customers.
+I mean, JSON wasn't designed for these things. It was made to communicate between JavaScript processes over a wire. It doesn't *have* to be these things for me to appreciate what it can do. But that doesn't mean it should be the thing to do the things we do make it do. Let's design a syntax that can always do those things, and serve *all* its customers.
 
 So there's YAML. It basically does what I want but its syntax is complex, and has spatial requirements that I feel are binding. Just more syntax to manage, and it's harder to modify its structure quickly by hand. Humon is more fluid and flexible, and that allows for quick changes in a text editor.
 
 So there's TOML, which comes pretty close. It still has some structural requirements that I feel are unnecessary.
 
-So, this project proposes Humon as a replacement for those tasks that JSON is performing but shouldn't, and YAML might be performing if it was more accessible. Specifically, those spaces where humans interact with structured text data, and those places where we could be, but are inhibited by inconvenience or a rigid format like .ini.
+So there's XML. But, no, there isn't.
+
+So, this project proposes Humon as a replacement for those tasks that XML is performing but shouldn't, JSON is performing but shouldn't, and YAML might be performing if it was more accessible. Specifically, those spaces where humans interact with structured text data, and those places where we could be, but are inhibited by inconvenience or a rigid format. Reg/.ini files, some .rc files, and a whole host of other types could be wrapped up in a format like this as well.
 
 ### Some terms
-*Humon*: The format, API, implementation of the API, files memory blocks or data streams that contain expressions of data in the format, or that data.
+*Humon*: The format, API, implementation of the API, or files, memory blocks, or data streams that contain expressions of data in the format, or that data.
 
 *trove*: A tokenized and parsed, in-memory representation of Humon data which stems from a single root node, and against which Humon APIs are programmed.
 
 *token stream*: The text of a Humon file or in-memory text string. I use this language to refer to Humon text content like in a file, as opposed to tokenized or parsed Humon data in a trove.
 
-*token*: A word or sequence of words in a Humon token stream, which are meaningful to Humon and you at a granular level. `{` is a token, as is a value like `"foo"`, as is a whole comment like `/* I am just an utterance. */`. (Comments are considered single tokens for parsing purposes.) Every token is owned either by a single node, or (in special cases) by the trove itself. A token array is maintained by the trove, and provides content and position information (row, column) for each token, if that sort of thing is interesting to you.
+*token*: A word or sequence of words in a Humon token stream which are meaningful to Humon and you at a granular level, or a structural representation of such a token in a trove. `{` is a token, as is a value like `"foo"`, as is a whole comment like `/* I am just an utterance. */`. (Comments are considered single tokens for parsing purposes.) Every token is owned either by a single node, or (in special cases) by the trove itself. A token array is maintained by the trove, and provides content and position information (row, column) for each token, if that sort of thing is interesting to you.
 
 *node*: A unit of structure in a Humon data hierarchy. There are three kinds of nodes: lists, dicts (dictionaries), and values. Lists and dicts can store any kinds of nodes as children. Nodes are the abstraction of the structure. The trove maintains an array of nodes parsed from the token array.
 
@@ -162,9 +166,11 @@ So, this project proposes Humon as a replacement for those tasks that JSON is pe
 
 *dict*: A node that contains a sequential collection of zero or more nodes as children, where each node is associated with a key. In the language, the dict is the bounding `{ }` around the child nodes, each of which must be preceded by a key and `:`. In the API, a dict's children can be accessed by index or by key.
 
-*key*: An associated string for a dict's child. A key must be a string of nonzero length. Within a dict, keys must be unique. There is no maximum length defined, and keys can be quoted. (Quoted values can be multiline strings, but that's a strange way to spec a key.) Any Unicode code point that is not whitespace or punctuation counts as a key character.
+*key*: An associated string for a dict's child. A key must be a string of nonzero length. Within a dict, keys must be unique. There is no maximum length defined, and keys can be quoted. (Quoted or heredoc'd values can be multiline strings, but that's a strange way to spec a key.) Any Unicode code point that is not whitespace or punctuation counts as a key character.
 
-*value*: A node that contains a single string value. Values can be quoted; quoted values can be multiline strings. As with keys, any Unicode code point that is not whitespace or punctuation counts as a value character.
+*value*: A node that contains a single string value. Values can optionally be quoted or heredocs; such values can be multiline strings. As with keys, any Unicode code point that is not whitespace or punctuation counts as a value character.
+
+*heredoc*: A syntax for specifying an exact character-for-character string, with no need to fix up the string to abide by Humon syntax. (No '\'-escapements, or other disambiguations required.)
 
 *comment*: A string of words that are not exposed as values in nodes. They're mainly for humans to make notes, but there are APIs to search for comments and get their associated nodes, in case that's useful.
 
@@ -173,9 +179,9 @@ So, this project proposes Humon as a replacement for those tasks that JSON is pe
 ### The principles applied to the language
 
 #### Brevity and simplicity
-Punctuation in Humon consists entirely of:
+Punctuation in Humon consists of:
 
-    [ ] { } : " ' ` @ // /* */
+    [ ] { } : " ' ` ^ @ // /* */
 
 As stated, there are three kinds of nodes in a Humon token stream: lists, dicts, and values. These correspond to the same object kinds in JSON, conceptually: A list stores a plurality of other nodes in ordered sequence. A dictionary stores a plurality of nodes in ordered sequence, each associated with a key. A value stores a single string. This structure allows for an arbitrary data hierarchy.
 
@@ -209,7 +215,7 @@ Each dict entry must be a key:node pair. The node can be of any kind. Each key i
 **Values are strings.**
 A value is a contiguous non-punctuation, non-whitespace string of Unicode code points, or a quoted string of Unicode code points.
 
-For non-quoted values, the first unescaped whitespace or punctuation character encountered ends the string, and begins a new token. This obviously includes newlines. Quotes that are encountered *within* the string (but not the beginning) are included with it, and are not matched against any other quotes later in the string. So, `value"with'quotes` is tokenized as one whole token string. Backslashes can be used to escape punctuation characters or whitespace within an unquoted string. So, `value\ with\[\ crazy\ stuff \]` is tokenized as one whole token string. Backslashes do not escape newlines though; for that, use a quoted string.
+For non-quoted values, the first unescaped whitespace or punctuation character encountered ends the string, and begins a new token. This obviously includes newlines and spaces, but also commas. Quotes that are encountered *within* the string (but not the beginning) are included with it, and are not matched against any other quotes later in the string. So, `value"with'quotes` is tokenized as one whole token string. Backslashes can be used to escape punctuation characters or whitespace within an unquoted string. So, `value\ with\[\ crazy\ stuff \]` is tokenized as one whole token string. Backslashes do not escape newlines though; for that, use a quoted string.
 
 You can use any quote character (`'`, `"`, `` ` ``) to begin a string. It doesn't matter which you use; they all work the same way. A quoted string value starts after the quote, and ends just before the next corresponding, *unescaped* quote. The string can contain backslash-escaped quotes, like in most programming languages, and treats other kinds of quotes as normal token characters:
 
@@ -220,6 +226,47 @@ Quoted string values can span multiple lines of text. Newlines are included in t
     "Fiery the angels rose, and as they rose deep thunder roll'd.
     Around their shores: indignant burning with the fires of Orc."
 
+Humon also supports heredoc-style strings. These are good for inserting code snippets or other wild and wacky text in languages that didn't expect to have to adhere to Humon's particular syntax:
+
+    {
+        min: ^EOT^
+        if ($1 < $2)
+            { return $1; }
+        else
+            { return $2; }
+    ^EOT^
+    }
+
+The heredoc tag starts with a `^` followed by zero or more characters, followed by another `^`. The resulting value token contains all the following text until the next matching `^`-enclosed tag in the token stream. The tags otherwise have no meaning, and can be reused. The tag can be zero characters long, which is my usual; I generally use a named tag only if I need to disambiguate the tag from a double-caret sequence inside the token (which I never have).
+
+The specific whitespacing of heredoc values is nuanced. That's because our (really, my) expectation is a little nuanced too. The following example illustrates:
+
+    {
+        min: ^^
+        if ($1 < $2)
+            { return $1; }
+        else
+            { return $2; }
+    ^^
+
+        max: ^^
+
+        if ($1 >= $2)
+            { return $1; }
+        else
+            { return $2; }
+    ^^
+
+        neg: ^^return -$1;^^
+        inv: ^^        return 1/$1;^^
+    }
+
+Above, `min`'s value starts at the first 'i' in 'if'. `max`'s value starts at the newline *before* the first 'i' in its 'if', and that newline is included it in the token. In the case that the token starts on the same line as the heredoc tag as in `neg` and `inv`, the token includes all the characters between the tags, including preceding and trailing whitespace.
+
+> The specific rule is: After the heredoc tag, if the next non-whitespace character is on the same line as the tag, then all text right after the heredoc tag is included in the token, including any whitespace between the tag and the character. Conversely, if the next non-whitespace character is on a different line, then all whitespace after the heredoc tag is skipped, up to and including the *first* newline. Then all text after that is included in the token.
+
+These nuances allow you to have code blocks or other format-sensitive things as heredocs, without introducing spurious newlines at the beginning, and without requiring the first line to be preceded by a tag or other Humon punctuation. They also allow you to one-line a heredoc, which can be handy for things like Windows directory paths, or Humon node addresses in some other document (we'll talk about node addressing in a bit), or format-sensitive one-line code snippets.
+
 **Keys must be strings.**
 A value is a contiguous non-punctuation, non-whitespace string of Unicode code points, or a quoted string of Unicode code points.
 
@@ -229,11 +276,12 @@ They can be numbers of course, but that's just a string to Humon. The rules for 
         this: okay
         this one: nope
         this\ one: sure
-        "this one here": "this is fine"
+        "this one here": "it's fine"
         "this
     one": yep
         1: "fine, but remember: numbers are just strings to Humon and they won't be sorted"
         Δημοσθένους: "Unicode is fully recognized."
+        ^WHY^No really, why allow this?^WHY^: "Why not?"
     }
 
 **Whitespace is ignored.**
@@ -426,7 +474,7 @@ A relative address can be used to get from one node to another:
 
 !!! src: apps/readmeSrc/usage.cpp; frag: addressWeird3; indent: -2
 
-Notice the relative path does not start with `/`. The relative address is followed from the node, not from the trove.
+Notice the relative path does not start with `/`. The relative address is followed from the node, not from the root.
 
 There are also explicit member functions for getting nodes by child index or key or parentage:
 
