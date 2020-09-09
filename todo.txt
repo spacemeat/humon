@@ -1,5 +1,5 @@
 DONE THIS CHECKIN:
-Fixed printing output bug caused by heredoc changes.
+Readme improvements.
 
 TODO:
 P1 finish the python package

@@ -109,7 +109,7 @@ or in C++:
 ### Installation
 If you're just using Humon files with some application you've installed, you don't need to do anything. However, the project contains a directory called `vscode/humon-lang` which contains a TextMate colorizer for VS Code. You can copy the `humon-lang` directory into your `~/.vscode/extensions` directory, and VS Code will make files with a ".hu" extension a bit more colorful.
 
-Building Humon in Linux is easy enough, but you need to have Python3.7.5 or newer installed. Starting from the Humon project directory, you can build the binaries with gcc:
+Building Humon in Linux is easy enough, but you need to have Python 3.7.5 or newer installed. Starting from the Humon project directory, you can build the binaries with gcc:
 
     ~/src/humon$ ./build-linux.py
 
@@ -124,7 +124,7 @@ In Windows, you can open the root-level `humon.sln` file in Visual Studio 2017 o
 There are a number of build options available to get just what you want: 32-bit architecture, debug vs release builds, and a few switches to customize the runtime. See [this here section here](#buildingHumon).
 
 ### Integrating Humon into your application
-If you've successfully built, there will be an appropriate binary of interest in `build/bin`. The build system makes a static and shared library in Linux, and a static library and DLL (with import library) in Visual Studio.
+When you've successfully built, there will be an appropriate binary of interest in `build/bin`. The build system makes a static and shared library in Linux, and a static library and DLL (with import library) in Visual Studio.
 
 In Linux, you can install Humon into your system by invoking 
 
@@ -134,7 +134,7 @@ This will place the built headers and libraries and the [hux tool](#hux) into th
 
 As an alternative to installing, you can simply copy the lib from `build/bin` and the headers from `include/humon` into your application's code.
 
-If you're building a Windows project in Visual Studio, and you want to use the static library, simply #include <humon/humon.h> or <humon/humon.hpp>, and link against the lib. If you want to use the DLL, define the HUMON_USING_DLL preprocessor symbol (either with a preceding #define or by passing `-DHUMON_USING_DLL` to the build) and link against the import lib.
+If you're building a Windows project in Visual Studio, and you want to use the static library, simply `#include <humon/humon.h>` or `#includde <humon/humon.hpp>`, and link against the lib. If you want to use the DLL, define the HUMON_USING_DLL preprocessor symbol (either with a preceding `#define` or by passing `-DHUMON_USING_DLL` to the build) and link against the import lib.
 
 ### Humon version
 Humon uses semver in its language/API versioning scheme: `major.minor.patch` For changes that do not affect the API or correct behavior, the patch is incremented. For changes that only add to the API but do not break builds or behaviors, the minor value is incremented. For breaking changes, the major value is incremented. The version refers to the C/C++ API version; the Humon *format* is considered stable.
@@ -142,7 +142,7 @@ Humon uses semver in its language/API versioning scheme: `major.minor.patch` For
 The version number is defined in the C/C++ API as `HUMON_MAJORVERSION`, `HUMON_MINORVERSION`, and `HUMON_PATCHVERSION`.
 
 ## Design principles
-We're going to keep referencing JSON, as it's the model that Humon takes after. But we want it to be better, so the obvious thing to do is just fix the problems with JSON. Once we commit to designing a new format / language, we're free to make the rules. Rules should come from guiding principles:
+We're going to keep referencing JSON, as it's the model that Humon takes after. We want it to be better, so the obvious thing to do is fix the problems with JSON, and that's most of what Humon is. But, once we commit to designing a new format / language, we're free to make the rules. Rules should come from guiding principles:
 
 1. **We are serving humans with this language.**
 Human authors and maintainers are one of the two primary customers. Reading, modifying, and writing Humon data in an editor should be as simple and hassle-free as possible. It must never come as a surprise what the language thinks you mean, or what is legal to state in the language. A minimal syntax promotes this principle. Humon token streams must be able to be large, storing lots of kinds of data, free to fulfill human needs tersely.
@@ -150,11 +150,11 @@ Human authors and maintainers are one of the two primary customers. Reading, mod
 Computing machines are the other primary customer. Software written against the language must run quick, and the language must promote simple interfaces and consistent operation. There must be adequate facilities for programmed machines to utilize the data exposed by Humon. Resource usage for grokking Humon objects must be reasonable.
 1. **We are serving humans who are serving machines with this language.**
 The APIs are the conjunction of human and machine. The machine has been taught how to use them. We can learn the same. API design must be convenient and unsurprising, consistent and unambiguous.
-1. **Humon is domain-neutral**
-There are no assumptions made about the structure, use of the structure, or meaning of any tokens or comments or annotations. Applications will use Humon to describe their own domain-specific structure, as determined by the app designer. A Humon token stream that is syntactically legal per the language rules is valid Humon; whether it is a valid structure for the app using Humon is up to the app to determine.
+1. **Humon is domain-neutral.**
+There are no assumptions made about the structure, use of the structure, or meaning of any keys or values or comments or annotations. Applications will use Humon to describe their own domain-specific structure, as determined by the app designer. A Humon token stream that is syntactically legal per the language rules is valid Humon; whether it is a valid structure for the app using Humon is up to the app to determine.
 
 ### Principles in the language
-No more required quotes. Commas are optional. When you do quote keys or values, you can use any quote character `` ' " ` ``. Heredoc-style quotes are supported. Keys and values are just text data. Quoted and heredoc strings can contain newlines. Annotations and comments can provide "human hooks" into the data without the need to muck with the structure design, and without polluting the data structure expected by an application. Humon files are *intended* to be authored and modified in text editing tools, by humans, and also be simple enough for a machine to generate as well.
+No more required quotes. Commas are optional. When you do quote keys or values, you can use any common quote character `` ' " ` ``. Heredoc-style quotes are supported. Keys and values are just text data. Quoted and heredoc strings can contain newlines. Annotations and comments can provide "human hooks" into the data without the need to muck with the structure design, and without polluting the data structure expected by an application. Humon files are *intended* to be authored and modified in text editing tools, by humans, and also be simple enough for a machine to generate as well.
 
 ### Principles in the APIs
 Most of the interesting use cases for Humon involve a machine reading data authored by either a machine or a human. The performance characteristics of the implementation reflect this; loaded Humon troves are *immutable*. Searching and scanning through Humon data is quick, and references to internal data do not go bad for the life of the trove.
@@ -199,7 +199,7 @@ So, this project proposes Humon as a replacement for those tasks that XML is per
 
 *value*: A node that contains a single string value. Values can optionally be quoted or heredocs; such values can be multiline strings. As with keys, any Unicode code point that is not whitespace or punctuation counts as a value character.
 
-*heredoc*: A syntax for specifying an exact character-for-character string, with no need to fix up the string to abide by Humon syntax. (No '\'-escapements, or other disambiguations required.)
+*heredoc*: A syntax for specifying an exact character-for-character string, with no need to fix up the string to abide by Humon syntax. (No '\\'-escapements, or other disambiguations required.)
 
 *comment*: A string of words that are not exposed as values in nodes. They're mainly for humans to make notes, but there are APIs to search for comments and get their associated nodes, in case that's useful.
 
@@ -242,7 +242,7 @@ Any kind of node can occupy any entry in any list. Lists don't have to contain n
 Each dict entry must be a key:node pair. The node can be of any kind. Each key in a dict must be a string, and unique within the dict. There is no delimiting syntax between key:node pairs; just whitespace (maybe including commas if you like) if needed for disambiguation.
 
 **Values are strings.**
-A value is a contiguous non-punctuation, non-whitespace string of Unicode code points, or a quoted string of Unicode code points.
+A value is a contiguous non-punctuation, non-whitespace string of Unicode code points, or a quoted string of Unicode code points, or a heredoc-tagged string of Unicode code points.
 
 For non-quoted values, the first unescaped whitespace or punctuation character encountered ends the string, and begins a new token. This obviously includes newlines and spaces, but also commas. Quotes that are encountered *within* the string (but not the beginning) are included with it, and are not matched against any other quotes later in the string. So, `value"with'quotes` is tokenized as one whole token string. Backslashes can be used to escape punctuation characters or whitespace within an unquoted string. So, `value\ with\[\ crazy\ stuff \]` is tokenized as one whole token string. Backslashes do not escape newlines though; for that, use a quoted string.
 
@@ -297,17 +297,17 @@ Above, `min`'s value starts at the first 'i' in 'if'. `max`'s value starts at th
 These nuances allow you to have code blocks or other format-sensitive things as heredocs, without introducing spurious newlines at the beginning, and without requiring the first line to be preceded by a tag or other Humon punctuation. They also allow you to one-line a heredoc, which can be handy for things like Windows directory paths, or Humon node addresses in some other document (we'll talk about node addressing in a bit), or format-sensitive one-line code snippets.
 
 **Keys must be strings.**
-A value is a contiguous non-punctuation, non-whitespace string of Unicode code points, or a quoted string of Unicode code points.
+A value is a contiguous non-punctuation, non-whitespace string of Unicode code points, or a quoted string of Unicode code points, or a heredoc-tagged string of Unicode code points.
 
 They can be numbers of course, but that's just a string to Humon. The rules for value strings also fully apply to keys. Examples below specify valid keys:
 
     {
         this: okay
-        this one: nope
+        // this one: nope      // Syntax error
         this\ one: sure
         "this one here": "it's fine"
         "this
-    one": yep
+    one": yes
         1: "fine, but remember: numbers are just strings to Humon and they won't be sorted"
         Δημοσθένους: "Unicode is fully recognized."
         ^WHY^No really, why allow this?^WHY^: "Why not?"
@@ -381,15 +381,15 @@ Humon respects all whitespace characters that Unicode specifies, and supports al
 
 There are performance implications for using `hu::Encoding::unknown`, especially if there is no BOM in the token stream. Humon has to examine bytes until it can determine the encoding, and then start over with a transcode operation. If you do know your encoding, do specify it.
 
-Some encodings (aliases or overlong encodings in some UTF-n formats) can cause unsecure behavior in some applications. You can be strict about checking for encoding legality. The checks are specified in a `hu::DeserializeOptions` structure passed to `hu::fromString` or `hu::fromFile` or `hu::fromStream`, and are on by default. When checking legality, overlong sequences are converted to canonical forms, and code points outside legal ranges cause an error.
+Some wrongly-encoded characters (aliases or overlong encodings in some UTF-n formats) can cause unsecure behavior in some applications. You can be strict about checking for encoding legality. The checks are specified in a `hu::DeserializeOptions` structure passed to `hu::fromString` or `hu::fromFile` or `hu::fromStream`, and are on by default. When checking legality, overlong sequences are converted to canonical forms, and code points outside legal ranges cause an error.
+
+If you know your source data is UTF-8, and you know it contains only legal code units or you don't care, you can turn off strict Unicode checking. This allows Humon to indiscriminately load byte data without checking for overlong sequences, etc. It's a little faster. If you're accepting a token stream generated by a user, especially a remote user, consider always checking legality. A proper Unicode application should not emit these illegal codes.
 
     auto desRes = hu::Trove::fromFile("apps/readmeSrc/materials.hu"sv, 
         { hu::Encoding::utf8, false });     // UTF-8, and disable Unicode checks
     if (auto trove = std::get_if<hu::Trove>(& desRes))
     {
         // ...
-
-If you know your source data is UTF-8, and you know it contains only legal code units or you don't care, you can turn off strict Unicode checking. This allows Humon to indiscriminately load byte data without checking for overlong sequences, etc. It's a little faster. If you're accepting a token stream generated by a user, especially a remote user, consider always checking legality. A proper Unicode application should not emit these illegal codes.
 
 Either way, special Unicode code points like continuations are simply considered word characters for keys or values or comments, and Humon doesn't *ever* check for Unicode's notions of semantic correctness for sequences of code points. To Humon, any code point is either whitespace, language punctuation (which is only ever a single UTF-8 byte), or a word-token character. That's all the tokenizer understands.
 
@@ -398,7 +398,7 @@ If this is all Groot to you, just rest assured that Humon can load any text file
 **Humon writes UTF-8.**
 While Humon can read all the normal UTF-n formats, `Trove::toString`, `Trove::toFile`, and their sugar functions can only generate UTF-8, with or without BOM as you choose.
 
-> Why only UTF-8? It's the ubiquitous encoding for the web and most Linux and OSX things, and Windows APIs can fully deal with it. But mainly, I just don't care enough about supporting these encodings beyond reading. Humon transcodes the token stream into UTF-8 internally, and slams memory out on a `Trove::to*` call. See the manifesto at [this page](http://utf8everywhere.org/) to read an opinionated opinion.
+> Why only UTF-8? It's the ubiquitous encoding for the web and most Linux and OSX things, and Windows APIs can fully deal with it. Humon transcodes the token stream into UTF-8 internally, and slams memory out on a `Trove::to*` call. See the manifesto at [this page](http://utf8everywhere.org/) to read an opinionated opinion.
 
 ## The C-family programming interfaces
 There are API specs for the C and C++ interfaces. The C API is fully featured but obtuse, as C APIs tend to be. The C++ API mainly wraps the C API, but also provides some nice features for more C++ish fun-time things. Since you'll usually be using the C++ API, we'll mainly discuss that.
@@ -407,7 +407,7 @@ There are API specs for the C and C++ interfaces. The C API is fully featured bu
 
 Start with `#include <humon/humon.hpp>`. The interface is contained in a namespace, `hu`. The C API is itself contained in a nested namespace, `hu::capi`, but you generally won't reference it yourself.
 
-(Note: To use the C API, `#include <humon/humon.h>` instead. Obviously there is no namespace there, because it's a pure C99 header.)
+(Note: To use the C API, `#include <humon/humon.h>` instead. Obviously there is no namespace there, because it's a pure C99 header, but if you're writing C++ and want it anyway, just define the preprocessor symbol `HUMON_USENAMESPACE`.)
 
 To deserialize a Humon token stream, invoke one of `hu::Trove`'s static member functions:
 
@@ -416,7 +416,7 @@ To deserialize a Humon token stream, invoke one of `hu::Trove`'s static member f
 
 These each return a `std::variant<hu::Trove, hu::ErrorCode>` object. Once you have a trove, all the loading from source is finished, and it's fully ready to use. You'll use the trove to get access to nodes and their data.
 
-> The error code is set if there was a problem loading the token stream before tokenization could begin. Bad parameters or an unusable encoding will disallow a trove from even being created. Beyond that point, a trove is made and returned, and will contain all the tokenization and parsing errors in the token stream.
+> The error code is set if there was a problem loading the token stream before tokenization could begin. Bad parameters or an unusable encoding will disallow a trove from even being created. Beyond that point, a trove is made and returned, and will contain all the tokenization and parsing errors in the token stream, if any.
 
 The `hu::Trove` class is move-constructable and move-assignable. When it is destroyed, it will destroy the underlying trove data.
 
@@ -429,14 +429,15 @@ There are some options you can give the loader:
     {
         & memMan,
         // These are fn pointers, so no captures allowed.
-        [](void * memMan, ::size_t len )
-            { return ((YourMemoryManager *) memMan)->alloc(len); },
-        [](void * memMan, void * alloc, ::size_t len )
-            { return ((YourMemoryManager *) memMan)->realloc(alloc, len); },
-        [](void * memMan, void * alloc )
-            { return ((YourMemoryManager *) memMan)->free(alloc); }
+        [](void * memManager, ::size_t len )
+            { return ((YourMemoryManager *) memManager)->alloc(len); },
+        [](void * memManager, void * alloc, ::size_t len )
+            { return ((YourMemoryManager *) memManager)->realloc(alloc, len); },
+        [](void * memManager, void * alloc )
+            { return ((YourMemoryManager *) memManager)->free(alloc); }
     };
-    auto desResFromRam = hu::Trove::fromString("{foo: [100, 200]}"sv, { hu::Encoding::unknown, true, 4, alloc});
+    auto desResFromRam = hu::Trove::fromString("{foo: [100, 200]}"sv, 
+        { hu::Encoding::unknown, true, 4, alloc});
 
 The object constructed in the call is a `hu::DeserializeOptions`, which takes four values:
 * a `hu::Encoding` specifying the anticipated Unicode encoding of the input. For loading from files, this defaults to `hu::Encoding::unknown`, in which case Humon will attempt to guess the encoding. For loading from memory, it defaults to `hu::Encoding::utf8`.
@@ -482,12 +483,12 @@ To check whether a node has a particular child node, use the `%` operator on the
 It's more efficient to store a reference to a node than to look it up successive times. Above, we're essentially looking up `/foo` twice. Better to get the base object and store it:
 
     auto fooNode = rootNode / "foo";
-    hasFoosStuff = rootNode / "foo" % 1;                    
+    hasFoosStuff = fooNode ? fooNode % 1 : false;           
 
 Humon APIs don't throw, but rather return nullish* objects, which have implicit `operator bool()`s for checking nullity. So even better than above:
 
     fooNode = rootNode / "foo";
-    hasFoosStuff = fooNode ? fooNode % 1 : false;           
+    hasFoosStuff = fooNode % 1;                             
 
 Or even,
 
@@ -528,7 +529,7 @@ There are some finnicky bits about node addresses when considering that a dict's
 
     "/foo/'20'/baz/"
 
-`hu::Node::address()` always returns an address that is legal to use in `hu::Trove::nodeByAddress()` to find the node again. `hu::Node::address()` will appropriately `"`-enquoted terms if it needs to, and will escape already-present `"`s if it has to enquote such a term.
+`hu::Node::address()` always returns an address that is legal to use in `hu::Trove::nodeByAddress()` to find the node again. `hu::Node::address()` will appropriately double-enquote terms (`"`) if it needs to, and will escape already-present `"`s if it needs to enquote such a term.
 
     {
         bufferSources: {
@@ -560,6 +561,8 @@ There are some finnicky bits about node addresses when considering that a dict's
 
     $ runSample
     required's address: /bufferSources/"res/\"game\ assets\"/meshes.hu"/required
+
+> The example above is contrived for illustration; I generally prefer heredocs for paths (especially Windows paths) so quotes and other shell elements don't have to be considered.
 
 A relative address can be used to get from one node to another:
 
@@ -603,7 +606,7 @@ So you've got a value node. Whooptie-doo. To get a value from it:
 
 Though `hu::Node::value()` is assigned to a `std::string_view` above, it actually returns a `hu::Token`, which has an implicit conversion to a `std::string_view`. A `hu::Token` has information about the token's representation in the token stream. You can get line / column data and the string value itself. Use token information if you want to report on the location of interesting data in a token stream.
 
-In example [2] above, the `hu::val<T>` type is defined to extract typed data from the value string of a node.  It allows you to deserialize and return an arbitrary-typed value. There are definitions for the basic numeric types and `bool` (using English spelling of "true" to denote truth). This is how you'll get the vast majority of your data.
+In example [2] above, the `hu::val<T>` type is defined to extract typed data from the value string of a node.  It allows you to deserialize and return an arbitrary-typed value. There are definitions for the basic numeric types and `bool` (using English spelling of "true" to denote truth). This is how you'll get the vast majority of your typed data.
 
 You can also define your own specialization of `hu::val<T>` for your own type. Start with the type you'd like to deserialize:
 
@@ -643,7 +646,7 @@ Now you can use it:
 
     auto gccVersion = trove / "dependencies" / "gcc" / hu::val<V3>{}; 
 
-C++ will deduce tye type of `gccVersion` above from the `V3` template parameter passed to `hu::val<>`. `hu::val<T>` is a convenience which allows you to code the lookup and conversion in line, without grouping parentheses. You can also use the extractor member to convert strings by themselves:
+C++ will deduce the type of `gccVersion` above from the `V3` template parameter passed to `hu::val<>`. `hu::val<T>` is a convenience which allows you to code the lookup and conversion in line, without grouping parentheses. You can also use the extractor member to convert strings by themselves:
 
     auto const literalVersion = "9.2.1";                        
     auto toolVersion = hu::val<V3>::extract(literalVersion);    
@@ -659,7 +662,7 @@ Annotations are described in detail below. They're essentially per-node metadata
                     type: int @{numBits: 32 numBytes: 4}
                 }
                 damage: {
-                    type: int  @{numBits: 32 numBytes: 4}
+                    type: int @{numBits: 32 numBytes: 4}
                 }
                 // ...
             }
@@ -714,7 +717,7 @@ You can generate a Humon token stream from a `hu::Trove` like so:
     hu::SerializeOptions opts {};
     auto tokStr = trove.toString(opts);
 
-This will generate an uncolored, well-formatted token stream, or an error code. These are returned as a `std::variant<std::string, hu::ErrorCode>`. The `hu::SerializeOptions` class has formatting options to customize the token stream to you liking.
+This will generate an uncolored, well-formatted token stream, or an error code. These are returned as a `std::variant<std::string, hu::ErrorCode>`. The `hu::SerializeOptions` class has formatting options to customize the token stream to your liking.
 
 There are sugar functions to make it even easier:
 
@@ -725,12 +728,12 @@ There are sugar functions to make it even easier:
     // The parameter directs Humon to strip comments from the stream.
     tokStr = trove.toMinimalString({}, false);
     
-    // Minimal whitespace, with old style HTML linebreaks.
+    // Minimal whitespace, with old-style HTML linebreaks.
     tokStr = trove.toMinimalString({}, true, "<br />");
 
 For printing with colors, specify a color table of type `hu::ColorTable`, which is just a type alias for `std::array<std::string_view, hu::capi::HU_COLORCODE_NUMCOLORS>`. You can set these values manually; each string corresponds index-wise to color codes in `hu::ColorCode`, and is inserted just before the appropriate token in the printed token stream. There are a few special values: `hu::ColorCode::tokenStreamBegin` which is placed before all other characters, `hu::ColorCode::tokenEnd` which is placed after *each* colored token, and `hu::ColorCode::tokenStreamEnd` which is placed after the *last* token in the token stream.
 
-> Sometimes C-style enums can be more convenient than C++ enum classes. It's okay to admit it. You can use the analogous `hu::capi::huColorCode`, or `huColorCode` as defined in the `humon.h` C header.
+> Sometimes C-style enums can be more convenient than C++ enum classes. It's okay to admit it. You can use the analogous `hu::capi::huColorCode` as defined in the `humon.h` C header.
 
 Humon provides a function to make a `hu::ColorTable` with ANSI terminal color codes. This is useful for command-line printing of Humon content.
 
@@ -738,12 +741,12 @@ Humon provides a function to make a `hu::ColorTable` with ANSI terminal color co
 
     // You can specify minimal whitespace and still use a color table for the tokens--see below.
     tokStr = trove.toMinimalString(colorTable, false, "\n");
-    if (auto str = std::get_if<std::string>(& tokStr))
+    if (auto str = get_if<std::string>(& tokStr))
         { out << * str; }
 
     // Pretty. Use an indentation of 4 spaces to format nested depths.
     tokStr = trove.toPrettyString(4, false, colorTable, false, "\n");
-    if (auto str = std::get_if<std::string>(& tokStr))
+    if (auto str = get_if<std::string>(& tokStr))
         { out << * str; }
 
 ### The principles applied to the C-family APIs
@@ -753,7 +756,7 @@ Maybe you'd call them behaviors, but they embody the Humon principles.
 This is mostly for recording line numbers in token objects, for error reporting and other things that need token placement information. In general, it does what you expect.
 
 **All non-whitespace, non-quote characters are part of some token.**
-Only whitespace characters like spaces, newlines, commas, and quote characters around keys and values are discarded from tracking in the tokenizer.
+Only whitespace characters like spaces, newlines, and commas are discarded from tracking in the tokenizer.
 
 **All tokens are part of some node, xor the trove.**
 During a load, a Humon token stream is tokenized into a list of token objects, and then those tokens are parsed into a node hierarchy. Every single token object is owned by exactly one node, or by the trove itself in a few cases. A trove can completely reconstruct a Humon token stream from the nodes and tokens, including reconstructing comments and annotations with their appropriate associations.
@@ -761,21 +764,21 @@ During a load, a Humon token stream is tokenized into a list of token objects, a
 **All keys and values are strings.**
 As stated, Humon makes no assumptions about the data type of a value. `"True"`, `"true"`, and `true` are all the same type of thing to Humon: a four-character string. (Though, of course, case is preserved and considered when searching.)
 
-Usually boolean and numeric values are computational though, and matter to the application using Humon. Convenience APIs are included in some language bindings to parse values (and in some cases let you define your own parsers).
+Usually boolean and numeric values are computational though, and matter to the application using Humon. Convenience APIs like `hu::val<T>` are included to parse values (and in some cases let you define your own parsers).
 
 **Humon objects are immutable.**
 Once loaded, a Humon trove does not move or change. This has implications:
 1. Accessing raw value data is quick. You basically get a pointer and size. Since the data behind it doesn't move or change, that value pointer is good for the life of the trove.
-1. Raw string values returned by APIs are *not* NULL-terminated. (In C++, they translate directly to `std::string_view`s.)
-1. Raw string values contain escapement characters, just as seen in the token stream. They do not contain any surrounding quotes. If strings contain CRLF newlines in the token stream, they'll appear that way in raw string accesses too.
-1. Raw string values are UTF-8-encoded.
-1. The whole token stream must be in contiguous memory. This is currently true at least, and means loading a whole token stream before tokenizing and parsing. It's unfortunate for concurrency, and I'm thinking about it. For most use cases like app configurations or database schemas, this isn't a real issue.
+1. String values returned by APIs are *not* NULL-terminated. (In C++, they translate directly to `std::string_view`s.)
+1. String values contain escapement characters, just as seen in the token stream. They do not contain any surrounding quotes or heredoc tags. If strings contain CRLF newlines in the token stream, they'll appear that way in raw string accesses too. (You can also get the raw string values, which do contain the encapsulating characters.)
+1. String values are UTF-8-encoded.
+1. The whole token stream must be in contiguous memory.
 1. When serializing back to another stream or file from a Humon trove, the exact source can be spit out without any conversion, since the original string is still in memory (encoded as UTF-8). This is the most performant way to generate a Humon token stream from a trove.
 
 **The C-family APIs don't signal by default; rather, they return null objects.**
-Normally, trove and node functions that return other nodes or tokens will not throw exceptions on bad parameters or lookup terms, or if they're nullish objects. Instead they just return other nullish objects or degenerate values. In the C++ API, you can check `IsNullish()` on `hu::Trove`, `hu::Node`, and `hu::Token` objects to see whether they're managing null values. Most of the functions are marked `noexcept` by default as well.
+Normally, trove and node functions that return other nodes or tokens will not throw exceptions on bad parameters or lookup terms, or if they're nullish objects. Instead they just return other nullish objects or degenerate values. In the C++ API, you can check `isNullish()` on `hu::Trove`, `hu::Node`, and `hu::Token` objects to see whether they're managing null values. Most of the functions are marked `noexcept` by default as well.
 
-Tou can turn turn on exceptions for the C++ API. Before your `#include <humon/humon.hpp>` declaration, define any of these:
+You can turn turn on exceptions for the C++ API. Before your `#include <humon/humon.hpp>` declaration, define any of these:
 * `#define HUMON_USE_NULLISH_EXCEPTIONS` This will cause nullish `hu::Token` and `hu::Node` objects to throw when their member functions are called, instead of returning other nullish objects.
 * `#define HUMON_USE_NODE_PATH_EXCEPTIONS` This will cause  `hu::Trove::operator/` and `hu::Node::operator/` to throw exceptions instead of returning nullish objects when called with bad indices or keys. It can help you track down erroneous lookups.
 * `#define HUMON_SUPPRESS_NOEXCEPT` This turns off `noexcept` on most member functions, causing exceptions to be thrown instead of terminating the program.
@@ -798,7 +801,7 @@ So, if you want bad lookup sequences to throw exceptions, but all other function
 This is different from some JSON libraries, that don't preserve the order of key-object pairs in dicts. Humon guarantees that, when you access a dict's children by index (like you would a list), they'll be returned in the order you expect. Humon can maintain an extra table for accessing dict entries quickly by key. (Currently this is not implemented, and keys are searched in linear order. This is obviously on the fix-it list, but it's often the case that a linear search beats hash tables or binary searches for small numbers of entries.<sup>[citation needed]</sup>)
 
 **Comments have no meaning, but they do have context.**
-Humon doesn't know or care about your comments, as already stated in the language rules. But it doesn't discard them in the parsing process; they're preserved for searching and reserialization.
+Humon doesn't know or care about your comments, as already stated. But it doesn't discard them in the parsing process; they're preserved for searching and reserialization.
 
 All comments are associated to either a node in the hierarchy, or the trove itself. Humon tries to be smart about associating comments. Here's an example; the comments indicate to which token and node they associate:
 
@@ -820,6 +823,7 @@ You can get the comments on any node or the trove, and you can search for a comm
 
 1. Any comment that starts on a line of text that contains no other non-comment tokens before it is *associated forward*. That means the next non-comment token encountered in the token stream specifies the node to which the comment will be associated. If there are no non-comment tokens left in the stream, the comment applies to the trove.
 
+
     [
         // craftsman
         "table saw"
@@ -832,6 +836,7 @@ You can get the comments on any node or the trove, and you can search for a comm
     ]
 
 1. Any comment that appears on a line of text *after* a non-comment token is *associated backward*. That means a comment which trails a value or punctuation symbol on the same line of text is associated to that value or collection, respectively. These are mainly for comments that trail elements in a vertical list:
+
 
     [
         "table saw"     // craftsman
@@ -849,7 +854,7 @@ If you're never searching by comments, or are ignoring them altogether, then non
 **Annotations have context.**
 Like comments, annotations are associated with nodes or the trove. You can access annotations by key from a node, or search all annotations by key or value (or both) and get their associated nodes.
 
-Annotations are always *associated backward*. They modify the nearest non-comment node that appeared before the annotation, regardless of same-lineness. Any amount of whitespace or comments in between is ignored, as usual. If the previous token was a collection-starter or collection-ender (`[`, `{`, `]` or `}`), it modifies that list or dict node. In the following, `remoteStorage:true` annotates the player dict, not the userId value, because it follows the player dict's `{` opener:
+Annotations are always *associated backward*. They modify the node owning the nearest non-comment token that appeared before the annotation, regardless of same-lineness. Any amount of whitespace or comments in between is ignored, as usual. If the previous token was a collection-starter or collection-ender (`[`, `{`, `]` or `}`), it modifies that list or dict node. In the following, `remoteStorage:true` annotates the player dict, not the userId value, because it follows the player dict's `{` opener:
 
     {
         player: {
@@ -876,7 +881,7 @@ If no nodes appear before an annotation, it applies to the trove. A great way to
     ...
 
     auto desRes = hu::Trove::fromFile("apps/readmeSrc/hudo.hu"sv);
-    if (auto trove = std::get_if<hu::Trove>(& desRes))
+    if (auto trove = get_if<hu::Trove>(& desRes))
     {
         if (trove->troveAnnotation("app") != "hudo"sv)
             { throw runtime_error("File is not a hudo file."); }
@@ -896,7 +901,7 @@ Like asserted earlier, annotations are 100% open in their use. Humon doesn't use
 ## <a name="buildingHumon">Building Humon
 Humon builds on 64-bit and 32-bit architectures for Linux (so far, tested on Ubuntu) using GNU or Clang tools, and on 64-bit and 32-bit architectures in Visual Studio 2017+. The default build behaves as described above, but there are switches you can provide when you build Humon to change its behavior.
 
-For each build config and target, the binary artifacts are produced in `{humon}/build/int/bin/{cfg}{target}`, where `{cfg}` consists of `{-gcc|-clang}{-32}?{-d}?`, depending on the build tool you specify, whether to build a 32-bit version (if you're on a 64-bit machine), and whether it is a debug build. You can specify these settings; see below. The necessary artifacts are then copied to `{humon directory}/build/bin`, which is where the installer will look for files to copy.
+For each build config and target, the binary artifacts are produced in `{humon}/build/int/bin/{cfg}{target}`, where `{cfg}` consists of `{-gcc|-clang}{-32}?{-d}?`, depending on the build tool you specify, whether to build a 32-bit version (if you're on a 64-bit machine), and whether it is a debug build. You can specify these settings; see below. The necessary artifacts are then copied to `{humon directory}/build/bin`, which is where the installer will look for files to copy to system directories.
 
 For Linux development, you can install a successful build with `{humon}/install-linux.py`, run as superuser since it updates the library search cache. If that's not an option, you can simply copy the built binaries and the headers from `{humon}/include/humon` for use in your projects.
 
@@ -954,7 +959,7 @@ The build script takes several switches to build a specific target:
 | -buildAll    | (no)    | set to build *all* targets                             |
 
 ### Specifying integer types
-You can set the integer types Humon uses internally. If you *know*, beyond any doubt, that you'll *never* have more than 32767 lines in any Humon file your app reads, you can set the line integer type to `int16_t`. If you *know* you'll never read more than 255 columns, you can set the column integer type to `uint8_t`. This may sound picky, but these integers are stored in every token object in the token tracking array, and that size can add up, especially for large Humon troves. (See below for turning line and column tracking off completely.)
+You can set the integer types Humon uses internally. If you *know*, beyond any doubt, that you'll *never* have more than 32767 lines in any Humon file your app reads, you can set the line integer type to `int16_t`. If you *know* you'll never read more than 255 columns, you can set the column integer type to `uint8_t`. This may sound picky, but these integers are stored in every token object in the token tracking array, and that size can add up, especially for large Humon troves. (A future update is planned for turning line and column tracking off completely.)
 
 Here's what you can set, and the restrictions. Use the switch to pass in to the build system, and the associated macro to build against the header and lib. Since this macro affects types defined in the public `humon.h` header, it's important to use the same macros when building Humon and using it in another application, probably by passing something like `-DHUMON_LINE_TYPE=short` to the compiler if you passed `-lineType=short` to the build tool.
 
