@@ -107,11 +107,7 @@ static void appendColoredToken(PrintTracker * printer, huToken const * tok, huEn
     if (printer->lastPrintWasUnquotedWord && tok->kind != HU_TOKENKIND_COMMENT)
         { appendWs(printer, 1); }
     appendColor(printer, colorCode);
-    if (tok->quoteChar != '\0')
-        { appendString(printer, & tok->quoteChar, 1); }
-    appendString(printer, tok->str.ptr, tok->str.size);
-    if (tok->quoteChar != '\0')
-        { appendString(printer, & tok->quoteChar, 1); }
+    appendString(printer, tok->rawStr.ptr, tok->rawStr.size);
     appendColor(printer, HU_COLORCODE_TOKENEND);
     printer->lastPrintWasUnquotedWord = tok->quoteChar == '\0';
 }
@@ -124,7 +120,7 @@ static void printForwardComment(PrintTracker * printer, huToken const * tok)
     appendIndent(printer);
     appendColoredToken(printer, tok, HU_COLORCODE_COMMENT);
     printer->lastPrintWasUnquotedWord = false;
-    if (tok->str.ptr[1] == '/' || printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
+    if (tok->rawStr.ptr[1] == '/' || printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
         { appendNewline(printer); }
 }
 
@@ -135,7 +131,7 @@ static void printTrailingComment(PrintTracker * printer, huToken const * tok)
         { return; }
     appendColoredToken(printer, tok, HU_COLORCODE_COMMENT);
     printer->lastPrintWasUnquotedWord = false;
-    if (tok->str.ptr[1] == '/')
+    if (tok->rawStr.ptr[1] == '/')
         { appendNewline(printer); }
 }
 

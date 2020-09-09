@@ -21,7 +21,7 @@ Extents: (1024, 1024)
 }
 Alloc: #1 - 320 bytes
 Alloc: #2 - 21 bytes
-Alloc: #3 - 896 bytes
+Alloc: #3 - 1152 bytes
 Alloc: #4 - 3584 bytes
 Alloc: #5 - 128 bytes
 Alloc: #6 - 128 bytes

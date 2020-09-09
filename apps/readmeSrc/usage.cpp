@@ -173,14 +173,15 @@ int main()
         {
             & memMan,
             // These are fn pointers, so no captures allowed.
-            [](void * memMan, ::size_t len )
-                { return ((YourMemoryManager *) memMan)->alloc(len); },
-            [](void * memMan, void * alloc, ::size_t len )
-                { return ((YourMemoryManager *) memMan)->realloc(alloc, len); },
-            [](void * memMan, void * alloc )
-                { return ((YourMemoryManager *) memMan)->free(alloc); }
+            [](void * memManager, ::size_t len )
+                { return ((YourMemoryManager *) memManager)->alloc(len); },
+            [](void * memManager, void * alloc, ::size_t len )
+                { return ((YourMemoryManager *) memManager)->realloc(alloc, len); },
+            [](void * memManager, void * alloc )
+                { return ((YourMemoryManager *) memManager)->free(alloc); }
         };
-        auto desResFromRam = hu::Trove::fromString("{foo: [100, 200]}"sv, { hu::Encoding::unknown, true, 4, alloc});
+        auto desResFromRam = hu::Trove::fromString("{foo: [100, 200]}"sv, 
+            { hu::Encoding::unknown, true, 4, alloc});
 //!!!
 //!!! roots
         auto & trove = std::get<hu::Trove>(desResFromRam);
@@ -212,11 +213,11 @@ int main()
 //!!!
 //!!! child2
         auto fooNode = rootNode / "foo";
-        hasFoosStuff = rootNode / "foo" % 1;                    /*!!!eol*/out << "hasFoosStuff: " << hasFoosStuff << "\n";
+        hasFoosStuff = fooNode ? fooNode % 1 : false;           /*!!!eol*/out << "hasFoosStuff: " << hasFoosStuff << "\n";
 //!!!
 //!!! child3
         fooNode = rootNode / "foo";
-        hasFoosStuff = fooNode ? fooNode % 1 : false;           /*!!!eol*/out << "hasFoosStuff: " << hasFoosStuff << "\n";
+        hasFoosStuff = fooNode % 1;                             /*!!!eol*/out << "hasFoosStuff: " << hasFoosStuff << "\n";
 //!!!
 //!!! child4
         hasFoosStuff = rootNode / "foo" % 1;                    /*!!!eol*/out << "hasFoosStuff: " << hasFoosStuff << "\n";
@@ -331,7 +332,7 @@ int main()
                 type: int @{numBits: 32 numBytes: 4}
             }
             damage: {
-                type: int  @{numBits: 32 numBytes: 4}
+                type: int @{numBits: 32 numBytes: 4}
             }
             // ...
         }
@@ -389,7 +390,7 @@ int main()
         // The parameter directs Humon to strip comments from the stream.
         tokStr = trove.toMinimalString({}, false);
         
-        // Minimal whitespace, with old style HTML linebreaks.
+        // Minimal whitespace, with old-style HTML linebreaks.
         tokStr = trove.toMinimalString({}, true, "<br />");
 //!!!
 //!!! print3
@@ -397,12 +398,12 @@ int main()
 
         // You can specify minimal whitespace and still use a color table for the tokens--see below.
         tokStr = trove.toMinimalString(colorTable, false, "\n");
-        if (auto str = std::get_if<std::string>(& tokStr))
+        if (auto str = get_if<std::string>(& tokStr))
             { out << * str; }
 
         // Pretty. Use an indentation of 4 spaces to format nested depths.
         tokStr = trove.toPrettyString(4, false, colorTable, false, "\n");
-        if (auto str = std::get_if<std::string>(& tokStr))
+        if (auto str = get_if<std::string>(& tokStr))
             { out << * str; }
 //!!!
     }
@@ -410,7 +411,7 @@ int main()
     {
 //!!! hudo
         auto desRes = hu::Trove::fromFile("apps/readmeSrc/hudo.hu"sv);
-        if (auto trove = std::get_if<hu::Trove>(& desRes))
+        if (auto trove = get_if<hu::Trove>(& desRes))
         {
             if (trove->troveAnnotation("app") != "hudo"sv)
                 { throw runtime_error("File is not a hudo file."); }
@@ -426,7 +427,7 @@ int main()
     }
 
     ifstream expStr("apps/readmeSrc/usage_cpp_out.txt");
-    string expected((std::istreambuf_iterator<char>(expStr)), std::istreambuf_iterator<char>());
+    string expected((istreambuf_iterator<char>(expStr)), istreambuf_iterator<char>());
     auto output = out.str();
     if (expected == output)
         { printf("Copasetic, my sisters and brothers.\n"); return 0; }

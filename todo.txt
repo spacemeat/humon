@@ -1,5 +1,5 @@
 DONE THIS CHECKIN:
-Improve test solution in VS. (runs ztestmaker in build and tests are now in IDE.)
+Fixed printing output bug caused by heredoc changes.
 
 TODO:
 P1 finish the python package
