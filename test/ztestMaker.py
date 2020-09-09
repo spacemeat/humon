@@ -6,7 +6,6 @@ from pprint import pprint
 
 testGroupRe     = re.compile('\s*TEST_GROUP\((\w+)\)(.*)$')
 testRe          = re.compile('\s*TEST\((\w+), (\w+)\)(.*)$')
-testEditLine    = re.compile('\$utest\$')
 
 
 def processFile(file):
@@ -26,18 +25,17 @@ def processFile(file):
     
 
 def processTestSrc(testDir):
-    cppFiles = [f for f in os.listdir(testDir)
+    hppFiles = [f for f in os.listdir(testDir)
                   if os.path.isfile(f) and 
-                     os.path.splitext(f)[1] == '.cpp' and
-                     os.path.splitext(f)[0].endswith('Tests') and
-                     os.path.splitext(f)[0].startswith('utest-gen-') == False]
-    testData = {f: processFile(f) for f in cppFiles}
+                     os.path.splitext(f)[1] == '.hpp' and
+                     os.path.splitext(f)[0].endswith('Tests')]
+    testData = {f: processFile(f) for f in hppFiles}
     #pprint (testData)
     return testData
 
 
 def generateRunner(srcFile, testGroups):
-    fi = open(f"ztest/gen-{srcFile}", "wt")
+    fi = open(f"ztest/gen-{srcFile[:-4]}.cpp", "wt")
     fi.write(f"""// AUTO-GENERATED FILE. Do not modify this file, or your changes
 // will be lost and you will has a sad.
 

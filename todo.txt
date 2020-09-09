@@ -1,5 +1,5 @@
 DONE THIS CHECKIN:
-Fix heredoc warnings in Windows.
+Change test file names to better accommodate IDEs.
 
 TODO:
 P1 finish the python package
