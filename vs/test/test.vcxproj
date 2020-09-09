@@ -19,8 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\test\apiTests.hpp" />
+    <ClInclude Include="..\..\test\commentTests.hpp" />
+    <ClInclude Include="..\..\test\cppTests.hpp" />
+    <ClInclude Include="..\..\test\dataTests.hpp" />
+    <ClInclude Include="..\..\test\errorTests.hpp" />
     <ClInclude Include="..\..\test\testData.h" />
     <ClInclude Include="..\..\test\testDataCpp.h" />
+    <ClInclude Include="..\..\test\utf8Tests.hpp" />
+    <ClInclude Include="..\..\test\vectorTests.hpp" />
+    <ClInclude Include="..\..\test\wakkaTests.hpp" />
     <ClInclude Include="..\..\test\ztest\ztest.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -135,6 +143,10 @@
       <Command>xcopy "$(OutDir)$(TargetName).exe" "$(SolutionDir)build\bin\" /Y
 xcopy "$(OutDir)$(TargetName).pdb" "$(SolutionDir)build\bin\" /Y</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>cd $(SolutionDir)test
+python3 ./ztestMaker.py</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -159,6 +171,10 @@ xcopy "$(OutDir)$(TargetName).pdb" "$(SolutionDir)build\bin\" /Y</Command>
       <Command>xcopy "$(OutDir)$(TargetName).exe" "$(SolutionDir)build\bin\" /Y
 xcopy "$(OutDir)$(TargetName).pdb" "$(SolutionDir)build\bin\" /Y</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>cd $(SolutionDir)test
+python3 ./ztestMaker.py</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -186,6 +202,10 @@ xcopy "$(OutDir)$(TargetName).pdb" "$(SolutionDir)build\bin\" /Y</Command>
     <PostBuildEvent>
       <Command>xcopy "$(OutDir)$(TargetName).exe" "$(SolutionDir)build\bin\" /Y</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>cd $(SolutionDir)test
+python3 ./ztestMaker.py</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -213,6 +233,10 @@ xcopy "$(OutDir)$(TargetName).pdb" "$(SolutionDir)build\bin\" /Y</Command>
     <PostBuildEvent>
       <Command>xcopy "$(OutDir)$(TargetName).exe" "$(SolutionDir)build\bin\" /Y</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>cd $(SolutionDir)test
+python3 ./ztestMaker.py</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

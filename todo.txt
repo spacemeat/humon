@@ -1,5 +1,5 @@
 DONE THIS CHECKIN:
-Change test file names to better accommodate IDEs.
+Improve test solution in VS. (runs ztestmaker in build and tests are now in IDE.)
 
 TODO:
 P1 finish the python package
