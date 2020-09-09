@@ -1,6 +1,5 @@
 DONE THIS CHECKIN:
-Fill in convenience functions in C lib. huGetKey, etc.
-Implement heredoc support.
+Fix heredoc warnings in Windows.
 
 TODO:
 P1 finish the python package

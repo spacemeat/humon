@@ -380,7 +380,7 @@ static void eatQuotedWord(huScanner * scanner)
 }
 
 
-static void eatHeredocTag(huScanner * scanner, huHeretagSize_t * tagLen)
+static void eatHeredocTag(huScanner * scanner, huSize_t * tagLen)
 {
     // record the location for error reporting
     huLine_t tokenStartLine = scanner->line;
@@ -441,7 +441,7 @@ static void eatHeredoc(huScanner * scanner, huSize_t * offsetIn, huSize_t * offs
     huCol_t tokenStartCol = scanner->col;
 
     char const * tagStart = scanner->curCursor->character;
-    huHeretagSize_t tagLen = 0;
+    huSize_t tagLen = 0;
 
     char const * tokenRawStart = scanner->curCursor->character;
 

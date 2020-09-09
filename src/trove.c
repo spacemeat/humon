@@ -333,7 +333,7 @@ huToken const * huGetToken(huTrove const * trove, huSize_t tokenIdx)
 huToken * allocNewToken(huTrove * trove, huEnumType_t kind, 
     char const * str, huSize_t size, 
     huLine_t line, huCol_t col, huLine_t endLine, huCol_t endCol, 
-    huHeretagSize_t offsetIn, huHeretagSize_t offsetOut,
+    huSize_t offsetIn, huSize_t offsetOut,
     char quoteChar)
 {
     huSize_t num = 1;

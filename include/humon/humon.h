@@ -49,9 +49,6 @@
 #ifndef HUMON_COL_TYPE
 #define HUMON_COL_TYPE      long
 #endif
-#ifndef HUMON_HERETAGSIZE_TYPE
-#define HUMON_HERETAGSIZE_TYPE      char
-#endif
 
 // For proper operation, this type must be signed.
 #ifndef HUMON_SIZE_TYPE
@@ -75,7 +72,6 @@ extern "C"
     typedef HUMON_ENUM_TYPE         huEnumType_t;
     typedef HUMON_LINE_TYPE         huLine_t;
     typedef HUMON_COL_TYPE          huCol_t;
-    typedef HUMON_HERETAGSIZE_TYPE  huHeretagSize_t;
     typedef HUMON_SIZE_TYPE         huSize_t;
 
     /// Specifies the supported Unicode encodings.
