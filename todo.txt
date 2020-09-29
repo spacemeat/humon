@@ -1,5 +1,4 @@
 DONE THIS CHECKIN:
-Readme improvements.
 
 TODO:
 P1 finish the python package

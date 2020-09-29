@@ -32,6 +32,7 @@ if __name__ == "__main__":
     shutil.copy('/'.join([includeHumon, 'humon.h']), usrLocalIncludeHumon)
     shutil.copy('/'.join([includeHumon, 'humon.hpp']), usrLocalIncludeHumon)
     shutil.copy('/'.join([includeHumon, 'ansiColors.h']), usrLocalIncludeHumon)
+    shutil.copy('/'.join([includeHumon, 'version.h']), usrLocalIncludeHumon)
     
     shutil.copy('/'.join([buildBin, 'libhumon.a']), usrLocalLib)
 
