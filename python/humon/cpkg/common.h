@@ -4,6 +4,8 @@
 #include "humon/humon.h"
 #include "humon/ansiColors.h"
 
+//#define CAVEPERSON
+
 enum VectorElementTypeEnum
 {
     VECTORKIND_TOKENS,

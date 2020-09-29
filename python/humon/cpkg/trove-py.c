@@ -10,7 +10,9 @@ typedef struct
 
 static void Trove_dealloc(TroveObject * self)
 {
+#ifdef CAVEPERSON
     printf("%sTrove dealloc%s\n", ansi_darkBlue, ansi_off);
+#endif
     huDestroyTrove(self->trovePtr);
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
@@ -18,7 +20,9 @@ static void Trove_dealloc(TroveObject * self)
 
 static PyObject * Trove_new(PyTypeObject * type, PyObject * args, PyObject * kwds)
 {
+#ifdef CAVEPERSON
     printf("%sTrove new%s\n", ansi_darkBlue, ansi_off);
+#endif
 
     TroveObject * self = (TroveObject *) type->tp_alloc(type, 0);
     if (self != NULL)
@@ -32,7 +36,9 @@ static PyObject * Trove_new(PyTypeObject * type, PyObject * args, PyObject * kwd
 
 static int Trove_init(TroveObject * self, PyObject * args, PyObject * kwds)
 {
+#ifdef CAVEPERSON
     printf("%sTrove init%s\n", ansi_darkMagenta, ansi_off);
+#endif
 
     PyObject * capsule = NULL;
     if (! PyArg_ParseTuple(args, "O", & capsule))
@@ -281,6 +287,68 @@ static PyObject * Trove_getTroveAnnotations(TroveObject * self, PyObject * args,
     static char * keywords[] = { "key", "value", NULL };
 
     char * key = NULL;
+    char * value = NULL;
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ss", keywords, & key, & value))
+        { return NULL; }
+
+    if (key && ! value)
+    {
+        // look up by key, return one token
+        huToken const * tok = huGetTroveAnnotationWithKeyZ(self->trovePtr, key);
+        return makeToken(tok);
+    }
+    else if (! key && value)
+    {
+        // look up by value, return n tokens
+        // TODO: The returned list seems to be leaking
+        PyObject * list = Py_BuildValue("[]");
+        if (list == NULL)
+            { return NULL; }
+
+        huSize_t cursor = 0;
+        huToken const * tok = NULL;
+        do
+        {
+            tok = huGetTroveAnnotationWithValueZ(self->trovePtr, value, & cursor);
+            if (tok)
+            {
+                if (PyList_Append(list, makeToken(tok)) < 0)
+                {
+                    Py_DECREF(tok);
+                    break;
+                }
+            }
+        } while (tok != NULL);
+
+        if (PyErr_Occurred())
+        {
+            Py_DECREF(list);
+            return NULL;
+        }
+
+        return list;
+    }
+    else if (key && value)
+    {
+        // look up by key, return whether key->value (bool)
+        huToken const * tok = huGetTroveAnnotationWithKeyZ(self->trovePtr, key);
+        return PyBool_FromLong(strncmp(tok->str.ptr, value, min(tok->str.size, strlen(value))) == 0);
+    }
+
+    return NULL;
+}
+
+/* This version would be faster than the above, but Python3.7.5 seems to have 
+   trouble with s#. Or I'm doing somehting wrong.
+
+static PyObject * Trove_getTroveAnnotations(TroveObject * self, PyObject * args, PyObject * kwargs)
+{
+    if (! checkYourSelf(self))
+        { return NULL; }
+
+    static char * keywords[] = { "key", "value", NULL };
+
+    char * key = NULL;
     int keyLen = 0;
     char * value = NULL;
     int valueLen = 0;
@@ -333,7 +401,7 @@ static PyObject * Trove_getTroveAnnotations(TroveObject * self, PyObject * args,
 
     return NULL;
 }
-
+*/
 
 static PyObject * Trove_getTroveComment(TroveObject * self, PyObject * args)
 {
@@ -472,76 +540,6 @@ static PyObject * Trove_findNodesByCommentContaining(TroveObject * self, PyObjec
 }
 
 
-static PyObject * objectifyRec(PyObject * pyParentNode, huNode const * node)
-{
-    PyObject * newThing = NULL;
-
-    if (node->kind == HU_NODEKIND_LIST)
-        { newThing = Py_BuildValue("[]"); }
-    else if (node->kind == HU_NODEKIND_DICT)
-        { newThing = Py_BuildValue("{}"); }
-    else
-    {
-        huStringView const * str = & node->valueToken->str;
-        newThing = Py_BuildValue("s#", str->ptr, (int) str->size);
-    }
-
-    if (newThing == NULL)
-        { return NULL; }
-
-    if (pyParentNode && huGetParent(node)->kind == HU_NODEKIND_LIST)
-    {
-        // add str to pyParentNode
-        if (PyList_Append(pyParentNode, newThing) < 0)
-        {
-            Py_DECREF(newThing);
-            return NULL;
-        }
-    }
-    else if (pyParentNode && huGetParent(node)->kind == HU_NODEKIND_DICT)
-    {
-        huStringView const * keyStr = & node->keyToken->str;
-        PyObject * key = Py_BuildValue("s#", keyStr->ptr, (int) keyStr->size);
-        if (key == NULL)
-        {
-            Py_DECREF(newThing);
-            return NULL;
-        }
-
-        // add str to pyParentNode
-        if (PyDict_SetItem(pyParentNode, key, newThing) < 0)
-        {
-            Py_DECREF(key);
-            Py_DECREF(newThing);
-            return NULL;
-        }
-    }
-
-    huSize_t numChildren = huGetNumChildren(node);
-    for (int i = 0; i < numChildren; ++i)
-    {
-        huNode const * ch = huGetChildByIndex(node, i);
-        if (ch != NULL)
-            { objectifyRec(newThing, ch); }
-    }
-
-    return newThing;
-}
-
-
-static PyObject * Trove_objectify(TroveObject * self)
-{
-    huNode const * root = huGetRootNode(self->trovePtr);
-    if (root == NULL)
-    {
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    return objectifyRec(NULL, root);
-}
-
-
 static PyObject * Trove_richCompare(PyObject * self, PyObject * other, int op)
 {
     PyObject * result = NULL;
@@ -608,7 +606,6 @@ static PyMethodDef Trove_methods[] =
     { "getTroveComment", (PyCFunction) Trove_getTroveComment, METH_VARARGS | METH_KEYWORDS, PyDoc_STR("Return a comment from a trove by index.") },
     { "findNodesWithAnnotations", (PyCFunction) Trove_findNodesWithAnnotations, METH_VARARGS | METH_KEYWORDS, PyDoc_STR("Returns a list of all nodes in a trove with a specific annotation key, value, or both.") },
     { "findNodesByCommentContaining", (PyCFunction) Trove_findNodesByCommentContaining, METH_VARARGS, PyDoc_STR("Returns a list of all nodes in a trove with an associated comment containing the given text.") },
-    { "objectify", (PyCFunction) Trove_objectify, METH_NOARGS, PyDoc_STR("Return a hierarchy of Python list-dict-string objects representing the trove.") },
     { NULL }
 };
 
@@ -671,7 +668,7 @@ PyObject * makeTrove(huTrove const * trovePtr)
     {
         troveObj = PyObject_CallFunction((PyObject *) & TroveType, "(O)", capsule);
         if (troveObj == NULL && ! PyErr_Occurred())
-            { PyErr_SetString(PyExc_RuntimeError, "Could not create Node"); }
+            { PyErr_SetString(PyExc_RuntimeError, "Could not create Trove"); }
 
         Py_DECREF(capsule);
     }

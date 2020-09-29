@@ -19,13 +19,21 @@ PyMODINIT_FUNC PyInit_humon(void)
     AddEnumConstantsToModule(module);
 
     PyObject * enums = PyImport_ImportModule("humon.enums");
-    if (enums == NULL) {
+    if (enums == NULL)
+    {
         Py_DECREF(module);
         return NULL;
     }    
-
     Py_DECREF(enums);
-    
+
+    PyObject * iterators = PyImport_ImportModule("humon.iterators");
+    if (iterators == NULL)
+    {
+        Py_DECREF(module);
+        return NULL;
+    }    
+    Py_DECREF(iterators);
+
     if (RegisterTokenType(module) < 0)
     {
         Py_DECREF(module);

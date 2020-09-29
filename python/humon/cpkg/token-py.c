@@ -10,6 +10,7 @@ typedef struct
 
 static void Token_dealloc(TokenObject * self)
 {
+#ifdef CAVEPERSON
     if (self->tokenPtr == NULL)
         { printf("%sToken dealloc - <null>%s\n", ansi_darkBlue, ansi_off); }
     else
@@ -17,6 +18,7 @@ static void Token_dealloc(TokenObject * self)
         printf("%sToken dealloc - %.*s%s\n", ansi_darkBlue, 
             (int) self->tokenPtr->str.size, self->tokenPtr->str.ptr, ansi_off);
     }
+#endif
     
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
@@ -24,7 +26,10 @@ static void Token_dealloc(TokenObject * self)
 
 static PyObject * Token_new(PyTypeObject * type, PyObject * args, PyObject * kwds)
 {
+#ifdef CAVEPERSON
     printf("%sToken new%s\n", ansi_darkBlue, ansi_off);
+#endif
+
     TokenObject * self;
     self = (TokenObject *) type->tp_alloc(type, 0);
     if (self != NULL)
@@ -38,7 +43,10 @@ static PyObject * Token_new(PyTypeObject * type, PyObject * args, PyObject * kwd
 
 static int Token_init(TokenObject * self, PyObject * args, PyObject * kwds)
 {
+#ifdef CAVEPERSON
     printf("%sToken init%s\n", ansi_darkMagenta, ansi_off);
+#endif
+
     PyObject * capsule = NULL;
     if (! PyArg_ParseTuple(args, "O", & capsule))
         { return -1; }

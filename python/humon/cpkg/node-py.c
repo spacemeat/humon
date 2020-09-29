@@ -9,25 +9,46 @@ typedef struct
 } NodeObject;
 
 
+static char * makeAddressString(NodeObject * self)
+{
+    huSize_t strLen = 0;
+    char * str = NULL;
+    huGetAddress(self->nodePtr, str, & strLen);
+    str = malloc(strLen + 1);
+    if (str != NULL)
+    {
+        huGetAddress(self->nodePtr, str, & strLen);
+        str[strLen] = '\0';
+    }
+
+    return str;
+}
+
+
 static void Node_dealloc(NodeObject * self)
 {
     if (self->nodePtr == NULL)
-        { printf("%sNode dealloc - <null>%s\n", ansi_darkBlue, ansi_off); }
+    {
+#ifdef CAVEPERSON
+        printf("%sNode dealloc - <null>%s\n", ansi_darkBlue, ansi_off);
+#endif
+    }
     else
     {
-        huSize_t strLen = 0;
-        char * str = NULL;
-        huGetAddress(self->nodePtr, str, & strLen);
-        str = malloc(strLen + 1);
-        if (str != NULL)
+        char * str = makeAddressString(self);
+        if (str)
         {
-            huGetAddress(self->nodePtr, str, & strLen);
-            str[strLen] = '\0';
-
+#ifdef CAVEPERSON
             printf("%sNode dealloc - %s%s\n", ansi_darkBlue, str, ansi_off);
+#endif
         }
         else
-            { printf("%sNode dealloc - malloc BAD%s\n", ansi_darkBlue, ansi_off); }
+        {
+#ifdef CAVEPERSON
+            printf("%sNode dealloc - malloc BAD%s\n", ansi_darkBlue, ansi_off);
+#endif
+        }
+        free(str);
     }
     Py_DECREF(self->trove);
     Py_TYPE(self)->tp_free((PyObject *) self);
@@ -36,7 +57,10 @@ static void Node_dealloc(NodeObject * self)
 
 static PyObject * Node_new(PyTypeObject * type, PyObject * args, PyObject * kwds)
 {
+#ifdef CAVEPERSON
     printf("%sNode new%s\n", ansi_darkBlue, ansi_off);
+#endif
+
     NodeObject * self = (NodeObject *) type->tp_alloc(type, 0);
     if (self != NULL)
     {
@@ -50,7 +74,6 @@ static PyObject * Node_new(PyTypeObject * type, PyObject * args, PyObject * kwds
 
 static int Node_init(NodeObject * self, PyObject * args, PyObject * kwds)
 {
-    printf("%sNode init%s\n", ansi_darkMagenta, ansi_off);
     PyObject * trove = NULL;
     PyObject * capsule = NULL;
     if (! PyArg_ParseTuple(args, "O!O", & TroveType, & trove, & capsule))
@@ -61,7 +84,7 @@ static int Node_init(NodeObject * self, PyObject * args, PyObject * kwds)
     
     Py_INCREF(trove);
     Py_INCREF(capsule);
-    
+
     if (PyCapsule_CheckExact(capsule))
     {
         // node will never be NULL
@@ -77,6 +100,19 @@ static int Node_init(NodeObject * self, PyObject * args, PyObject * kwds)
         { PyErr_SetString(PyExc_TypeError, "Argument 2 must be an encapsulated pointer."); }
 
     Py_DECREF(capsule);
+
+#ifdef CAVEPERSON
+    char * str = makeAddressString(self);
+    if (str)
+    {
+        printf("%sNode init - %s%s\n", ansi_darkMagenta, str, ansi_off);
+    }
+    else
+    {
+        printf("%sNode init - malloc BAD%s\n", ansi_darkMagenta, ansi_off);
+    }
+    free(str);
+#endif
 
     PyObject * oldTrove = self->trove;
     self->trove = trove;
@@ -149,9 +185,23 @@ static PyObject * Node_get_keyToken(NodeObject * self, void * closure)
         ? makeToken(self->nodePtr->keyToken)
         : NULL; }
 
+static PyObject * Node_get_key(NodeObject * self, void * closure)
+    { return checkYourSelf(self)
+        ? Py_BuildValue("s#", 
+            self->nodePtr->keyToken->str.ptr, 
+            self->nodePtr->keyToken->str.size)
+        : NULL; }
+
 static PyObject * Node_get_valueToken(NodeObject * self, void * closure)
     { return checkYourSelf(self)
         ? makeToken(self->nodePtr->valueToken)
+        : NULL; }
+
+static PyObject * Node_get_value(NodeObject * self, void * closure)
+    { return checkYourSelf(self)
+        ? Py_BuildValue("s#", 
+            self->nodePtr->valueToken->str.ptr, 
+            self->nodePtr->valueToken->str.size)
         : NULL; }
 
 static PyObject * Node_get_lastValueToken(NodeObject * self, void * closure)
@@ -274,14 +324,32 @@ static PyObject * Node_getChild(NodeObject * self, PyObject * args)
     }
 
     PyObject * nodeObj = makeNode((PyObject *) self->trove, node);
-
-    Py_DECREF(arg);
     
     return nodeObj;
 }
 
 
-static PyObject * Node_getRelative(NodeObject * self, PyObject * args)
+static PyObject * Node_getNodeByAddress(NodeObject * self, PyObject * args)
+{
+    if (! checkYourSelf(self))
+        { return NULL; }
+
+    char const * arg = NULL;
+    if (!PyArg_ParseTuple(args, "s", & arg))
+        { return NULL; }
+
+    huNode const * node = huGetNodeByRelativeAddressZ(self->nodePtr, arg);
+    PyObject * nodeObj = makeNode((PyObject *) self->trove, node);
+    if (nodeObj == NULL)
+        { return NULL; }
+    
+    return nodeObj;
+}
+
+/* This version would be faster than the above, but Python3.7.5 seems to have 
+   trouble with s#. Or I'm doing somehting wrong.
+
+static PyObject * Node_getNodeByAddress(NodeObject * self, PyObject * args)
 {
     if (! checkYourSelf(self))
         { return NULL; }
@@ -298,7 +366,7 @@ static PyObject * Node_getRelative(NodeObject * self, PyObject * args)
     
     return nodeObj;
 }
-
+*/
 
 static PyObject * Node_getAnnotations(NodeObject * self, PyObject * args, PyObject * kwargs)
 {
@@ -413,6 +481,76 @@ static PyObject * Node_getCommentsContaining(NodeObject * self, PyObject * args,
 }
 
 
+static PyObject * objectifyRec(PyObject * pyParentNode, huNode const * node)
+{
+    PyObject * newThing = NULL;
+
+    if (node->kind == HU_NODEKIND_LIST)
+        { newThing = Py_BuildValue("[]"); }
+    else if (node->kind == HU_NODEKIND_DICT)
+        { newThing = Py_BuildValue("{}"); }
+    else
+    {
+        huStringView const * str = & node->valueToken->str;
+        newThing = Py_BuildValue("s#", str->ptr, (int) str->size);
+    }
+
+    if (newThing == NULL)
+        { return NULL; }
+
+    if (pyParentNode && huGetParent(node)->kind == HU_NODEKIND_LIST)
+    {
+        // add str to pyParentNode
+        if (PyList_Append(pyParentNode, newThing) < 0)
+        {
+            Py_DECREF(newThing);
+            return NULL;
+        }
+    }
+    else if (pyParentNode && huGetParent(node)->kind == HU_NODEKIND_DICT)
+    {
+        huStringView const * keyStr = & node->keyToken->str;
+        PyObject * key = Py_BuildValue("s#", keyStr->ptr, (int) keyStr->size);
+        if (key == NULL)
+        {
+            Py_DECREF(newThing);
+            return NULL;
+        }
+
+        // add str to pyParentNode
+        if (PyDict_SetItem(pyParentNode, key, newThing) < 0)
+        {
+            Py_DECREF(key);
+            Py_DECREF(newThing);
+            return NULL;
+        }
+    }
+
+    huSize_t numChildren = huGetNumChildren(node);
+    for (int i = 0; i < numChildren; ++i)
+    {
+        huNode const * ch = huGetChildByIndex(node, i);
+        if (ch != NULL)
+            { objectifyRec(newThing, ch); }
+    }
+
+    return newThing;
+}
+
+
+static PyObject * Node_objectify(NodeObject * self)
+{
+    huNode const * node = self->nodePtr;
+    if (node == NULL)
+    {
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    return objectifyRec(NULL, node);
+}
+
+
 static PyObject * Node_repr(NodeObject * self)
 {
     PyObject * kind = Node_get_kind(self, NULL);
@@ -492,6 +630,114 @@ static int Node_bool(PyObject * self)
 }
 
 
+static Py_ssize_t Node_length(PyObject * self)
+{
+    huNode const * node = ((NodeObject *) self)->nodePtr;
+    if (node == NULL)
+        { return -1; }
+
+    return huGetNumChildren(node);
+}
+
+
+static PyObject * Node_subscript(NodeObject * self, PyObject * args)
+{
+    if (! checkYourSelf(self))
+        { return NULL; }
+
+    PyObject * arg = NULL;
+    if (!PyArg_Parse(args, "O", & arg))
+        { return NULL; }
+    
+    huNode const * node = NULL;
+
+    // pass int or string
+    if (PyLong_Check(arg))
+    {
+        int idx = PyLong_AsLong(arg);
+        if (idx >= 0)
+            { node = huGetChildByIndex(self->nodePtr, idx); }
+    }
+    else if (PyUnicode_Check(arg))
+    {
+        char const * buf = NULL;
+        Py_ssize_t bufLen = 0;
+        buf = PyUnicode_AsUTF8AndSize(arg, & bufLen);
+        if (buf)
+        {
+            if (bufLen > 0)
+                { node = huGetChildByKeyN(self->nodePtr, buf, bufLen); }
+        }
+    }
+
+    PyObject * nodeObj = makeNode((PyObject *) self->trove, node);
+    
+    return nodeObj;
+}
+
+
+static int Node_contains(NodeObject * self, PyObject * args)
+{
+    if (! checkYourSelf(self))
+        { return -1; }
+
+    PyObject * arg = NULL;
+    if (!PyArg_Parse(args, "O", & arg))
+        { return -1; }
+    
+    // pass int or string
+    if (PyLong_Check(arg))
+    {
+        int idx = PyLong_AsLong(arg);
+        if (idx >= 0)
+            { return idx < huGetNumChildren(self->nodePtr); }
+    }
+    else if (PyUnicode_Check(arg))
+    {
+        char const * buf = NULL;
+        Py_ssize_t bufLen = 0;
+        buf = PyUnicode_AsUTF8AndSize(arg, & bufLen);
+        // TODO: Decref buf?
+        if (buf)
+        {
+            if (bufLen > 0)
+                { return huGetChildByKeyN(self->nodePtr, buf, bufLen) != NULL; }
+        }
+    }
+
+    return -1;
+}
+
+
+static PyObject * Node_iter(NodeObject * self, PyObject * args)
+{
+    PyObject * inst = NULL;
+
+    PyObject * module = PyImport_AddModule("humon.iterators");
+    if (module != NULL)
+    {
+        Py_INCREF(module);
+        PyObject * iterType = PyObject_GetAttrString(module, "ChildNodeIterator");
+        if (iterType != NULL)
+        {
+            inst = PyObject_CallFunction(iterType, "O", self);
+            if (inst == NULL)
+                { PyErr_SetString(PyExc_ValueError, "Could not make iterator."); }
+
+            Py_DECREF(iterType);
+        }
+        else
+            { PyErr_SetString(PyExc_ValueError, "Could not find ChildNodeIterator."); }
+    
+        Py_DECREF(module);
+    }
+    else
+        { PyErr_SetString(PyExc_ValueError, "Could not load iterators module."); }
+
+    return inst;
+}
+
+
 static PyMemberDef Node_members[] = 
 {
     { NULL }
@@ -506,7 +752,9 @@ static PyGetSetDef Node_getsetters[] =
     { "kind",           (getter) Node_get_kind, (setter) NULL, PyDoc_STR("The kind of node this is."), NULL },
     { "firstToken",     (getter) Node_get_firstToken, (setter) NULL, PyDoc_STR("The first token which contributes to this node, including any annotation and comment tokens."), NULL },
     { "keyToken",       (getter) Node_get_keyToken, (setter) NULL, PyDoc_STR("The key token if the node is inside a dict."), NULL },
+    { "key",            (getter) Node_get_key, (setter) NULL, PyDoc_STR("The key if the node is inside a dict."), NULL },
     { "valueToken",     (getter) Node_get_valueToken, (setter) NULL, PyDoc_STR("The first token of this node's actual value; for a container, it points to the opening brac(e|ket)."), NULL },
+    { "value",          (getter) Node_get_value, (setter) NULL, PyDoc_STR("The node's actual value; for a container, it gets the opening brac(e|ket)."), NULL },
     { "lastValueToken", (getter) Node_get_lastValueToken, (setter) NULL, PyDoc_STR("The last token of this node's actual value; for a container, it points to the closing brac(e|ket)."), NULL },
     { "lastToken",      (getter) Node_get_lastToken, (setter) NULL, PyDoc_STR("The last token of this node, including any annotation and comment tokens."), NULL },
     { "parentNodeIdx",  (getter) Node_get_parentNodeIdx, (setter) NULL, PyDoc_STR("The parent node's index, or -1 if this node is the root."), NULL },
@@ -526,16 +774,29 @@ static PyGetSetDef Node_getsetters[] =
 static PyMethodDef Node_methods[] =
 {
     { "getChild", (PyCFunction)Node_getChild, METH_VARARGS | METH_KEYWORDS, PyDoc_STR("Get a node's parent.") },
-    { "getRelative", (PyCFunction)Node_getRelative, METH_VARARGS, PyDoc_STR("Get a node by relative address.") },
+    { "getNodeByAddress", (PyCFunction)Node_getNodeByAddress, METH_VARARGS, PyDoc_STR("Get a node by relative address.") },
     { "getAnnotations", (PyCFunction)Node_getAnnotations, METH_VARARGS | METH_KEYWORDS, PyDoc_STR("Get a node's annotations.") },
     { "getComment", (PyCFunction)Node_getComment, METH_VARARGS, PyDoc_STR("Get a node's comment by index.") },
     { "getCommentsContaining", (PyCFunction)Node_getCommentsContaining, METH_VARARGS, PyDoc_STR("Get a node's comments which contain the specified substring.") },
+    { "objectify", (PyCFunction) Node_objectify, METH_NOARGS, PyDoc_STR("Return a hierarchy of Python list-dict-string objects representing the node and its descendents.") },
     { NULL }
 };
 
 static PyNumberMethods numberMethods = 
 {
     .nb_bool = (inquiry) Node_bool
+};
+
+static PyMappingMethods mappingMethods = 
+{
+    .mp_length = (lenfunc) Node_length,
+    .mp_subscript = (binaryfunc) Node_subscript
+};
+
+static PySequenceMethods sequenceMethods = 
+{
+    .sq_length = (lenfunc) Node_length,
+    .sq_contains = (objobjproc) Node_contains
 };
 
 
@@ -556,7 +817,10 @@ PyTypeObject NodeType =
     .tp_repr = (reprfunc) Node_repr,
     .tp_str = (reprfunc) Node_str,
     .tp_richcompare = (richcmpfunc) Node_richCompare,
-    .tp_as_number = & numberMethods
+    .tp_as_number = & numberMethods,
+    .tp_as_sequence = & sequenceMethods,
+    .tp_as_mapping = & mappingMethods,
+    .tp_iter = (getiterfunc) Node_iter
 };
 
 
