@@ -281,6 +281,8 @@ if __name__ == "__main__":
             flags += ' -DHUMON_SWAG_BLOCKSIZE="' + arg.split('=')[1] + '"'
         elif arg.startswith('-transcodeBlock='):
             flags += ' -DHUMON_TRANSCODE_BLOCKSIZE="' + arg.split('=')[1] + '"'
+        elif arg.startswith('-addressBlock='):
+            flags += ' -DHUMON_ADDRESS_BLOCKSIZE="' + arg.split('=')[1] + '"'
         elif arg == "-noChecks":
             flags += ' -DHUMON_NO_PARAMETER_CHECKS'
         elif arg == "-cavePerson":

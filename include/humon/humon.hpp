@@ -51,8 +51,13 @@
 /// The Humon namespace.
 namespace hu
 {
+    typedef hu::capi::huEnumType_t enumType_t;
+    typedef hu::capi::huLine_t line_t;
+    typedef hu::capi::huCol_t col_t;
+    typedef hu::capi::huSize_t size_t;
+
     /// Specifies a UTFn text encoding.
-    enum class Encoding : capi::huEnumType_t
+    enum class Encoding : hu::enumType_t
     {
         utf8 = capi::HU_ENCODING_UTF8,
         utf16be = capi::HU_ENCODING_UTF16_BE,
@@ -65,11 +70,11 @@ namespace hu
     /// Return a string representation of a hu::Encoding.
     inline char const * to_string(Encoding rhs) HUMON_NOEXCEPT
     {
-        return capi::huEncodingToString(static_cast<capi::huEnumType_t>(rhs));
+        return capi::huEncodingToString(static_cast<hu::enumType_t>(rhs));
     }
 
     /// Specifies the kind of data represented by a particular hu::Token.
-    enum class TokenKind : capi::huEnumType_t
+    enum class TokenKind : hu::enumType_t
     {
         null = capi::HU_TOKENKIND_NULL,                 ///< Invalid token. Malformed, or otherwise nonexistent.
         eof = capi::HU_TOKENKIND_EOF,                   ///< The end of the token stream or string.
@@ -86,11 +91,11 @@ namespace hu
     /// Return a string representation of a hu::TokenKind.
     inline char const * to_string(TokenKind rhs) HUMON_NOEXCEPT
     {
-        return capi::huTokenKindToString(static_cast<capi::huEnumType_t>(rhs));
+        return capi::huTokenKindToString(static_cast<hu::enumType_t>(rhs));
     }
 
     /// Specifies the kind of node represented by a particular hu::Node.
-    enum class NodeKind : capi::huEnumType_t
+    enum class NodeKind : hu::enumType_t
     {
         null = capi::HU_NODEKIND_NULL,      ///< Invalid node. An invalid address returns a null node.
         list = capi::HU_NODEKIND_LIST,      ///< List node. The node contains a sequence of unassociated objects in maintained order.
@@ -101,11 +106,11 @@ namespace hu
     /// Return a string representation of a hu::NodeKind.
     inline char const * to_string(NodeKind rhs) HUMON_NOEXCEPT
     {
-        return capi::huNodeKindToString(static_cast<capi::huEnumType_t>(rhs));
+        return capi::huNodeKindToString(static_cast<hu::enumType_t>(rhs));
     }
 
     /// Specifies the style of whitespacing in Humon text.
-    enum class WhitespaceFormat : capi::huEnumType_t
+    enum class WhitespaceFormat : hu::enumType_t
     {
         cloned = capi::HU_WHITESPACEFORMAT_CLONED,              ///< Byte-for-byte copy of the original.
         minimal = capi::HU_WHITESPACEFORMAT_MINIMAL,            ///< Reduces as much whitespace as possible.
@@ -115,11 +120,11 @@ namespace hu
     /// Return a string representation of a hu::WhitespaceFormat.
     inline char const * to_string(WhitespaceFormat rhs) HUMON_NOEXCEPT
     {
-        return capi::huWhitespaceFormatToString(static_cast<capi::huEnumType_t>(rhs));
+        return capi::huWhitespaceFormatToString(static_cast<hu::enumType_t>(rhs));
     }
 
     /// Specifies a tokenizing or parsing error code, or lookup error.
-    enum class ErrorCode : capi::huEnumType_t
+    enum class ErrorCode : hu::enumType_t
     {
         noError = capi::HU_ERROR_NOERROR,                       ///< No error.
         badEncoding = capi::HU_ERROR_BADENCODING,               ///< The Unicode encoding is malformed.
@@ -141,11 +146,11 @@ namespace hu
     /// Return a string representation of a hu::ErrorCode.
     inline char const * to_string(ErrorCode rhs) HUMON_NOEXCEPT
     {
-        return capi::huOutputErrorToString(static_cast<capi::huEnumType_t>(rhs));
+        return capi::huOutputErrorToString(static_cast<hu::enumType_t>(rhs));
     }
 
     /// Specifies how a trove responds to errors.
-    enum class ErrorResponse : capi::huEnumType_t
+    enum class ErrorResponse : hu::enumType_t
     {
         mum = capi::HU_ERRORRESPONSE_MUM,
         toStdout = capi::HU_ERRORRESPONSE_STDOUT,
@@ -156,7 +161,7 @@ namespace hu
     };
 
     /// Specifies a style ID for colorized printing.
-    enum class ColorCode : capi::huEnumType_t
+    enum class ColorCode : hu::enumType_t
     {
         tokenStreamBegin = capi::HU_COLORCODE_TOKENSTREAMBEGIN,     ///< Beginning-of-token stream color code.
         tokenStreamEnd = capi::HU_COLORCODE_TOKENSTREAMEND,         ///< End-of-token stream color code.
@@ -176,101 +181,6 @@ namespace hu
         whitespace = capi::HU_COLORCODE_WHITESPACE,                 ///< Whitespace style (including commas).
 
         numColors = capi::HU_COLORCODE_NUMCOLORS                    ///< One past the last style code.
-    };
-
-    /// Value extraction template for in-line grokking of value nodes.
-    /** This template is a helper to extract machine values out of Humon value nodes.
-     * Standard types are supported, and custom extractors can be specified. Just
-     * specialize `hu::val<T>` for your type `T`, and implement the `extract()`
-     * function.
-     * Usage: Use in conjunction with the `/` operator on a value node. This allows
-     * you to extract a value in the natural flow of things:
-     * `auto numEyes = node / "frogs" / "numEyes" / hu::val<int> {};`
-     * `auto color = node / "frogs" / "colors" / 0 / hu::val<AnimalColorsEnum> {};`
-     */
-    template <class T, typename V = void>
-    struct val
-    { };
-
-    /// Extractor for type int.
-    template <class T>
-    struct val<T, typename std::enable_if_t<std::is_integral_v<T>>>
-    {
-        /// Extract the value from the string.
-        static inline T extract(std::string_view valStr) HUMON_PATH_NOEXCEPT
-        {
-            T value;
-            auto [p, ec] = std::from_chars(valStr.data(), valStr.data() + valStr.size(), value);
-            if (ec == std::errc())
-                { return value; }
-            else
-                { return T {}; }
-        }
-    };
-
-    /// Extractor for type float.
-    template <class T>
-    struct val<T, typename std::enable_if_t<std::is_floating_point_v<T>>>
-    {
-        /// Extract the value from the string.
-        static inline T extract(std::string_view valStr) HUMON_PATH_NOEXCEPT
-        {
-            // TODO: (gcc): Once std::from_chars(..T&) is complete, use this or remove this specialization. We're making a useless string here and it maketh me to bite metal. Don't forget to HUMON_NOEXCEPT.
-    #if 0
-            T val;
-            auto [p, ec] = std::from_chars(valStr.data(), valStr.data() + valStr.size(), val, std::chars_format::general);
-            if (ec == std::errc())
-                { return val; }
-            else
-                { return T {}; }
-    #else
-            return static_cast<T>(std::stod(std::string(valStr)));
-    #endif
-        }
-    };
-
-    /// Extractor for type std::string_view.
-    template <>
-    struct val<std::string_view>
-    {
-        /// Extract the value from the string.
-        static inline std::string_view extract(std::string_view valStr) HUMON_PATH_NOEXCEPT
-        {
-            return valStr;
-        }
-    };
-
-    /// Extractor for type std::string.
-    template <>
-    struct val<std::string>
-    {
-        /// Extract the value from the string.
-        static inline std::string extract(std::string_view valStr) HUMON_PATH_NOEXCEPT
-        {
-            return std::string(valStr);
-        }
-    };
-
-    /// Extractor for type bool. Parses English spelling of "true" for truth.
-    template <>
-    struct val<bool>
-    {
-        /// Extract the value from the string.
-        static inline bool extract(std::string_view valStr) HUMON_PATH_NOEXCEPT
-        {
-            if (valStr[0] != 't' && valStr[0] != 'T')
-                { return false; }
-            
-            if (valStr.size() == 1)
-                { return true; }
-            
-            if (valStr.size() != 4)
-                { return false; }
-
-            return valStr == "true" || 
-                    valStr == "True" || 
-                    valStr == "TRUE";
-        }
     };
 
     /// Conversion from capi::huStringView to std::string_view.
@@ -309,19 +219,19 @@ namespace hu
     {
     public:
         /// Construct with sane defaults.
-        DeserializeOptions(Encoding encoding = Encoding::unknown, bool strictUnicode = true, capi::huCol_t tabSize = 4, Allocator allocator = {}) HUMON_NOEXCEPT
+        DeserializeOptions(Encoding encoding = Encoding::unknown, bool strictUnicode = true, hu::col_t tabSize = 4, Allocator allocator = {}) HUMON_NOEXCEPT
         {
-            capi::huInitDeserializeOptions(& cparams, static_cast<capi::huEnumType_t>(encoding), strictUnicode, tabSize, & allocator);
+            capi::huInitDeserializeOptions(& cparams, static_cast<hu::enumType_t>(encoding), strictUnicode, tabSize, & allocator);
         }
 
         /// Expect a particular Unicode encoding, or Encoding::unknown.
-        void setEncoding(Encoding encoding) HUMON_NOEXCEPT { cparams.encoding = static_cast<capi::huEnumType_t>(encoding); }
+        void setEncoding(Encoding encoding) HUMON_NOEXCEPT { cparams.encoding = static_cast<hu::enumType_t>(encoding); }
         /// Allow code points that are out of Unicode range.
         void setAllowOutOfRangeCodePoints(bool shallWe) HUMON_NOEXCEPT { cparams.allowOutOfRangeCodePoints = shallWe; }
         /// Allow unpaired surrogate code units in UTF-16.
         void setAllowUtf16UnmatchedSurrogates(bool shallWe) HUMON_NOEXCEPT { cparams.allowUtf16UnmatchedSurrogates = shallWe; }
         /// Use this tab size when computing the column of a token and the token stream contains tabs.
-        void setTabSize(capi::huCol_t tabSize) HUMON_NOEXCEPT { cparams.tabSize = tabSize; }
+        void setTabSize(hu::col_t tabSize) HUMON_NOEXCEPT { cparams.tabSize = tabSize; }
         /// Customize the memory allocation functions used in all of Humon's API.
         void setAllocator(Allocator allocator) HUMON_NOEXCEPT
         {
@@ -334,7 +244,7 @@ namespace hu
         /// Get whether unpaired surrogates in UTF-16 are allowed.
         bool allowUtf16UnmatchedSurrogates() const HUMON_NOEXCEPT { return cparams.allowUtf16UnmatchedSurrogates; }
         /// Get the tab size used to compute column information in token streams that contain tabs.
-        capi::huCol_t tabSize() const HUMON_NOEXCEPT { return cparams.tabSize; }
+        hu::col_t tabSize() const HUMON_NOEXCEPT { return cparams.tabSize; }
         /// Get the allocator used to handle memory.
         Allocator getAllocator() const HUMON_NOEXCEPT { return Allocator { cparams.allocator }; }
 
@@ -348,22 +258,22 @@ namespace hu
     public:
         /// Construct with sane defaults.
         SerializeOptions(WhitespaceFormat WhitespaceFormat = WhitespaceFormat::pretty, 
-            capi::huCol_t indentSize = 4, bool indentWithTabs = false, std::optional<ColorTable> const & colors = {},
+            hu::col_t indentSize = 4, bool indentWithTabs = false, std::optional<ColorTable> const & colors = {},
             bool printComments = true, std::string_view newline = "\n", bool printBom = false) HUMON_NOEXCEPT
         {
             std::size_t newlineSize = newline.size();
-            if (newlineSize > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
-                { newlineSize = static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()); }
+            if (newlineSize > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+                { newlineSize = static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()); }
 
-            capi::huInitSerializeOptionsN(& cparams, static_cast<capi::huEnumType_t>(WhitespaceFormat), indentSize, indentWithTabs,
-                false, capiColorTable, printComments, newline.data(), static_cast<capi::huSize_t>(newlineSize), printBom);
+            capi::huInitSerializeOptionsN(& cparams, static_cast<hu::enumType_t>(WhitespaceFormat), indentSize, indentWithTabs,
+                false, capiColorTable, printComments, newline.data(), static_cast<hu::size_t>(newlineSize), printBom);
             setColorTable(colors);
         }
 
         /// Set the whitespace formatting.
-        void setFormat(WhitespaceFormat WhitespaceFormat) HUMON_NOEXCEPT { cparams.whitespaceFormat = static_cast<capi::huEnumType_t>(WhitespaceFormat); }
+        void setFormat(WhitespaceFormat WhitespaceFormat) HUMON_NOEXCEPT { cparams.whitespaceFormat = static_cast<hu::enumType_t>(WhitespaceFormat); }
         /// Set the number of spaces to use for indentation.
-        void setIndentSize(capi::huCol_t indentSize) HUMON_NOEXCEPT { cparams.indentSize = indentSize; }
+        void setIndentSize(hu::col_t indentSize) HUMON_NOEXCEPT { cparams.indentSize = indentSize; }
         /// Use tab instead of spaces for indentation.
         void setIndentWithTabs(bool shallWe) HUMON_NOEXCEPT { cparams.indentWithTabs = shallWe; }
 
@@ -373,13 +283,13 @@ namespace hu
             if (colors)
             {
                 std::string_view const * sv = (* colors).data();
-                for (capi::huEnumType_t i = 0; i < capi::HU_COLORCODE_NUMCOLORS; ++i)
+                for (hu::enumType_t i = 0; i < capi::HU_COLORCODE_NUMCOLORS; ++i)
                 {
                     std::size_t sz = sv[(size_t) i].size();
-                    if (sz > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
-                        { sz = static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()); }
+                    if (sz > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+                        { sz = static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()); }
                     capiColorTable[(size_t) i].ptr = sv[(size_t) i].data();
-                    capiColorTable[(size_t) i].size = static_cast<capi::huSize_t>(sz);
+                    capiColorTable[(size_t) i].size = static_cast<hu::size_t>(sz);
                 }
                 cparams.usingColors = true;
             }
@@ -393,17 +303,17 @@ namespace hu
         void setNewline(std::string_view newline) HUMON_NOEXCEPT
         {
             std::size_t sz = newline.size();
-            if (sz > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
-                { sz = static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()); }
+            if (sz > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+                { sz = static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()); }
 
             cparams.newline.ptr = newline.data(); 
-            cparams.newline.size = static_cast<capi::huSize_t>(sz);
+            cparams.newline.size = static_cast<hu::size_t>(sz);
         }
 
         /// Get the whitespace formatting.
         WhitespaceFormat whitespaceFormat() const HUMON_NOEXCEPT { return static_cast<WhitespaceFormat>(cparams.whitespaceFormat); }
         /// Get the number of spaces to use for indentation.
-        capi::huSize_t indentSize() { return cparams.indentSize; }
+        hu::size_t indentSize() { return cparams.indentSize; }
         /// Get whether to use tabs instead of spaces for indentation.
         bool indentWithTabs() { return cparams.indentWithTabs; }
 
@@ -415,7 +325,7 @@ namespace hu
             
             ColorTable newColorTable;
             std::string_view * sv = newColorTable.data();
-            for (capi::huEnumType_t i = 0; i < capi::HU_COLORCODE_NUMCOLORS; ++i)
+            for (hu::enumType_t i = 0; i < capi::HU_COLORCODE_NUMCOLORS; ++i)
             {
                 sv[(size_t) i] = { capiColorTable[(size_t) i].ptr,
                                    static_cast<std::size_t>(capiColorTable[(size_t) i].size) };
@@ -477,13 +387,13 @@ namespace hu
             { check(); return isValid() ? make_sv(ctoken->rawStr) : ""; }
         std::string_view str() const HUMON_NOEXCEPT   ///< Returns the string value of the token.
             { check(); return isValid() ? make_sv(ctoken->str) : ""; }
-        capi::huLine_t line() const HUMON_NOEXCEPT               ///< Returns the line number of the first character of the token in the file.
+        hu::line_t line() const HUMON_NOEXCEPT               ///< Returns the line number of the first character of the token in the file.
             { check(); return isValid() ? ctoken->line : 0; }
-        capi::huCol_t col() const HUMON_NOEXCEPT                ///< Returns the column number of the first character of the token in the file.
+        hu::col_t col() const HUMON_NOEXCEPT                ///< Returns the column number of the first character of the token in the file.
             { check(); return isValid() ? ctoken->col : 0; }
-        capi::huLine_t endLine() const HUMON_NOEXCEPT            ///< Returns the line number of the last character of the token in the file.
+        hu::line_t endLine() const HUMON_NOEXCEPT            ///< Returns the line number of the last character of the token in the file.
             { check(); return isValid() ? ctoken->endLine : 0; }
-        capi::huCol_t endCol() const HUMON_NOEXCEPT             ///< Returns the column number of the last character of the token in the file.
+        hu::col_t endCol() const HUMON_NOEXCEPT             ///< Returns the column number of the last character of the token in the file.
             { check(); return isValid() ? ctoken->endCol : 0; }
         operator std::string_view() HUMON_NOEXCEPT    ///< String view conversion.
             { return str(); }
@@ -499,6 +409,20 @@ namespace hu
 
         capi::huToken const * ctoken = nullptr;
     };
+
+    /// Value extraction template for in-line grokking of value nodes.
+    /** This template is a helper to extract machine values out of Humon value nodes.
+     * Standard types are supported, and custom extractors can be specified. Just
+     * specialize `hu::val<T>` for your type `T`, and implement the `extract()`
+     * function.
+     * Usage: Use in conjunction with the `/` operator on a value node. This allows
+     * you to extract a value in the natural flow of things:
+     * `auto numEyes = node / "frogs" / "numEyes" % hu::val<int> {};`
+     * `auto color = node / "frogs" / "colors" / 0 % hu::val<AnimalColorsEnum> {};`
+     */
+    template <class T, typename V = void>
+    struct val
+    { };
 
     /// References a node's parent in an object-based lookup.
     /** hu::Node::operator/() has an overload which takes a hu::Parent. This
@@ -533,7 +457,7 @@ namespace hu
             { return isValid(); }
         bool isRoot() const HUMON_NOEXCEPT              ///< Returns whether is node is the root node.
             { check(); return nodeIndex() == 0; }
-        capi::huSize_t nodeIndex() const HUMON_NOEXCEPT              ///< Returns the node index within the trove. Rarely needed.
+        hu::size_t nodeIndex() const HUMON_NOEXCEPT              ///< Returns the node index within the trove. Rarely needed.
             { check(); return isValid() ? cnode->nodeIdx : -1; }
         NodeKind kind() const HUMON_NOEXCEPT              ///< Returns the kind of node this is.
             { check(); return isValid() ? static_cast<NodeKind>(cnode->kind)
@@ -548,9 +472,9 @@ namespace hu
             { check(); return Token(isValid() ? cnode->lastToken : HU_NULLTOKEN); }
         Node parent() const HUMON_NOEXCEPT                ///< Returns the parent node of this node, or the null node if this is the root.
             { check(); return Node(capi::huGetParent(cnode)); }
-        capi::huSize_t childOrdinal() const HUMON_NOEXCEPT           ///< Returns the index of this node vis a vis its sibling nodes (starting at 0).
+        hu::size_t childOrdinal() const HUMON_NOEXCEPT           ///< Returns the index of this node vis a vis its sibling nodes (starting at 0).
             { check(); return isValid() ? cnode->childOrdinal : -1; }
-        capi::huSize_t numChildren() const HUMON_NOEXCEPT            ///< Returns the number of children of this node.
+        hu::size_t numChildren() const HUMON_NOEXCEPT            ///< Returns the number of children of this node.
             { check(); return capi::huGetNumChildren(cnode); }
 
         /// Returns the child node, by child index.
@@ -560,9 +484,9 @@ namespace hu
         Node child(IntType idx) const HUMON_NOEXCEPT
         {
             check();
-            if (idx > 0 && static_cast<std::size_t>(idx) > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (idx > 0 && static_cast<std::size_t>(idx) > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return Node(HU_NULLNODE); }
-            return capi::huGetChildByIndex(cnode, static_cast<capi::huSize_t>(idx));
+            return capi::huGetChildByIndex(cnode, static_cast<hu::size_t>(idx));
         }
 
         /// Returns the child node, by key (if this is a dict).
@@ -570,9 +494,9 @@ namespace hu
         {
             check();
             std::size_t sz = key.size();
-            if (sz > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (sz > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return Node(HU_NULLNODE); }
-            return capi::huGetChildByKeyN(cnode, key.data(), static_cast<capi::huSize_t>(sz));
+            return capi::huGetChildByKeyN(cnode, key.data(), static_cast<hu::size_t>(sz));
         }
 
         Node firstChild() const HUMON_NOEXCEPT            ///< Returns the first child node of this node.
@@ -588,9 +512,9 @@ namespace hu
         {
             check();
             std::size_t sz = relativeAddress.size();
-            if (sz > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (sz > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return Node(HU_NULLNODE); }
-            return capi::huGetNodeByRelativeAddressN(cnode, relativeAddress.data(), static_cast<capi::huSize_t>(sz));
+            return capi::huGetNodeByRelativeAddressN(cnode, relativeAddress.data(), static_cast<hu::size_t>(sz));
         }
         bool hasKey() const HUMON_NOEXCEPT                ///< Returns whether this node has a key. (If it's in a dict.)
             { check(); return capi::huHasKey(cnode); }
@@ -598,13 +522,13 @@ namespace hu
             { check(); return Token(isValid() ? cnode->keyToken : HU_NULLTOKEN); }
         Token value() const HUMON_NOEXCEPT                ///< Returns the first value token that encodes this node.
             { check(); return Token(isValid() ? cnode->valueToken : HU_NULLTOKEN); }
-        capi::huSize_t numAnnotations() const HUMON_NOEXCEPT         ///< Returns the number of annotations associated to this node.
+        hu::size_t numAnnotations() const HUMON_NOEXCEPT         ///< Returns the number of annotations associated to this node.
             { check(); return capi::huGetNumAnnotations(cnode); }
 
         /// Returns the `idx`th annotation.
         /** Returns a <Token, Token> referencing the key and value of the annotation
          * accessed by index. */
-        std::tuple<Token, Token> annotation(capi::huSize_t idx) const HUMON_NOEXCEPT 
+        std::tuple<Token, Token> annotation(hu::size_t idx) const HUMON_NOEXCEPT 
         {
             check();
             auto canno = capi::huGetAnnotation(cnode, idx);
@@ -620,9 +544,9 @@ namespace hu
         {
             check();
             std::vector<std::tuple<Token, Token>> vec;
-            capi::huSize_t numAnnos = numAnnotations();
+            hu::size_t numAnnos = numAnnotations();
             vec.reserve(numAnnos);
-            for (capi::huSize_t i = 0; i < numAnnos; ++i)
+            for (hu::size_t i = 0; i < numAnnos; ++i)
                 { vec.push_back(annotation(i)); }
             return vec;
         }
@@ -635,9 +559,9 @@ namespace hu
         {
             check();
             std::size_t sz = key.size();
-            if (sz > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (sz > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return false; }
-            return capi::huHasAnnotationWithKeyN(cnode, key.data(), static_cast<capi::huSize_t>(sz));
+            return capi::huHasAnnotationWithKeyN(cnode, key.data(), static_cast<hu::size_t>(sz));
         }
 
         /// Returns a Token referencing the value of the annotation accessed by key.
@@ -645,9 +569,9 @@ namespace hu
         { 
             check();
             std::size_t sz = key.size();
-            if (sz > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (sz > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return Token(HU_NULLTOKEN); }
-            auto canno = capi::huGetAnnotationWithKeyN(cnode, key.data(), static_cast<capi::huSize_t>(sz));
+            auto canno = capi::huGetAnnotationWithKeyN(cnode, key.data(), static_cast<hu::size_t>(sz));
             return Token(canno);
         }
 
@@ -655,13 +579,13 @@ namespace hu
         /** A node can have multiple annotations, each with different keys which have the same 
          * value. This function returns the number of annotations associated to this node with
          * the specified value. */
-        capi::huSize_t numAnnotationsWithValue(std::string_view value) const HUMON_NOEXCEPT
+        hu::size_t numAnnotationsWithValue(std::string_view value) const HUMON_NOEXCEPT
         {
             check();
             std::size_t sz = value.size();
-            if (sz > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (sz > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return 0; }
-            return capi::huGetNumAnnotationsWithValueN(cnode, value.data(), static_cast<capi::huSize_t>(sz));
+            return capi::huGetNumAnnotationsWithValueN(cnode, value.data(), static_cast<hu::size_t>(sz));
         }
         
         /// Returns a new collection of all this node's annotations with the specified value.
@@ -672,14 +596,14 @@ namespace hu
             check();
             std::vector<Token> vec;
             std::size_t sz = value.size();
-            if (sz > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (sz > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return vec; }
 
-            capi::huSize_t cursor = 0;
+            hu::size_t cursor = 0;
             capi::huToken const * tok = HU_NULLTOKEN;
             do
             {
-                tok = capi::huGetAnnotationWithValueN(cnode, value.data(), static_cast<capi::huSize_t>(sz), & cursor);
+                tok = capi::huGetAnnotationWithValueN(cnode, value.data(), static_cast<hu::size_t>(sz), & cursor);
                 if (tok)
                     { vec.push_back(tok); }
             } while (tok != HU_NULLTOKEN);
@@ -688,11 +612,11 @@ namespace hu
         }
 
         /// Returns the number of comments associated to this node.
-        capi::huSize_t numComments() const HUMON_NOEXCEPT
+        hu::size_t numComments() const HUMON_NOEXCEPT
             { check(); return capi::huGetNumComments(cnode); }
         /// Returns the `idx`th comment associated to this node.
         /** Returns a Token of the `idx`th ordinal comment associated with this node. */
-        Token comment(capi::huSize_t idx) const HUMON_NOEXCEPT 
+        Token comment(hu::size_t idx) const HUMON_NOEXCEPT 
             { check(); return capi::huGetComment(cnode, idx); }
 
         /// Returns a new collection of all comments associated to this node.
@@ -700,9 +624,9 @@ namespace hu
         {
             check();
             std::vector<Token> vec;
-            capi::huSize_t numComms = numComments();
+            hu::size_t numComms = numComments();
             vec.reserve(numComms);
-            for (capi::huSize_t i = 0; i < numComms; ++i)
+            for (hu::size_t i = 0; i < numComms; ++i)
                 { vec.push_back(comment(i)); }
             return vec;
         }
@@ -712,9 +636,9 @@ namespace hu
         {
             check();
             std::size_t sz = containedString.size();
-            if (sz > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (sz > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return false; }
-            return capi::huHasCommentsContainingN(cnode, containedString.data(), static_cast<capi::huSize_t>(sz));
+            return capi::huHasCommentsContainingN(cnode, containedString.data(), static_cast<hu::size_t>(sz));
         }
 
         /// Returns a new collection of all comments associated to this node containing the specified substring.
@@ -723,14 +647,14 @@ namespace hu
             check();
             std::vector<Token> vec;
             std::size_t sz = containedString.size();
-            if (sz > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (sz > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return vec; }
 
-            capi::huSize_t cursor = 0;
+            hu::size_t cursor = 0;
             capi::huToken const * comm = NULL;
             do
             {
-                comm = capi::huGetCommentsContainingN(cnode, containedString.data(), static_cast<capi::huSize_t>(sz), & cursor);
+                comm = capi::huGetCommentsContainingN(cnode, containedString.data(), static_cast<hu::size_t>(sz), & cursor);
                 if (comm)
                     { vec.emplace_back(comm); }
             } while (comm != HU_NULLTOKEN);
@@ -744,9 +668,9 @@ namespace hu
         bool operator % (IntType idx) const HUMON_PATH_NOEXCEPT
         {
             check();
-            if (idx > 0 && static_cast<std::size_t>(idx) > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (idx > 0 && static_cast<std::size_t>(idx) > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return false; }                
-            auto cidx = static_cast<capi::huSize_t>(idx);
+            auto cidx = static_cast<hu::size_t>(idx);
             if (isValid() && (kind() == NodeKind::dict || kind() == NodeKind::list))
                 { return cidx >= 0 && cidx < numChildren(); }
             return false;
@@ -824,14 +748,14 @@ namespace hu
          * 
          * The purpose of val<T> is to allow users to write code like:
          *      auto sv = materialsTrove / "assets" / "brick-diffuse" / "src" / 
-         *                0 / h::val<string_view> {};*/
+         *                0 % h::val<string_view> {};*/
         template <class U>
-        [[nodiscard]] inline U operator / (val<U> ve) const HUMON_PATH_NOEXCEPT
+        [[nodiscard]] inline U operator % (val<U> ve) const HUMON_PATH_NOEXCEPT
         {
             check();
             if (kind() != NodeKind::value)
                 { return U {}; }
-            return ve.extract(make_sv(cnode->valueToken->str));
+            return ve.extract(*this);
         }
 
         /// Returns the entire text contained by this node and all its children.
@@ -852,7 +776,7 @@ namespace hu
         [[nodiscard]] std::string address() const HUMON_NOEXCEPT
         {
             check();
-            capi::huSize_t len = 0;
+            hu::size_t len = 0;
             capi::huGetAddress(cnode, NULL, & len);
             std::string s;
             s.resize(len);
@@ -864,6 +788,93 @@ namespace hu
         void check() const HUMON_NOEXCEPT { checkNotNull(cnode); }
 
         capi::huNode const * cnode = nullptr;
+    };
+
+
+    /// Extractor for type int.
+    template <class T>
+    struct val<T, typename std::enable_if_t<std::is_integral_v<T>>>
+    {
+        /// Extract the value from the string.
+        static inline T extract(Node const & val) HUMON_PATH_NOEXCEPT
+        {
+            auto const & valStr = val.value().str();
+            T value;
+            auto [p, ec] = std::from_chars(valStr.data(), valStr.data() + valStr.size(), value);
+            if (ec == std::errc())
+                { return value; }
+            else
+                { return T {}; }
+        }
+    };
+
+    /// Extractor for type float.
+    template <class T>
+    struct val<T, typename std::enable_if_t<std::is_floating_point_v<T>>>
+    {
+        /// Extract the value from the string.
+        static inline T extract(Node const & val) HUMON_PATH_NOEXCEPT
+        {
+            auto const & valStr = val.value().str();
+            // TODO: (gcc): Once std::from_chars(..T&) is complete, use this or remove this specialization. We're making a useless string here and it maketh me to bite metal. Don't forget to HUMON_NOEXCEPT.
+    #if 0
+            T val;
+            auto [p, ec] = std::from_chars(valStr.data(), valStr.data() + valStr.size(), val, std::chars_format::general);
+            if (ec == std::errc())
+                { return val; }
+            else
+                { return T {}; }
+    #else
+            return static_cast<T>(std::stod(std::string(valStr)));
+    #endif
+        }
+    };
+
+    /// Extractor for type std::string_view.
+    template <>
+    struct val<std::string_view>
+    {
+        /// Extract the value from the string.
+        static inline std::string_view extract(Node const & val) HUMON_PATH_NOEXCEPT
+        {
+            auto const & valStr = val.value().str();
+            return valStr;
+        }
+    };
+
+    /// Extractor for type std::string.
+    template <>
+    struct val<std::string>
+    {
+        /// Extract the value from the string.
+        static inline std::string extract(Node const & val) HUMON_PATH_NOEXCEPT
+        {
+            auto const & valStr = val.value().str();
+            return std::string(valStr);
+        }
+    };
+
+    /// Extractor for type bool. Parses English spelling of "true" for truth.
+    template <>
+    struct val<bool>
+    {
+        /// Extract the value from the string.
+        static inline bool extract(Node const & val) HUMON_PATH_NOEXCEPT
+        {
+            auto const & valStr = val.value().str();
+            if (valStr[0] != 't' && valStr[0] != 'T')
+                { return false; }
+            
+            if (valStr.size() == 1)
+                { return true; }
+            
+            if (valStr.size() != 4)
+                { return false; }
+
+            return valStr == "true" || 
+                    valStr == "True" || 
+                    valStr == "TRUE";
+        }
     };
 
 
@@ -885,12 +896,12 @@ namespace hu
             ErrorResponse errorRespose = ErrorResponse::stderrAnsiColor) HUMON_NOEXCEPT
         {
             capi::huTrove const * trove = HU_NULLTROVE;
-            if (data.size() > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (data.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return ErrorCode::badParameter; }
 
             auto error = capi::huDeserializeTroveN(& trove, data.data(), 
-                static_cast<capi::huSize_t>(data.size()), 
-                & deserializeOptions.cparams, static_cast<capi::huEnumType_t>(errorRespose));
+                static_cast<hu::size_t>(data.size()), 
+                & deserializeOptions.cparams, static_cast<hu::enumType_t>(errorRespose));
 
             if (error != capi::HU_ERROR_NOERROR &&
                 error != capi::HU_ERROR_TROVEHASERRORS)
@@ -905,13 +916,13 @@ namespace hu
          * ready to use. Otherwise the Trove will be in an erroneous state; it will not 
          * be a null trove, but rather will be loaded with no nodes, and errors marking 
          * tokens. */
-        [[nodiscard]] static DeserializeResult fromString(char const * data, capi::huSize_t dataLen, 
+        [[nodiscard]] static DeserializeResult fromString(char const * data, hu::size_t dataLen, 
             DeserializeOptions deserializeOptions = { Encoding::utf8 }, 
             ErrorResponse errorRespose = ErrorResponse::stderrAnsiColor) HUMON_NOEXCEPT
         {
             capi::huTrove const * trove = HU_NULLTROVE;
             auto error = capi::huDeserializeTroveN(& trove, data, dataLen, 
-                & deserializeOptions.cparams, static_cast<capi::huEnumType_t>(errorRespose));
+                & deserializeOptions.cparams, static_cast<hu::enumType_t>(errorRespose));
             if (error != capi::HU_ERROR_NOERROR &&
                 error != capi::HU_ERROR_TROVEHASERRORS)
                 { return static_cast<ErrorCode>(error); }
@@ -930,11 +941,11 @@ namespace hu
             ErrorResponse errorRespose = ErrorResponse::stderrAnsiColor) HUMON_NOEXCEPT
         {
             capi::huTrove const * trove = HU_NULLTROVE;
-            if (path.size() > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (path.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return ErrorCode::badParameter; }
 
             auto error = capi::huDeserializeTroveFromFile(& trove, path.data(), 
-                & deserializeOptions.cparams, static_cast<capi::huEnumType_t>(errorRespose));
+                & deserializeOptions.cparams, static_cast<hu::enumType_t>(errorRespose));
             if (error != capi::HU_ERROR_NOERROR &&
                 error != capi::HU_ERROR_TROVEHASERRORS)
                 { return static_cast<ErrorCode>(error); }
@@ -951,7 +962,7 @@ namespace hu
          * 
          * If maxNumBytes == 0, `fromIstream` reads the stream until EOF is encountered.*/
         [[nodiscard]] static DeserializeResult fromIstream(std::istream & in, 
-            DeserializeOptions deserializeOptions = { Encoding::unknown }, capi::huSize_t maxNumBytes = 0, 
+            DeserializeOptions deserializeOptions = { Encoding::unknown }, hu::size_t maxNumBytes = 0, 
             ErrorResponse errorResponse = ErrorResponse::stderrAnsiColor) HUMON_NOEXCEPT
         {
             if (maxNumBytes == 0)
@@ -1021,7 +1032,7 @@ namespace hu
             { return ctrove == nullptr; }
         operator bool () const HUMON_NOEXCEPT     ///< Returns whether the trove is valid (not null).
             { return isValid(); }
-        capi::huSize_t numTokens() const HUMON_NOEXCEPT      ///< Returns the number of tokens in the trove.
+        hu::size_t numTokens() const HUMON_NOEXCEPT      ///< Returns the number of tokens in the trove.
             { return capi::huGetNumTokens(ctrove); }
 
         template <class IntType, 
@@ -1029,11 +1040,11 @@ namespace hu
                 std::is_integral_v<IntType>, IntType>::type * = nullptr>
         Token token(IntType idx) const HUMON_NOEXCEPT ///< Returns a Token by index.
         {
-            if (idx > 0 && static_cast<std::size_t>(idx) > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (idx > 0 && static_cast<std::size_t>(idx) > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return Token(HU_NULLTOKEN); }
             return Token(capi::huGetToken(ctrove, idx));
         }
-        capi::huSize_t numNodes() const HUMON_NOEXCEPT       ///< Returns the number of nodes in the trove.
+        hu::size_t numNodes() const HUMON_NOEXCEPT       ///< Returns the number of nodes in the trove.
             { return capi::huGetNumNodes(ctrove); }
         bool hasRoot() const HUMON_NOEXCEPT       ///< Returns whether the trove has a root node.
             { return numNodes() > 0; }
@@ -1045,9 +1056,9 @@ namespace hu
                 std::is_integral_v<IntType>, IntType>::type * = nullptr>
         Node nodeByIndex(IntType idx) const HUMON_NOEXCEPT   ///< Returns a Node by index.
         {
-            if (idx > 0 && static_cast<std::size_t>(idx) > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (idx > 0 && static_cast<std::size_t>(idx) > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return Node(HU_NULLNODE); }
-            return Node(capi::huGetNodeByIndex(ctrove, static_cast<capi::huSize_t>(idx)));
+            return Node(capi::huGetNodeByIndex(ctrove, static_cast<hu::size_t>(idx)));
         }
 
         /// Gets a node in the trove by its address.
@@ -1058,18 +1069,18 @@ namespace hu
          * the appropriate hu::ErrorCode}, */
         Node nodeByAddress(std::string_view address) const HUMON_NOEXCEPT
         {
-            if (address.size() > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (address.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return Node(HU_NULLNODE); }
             return Node(capi::huGetNodeByAddressN(
-                ctrove, address.data(), static_cast<capi::huSize_t>(address.size())));
+                ctrove, address.data(), static_cast<hu::size_t>(address.size())));
         }
 
         /// Returns the number of errors encountered when tokenizing and parsing the Humon.
-        capi::huSize_t numErrors() const HUMON_NOEXCEPT
+        hu::size_t numErrors() const HUMON_NOEXCEPT
             { return ctrove ? capi::huGetNumErrors(ctrove) : 0; }
 
         /// Returns the `idx`th error encountered when tokenizing and parsing the Humon.
-        std::tuple<ErrorCode, Token> error(capi::huSize_t idx) const HUMON_NOEXCEPT 
+        std::tuple<ErrorCode, Token> error(hu::size_t idx) const HUMON_NOEXCEPT 
         {
             auto cerr = capi::huGetError(ctrove, idx);
             return { static_cast<ErrorCode>(cerr->errorCode), Token(cerr->token) };
@@ -1081,17 +1092,17 @@ namespace hu
             std::vector<std::tuple<ErrorCode, Token>> vec;
             auto numErr = numErrors();
             vec.reserve(numErr);
-            for (capi::huSize_t i = 0; i < numErr; ++i)
+            for (hu::size_t i = 0; i < numErr; ++i)
                 { vec.push_back(error(i)); }
             return vec;
         }
 
         /// Returns the number of annotations associated to this trove (not to any node).
-        capi::huSize_t numTroveAnnotations() const HUMON_NOEXCEPT
+        hu::size_t numTroveAnnotations() const HUMON_NOEXCEPT
             { return capi::huGetNumTroveAnnotations(ctrove); }
 
         /// Returns the `idx`th annotation associated to this trove (not to any node).
-        std::tuple<Token, Token> troveAnnotation(capi::huSize_t idx) const HUMON_NOEXCEPT 
+        std::tuple<Token, Token> troveAnnotation(hu::size_t idx) const HUMON_NOEXCEPT 
         { 
             auto canno = capi::huGetTroveAnnotation(ctrove, idx); 
             return { Token(canno->key), Token(canno->value) };
@@ -1103,7 +1114,7 @@ namespace hu
             std::vector<std::tuple<Token, Token>> vec;
             auto numAnnos = numTroveAnnotations();
             vec.reserve(numAnnos);
-            for (capi::huSize_t i = 0; i < numAnnos; ++i)
+            for (hu::size_t i = 0; i < numAnnos; ++i)
                 { vec.push_back(troveAnnotation(i)); }
             return vec;
         }
@@ -1112,30 +1123,30 @@ namespace hu
         /// the specified key.
         bool hasTroveAnnotation(std::string_view key) const HUMON_NOEXCEPT
         {
-            if (key.size() > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (key.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return false; }
             return capi::huTroveHasAnnotationWithKeyN(
-                ctrove, key.data(), static_cast<capi::huSize_t>(key.size()));
+                ctrove, key.data(), static_cast<hu::size_t>(key.size()));
         }
 
         /// Returns the value of the `idx`th annotation associated to this trove (not to any node)
         /// with the specified key.
         Token troveAnnotation(std::string_view key) const HUMON_NOEXCEPT 
         {
-            if (key.size() > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (key.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return Token(HU_NULLTROVE); }
             return capi::huGetTroveAnnotationWithKeyN(
-                ctrove, key.data(), static_cast<capi::huSize_t>(key.size()));
+                ctrove, key.data(), static_cast<hu::size_t>(key.size()));
         }
 
         /// Return the number of trove annotations associated to this trove (not to any node) with 
         /// the specified value.
-        capi::huSize_t numTroveAnnotationsWithValue(std::string_view value) const HUMON_NOEXCEPT
+        hu::size_t numTroveAnnotationsWithValue(std::string_view value) const HUMON_NOEXCEPT
         {
-            if (value.size() > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (value.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return Token(HU_NULLTROVE); }
             return capi::huGetNumTroveAnnotationsWithValueN(
-                ctrove, value.data(), static_cast<capi::huSize_t>(value.size()));
+                ctrove, value.data(), static_cast<hu::size_t>(value.size()));
         }
 
         /// Returns a new collection of all the keys of annotations associated to this trove (not 
@@ -1144,15 +1155,15 @@ namespace hu
         {
             check();
             std::vector<Token> vec;
-            if (value.size() > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (value.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return vec; }
 
-            capi::huSize_t cursor = 0;
+            hu::size_t cursor = 0;
             capi::huToken const * tok = HU_NULLTOKEN;
             do
             {
                 tok = capi::huGetTroveAnnotationWithValueN(
-                    ctrove, value.data(), static_cast<capi::huSize_t>(value.size()), & cursor);
+                    ctrove, value.data(), static_cast<hu::size_t>(value.size()), & cursor);
                 if (tok)
                     { vec.push_back(tok); }
             } while (tok != HU_NULLTOKEN);
@@ -1161,11 +1172,11 @@ namespace hu
         }
 
         /// Returns the number of comments associated to this trove (not to any node).
-        capi::huSize_t numTroveComments() const HUMON_NOEXCEPT
+        hu::size_t numTroveComments() const HUMON_NOEXCEPT
             { return capi::huGetNumTroveComments(ctrove); }
 
         /// Returns the `idx`th comment associated to this trove (not to any node).
-        std::tuple<Token, Node> troveComment(capi::huSize_t idx) const HUMON_NOEXCEPT 
+        std::tuple<Token, Node> troveComment(hu::size_t idx) const HUMON_NOEXCEPT 
         {
             auto ccomm = capi::huGetTroveComment(ctrove, idx);
             return { Token(ccomm), nullptr };
@@ -1177,7 +1188,7 @@ namespace hu
             std::vector<std::tuple<Token, Node>> vec;
             auto numComms = numTroveComments();
             vec.reserve(numComms);
-            for (capi::huSize_t i = 0; i < numComms; ++i)
+            for (hu::size_t i = 0; i < numComms; ++i)
                 { vec.push_back(troveComment(i)); }
             return vec;
         }        
@@ -1187,15 +1198,15 @@ namespace hu
         [[nodiscard]] std::vector<Node> findNodesWithAnnotationKey(std::string_view key) const HUMON_NOEXCEPT
         {
             std::vector<Node> vec;
-            if (key.size() > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (key.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return vec; }
 
-            capi::huSize_t cursor = 0;
+            hu::size_t cursor = 0;
             capi::huNode const * node = HU_NULLNODE;
             do
             {
                 node = capi::huFindNodesWithAnnotationKeyN(
-                    ctrove, key.data(), static_cast<capi::huSize_t>(key.size()), & cursor);
+                    ctrove, key.data(), static_cast<hu::size_t>(key.size()), & cursor);
                 if (node)
                     { vec.emplace_back(node); }
             } while(node != HU_NULLNODE);
@@ -1207,15 +1218,15 @@ namespace hu
         [[nodiscard]] std::vector<Node> findNodesWithAnnotationValue(std::string_view value) const HUMON_NOEXCEPT
         {
             std::vector<Node> vec;
-            if (value.size() > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (value.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return vec; }
 
-            capi::huSize_t cursor = 0;
+            hu::size_t cursor = 0;
             capi::huNode const * node = HU_NULLNODE;
             do
             {
                 node = capi::huFindNodesWithAnnotationValueN(
-                    ctrove, value.data(), static_cast<capi::huSize_t>(value.size()), & cursor);
+                    ctrove, value.data(), static_cast<hu::size_t>(value.size()), & cursor);
                 if (node)
                     { vec.emplace_back(node); }
             } while(node != HU_NULLNODE);
@@ -1227,18 +1238,18 @@ namespace hu
         [[nodiscard]] std::vector<Node> findNodesWithAnnotationKeyValue(std::string_view key, std::string_view value) const HUMON_NOEXCEPT
         {
             std::vector<Node> vec;
-            if (key.size() > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (key.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return vec; }
-            if (value.size() > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (value.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return vec; }
 
-            capi::huSize_t cursor = 0;
+            hu::size_t cursor = 0;
             capi::huNode const * node = HU_NULLNODE;
             do
             {
                 node = capi::huFindNodesWithAnnotationKeyValueNN(
-                    ctrove, key.data(), static_cast<capi::huSize_t>(key.size()), 
-                    value.data(), static_cast<capi::huSize_t>(value.size()), & cursor);
+                    ctrove, key.data(), static_cast<hu::size_t>(key.size()), 
+                    value.data(), static_cast<hu::size_t>(value.size()), & cursor);
                 if (node)
                     { vec.emplace_back(node); }
             } while(node != HU_NULLNODE);
@@ -1250,15 +1261,15 @@ namespace hu
         [[nodiscard]] std::vector<Node> findNodesByCommentContaining(std::string_view containedText) const HUMON_NOEXCEPT
         {
             std::vector<Node> vec;
-            if (containedText.size() > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (containedText.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return vec; }
 
-            capi::huSize_t cursor = 0;
+            hu::size_t cursor = 0;
             capi::huNode const * node = HU_NULLNODE;
             do
             {
                 node = capi::huFindNodesByCommentContainingN(
-                    ctrove, containedText.data(), static_cast<capi::huSize_t>(containedText.size()), & cursor);
+                    ctrove, containedText.data(), static_cast<hu::size_t>(containedText.size()), & cursor);
                 if (node)
                     { vec.emplace_back(Node(node)); }
             } while(node != HU_NULLNODE);
@@ -1291,7 +1302,7 @@ namespace hu
         }
 
         /// Serializes a trove with whitespace formatting suitable for readability.
-        [[nodiscard]] std::variant<std::string, ErrorCode> toPrettyString(capi::huCol_t indentSize = 4,
+        [[nodiscard]] std::variant<std::string, ErrorCode> toPrettyString(hu::col_t indentSize = 4,
             bool indentWithTabs = false, std::optional<ColorTable> const & colors = {}, bool printComments = true, 
             std::string_view newline = "\n", bool printBom = false) const HUMON_NOEXCEPT 
         {
@@ -1304,16 +1315,16 @@ namespace hu
          * The contents of the file are whitespace-formatted and colorized depending on
          * the parameters.
          * \return A variant containing either the encoded string, or an error code.*/
-        [[nodiscard]] std::variant<std::string, ErrorCode> toString(SerializeOptions & SerializeOptions) const HUMON_NOEXCEPT 
+        [[nodiscard]] std::variant<std::string, ErrorCode> toString(SerializeOptions & serializeOptions) const HUMON_NOEXCEPT 
         {
-            capi::huSize_t strLength = 0;
+            hu::size_t strLength = 0;
             std::string s;
-            auto error = capi::huSerializeTrove(ctrove, NULL, & strLength, & SerializeOptions.cparams);
+            auto error = capi::huSerializeTrove(ctrove, NULL, & strLength, & serializeOptions.cparams);
             if (error != capi::HU_ERROR_NOERROR)
                 { return static_cast<ErrorCode>(error); }
             
             s.resize(strLength);
-            error = capi::huSerializeTrove(ctrove, s.data(), & strLength, & SerializeOptions.cparams);
+            error = capi::huSerializeTrove(ctrove, s.data(), & strLength, & serializeOptions.cparams);
             if (error != capi::HU_ERROR_NOERROR)
                 { return static_cast<ErrorCode>(error); }
 
@@ -1321,7 +1332,7 @@ namespace hu
         }
 
         /// Serializes a trove with the exact input token stream.
-        [[nodiscard]] std::variant<capi::huSize_t, ErrorCode> toClonedFile(std::string_view path, 
+        [[nodiscard]] std::variant<hu::size_t, ErrorCode> toClonedFile(std::string_view path, 
             bool printBom = false) const HUMON_NOEXCEPT
         {
             SerializeOptions sp = { WhitespaceFormat::cloned, 0, false, std::nullopt, true, "", printBom };
@@ -1329,7 +1340,7 @@ namespace hu
         }
 
         /// Serializes a trove with the minimum token stream necessary to accurately convey the data.
-        [[nodiscard]] std::variant<capi::huSize_t, ErrorCode> toMinimalFile(std::string_view path, 
+        [[nodiscard]] std::variant<hu::size_t, ErrorCode> toMinimalFile(std::string_view path, 
             std::optional<ColorTable> const & colors = {}, bool printComments = true,
             std::string_view newline = "\n", bool printBom = false) const HUMON_NOEXCEPT
         {
@@ -1338,8 +1349,8 @@ namespace hu
         }
 
         /// Serializes a trove with whitespace formatting suitable for readability.
-        [[nodiscard]] std::variant<capi::huSize_t, ErrorCode> toPrettyFile(std::string_view path, 
-            capi::huCol_t indentSize = 4, bool indentWithTabs = false, std::optional<ColorTable> const & colors = {}, bool printComments = true,
+        [[nodiscard]] std::variant<hu::size_t, ErrorCode> toPrettyFile(std::string_view path, 
+            hu::col_t indentSize = 4, bool indentWithTabs = false, std::optional<ColorTable> const & colors = {}, bool printComments = true,
             std::string_view newline = "\n", bool printBom = false) const HUMON_NOEXCEPT 
         {
             SerializeOptions sp = { WhitespaceFormat::pretty, indentSize, indentWithTabs, colors, printComments, newline, printBom };
@@ -1353,10 +1364,10 @@ namespace hu
          * \return A variant containing either the number of bytes written to the file, or the
          * an error code.
          */
-        [[nodiscard]] std::variant<capi::huSize_t, ErrorCode> toFile(std::string_view path, SerializeOptions & SerializeOptions) const HUMON_NOEXCEPT
+        [[nodiscard]] std::variant<hu::size_t, ErrorCode> toFile(std::string_view path, SerializeOptions & SerializeOptions) const HUMON_NOEXCEPT
         {
-            capi::huSize_t outputLength = 0;
-            if (path.size() > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            hu::size_t outputLength = 0;
+            if (path.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return ErrorCode::badParameter; }
 
             auto error = capi::huSerializeTroveToFile(ctrove, path.data(), & outputLength, & SerializeOptions.cparams);
@@ -1411,7 +1422,7 @@ namespace hu
             if (! ch)
                 { return Node(HU_NULLNODE); }
 
-            if (key.size() > static_cast<std::size_t>(std::numeric_limits<capi::huSize_t>::max()))
+            if (key.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
                 { return Node(HU_NULLNODE); }
 
             ch = ch.child(key);
@@ -1435,7 +1446,7 @@ namespace hu
         ColorTable table;        
         capi::huStringView nativeTable[capi::HU_COLORCODE_NUMCOLORS];
         capi::huFillAnsiColorTable(nativeTable);
-        for (capi::huEnumType_t i = 0; i < capi::HU_COLORCODE_NUMCOLORS; ++i)
+        for (hu::enumType_t i = 0; i < capi::HU_COLORCODE_NUMCOLORS; ++i)
             { table[(size_t) i] = {nativeTable[(size_t) i].ptr, static_cast<std::size_t>(nativeTable[(size_t) i].size)}; }
 
         return table;

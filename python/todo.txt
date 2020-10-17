@@ -1,17 +1,8 @@
 Done:
-Made node iterable. [ch for ch in node] yields the node's children.
-Made node a map and a sequence, to allow for len(node), and node[childIdx].
-Added caveperson debugging #define for resource debugging.
-Added node.key, node.value
-Sidestepped a few bugs in Python 3.7.5 related to "s#" parsing.
-Made objectify a node method to allow for subtreeing.
 
 Doing:
 PyDoc strings with foo => bar type text.
 Use python memory management
 Trove_findNodesByCommentContaining and others aren't using kwargs
 Do basic test suite hitting all function points
-Version in setup.py from include/humon/version.h
-[] accessors on nodes
-.value for nodes (return the string)
-
+Version in humon module from include/humon/version.h

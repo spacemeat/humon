@@ -104,8 +104,6 @@ bool argStartsWith(char const * arg, char const * spec)
 
 int main(int argc, char ** argv)
 {
-//    bool loadFromStdin = false;
-//    bool loadFromCmdline = false;
     InputType inputType = InputType::stdIn;
     string inputFile;
     string outputFile;
@@ -253,20 +251,6 @@ int main(int argc, char ** argv)
         }
         break;
     }
-
-    // set up us the input
-    // if (loadFromStdin)
-    // {
-    //     desRes = getInput(cin);
-    // }
-    // else
-    // {
-    //     auto in = ifstream (inputFile);
-    //     if (in.is_open() == false)
-    //         { cerr << "Could not open file " << inputFile << " for input.\n"; return 1; }
-
-    //     desRes = getInput(in);
-    // }
 
     if (auto error = get_if<ErrorCode>(& desRes))
     {

@@ -197,11 +197,14 @@ struct htd_wakka
 u8R"({
     \key: \val
     k\ey: v\al
-    key\ : val\  k\"ey: v\"al
+    key\ : val\ // space after backslash
+    k\"ey: v\"al
     \"key": \"val"
-    key\ key: val\ val
-    key\{key\}: val\{val\}
-    key\::val\:
+    ^^key\ key^^: ^^val\ val^^
+    ^A^key\{key\}^A^: ^🤔^val\{val\}^🤔^
+    ^
+^key^
+^\::val\:
     \🤔:\∑
 }
 )"sv;

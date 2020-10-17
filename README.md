@@ -102,8 +102,8 @@ or in C++:
     if (auto trove = std::get_if<hu::Trove>(& desRes))
     {
         auto extentsNode = trove->nodeByAddress("/assets/brick-diffuse/importData/extents"sv);
-        tuple xyExtents = { extentsNode / 0 / hu::val<int>{}, 
-                            extentsNode / 1 / hu::val<int>{} };
+        tuple xyExtents = { extentsNode / 0 % hu::val<int>{}, 
+                            extentsNode / 1 % hu::val<int>{} };
         // ...
 
 ### Installation
@@ -195,15 +195,17 @@ So, this project proposes Humon as a replacement for those tasks that XML is per
 
 *dict*: A node that contains a sequential collection of zero or more nodes as children, where each node is associated with a key. In the language, the dict is the bounding `{ }` around the child nodes, each of which must be preceded by a key and `:`. In the API, a dict's children can be accessed by index or by key.
 
-*key*: An associated string for a dict's child. A key must be a string of nonzero length. Within a dict, keys must be unique. There is no maximum length defined, and keys can be quoted. (Quoted or heredoc'd values can be multiline strings, but that's a strange way to spec a key.) Any Unicode code point that is not whitespace or punctuation counts as a key character.
+*string*: An array of one or more Unicode code points that represents a key or value. All strings in Humon follow the same rules: Unquoted strings are the longest sequence of non-whitespace characters delimited by Humon punctuation, whitespace, or comment sequences. Quoted and heredoc'd strings are delimited by their quote characters only, and can contain newlines or anything else. There is no maximum length defined.
 
-*value*: A node that contains a single string value. Values can optionally be quoted or heredocs; such values can be multiline strings. As with keys, any Unicode code point that is not whitespace or punctuation counts as a value character.
+*key*: An associated string for a dict's child node. Within a dict, keys must be unique.
 
-*heredoc*: A syntax for specifying an exact character-for-character string, with no need to fix up the string to abide by Humon syntax. (No '\\'-escapements, or other disambiguations required.)
+*value*: A node that contains a single string, or that string.
 
-*comment*: A string of words that are not exposed as values in nodes. They're mainly for humans to make notes, but there are APIs to search for comments and get their associated nodes, in case that's useful.
+*heredoc*: A syntax for quoting a key or value string which allows for customization of the quote sequence, thus allowing the possibility of any string of characters to be enquoted.
 
-*annotation*: One of a collection of key:value string pairs associated to a node or a trove. They are exposed as special values in nodes, and are globally searchable by key and/or value. Any node can have any number of annotations, as long as they have unique keys (like in a dict).
+*comment*: A character string that decorates a token stream, but is not part of the Humon dataset. They're mainly for humans to make notes, and you (probably) won't ever worry about them in code, but there are APIs to search for comments and get their associated nodes, in case that's useful.
+
+*annotation*: One of a collection of key:value string pairs associated to a node or a trove. They are exposed through separate APIs, and are globally searchable by key and/or value. Any node can have any number of annotations, as long as they have unique keys (like in a dict).
 
 ### The principles applied to the language
 
@@ -242,20 +244,18 @@ Any kind of node can occupy any entry in any list. Lists don't have to contain n
 Each dict entry must be a key:node pair. The node can be of any kind. Each key in a dict must be a string, and unique within the dict. There is no delimiting syntax between key:node pairs; just whitespace (maybe including commas if you like) if needed for disambiguation.
 
 **Values are strings.**
-A value is a contiguous non-punctuation, non-whitespace string of Unicode code points, or a quoted string of Unicode code points, or a heredoc-tagged string of Unicode code points.
+A string is a contiguous non-punctuation, non-whitespace string of Unicode code points, or a quoted string of Unicode code points, or a heredoc-tagged string of Unicode code points.
 
-For non-quoted values, the first unescaped whitespace or punctuation character encountered ends the string, and begins a new token. This obviously includes newlines and spaces, but also commas. Quotes that are encountered *within* the string (but not the beginning) are included with it, and are not matched against any other quotes later in the string. So, `value"with'quotes` is tokenized as one whole token string. Backslashes can be used to escape punctuation characters or whitespace within an unquoted string. So, `value\ with\[\ crazy\ stuff \]` is tokenized as one whole token string. Backslashes do not escape newlines though; for that, use a quoted string.
+For non-quoted strings, the first unescaped whitespace or punctuation character encountered ends the string, and begins a new token. This obviously includes newlines and spaces, but also commas. Quotes that are encountered *within* the string (but not the beginning) are included with it, and are not matched against any other quotes later in the string. So, `value"with'quotes` is tokenized as one whole token string.
 
-You can use any quote character (`'`, `"`, `` ` ``) to begin a string. It doesn't matter which you use; they all work the same way. A quoted string value starts after the quote, and ends just before the next corresponding, *unescaped* quote. The string can contain backslash-escaped quotes, like in most programming languages, and treats other kinds of quotes as normal token characters:
+There is no notion of backslashing or other escape sequences. What you see is what you get. This is true for quoted strings as well.
 
-    'This isn\'t an "uncommon" example.'
-
-Quoted string values can span multiple lines of text. Newlines are included in the value.
+You can use any quote character (`'`, `"`, `` ` ``) to begin a string. It doesn't matter which you use; they all work the same way. A quoted string value starts after the quote, and ends just before the next corresponding quote. Quoted strings can span multiple lines of text. Newlines are included in the string.
 
     "Fiery the angels rose, and as they rose deep thunder roll'd.
     Around their shores: indignant burning with the fires of Orc."
 
-Humon also supports heredoc-style strings. These are good for inserting code snippets or other wild and wacky text in languages that didn't expect to have to adhere to Humon's particular syntax:
+Humon also supports heredoc-style strings. These are good for inserting code snippets or other wild and wacky text in languages that may use your quote characters. (JavaScript and JSX and such wind up using all three.) They're also good when generating Humon programmatically, and you don't know exactly what quotes characters are in there and you don't really want to check:
 
     {
         min: ^EOT^
@@ -294,7 +294,7 @@ Above, `min`'s value starts at the first 'i' in 'if'. `max`'s value starts at th
 
 > The specific rule is: After the heredoc tag, if the next non-whitespace character is on the same line as the tag, then all text right after the heredoc tag is included in the token, including any whitespace between the tag and the character. Conversely, if the next non-whitespace character is on a different line, then all whitespace after the heredoc tag is skipped, up to and including the *first* newline. Then all text after that is included in the token.
 
-These nuances allow you to have code blocks or other format-sensitive things as heredocs, without introducing spurious newlines at the beginning, and without requiring the first line to be preceded by a tag or other Humon punctuation. They also allow you to one-line a heredoc, which can be handy for things like Windows directory paths, or Humon node addresses in some other document (we'll talk about node addressing in a bit), or format-sensitive one-line code snippets.
+These nuances allow you to have code blocks or other format-sensitive things as heredocs, without introducing spurious newlines at the beginning, and without requiring the first line to be preceded by a tag or other Humon punctuation. They also allow you to one-line a heredoc, which can be handy for things like directory paths, or Humon node addresses in some other document (we'll talk about node addressing in a bit), or format-sensitive one-line code snippets.
 
 **Keys must be strings.**
 A value is a contiguous non-punctuation, non-whitespace string of Unicode code points, or a quoted string of Unicode code points, or a heredoc-tagged string of Unicode code points.
@@ -303,8 +303,8 @@ They can be numbers of course, but that's just a string to Humon. The rules for 
 
     {
         this: okay
-        // this one: nope      // Syntax error
-        this\ one: sure
+        this one: nope      // Syntax error
+        ^^this one^^: sure
         "this one here": "it's fine"
         "this
     one": yes
@@ -314,7 +314,7 @@ They can be numbers of course, but that's just a string to Humon. The rules for 
     }
 
 **Whitespace is ignored.**
-The tokenizer ignores whitespace that isn't escaped or contained in a quoted string. Whitespace characters are not captured by tokens. All Unicode whitespace code points are recognized as whitespace.
+The tokenizer ignores whitespace that isn't contained in a quoted string or comment. Whitespace characters are not captured by tokens. All Unicode whitespace code points are recognized as whitespace.
 
 **Commas are whitespace.**
 Commas are regarded by the tokenizer as whitespace. They are completely optional. The following Humon objects are identical:
@@ -513,7 +513,7 @@ Node addresses are computed, not stored in the trove; as a result, the return va
 
 The address of a node looks like:
 
-    "/foo/20/baz/3"
+    /foo/20/baz/3
 
 The `/`s delimit the terms, and each term is either a key or integer index.
 
@@ -527,25 +527,25 @@ You get a node object back, which is valid if the address is valid or nullish if
 
 There are some finnicky bits about node addresses when considering that a dict's keys can be numbers in a token stream. They're still just string keys to Humon. But, `hu::Trove::nodeByAddress(address)` and `hu::Node::nodeByAddress(address)` interpret numeric terms in the address as indices. If you intend them to be read as keys, enquote that term in the address:
 
-    "/foo/'20'/baz/"
+    /foo/'20'/baz/
 
-`hu::Node::address()` always returns an address that is legal to use in `hu::Trove::nodeByAddress()` to find the node again. `hu::Node::address()` will appropriately double-enquote terms (`"`) if it needs to, and will escape already-present `"`s if it needs to enquote such a term.
+`hu::Node::address()` always returns an address that is legal to use in `hu::Trove::nodeByAddress()` to find the node again. `hu::Node::address()` will appropriately single-enquote terms (`'`) if the key is numeric, and will heredoc strings with `/`s in them to disambiguate such keys in the address format.
 
     {
         bufferSources: {
-            res/"game\ assets"/meshes.hu: {
+            'res/"game_assets"/meshes.hu': {
                 required: true
                 monitoredForChanges: true
             }
         } 
         pipelineSources: {
-            res/"game\ assets"/materials.hu: {
+            `res/"game_assets"/materials.hu`: {
                 required: false
                 monitoredForChanges: true
             }
         }
         renderPlans: {
-            res/"game\ assets"/renderPlan-overland.hu: {
+            res/"game_assets"/renderPlan-overland.hu: {
                 required: true
                 monitoredForChanges: true
             }
@@ -560,13 +560,11 @@ There are some finnicky bits about node addresses when considering that a dict's
     ...
 
     $ runSample
-    required's address: /bufferSources/"res/\"game\ assets\"/meshes.hu"/required
-
-> The example above is contrived for illustration; I generally prefer heredocs for paths (especially Windows paths) so quotes and other shell elements don't have to be considered.
+    required's address: /bufferSources/^^res/"game_assets"/meshes.hu^^/required
 
 A relative address can be used to get from one node to another:
 
-    auto relativeNode = requiredNode.nodeByAddress("../.. / .. /1 / 0"); 
+    auto relativeNode = requiredNode.nodeByAddress("../../../2/0/required"); 
 
 Notice the relative path does not start with `/`. The relative address is followed from the node, not from the root.
 
@@ -600,13 +598,13 @@ So you've got a value node. Whooptie-doo. To get a value from it:
     node = trove / "bufferSources" / 0 / "monitoredForChanges";
     string_view valStr = node.value();       /* [1] */          
     // or
-    bool valBool = node / hu::val<bool>{};   /* [2] */          
+    bool valBool = node % hu::val<bool>{};   /* [2] */          
 
 > There are numerous Humon APIs that return a `std::string_view`, which might raise some of y'all's flags--`std::string_view`s do not own their own data. But remember, Humon objects are immutable and don't ever move in memory; the C++ objects just wrap heap pointers. Once the trove is loaded, none of its references go bad until the trove is destroyed. The returned `std::string_view`s point to memory that is static and good until the trove is gone, so in the case of Humon APIs, returning a `std::string_view` is copacetic. Just keep the trove around.
 
 Though `hu::Node::value()` is assigned to a `std::string_view` above, it actually returns a `hu::Token`, which has an implicit conversion to a `std::string_view`. A `hu::Token` has information about the token's representation in the token stream. You can get line / column data and the string value itself. Use token information if you want to report on the location of interesting data in a token stream.
 
-In example [2] above, the `hu::val<T>` type is defined to extract typed data from the value string of a node.  It allows you to deserialize and return an arbitrary-typed value. There are definitions for the basic numeric types and `bool` (using English spelling of "true" to denote truth). This is how you'll get the vast majority of your typed data.
+In example [2] above, the `hu::val<T>` type is defined to extract typed data from the value string of a node.  It allows you to deserialize and return an arbitrary-typed value. There are definitions for the basic numeric types and `bool` (using English spelling of "true" to denote truth). This is likely how you'll get the majority of your typed data.
 
 You can also define your own specialization of `hu::val<T>` for your own type. Start with the type you'd like to deserialize:
 
@@ -614,7 +612,7 @@ You can also define your own specialization of `hu::val<T>` for your own type. S
     class Version
     {
     public:
-        Version(std::string_view str) { ... }
+        Version(std::string_view verString = ""sv) { ... }
         Version(std::initializer_list<int> init) { ... }
         bool operator < (Version const & rhs) const { ... }
         int operator [] (int compIdx) const { ... }
@@ -630,9 +628,9 @@ And define the specialized extractor:
     template <>
     struct hu::val<V3>
     {
-        static V3 extract(std::string_view valStr)
+        static V3 extract(hu::Node const & val)
         {
-            return V3(valStr);
+            return V3(val.value().str());
         }
     };
 
@@ -644,12 +642,9 @@ Now you can use it:
     
     ...
 
-    auto gccVersion = trove / "dependencies" / "gcc" / hu::val<V3>{}; 
+    auto gccVersion = trove / "dependencies" / "gcc" % hu::val<V3>{}; 
 
-C++ will deduce the type of `gccVersion` above from the `V3` template parameter passed to `hu::val<>`. `hu::val<T>` is a convenience which allows you to code the lookup and conversion in line, without grouping parentheses. You can also use the extractor member to convert strings by themselves:
-
-    auto const literalVersion = "9.2.1";                        
-    auto toolVersion = hu::val<V3>::extract(literalVersion);    
+C++ will deduce the type of `gccVersion` above from the `V3` template parameter passed to `hu::val<>`. `hu::val<T>` is a convenience which allows you to code the lookup and conversion in line, without grouping parentheses.
 
 ### Getting annotation data
 
@@ -770,10 +765,10 @@ Usually boolean and numeric values are computational though, and matter to the a
 Once loaded, a Humon trove does not move or change. This has implications:
 1. Accessing raw value data is quick. You basically get a pointer and size. Since the data behind it doesn't move or change, that value pointer is good for the life of the trove.
 1. String values returned by APIs are *not* NULL-terminated. (In C++, they translate directly to `std::string_view`s.)
-1. String values contain escapement characters, just as seen in the token stream. They do not contain any surrounding quotes or heredoc tags. If strings contain CRLF newlines in the token stream, they'll appear that way in raw string accesses too. (You can also get the raw string values, which do contain the encapsulating characters.)
+1. String values contain all the characters exactly as seen in the token stream. They do not contain any surrounding quotes or heredoc tags. If strings contain CRLF newlines in the token stream, they'll appear that way in raw string accesses too. (You can also get the raw string values, which do contain the enquoting characters.)
 1. String values are UTF-8-encoded.
 1. The whole token stream must be in contiguous memory.
-1. When serializing back to another stream or file from a Humon trove, the exact source can be spit out without any conversion, since the original string is still in memory (encoded as UTF-8). This is the most performant way to generate a Humon token stream from a trove.
+1. When serializing back to another stream or file from a Humon trove, the exact source can be emitted without any conversion, since the original string is still in memory (encoded as UTF-8). This is the most performant way to generate a Humon token stream from a trove. Use `hu::Trove::tokenStream` and `hu::Node::tokenStream` for this.
 
 **The C-family APIs don't signal by default; rather, they return null objects.**
 Normally, trove and node functions that return other nodes or tokens will not throw exceptions on bad parameters or lookup terms, or if they're nullish objects. Instead they just return other nullish objects or degenerate values. In the C++ API, you can check `isNullish()` on `hu::Trove`, `hu::Node`, and `hu::Token` objects to see whether they're managing null values. Most of the functions are marked `noexcept` by default as well.
@@ -798,7 +793,9 @@ So, if you want bad lookup sequences to throw exceptions, but all other function
     #include <humon/humon.hpp>
 
 **Objects in dicts remain in serial order.**
-This is different from some JSON libraries, that don't preserve the order of key-object pairs in dicts. Humon guarantees that, when you access a dict's children by index (like you would a list), they'll be returned in the order you expect. Humon can maintain an extra table for accessing dict entries quickly by key. (Currently this is not implemented, and keys are searched in linear order. This is obviously on the fix-it list, but it's often the case that a linear search beats hash tables or binary searches for small numbers of entries.<sup>[citation needed]</sup>)
+This is different from some JSON libraries, that don't preserve the order of key-object pairs in dicts. Humon guarantees that, when you access a dict's children by index (as you would a list), they'll be returned in the order you expect. Humon can maintain an extra table for accessing dict entries quickly by key.
+
+>Currently this is not implemented, and keys are searched in linear order. This is obviously on the fix-it list for larger dicts, but it's often the case that a linear search beats hash tables or binary searches for small numbers of entries <sup>[citation needed]</sup>.
 
 **Comments have no meaning, but they do have context.**
 Humon doesn't know or care about your comments, as already stated. But it doesn't discard them in the parsing process; they're preserved for searching and reserialization.
@@ -899,9 +896,13 @@ If no nodes appear before an annotation, it applies to the trove. A great way to
 Like asserted earlier, annotations are 100% open in their use. Humon doesn't use any annotation keys or values and doesn't interpret them. Applications can use them or not, but all annotations that are legal are guaranteed to be parsed, even if the application doesn't know about or use them at all. In this way you can embed metadata about objects in a Humon file, and even old versions of Humon apps will correctly read (and ignore) them, because all official versions of Humon always have.
 
 ## <a name="buildingHumon">Building Humon
-Humon builds on 64-bit and 32-bit architectures for Linux (so far, tested on Ubuntu) using GNU or Clang tools, and on 64-bit and 32-bit architectures in Visual Studio 2017+. The default build behaves as described above, but there are switches you can provide when you build Humon to change its behavior.
+Humon's C library requires a C99 compiler to build.
 
-For each build config and target, the binary artifacts are produced in `{humon}/build/int/bin/{cfg}{target}`, where `{cfg}` consists of `{-gcc|-clang}{-32}?{-d}?`, depending on the build tool you specify, whether to build a 32-bit version (if you're on a 64-bit machine), and whether it is a debug build. You can specify these settings; see below. The necessary artifacts are then copied to `{humon directory}/build/bin`, which is where the installer will look for files to copy to system directories.
+Humon's C++ library uses C++17 features, and thus requires a C++17 compiler to build.
+
+Humon builds on 64-bit and 32-bit architectures for Linux (so far, tested on 64-bit Ubuntu 19.10) using GNU or Clang tools, and on Windows (so far, tested on 64-bit Windows 10), targeting 64-bit and 32-bit architectures in Visual Studio 2017+. The default build behaves as described above, but there are switches you can provide when you build Humon to change its behavior.
+
+For each build config and target, the binary artifacts are produced in `{humon}/build/int/bin/cfg-{cfg}`, where `{cfg}` consists of `{-gcc|-clang}{-32}?{-d}?`, depending on the build tool you specify, whether to build a 32-bit version (if you're on a 64-bit machine), and whether it is a debug build. You can specify these settings; see below. The necessary artifacts are then copied to `{humon directory}/build/bin`, which is where the installer will look for files to copy to system directories.
 
 For Linux development, you can install a successful build with `{humon}/install-linux.py`, run as superuser since it updates the library search cache. If that's not an option, you can simply copy the built binaries and the headers from `{humon}/include/humon` for use in your projects.
 
@@ -981,6 +982,7 @@ These values change some internal block size values for determining the Unicode 
 |-------------------- |-------------------------- |---------- |
 | -swagBlock=<n>      | HUMON_SWAG_BLOCKSIZE      | (64)      |
 | -transcodeBlock=<n> | HUMON_TRANSCODE_BLOCKSIZE | (1 << 16) |
+| -addressBlock=<n>   | HUMON_ADDRESS_BLOCKSIZE   | (64)      |
 
 ### Skipping parameter checks
 If you're sure you're passing good parameters all the time to Humon, you can disable some parameter sanity checks by passing `-noChecks` to the build script. These checks will be excised, and bad parameters can then cause undefined behavior, so be certain.
@@ -1025,8 +1027,6 @@ Near-future features include:
 * Language bindings for .NET
 * Language bindings for Node
 * Language bindings for Rust
-* Modules for C++
-* Single-header-ify the C++ (as an alternative to modules)
+* Single-header-ify the C++
 * Constexpr All The Things in the single-header version. Kind of a research project.
 * Better build process. Considering CMake, but that's not set in stone. Frankly, it is not my very favorite.
-* C++ Range views for depth- and breadth-first node visitation

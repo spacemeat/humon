@@ -992,8 +992,7 @@ huEnumType_t huSerializeTrove(huTrove const * trove, char * dest, huSize_t * des
     if (serializeOptions &&
         (isNegative(serializeOptions->whitespaceFormat) || serializeOptions->whitespaceFormat >= 3 || 
          isNegative(serializeOptions->indentSize) || 
-         (serializeOptions->usingColors && serializeOptions->colorTable == NULL) ||
-         serializeOptions->newline.ptr == NULL || serializeOptions->newline.size < 1))
+         (serializeOptions->usingColors && serializeOptions->colorTable == NULL)))
         { return HU_ERROR_BADPARAMETER; }
 #endif
 
@@ -1026,7 +1025,7 @@ huEnumType_t huSerializeTrove(huTrove const * trove, char * dest, huSize_t * des
              serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_MINIMAL)
     {
         // newline must be > 0; some things need a newline like // comments
-        if (serializeOptions->newline.size < 1)
+        if (serializeOptions->newline.ptr == NULL || serializeOptions->newline.size < 1)
             { return HU_ERROR_BADPARAMETER; }
 
         huVector str;

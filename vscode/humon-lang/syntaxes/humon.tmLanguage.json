@@ -44,7 +44,7 @@
 
 		"unquotedValue": {
 			"name": "support.type.property-name.humon",
-			"match": "[^\\[\\]{},[:space:]:@'\"`][^\\[\\]{},[:space:]:@]*?(?=(//|/*))"
+			"match": "[^\\[\\]{},[:space:]:@'\"`^][^\\[\\]{},[:space:]:@]*?(?=(//|/*))"
 		},
 
 		"singleQuotedValue": {
@@ -80,6 +80,17 @@
 			]
 		},
 
+		"heredocValue": {
+			"name": "string.quoted.single.humon",
+			"begin": "\\^.*\\^",
+			"end": "\\^.*\\^",
+			"patterns": [{
+					"name": "constant.character.escape.humon",
+					"match": "\\\\."
+				}
+			]
+		},
+
 		"value": {
 			"patterns": [{
 					"include": "#unquotedValue"
@@ -89,6 +100,8 @@
 					"include": "#singleQuotedValue"
 				}, {
 					"include": "#doubleQuotedValue"
+				}, {
+					"include": "#heredocValue"
 				}
 			]
 		},

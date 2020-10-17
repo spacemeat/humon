@@ -147,14 +147,22 @@ huNode const * huGetNextSibling(huNode const * node)
 
 // Note, we're using huSize_t instead of huCol_t for col on purpose in these functions. col here is just the char offset into the address string.
 
-static void eatAddressWord(huScanner * scanner)
+static bool eatAddressWord(huScanner * scanner, huSize_t * wordLen)
 {
+    bool error = false;
+    
     // The first character is already confirmed a word char, so, next please.
     nextCharacter(scanner);
+    * wordLen = scanner->curCursor->charLength;
 
     bool eating = true;
     while (eating)
     {
+        if (scanner->curCursor->isError)
+        {
+            eating = false;
+            error = true;
+        }
         if (scanner->curCursor->isEof)
             { eating = false; }
         else if (scanner->curCursor->isNewline || scanner->curCursor->isSpace)
@@ -169,19 +177,26 @@ static void eatAddressWord(huScanner * scanner)
                 break;
             default:
                 nextCharacter(scanner);
+                * wordLen += scanner->curCursor->charLength;
                 break;
             }
         }
-    }    
+    }
+
+    return error == false;
 }
 
 
-static void eatQuotedAddressWord(huScanner * scanner)
+static bool eatQuotedAddressWord(huScanner * scanner, char const ** word, huSize_t * wordLen)
 {
+    bool error = false;
     uint32_t quoteChar = scanner->curCursor->codePoint;
 
     // The first character is already confirmed quoteChar, so, next please.
     nextCharacter(scanner);
+
+    * word = scanner->curCursor->character;
+    * wordLen = 0;  // but not to be included in the word len
 
     bool eating = true;
     while (eating)
@@ -190,16 +205,7 @@ static void eatQuotedAddressWord(huScanner * scanner)
             scanner->curCursor->isEof)
         {
             eating = false;
-        }
-        else if (scanner->curCursor->codePoint == '\\')
-        {
-            nextCharacter(scanner);
-
-            // skip over the escaped quote so we don't encounter it and end the string
-            if (scanner->curCursor->codePoint == quoteChar)
-            {
-                nextCharacter(scanner);
-            }
+            error = true;
         }
         else if (scanner->curCursor->codePoint == quoteChar)
         {
@@ -209,8 +215,72 @@ static void eatQuotedAddressWord(huScanner * scanner)
         else
         {
             nextCharacter(scanner);
+            * wordLen += scanner->curCursor->charLength;
         }
     }
+
+    return error == false;
+}
+
+
+static bool eatHeredocTag(huScanner * scanner, huSize_t * tagLen)
+{
+    bool error = false;
+
+    // The first character is already confirmed caret, so, next please.
+    * tagLen = scanner->curCursor->charLength;
+    nextCharacter(scanner);
+
+    bool eating = true;
+    while (eating)
+    {
+        if (scanner->curCursor->isError ||
+            scanner->curCursor->isEof)
+        {
+            eating = false;
+            error = true;
+        }
+        else
+        {
+            * tagLen += scanner->curCursor->charLength;
+
+            if (scanner->curCursor->codePoint == '^')
+                { eating = false; }
+
+            nextCharacter(scanner);
+        }
+    }
+
+    return error == false;
+}
+
+
+static bool eatHeredocWord(huScanner * scanner, char const * tag, huSize_t tagLen, huSize_t * wordLen)
+{
+    * wordLen = 0;
+    bool error = false;
+
+    bool eating = true;
+    while (eating)
+    {
+        if (scanner->curCursor->isError ||
+            scanner->curCursor->isEof)
+        {
+            eating = false;
+            error = true;
+        }
+        else if (strncmp(scanner->curCursor->character, tag, tagLen) == 0)
+        {
+            eating = false;
+        }
+        else
+        {
+            * wordLen += scanner->curCursor->charLength;
+            nextCharacter(scanner);
+        }
+    }
+
+    return error == false;
 }
 
 
@@ -253,80 +323,78 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
 
     char const * rawWordStart = address + wslen;
     char const * wordStart = rawWordStart;
+    huSize_t wordLen = 0;
     bool quoted = false;
-    bool doubleQuoted = false;
+    char quoteChar = '\0';
+    bool error = false;
+
     switch(scanner.curCursor->codePoint)
     {
     case '\0':
         return node;
     case '"':
         wordStart += 1;
-        eatQuotedAddressWord(& scanner);
-        quoted = true;
-        doubleQuoted = true;
+        error = ! eatQuotedAddressWord(& scanner, & wordStart, & wordLen);
+        quoteChar = '"';
         break;
     case '\'':
         wordStart += 1;
-        eatQuotedAddressWord(& scanner);
-        quoted = true;
+        error = ! eatQuotedAddressWord(& scanner, & wordStart, & wordLen);
+        quoteChar = '\'';
         break;
     case '`':
         wordStart += 1;
-        eatQuotedAddressWord(& scanner);
-        quoted = true;
+        error = ! eatQuotedAddressWord(& scanner, & wordStart, & wordLen);
+        quoteChar = '`';
+        break;
+    case '^':
+        {
+            huSize_t tagLen = 0;
+            char const * tag = scanner.curCursor->character;
+            error = ! eatHeredocTag(& scanner, & tagLen);
+            if (error)
+                { break; }
+            wordStart += tagLen;
+            error = ! eatHeredocWord(& scanner, tag, tagLen, & wordLen);
+            if (error)
+                { break; }
+            error = ! eatHeredocTag(& scanner, & tagLen);
+            quoteChar = '^';
+        }
         break;
     default:
-        eatAddressWord(& scanner);
+        error = ! eatAddressWord(& scanner, & wordLen);
         break;
     }
+
+    if (error)
+        { return HU_NULLNODE; }
 
     huSize_t rawPartLen = scanner.len - wslen;
     if (rawPartLen == 0)
        { return HU_NULLNODE; }
     
-    huSize_t partLen = rawPartLen;
-    if (quoted)
-        { partLen -= 2; }
-    
     huNode const * nextNode = HU_NULLNODE;
+
     // if '..', go up a level if we can
-    if (quoted == false && partLen == 2 && 
+    if (quoteChar == '\0' && wordLen == 2 && 
         wordStart[0] == '.' && wordStart[1] == '.')
             { nextNode = huGetParent(node); }
     else
     {
-        // if numeric, and not quoted, and not oversized, use as an index
-        // (oversized numbers treated as keys will likely simply fail to find anything)
-        char * wordEnd;
-        unsigned long long index = strtoull(wordStart, & wordEnd, 10);
-        if (quoted == false && wordEnd - wordStart == partLen && index <= maxOfType(huSize_t))
-            { nextNode = huGetChildByIndex(node, (huSize_t) index); }
-        else
+        if (quoteChar == '\0')
         {
-            if (doubleQuoted)
-            {
-                // process a quoted string into a proper key
-                char trKey[HUMON_ADDRESS_BLOCKSIZE];
-                char * ptrKey = trKey;
-                huSize_t trCursor = 0;
-                if (partLen >= HUMON_ADDRESS_BLOCKSIZE)   // We have a static buffer, but if it's not big enough, make a sufficiently huge one.
-                    { ptrKey = ourAlloc(& node->trove->allocator, partLen); }
-                // extract the key
-                for (char const * pc = wordStart; pc < wordStart + partLen; ++pc)
-                {
-                    if (* pc == '\\' && pc < wordStart + partLen - 1 && * (pc + 1) == '"')
-                        { trKey[trCursor++] = '"'; pc += 1; }
-                    else
-                        { trKey[trCursor++] = * pc; }
-                }
-                nextNode = huGetChildByKeyN(node, trKey, trCursor);
-                if (partLen >= HUMON_ADDRESS_BLOCKSIZE)   // If we had to make a bigger buffer, dispose of it.
-                    { ourFree(& node->trove->allocator, ptrKey); }
-            }
+            char * wordEnd;
+            unsigned long long index = strtoull(wordStart, & wordEnd, 10);
+            if (quoted == false && wordEnd - wordStart == wordLen && index <= maxOfType(huSize_t))
+                { nextNode = huGetChildByIndex(node, (huSize_t) index); }
             else
-                { nextNode = huGetChildByKeyN(node, wordStart, partLen); }
+                { nextNode = huGetChildByKeyN(node, wordStart, wordLen); }
         }
+        else
+            { nextNode = huGetChildByKeyN(node, wordStart, wordLen); }
     }
+
     // If the key or index is invalid, nextNode wil be set to HU_NULLNODE.
     if (nextNode == HU_NULLNODE)
         { return HU_NULLNODE; }
@@ -410,13 +478,13 @@ static void getNodeAddressRec(huNode const * node, PrintTracker * printer)
     {
         huStringView const * key = & node->keyToken->str;
 
-        //  if key is not quoted, and contains a '/',
-        //      append "
-        //      for the whole key,
-        //          append string up to any " in the string
-        //          if we're at a ",
-        //              append \"
-        //      append "
+        //  if key is not quoted
+        //      if key contains a '/',
+        //          determine the best heredoc string
+        //          append heredoc string
+        //          append string
+        //          append heredoc string
+        //      else
 
         bool isQuoted = node->keyToken->quoteChar != '\0';
 
@@ -425,20 +493,19 @@ static void getNodeAddressRec(huNode const * node, PrintTracker * printer)
             char * slashIdx = memchr(key->ptr, '/', key->size);
             if (slashIdx != NULL)
             {
-                appendString(printer, "\"", 1);
-                char const * blockBegin = key->ptr;
-                for (char const * sp = key->ptr; sp < key->ptr + key->size; ++sp)
+#define HEREDOC_TAG_LEN (16)
+                char heredocTag[HEREDOC_TAG_LEN] = "^^";
+                int foundLen = 2;
+                bool foundOne = ! stringInString(key->ptr, key->size, heredocTag, foundLen);
+                for (int i = 0; foundOne == false; ++i)
                 {
-                    if (* sp == '"')
-                    {
-                        appendString(printer, blockBegin, (huSize_t)(sp - blockBegin));
-                        appendString(printer, "\\\"", 2);
-                        blockBegin = sp + 1;
-                    }
+                    foundLen = snprintf(heredocTag, HEREDOC_TAG_LEN, "^%d^", i);
+                    foundOne = ! stringInString(key->ptr, key->size, heredocTag, foundLen);
                 }
-                appendString(printer, blockBegin, (huSize_t)(key->ptr + key->size - blockBegin));
-                appendString(printer, "\"", 1);
-                return;
+
+                appendString(printer, heredocTag, foundLen);
+                appendString(printer, key->ptr, key->size);
+                appendString(printer, heredocTag, foundLen);
             }
             else
             {
@@ -448,15 +515,20 @@ static void getNodeAddressRec(huNode const * node, PrintTracker * printer)
                     { hasNonDigits = key->ptr[i] < '0' || key->ptr[i] > '9'; }
                 if (hasNonDigits == false)
                 {
-                    appendString(printer, "\"", 1);
+                    appendString(printer, "'", 1);
                     appendString(printer, key->ptr, key->size);
-                    appendString(printer, "\"", 1);
-                    return;
+                    appendString(printer, "'", 1);
+                }
+                else
+                {
+                    appendString(printer, key->ptr, key->size);
                 }
             }
         }
-
-        appendString(printer, key->ptr, key->size);
+        else
+        {
+            appendString(printer, node->keyToken->rawStr.ptr, node->keyToken->rawStr.size);
+        }
     }
 }
 

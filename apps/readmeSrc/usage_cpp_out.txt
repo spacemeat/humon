@@ -48,8 +48,8 @@ Free: #3
 Free: #4
 Free: #5
 Free: #6
-required's address: /bufferSources/"res/\"game\ assets\"/meshes.hu"/required
-relative node address: /pipelineSources/"res/\"game\ assets\"/materials.hu"
+required's address: /bufferSources/'res/"game_assets"/meshes.hu'/required
+relative node address: /renderPlans/^^res/"game_assets"/renderPlan-overland.hu^^/required
 node: /pipelineSources
 node: /pipelineSources
 childNode: /bufferSources
@@ -59,7 +59,6 @@ node: /
 valStr: true
 valBool: 1
 gccVersion: 9.2.1
-toolVersion: 9.2.1
 num annos: 2
 k: numBits  v: 32
 k: numBytes  v: 4

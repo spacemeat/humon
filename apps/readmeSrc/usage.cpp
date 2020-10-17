@@ -92,9 +92,9 @@ using V3 = Version<3>;
 template <>
 struct hu::val<V3>
 {
-    static V3 extract(std::string_view valStr)
+    static V3 extract(hu::Node const & val)
     {
-        return V3(valStr);
+        return V3(val.value().str());
     }
 };
 //!!!
@@ -127,8 +127,12 @@ public:
     int numFrees = 0;
 };
 
-int main()
+int main(int argc, char ** argv)
 {
+    bool update = false;
+    if (argc > 1 && argv[1][0] == '-' && argv[1][1] == 'u')
+        { update = true; }
+
     ostringstream out;
 
     {
@@ -137,8 +141,8 @@ int main()
         if (auto trove = std::get_if<hu::Trove>(& desRes))
         {
             auto extentsNode = trove->nodeByAddress("/assets/brick-diffuse/importData/extents"sv);
-            tuple xyExtents = { extentsNode / 0 / hu::val<int>{}, 
-                                extentsNode / 1 / hu::val<int>{} };
+            tuple xyExtents = { extentsNode / 0 % hu::val<int>{}, 
+                                extentsNode / 1 % hu::val<int>{} };
             // ...
 //!!!
             out << "Extents: (" << get<0>(xyExtents) << ", " << get<1>(xyExtents) << ")\n";
@@ -228,7 +232,7 @@ int main()
         { 
             // ... 
 //!!!
-            out << "foosStuff: " << foosStuff / hu::val<int>{} << "\n";
+            out << "foosStuff: " << foosStuff % hu::val<int>{} << "\n";
         }
 //!!! child6
         string address = node.address();                        /*!!!eol*/out << "address: " << address << "\n";
@@ -243,19 +247,19 @@ int main()
 //!!! addressWeird1
 {
     bufferSources: {
-        res/"game\ assets"/meshes.hu: {
+        'res/"game_assets"/meshes.hu': {
             required: true
             monitoredForChanges: true
         }
     } 
     pipelineSources: {
-        res/"game\ assets"/materials.hu: {
+        `res/"game_assets"/materials.hu`: {
             required: false
             monitoredForChanges: true
         }
     }
     renderPlans: {
-        res/"game\ assets"/renderPlan-overland.hu: {
+        res/"game_assets"/renderPlan-overland.hu: {
             required: true
             monitoredForChanges: true
         }
@@ -269,7 +273,7 @@ int main()
         auto requiredNode = trove / 0 / 0 / "required";             /*!!!eol*/out << "required's address: " << requiredNode.address() << "\n";
 //!!!
 //!!! addressWeird3
-        auto relativeNode = requiredNode.nodeByAddress("../.. / .. /1 / 0"); /*!!!eol*/out << "relative node address: " << relativeNode.address() << "\n";
+        auto relativeNode = requiredNode.nodeByAddress("../../../2/0/required"); /*!!!eol*/out << "relative node address: " << relativeNode.address() << "\n";
 //!!!
 //!!! getNode
         // get the root node
@@ -297,7 +301,7 @@ int main()
         node = trove / "bufferSources" / 0 / "monitoredForChanges";
         string_view valStr = node.value();       /* [1] */          /*!!!eol*/out << "valStr: " << valStr << "\n";            
         // or
-        bool valBool = node / hu::val<bool>{};   /* [2] */          /*!!!eol*/out << "valBool: " << valBool << "\n";
+        bool valBool = node % hu::val<bool>{};   /* [2] */          /*!!!eol*/out << "valBool: " << valBool << "\n";
 //!!!
     }
 
@@ -314,11 +318,7 @@ int main()
 
         auto trove = get<hu::Trove>(hu::Trove::fromString(src));
 //!!! val3
-        auto gccVersion = trove / "dependencies" / "gcc" / hu::val<V3>{}; /*!!!eol*/out << "gccVersion: " << gccVersion << "\n";
-//!!!
-//!!! val4                                                                    
-        auto const literalVersion = "9.2.1";                        
-        auto toolVersion = hu::val<V3>::extract(literalVersion);    /*!!!eol*/out << "toolVersion: " << toolVersion << "\n";
+        auto gccVersion = trove / "dependencies" / "gcc" % hu::val<V3>{}; /*!!!eol*/out << "gccVersion: " << gccVersion << "\n";
 //!!!
     }
 
@@ -426,13 +426,22 @@ int main()
         }
     }
 
-    ifstream expStr("apps/readmeSrc/usage_cpp_out.txt");
-    string expected((istreambuf_iterator<char>(expStr)), istreambuf_iterator<char>());
-    auto output = out.str();
-    if (expected == output)
-        { printf("Copasetic, my sisters and brothers.\n"); return 0; }
+    if (update)
+    {
+        ofstream expStr("apps/readmeSrc/usage_cpp_out.txt");
+        expStr << out.str();
+        printf("Updated expectations.\n");
+    }
     else
-        { printf("Epic fail: %s vs %s", expected.data(), output.data()); return 1; }
+    {
+        ifstream expStr("apps/readmeSrc/usage_cpp_out.txt");
+        string expected((istreambuf_iterator<char>(expStr)), istreambuf_iterator<char>());
+        auto output = out.str();
+        if (expected == output)
+            { printf("Copasetic, my sisters and brothers.\n"); return 0; }
+        else
+            { printf("Epic fail: \n%s\n----vs----\n%s", expected.data(), output.data()); return 1; }
+    }
 
     return 0;
 }

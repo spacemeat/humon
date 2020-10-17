@@ -1971,7 +1971,7 @@ TEST(huGetAddress, funky)
     char * s = new char[addressLen + 1];
     s[addressLen] = '\0';
     huGetAddress(a.a, s, & addressLen);
-    auto exp = "/\"/\"";
+    auto exp = "/^^/^^";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     POINTERS_EQUAL(a.a, huGetNodeByAddressN(a.trove, s, addressLen));
@@ -1982,7 +1982,7 @@ TEST(huGetAddress, funky)
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
     huGetAddress(a.b, s, & addressLen);
-    exp = "/\"a/b\"";
+    exp = "/^^a/b^^";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     POINTERS_EQUAL(a.b, huGetNodeByAddressN(a.trove, s, addressLen));
@@ -1993,7 +1993,7 @@ TEST(huGetAddress, funky)
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
     huGetAddress(a.c, s, & addressLen);
-    exp = "/\"/b\"";
+    exp = "/^^/b^^";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     POINTERS_EQUAL(a.c, huGetNodeByAddressN(a.trove, s, addressLen));
@@ -2004,7 +2004,7 @@ TEST(huGetAddress, funky)
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
     huGetAddress(a.d, s, & addressLen);
-    exp = "/\"a/\"";
+    exp = "/^^a/^^";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     POINTERS_EQUAL(a.d, huGetNodeByAddressN(a.trove, s, addressLen));
@@ -2015,7 +2015,7 @@ TEST(huGetAddress, funky)
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
     huGetAddress(a.e, s, & addressLen);
-    exp = "/\"/\\\"foo\\\"\"";      //        /"/\"foo\"
+    exp = R"(/^^/"foo"^^)";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     POINTERS_EQUAL(a.e, huGetNodeByAddressN(a.trove, s, addressLen));
@@ -2026,7 +2026,7 @@ TEST(huGetAddress, funky)
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
     huGetAddress(a.f, s, & addressLen);
-    exp = "/\"/\\\"foo'bar'\\\"\"";
+    exp = R"(/^^/"foo'bar'"^^)";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     POINTERS_EQUAL(a.f, huGetNodeByAddressN(a.trove, s, addressLen));
@@ -2037,7 +2037,7 @@ TEST(huGetAddress, funky)
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
     huGetAddress(a.g, s, & addressLen);
-    exp = "/\"/\\\"foo'bar`baz`'\\\"\"";
+    exp = R"(/^^/"foo'bar`baz`'"^^)";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     POINTERS_EQUAL(a.g, huGetNodeByAddressN(a.trove, s, addressLen));
@@ -2048,7 +2048,7 @@ TEST(huGetAddress, funky)
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
     huGetAddress(a.h, s, & addressLen);
-    exp = "/\"/'foo`bar\\\"baz\\\"`'\"";
+    exp = R"(/^^/'foo`bar"baz"`'^^)";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     POINTERS_EQUAL(a.h, huGetNodeByAddressN(a.trove, s, addressLen));
@@ -2059,7 +2059,7 @@ TEST(huGetAddress, funky)
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
     huGetAddress(a.i, s, & addressLen);
-    exp = "/\"/`foo\\\"bar'baz'\\\"`\"";
+    exp = R"(/^^/`foo"bar'baz'"`^^)";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     POINTERS_EQUAL(a.i, huGetNodeByAddressN(a.trove, s, addressLen));
@@ -2070,7 +2070,7 @@ TEST(huGetAddress, funky)
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
     huGetAddress(a.j, s, & addressLen);
-    exp = "/\"a\\\"foo\\\"/\"";
+    exp = R"(/^^a"foo"/^^)";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     POINTERS_EQUAL(a.j, huGetNodeByAddressN(a.trove, s, addressLen));
@@ -2081,7 +2081,7 @@ TEST(huGetAddress, funky)
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
     huGetAddress(a.k, s, & addressLen);
-    exp = "/\"a\\\"foo'bar'\\\"/\"";
+    exp = R"(/^^a"foo'bar'"/^^)";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     POINTERS_EQUAL(a.k, huGetNodeByAddressN(a.trove, s, addressLen));
@@ -2092,7 +2092,7 @@ TEST(huGetAddress, funky)
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
     huGetAddress(a.l, s, & addressLen);
-    exp = "/\"a\\\"foo'bar`baz`'\\\"/\"";
+    exp = R"(/^^a"foo'bar`baz`'"/^^)";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     POINTERS_EQUAL(a.l, huGetNodeByAddressN(a.trove, s, addressLen));
@@ -2103,7 +2103,7 @@ TEST(huGetAddress, funky)
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
     huGetAddress(a.m, s, & addressLen);
-    exp = "/\"a'foo`bar\\\"baz\\\"`'/\"";
+    exp = R"(/^^a'foo`bar"baz"`'/^^)";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     POINTERS_EQUAL(a.m, huGetNodeByAddressN(a.trove, s, addressLen));
@@ -2114,7 +2114,7 @@ TEST(huGetAddress, funky)
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
     huGetAddress(a.n, s, & addressLen);
-    exp = "/\"a`foo\\\"bar'baz'\\\"`/\"";
+    exp = R"(/^^a`foo"bar'baz'"`/^^)";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     POINTERS_EQUAL(a.n, huGetNodeByAddressN(a.trove, s, addressLen));
@@ -2125,7 +2125,7 @@ TEST(huGetAddress, funky)
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
     huGetAddress(a.o, s, & addressLen);
-    exp = "/\"0\"";
+    exp = R"(/'0')";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     POINTERS_EQUAL(a.o, huGetNodeByAddressN(a.trove, s, addressLen));
@@ -2147,7 +2147,7 @@ TEST(huGetAddress, funky)
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
     huGetAddress(a.q, s, & addressLen);
-    exp = "/\"/\\\"0123456789012345678901234567890123456789\\\"\"";
+    exp = R"(/^^/"0123456789012345678901234567890123456789"^^)";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     POINTERS_EQUAL(a.q, huGetNodeByAddressN(a.trove, s, addressLen));
@@ -2158,7 +2158,7 @@ TEST(huGetAddress, funky)
     s = new char[addressLen + 1];
     s[addressLen] = '\0';
     huGetAddress(a.r, s, & addressLen);
-    exp = "/\"a\\\"0123456789012345678901234567890123456789\\\"/\"";
+    exp = R"(/^^a"0123456789012345678901234567890123456789"/^^)";
     LONGS_EQUAL(strlen(exp), addressLen);
     STRNCMP_EQUAL(exp, s, addressLen);
     POINTERS_EQUAL(a.r, huGetNodeByAddressN(a.trove, s, addressLen));
@@ -3692,7 +3692,7 @@ static std::string makeFileName(std::string_view path, int WhitespaceFormat, boo
 {
     std::string format = ".pp";
     if (WhitespaceFormat == HU_WHITESPACEFORMAT_CLONED)
-        { format = ".px"; }
+        { format = ".pc"; }
     else if (WhitespaceFormat == HU_WHITESPACEFORMAT_MINIMAL)
         { format = ".pm"; }
 
@@ -3902,19 +3902,29 @@ TEST(huSerializeTrove, pathological)
     }
 
     strLen = 1024;
-    huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, false, NULL, true, NULL, 1, false);
+    huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_MINIMAL, 4, false, false, NULL, true, NULL, 1, false);
     error = huSerializeTrove(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
     strLen = 1024;
-    huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, false, NULL, true, "\n", 0, false);
+    huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_MINIMAL, 4, false, false, NULL, true, "\n", 0, false);
+    error = huSerializeTrove(l.trove, NULL, & strLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
+
+    strLen = 1024;
+    huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_PRETTY, 4, false, false, NULL, true, NULL, 1, false);
+    error = huSerializeTrove(l.trove, NULL, & strLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
+
+    strLen = 1024;
+    huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_PRETTY, 4, false, false, NULL, true, "\n", 0, false);
     error = huSerializeTrove(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
     if (isSignedType(huCol_t))
     {
         strLen = 1024;
-        huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, false, NULL, true, "\n", -1, false);
+        huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_PRETTY, 4, false, false, NULL, true, "\n", -1, false);
         error = huSerializeTrove(l.trove, NULL, & strLen, & params);
         LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
     }

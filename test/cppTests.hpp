@@ -82,8 +82,9 @@ public:
 template <>
 struct hu::val<TypeContainer>
 {
-    static inline TypeContainer extract(std::string_view valStr)
+    static inline TypeContainer extract(hu::Node const & val)
     {
+        auto const & valStr = val.value().str();
         if (valStr == "25.25")
             { return {1337}; }
         else
@@ -101,27 +102,24 @@ TEST(cppSugar, sugar)
     tn = m.c; ttn = m.trove / 2 / 0 / 0;
     CHECK_EQUAL_TEXT(tn, ttn, "/c");
 
-    auto nint = t.trove / 0 / hu::val<int>{};
+    auto nint = t.trove / 0 % hu::val<int>{};
     LONGS_EQUAL_TEXT(213, nint, "int");
-    auto nfloat = t.trove / 1 / hu::val<float>{};
+    auto nfloat = t.trove / 1 % hu::val<float>{};
     CHECK_EQUAL_TEXT(25.25f, nfloat, "float");
-    auto ndouble = t.trove / 2 / hu::val<double>{};
+    auto ndouble = t.trove / 2 % hu::val<double>{};
     DOUBLES_EQUAL_TEXT(25.25, ndouble, 0.0, "double");
-    auto nstring = t.trove / 3 / hu::val<std::string>{};
+    auto nstring = t.trove / 3 % hu::val<std::string>{};
     STRNCMP_EQUAL_TEXT("foo", nstring.data(), 3, "string");
-    auto nbool = t.trove / 4 / hu::val<bool>{};
+    auto nbool = t.trove / 4 % hu::val<bool>{};
     LONGS_EQUAL_TEXT(true, nbool, "bool");
 
     CHECK_TEXT(m.bp % 0, "bp has child");
     CHECK_TEXT(false == m.b % 0, "b has no child");
 
-    LONGS_EQUAL_TEXT(1337, t.trove / 2 / hu::val<TypeContainer>{}, "custom hu::value good");
-    LONGS_EQUAL_TEXT(0xbadf00d, t.trove / 0 / hu::val<TypeContainer>{}, "custom hu::value no good");
+    LONGS_EQUAL_TEXT(1337, t.trove / 2 % hu::val<TypeContainer>{}, "custom hu::value good");
+    LONGS_EQUAL_TEXT(0xbadf00d, t.trove / 0 % hu::val<TypeContainer>{}, "custom hu::value no good");
 
-    LONGS_EQUAL_TEXT(1337, hu::val<TypeContainer>::extract("25.25"), "static extract - good");
-    LONGS_EQUAL_TEXT(0xbadf00d, hu::val<TypeContainer>::extract("yeehaw"), "static extract - fail");
-
-    LONGS_EQUAL_TEXT(1337, t.trove / 1 / hu::Parent {} / 2 / hu::val<TypeContainer>{}, "custom hu::value good");
+    LONGS_EQUAL_TEXT(1337, t.trove / 1 / hu::Parent {} / 2 % hu::val<TypeContainer>{}, "custom hu::value good");
 
     auto spuriousNode = t.trove / "big" / "fat" / 0 / "sloppy" / "wet" / 1;
     CHECK_TEXT(spuriousNode.isNullish(), "wildly wrong path");    

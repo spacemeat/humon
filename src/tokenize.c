@@ -289,15 +289,6 @@ static void eatWord(huScanner * scanner)
             scanner->curCursor->isError)
             { eating = false; }
 
-        else if (scanner->curCursor->codePoint == '\\')
-        {
-            nextCharacter(scanner);
-            if (scanner->curCursor->isEof == false &&
-                scanner->curCursor->codePoint != '\n')
-            {
-                nextCharacter(scanner);
-            }
-        }
         else if (scanner->curCursor->codePoint == '/')
         {
             // A comment abutting an unquoted string should still delimit.
@@ -350,31 +341,12 @@ static void eatQuotedWord(huScanner * scanner)
             recordTokenizeError(scanner->trove, HU_ERROR_UNFINISHEDQUOTE, 
                 tokenStartLine, tokenStartCol);
         }
-        else if (scanner->curCursor->isNewline)
-        {
-            nextCharacter(scanner);
-        }
         else
         {
-            if (scanner->curCursor->codePoint == '\\')
-            {
-                nextCharacter(scanner);
+            if (scanner->curCursor->codePoint == quoteChar)
+                { eating = false; }
 
-                // skip over the escaped quote so we don't encounter it and end the string
-                if (scanner->curCursor->codePoint == quoteChar)
-                {
-                    nextCharacter(scanner);
-                }
-            }
-            else if (scanner->curCursor->codePoint == quoteChar)
-            {
-                nextCharacter(scanner);
-                eating = false;
-            }
-            else
-            {
-                nextCharacter(scanner);
-            }
+            nextCharacter(scanner);
         }
     }
 }
