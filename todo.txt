@@ -1,5 +1,5 @@
 DONE THIS CHECKIN:
-Fixed legacy bug in hu::Node::operator%(hu::val<T>)
+Reintroduced extraction by string. Provide one if you want to convert string to T.
 
 TODO:
 P1 separate the python package into new repo

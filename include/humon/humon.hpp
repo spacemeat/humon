@@ -793,10 +793,15 @@ namespace hu
     template <class T>
     struct val<T, typename std::enable_if_t<std::is_integral_v<T>>>
     {
-        /// Extract the value from the string.
+        /// Extract the value from the node.
         static inline T extract(Node const & node) HUMON_PATH_NOEXCEPT
         {
-            auto const & valStr = node.value().str();
+            return extract(node.value().str());
+        }
+
+        /// Extract the value from the string.
+        static inline T extract(std::string_view valStr) HUMON_PATH_NOEXCEPT
+        {
             T value;
             auto [p, ec] = std::from_chars(valStr.data(), valStr.data() + valStr.size(), value);
             if (ec == std::errc())
@@ -810,10 +815,15 @@ namespace hu
     template <class T>
     struct val<T, typename std::enable_if_t<std::is_floating_point_v<T>>>
     {
-        /// Extract the value from the string.
+        /// Extract the value from the node.
         static inline T extract(Node const & node) HUMON_PATH_NOEXCEPT
         {
-            auto const & valStr = node.value().str();
+            return extract(node.value().str());
+        }
+
+        /// Extract the value from the string.
+        static inline T extract(std::string_view valStr) HUMON_PATH_NOEXCEPT
+        {
             // TODO: (gcc): Once std::from_chars(..T&) is complete, use this or remove this specialization. We're making a useless string here and it maketh me to bite metal. Don't forget to HUMON_NOEXCEPT.
     #if 0
             T val;
@@ -832,10 +842,15 @@ namespace hu
     template <>
     struct val<std::string_view>
     {
-        /// Extract the value from the string.
+        /// Extract the value from the node.
         static inline std::string_view extract(Node const & node) HUMON_PATH_NOEXCEPT
         {
-            auto const & valStr = node.value().str();
+            return extract(node.value().str());
+        }
+
+        /// Extract the value from the string.
+        static inline std::string_view extract(std::string_view valStr) HUMON_PATH_NOEXCEPT
+        {
             return valStr;
         }
     };
@@ -844,10 +859,15 @@ namespace hu
     template <>
     struct val<std::string>
     {
-        /// Extract the value from the string.
+        /// Extract the value from the node.
         static inline std::string extract(Node const & node) HUMON_PATH_NOEXCEPT
         {
-            auto const & valStr = node.value().str();
+            return extract(node.value().str());
+        }
+
+        /// Extract the value from the string.
+        static inline std::string extract(std::string_view valStr) HUMON_PATH_NOEXCEPT
+        {
             return std::string(valStr);
         }
     };
@@ -856,10 +876,15 @@ namespace hu
     template <>
     struct val<bool>
     {
-        /// Extract the value from the string.
+        /// Extract the value from the node.
         static inline bool extract(Node const & node) HUMON_PATH_NOEXCEPT
         {
-            auto const & valStr = node.value().str();
+            return extract(node.value().str());
+        }
+
+        /// Extract the value from the string.
+        static inline bool extract(std::string_view valStr) HUMON_PATH_NOEXCEPT
+        {
             if (valStr[0] != 't' && valStr[0] != 'T')
                 { return false; }
             
