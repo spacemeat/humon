@@ -1,8 +1,0 @@
-Done:
-
-Doing:
-PyDoc strings with foo => bar type text.
-Use python memory management
-Trove_findNodesByCommentContaining and others aren't using kwargs
-Do basic test suite hitting all function points
-Version in humon module from include/humon/version.h
