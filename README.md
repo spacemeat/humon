@@ -4,7 +4,7 @@
 
 *Note: Certain language in this document assumes you are human.*
 
-Latest version: 0.1.0
+Latest version: 1.0.0
 
 ## Introduction
 
@@ -909,7 +909,7 @@ For Linux development, you can install a successful build with `{humon}/install-
 The following are built in Linux:
 
 * libhumon.a               - static library for Linux
-* libhumon.so.0.1.0        - shared library for Linux
+* libhumon.so.1.0.0        - shared library for Linux
 * test                     - test binary
 * hux                      - a command-line tool for transformatting and validating Humon data
 * readmeSrc-c              - a small sample with example code from this README.md

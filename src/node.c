@@ -903,7 +903,7 @@ huToken const * huGetCommentsContainingN(huNode const * node, char const * conta
     {
         huToken const * comm = huGetComment(node, * cursor);
         if (stringInString(comm->str.ptr, comm->str.size, 
-                containedText, containedTextLen))
+            containedText, containedTextLen))
         {
             * cursor += 1;
             return comm;
