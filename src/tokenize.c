@@ -204,16 +204,33 @@ void eatWs(huScanner * scanner)
 }
 
 
+void eatLineWs(huScanner * scanner)
+{
+    bool eating = true;
+    while (eating)
+    {
+        if (scanner->curCursor->isError)
+            { eating = false; }
+        else if (scanner->curCursor->isSpace ||
+                 scanner->curCursor->isTab)
+            { nextCharacter(scanner); }
+        else
+            { eating = false; }
+    }
+}
+
+
 static void eatDoubleSlashComment(huScanner * scanner, huSize_t * offsetIn)
 {
-    huSize_t len = scanner->len;
+    //huSize_t len = scanner->len;
 
     // The first two characters are already confirmed //, so, next please.
     nextCharacter(scanner);
     nextCharacter(scanner);
 
-    eatWs(scanner);
-    * offsetIn = scanner->len - len;
+    eatLineWs(scanner);
+    // * offsetIn = scanner->len - len;
+    (void) offsetIn;
 
     bool eating = true;
     while (eating)
@@ -531,7 +548,8 @@ void tokenizeTrove(huTrove * trove)
             {
                 huSize_t offsetIn = 0;
                 eatDoubleSlashComment(& scanner, & offsetIn);
-                allocNewToken(trove, HU_TOKENKIND_COMMENT, tokenStart, scanner.len - len, line, col, line, scanner.col, offsetIn, 0, '\0');
+                allocNewToken(trove, HU_TOKENKIND_COMMENT, tokenStart, 
+                    scanner.len - len, line, col, line, scanner.col, offsetIn, 0, '\0');
             }
             else if (scanner.nextCursor->codePoint == '*')
             {

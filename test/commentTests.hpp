@@ -57,3 +57,39 @@ TEST(comments, associations)
     comments = t.k10.commentsContaining("- 1");
     LONGS_EQUAL_TEXT(11, comments.size(), "/k10 has 11 -1 comments");
 }
+
+
+TEST_GROUP(divergentComments)
+{
+    std::string_view humon = R"(
+{
+    foo: [
+        a // 
+        b //
+        c
+    ]
+}
+)"sv;
+
+    void setup()
+    {
+    }
+
+    void teardown()
+    {
+    }
+};
+
+TEST(divergentComments, emptyComment)
+{
+    std::optional<hu::Trove> trove;
+
+    hu::DeserializeResult desRes = hu::Trove::fromString(humon.data());
+    auto pt = std::get_if<hu::Trove>(& desRes);
+    CHECK_TEXT(pt != NULL, "Bad humon!");
+    trove = std::move(*pt);
+    LONGS_EQUAL_TEXT(3, (trove->root() / "foo").numChildren(), "Invalid number of children.");
+    CHECK_TEXT(trove->root()/"foo"/0%hu::val<std::string_view>{} == "a", "a failed");
+    CHECK_TEXT(trove->root()/"foo"/1%hu::val<std::string_view>{} == "b", "a failed");
+    CHECK_TEXT(trove->root()/"foo"/2%hu::val<std::string_view>{} == "c", "a failed");
+}

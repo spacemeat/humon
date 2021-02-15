@@ -4,7 +4,7 @@
 
 *Note: Certain language in this document assumes you are human.*
 
-Latest version: 1.0.0
+Latest version: 1.0.1
 
 ## Introduction
 
@@ -774,22 +774,11 @@ Once loaded, a Humon trove does not move or change. This has implications:
 Normally, trove and node functions that return other nodes or tokens will not throw exceptions on bad parameters or lookup terms, or if they're nullish objects. Instead they just return other nullish objects or degenerate values. In the C++ API, you can check `isNullish()` on `hu::Trove`, `hu::Node`, and `hu::Token` objects to see whether they're managing null values. Most of the functions are marked `noexcept` by default as well.
 
 You can turn turn on exceptions for the C++ API. Before your `#include <humon/humon.hpp>` declaration, define any of these:
-* `#define HUMON_USE_NULLISH_EXCEPTIONS` This will cause nullish `hu::Token` and `hu::Node` objects to throw when their member functions are called, instead of returning other nullish objects.
 * `#define HUMON_USE_NODE_PATH_EXCEPTIONS` This will cause  `hu::Trove::operator/` and `hu::Node::operator/` to throw exceptions instead of returning nullish objects when called with bad indices or keys. It can help you track down erroneous lookups.
-* `#define HUMON_SUPPRESS_NOEXCEPT` This turns off `noexcept` on most member functions, causing exceptions to be thrown instead of terminating the program.
-* `#define HUMON_SUPPRESS_PATH_NOEXCEPT` This turns off `noexcept` on `hu::Trove::operator/` or `hu::Node::operator/` calls, allowing the program to throw instead of terminate when bad lookups occur.
 
-So, if you want bad lookup sequences to throw exceptions, but all other functions to terminate the program when misused, you might write this:
+So, if you want bad lookups to throw exceptions, but all other functions to behave normally, you'd do this:
 
-    #define HUMON_USE_NULLISH_EXCEPTIONS
-    // By not suppressing noexcept, those functions that fail by
-    // throwing will instead just crash the program.
-
-    // But here we allow the path functions to throw instead of
-    // crash, since we might actually want to handle it with code.
     #define HUMON_USE_NODE_PATH_EXCEPTIONS
-    #define HUMON_SUPPRESS_PATH_NOEXCEPT
-
     #include <humon/humon.hpp>
 
 **Objects in dicts remain in serial order.**
@@ -909,7 +898,7 @@ For Linux development, you can install a successful build with `{humon}/install-
 The following are built in Linux:
 
 * libhumon.a               - static library for Linux
-* libhumon.so.1.0.0        - shared library for Linux
+* libhumon.so.1.0.1        - shared library for Linux
 * test                     - test binary
 * hux                      - a command-line tool for transformatting and validating Humon data
 * readmeSrc-c              - a small sample with example code from this README.md

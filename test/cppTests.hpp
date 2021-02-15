@@ -195,10 +195,10 @@ TEST(cppSugar, comments)
 {
     auto tcs = m.trove.allTroveComments();
     LONGS_EQUAL(2, tcs.size());
-    auto str = "This is a trove comment."sv;
+    auto str = "// This is a trove comment."sv;
     LONGS_EQUAL(str.size(), std::get<0>(tcs[0]).str().size());
     MEMCMP_EQUAL(str.data(), std::get<0>(tcs[0]).str().data(), str.size());
-    str = "This is also a trove comment."sv;
+    str = "// This is also a trove comment."sv;
     LONGS_EQUAL(str.size(), std::get<0>(tcs[1]).str().size());
     MEMCMP_EQUAL(str.data(), std::get<0>(tcs[1]).str().data(), str.size());
 

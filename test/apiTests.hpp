@@ -1224,45 +1224,45 @@ TEST(huGetComment, lists)
 {
     CHECK(huGetComment(d.a, 0) != NULL);
     auto comm = huGetComment(l.a, 0)->str;
-    auto exp = "This is a aaaa right here.";
+    auto exp = "// This is a aaaa right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "a.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.ptr, comm.size, "a.comm 0 == exp");
     CHECK(huGetComment(l.a, 0) != NULL);
     comm = huGetComment(l.a, 1)->str;
-    exp = "aaaa";
+    exp = "// aaaa";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "a.comm 1 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.ptr, comm.size, "a.comm 1 == exp");
 
     comm = huGetComment(l.bp, 0)->str;
-    exp = "This is a bp right here.";
+    exp = "// This is a bp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "bp.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.ptr, comm.size, "bp.comm 0 == exp");
     comm = huGetComment(l.bp, 1)->str;
-    exp = "bp";
+    exp = "// bp";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "bp.comm 1 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.ptr, comm.size, "bp.comm 1 == exp");
 
     comm = huGetComment(l.b, 0)->str;
-    exp = "bbbb";
+    exp = "// bbbb";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "b.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.ptr, comm.size, "b.comm 0 == exp");
 
     comm = huGetComment(l.cpp, 0)->str;
-    exp = "This is a cpp right here.";
+    exp = "// This is a cpp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cpp.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.ptr, comm.size, "cpp.comm 0 == exp");
     comm = huGetComment(l.cpp, 1)->str;
-    exp = "cpp";
+    exp = "// cpp";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cpp.comm 1 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.ptr, comm.size, "cpp.comm 1 == exp");
 
     comm = huGetComment(l.cp, 0)->str;
-    exp = "cp";
+    exp = "// cp";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cp.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.ptr, comm.size, "cp.comm 0 == exp");
 
     comm = huGetComment(l.c, 0)->str;
-    exp = "cccc";
+    exp = "// cccc";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "c.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.ptr, comm.size, "c.comm 0 == exp");
 }
@@ -1271,45 +1271,45 @@ TEST(huGetComment, dicts)
 {
     CHECK(huGetComment(d.a, 0) != NULL);
     auto comm = huGetComment(d.a, 0)->str;
-    auto exp = "This is a aaaa right here.";
+    auto exp = "// This is a aaaa right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "a.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.ptr, comm.size, "a.comm 0 == exp");
     CHECK(huGetComment(d.a, 1) != NULL);
     comm = huGetComment(d.a, 1)->str;
-    exp = "aaaa";
+    exp = "// aaaa";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "a.comm 1 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.ptr, comm.size, "a.comm 1 == exp");
 
     comm = huGetComment(d.bp, 0)->str;
-    exp = "This is a bp right here.";
+    exp = "// This is a bp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "bp.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.ptr, comm.size, "bp.comm 0 == exp");
     comm = huGetComment(d.bp, 1)->str;
-    exp = "bp";
+    exp = "// bp";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "bp.comm 1 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.ptr, comm.size, "bp.comm 1 == exp");
 
     comm = huGetComment(d.b, 0)->str;
-    exp = "bbbb";
+    exp = "// bbbb";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "b.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.ptr, comm.size, "b.comm 0 == exp");
 
     comm = huGetComment(d.cpp, 0)->str;
-    exp = "This is a cpp right here.";
+    exp = "// This is a cpp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cpp.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.ptr, comm.size, "cpp.comm 0 == exp");
     comm = huGetComment(d.cpp, 1)->str;
-    exp = "cpp";
+    exp = "// cpp";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cpp.comm 1 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.ptr, comm.size, "cpp.comm 1 == exp");
 
     comm = huGetComment(d.cp, 0)->str;
-    exp = "cp";
+    exp = "// cp";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "cp.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.ptr, comm.size, "cp.comm 0 == exp");
 
     comm = huGetComment(d.c, 0)->str;
-    exp = "cccc";
+    exp = "// cccc";
     LONGS_EQUAL_TEXT(strlen(exp), comm.size, "c.comm 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm.ptr, comm.size, "c.comm 0 == exp");
 }
@@ -1452,12 +1452,12 @@ TEST(huGetCommentsContaining, lists)
     huSize_t cursor = 0;
     huToken const * comm = huGetCommentsContainingZ(l.a, "aaa", & cursor);
     CHECK(comm != HU_NULLTOKEN);
-    auto exp = "This is a aaaa right here.";
+    auto exp = "// This is a aaaa right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "a.gcc aaa 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "a.gcc aaa 0 == exp");
     comm = huGetCommentsContainingZ(l.a, "aaa", & cursor);
     CHECK(comm != HU_NULLTOKEN);
-    exp = "aaaa";
+    exp = "// aaaa";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "a.gcc aaa 1 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "a.gcc aaa 1 == exp");
     comm = huGetCommentsContainingZ(l.a, "aaa", & cursor);
@@ -1466,7 +1466,7 @@ TEST(huGetCommentsContaining, lists)
     cursor = 0;
     comm = huGetCommentsContainingZ(l.a, "right here", & cursor);
     CHECK(comm != HU_NULLTOKEN);
-    exp = "This is a aaaa right here.";
+    exp = "// This is a aaaa right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "a.gcc aaa 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "a.gcc aaa 0 == exp");
     comm = huGetCommentsContainingZ(l.a, "right here", & cursor);
@@ -1475,12 +1475,12 @@ TEST(huGetCommentsContaining, lists)
     cursor = 0;
     comm = huGetCommentsContainingZ(l.bp, "bp", & cursor);
     CHECK(comm != HU_NULLTOKEN);
-    exp = "This is a bp right here.";
+    exp = "// This is a bp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "bp.gcc bp 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "bp.gcc bp 0 == exp");
     comm = huGetCommentsContainingZ(l.bp, "bp", & cursor);
     CHECK(comm != HU_NULLTOKEN);
-    exp = "bp";
+    exp = "// bp";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "bp.gcc bp 1 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "bp.gcc bp 1 == exp");
     comm = huGetCommentsContainingZ(l.bp, "bp", & cursor);
@@ -1489,7 +1489,7 @@ TEST(huGetCommentsContaining, lists)
     cursor = 0;
     comm = huGetCommentsContainingZ(l.bp, "right here", & cursor);
     CHECK(comm != HU_NULLTOKEN);
-    exp = "This is a bp right here.";
+    exp = "// This is a bp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "bp.gcc bp 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "bp.gcc bp 0 == exp");
     comm = huGetCommentsContainingZ(l.bp, "right here", & cursor);
@@ -1498,7 +1498,7 @@ TEST(huGetCommentsContaining, lists)
     cursor = 0;
     comm = huGetCommentsContainingZ(l.b, "bbb", & cursor);
     CHECK(comm != HU_NULLTOKEN);
-    exp = "bbbb";
+    exp = "// bbbb";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "b.gcc bbb 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "b.gcc bbb 0 == exp");
     comm = huGetCommentsContainingZ(l.b, "bbb", & cursor);
@@ -1507,12 +1507,12 @@ TEST(huGetCommentsContaining, lists)
     cursor = 0;
     comm = huGetCommentsContainingZ(l.cpp, "cpp", & cursor);
     CHECK(comm != HU_NULLTOKEN);
-    exp = "This is a cpp right here.";
+    exp = "// This is a cpp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cpp.gcc cpp 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "cpp.gcc cpp 0 == exp");
     comm = huGetCommentsContainingZ(l.cpp, "cpp", & cursor);
     CHECK(comm != HU_NULLTOKEN);
-    exp = "cpp";
+    exp = "// cpp";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cpp.gcc cpp 1 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "cpp.gcc cpp 1 == exp");
     comm = huGetCommentsContainingZ(l.cpp, "cpp", & cursor);
@@ -1521,7 +1521,7 @@ TEST(huGetCommentsContaining, lists)
     cursor = 0;
     comm = huGetCommentsContainingZ(l.cpp, "right here", & cursor);
     CHECK(comm != HU_NULLTOKEN);
-    exp = "This is a cpp right here.";
+    exp = "// This is a cpp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cpp.gcc cpp 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "cpp.gcc cpp 0 == exp");
     comm = huGetCommentsContainingZ(l.cpp, "right here", & cursor);
@@ -1530,7 +1530,7 @@ TEST(huGetCommentsContaining, lists)
     cursor = 0;
     comm = huGetCommentsContainingZ(l.cp, "cp", & cursor);
     CHECK(comm != HU_NULLTOKEN);
-    exp = "cp";
+    exp = "// cp";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cp.gcc cp 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "cp.gcc cp 0 == exp");
     comm = huGetCommentsContainingZ(l.cp, "cp", & cursor);
@@ -1539,7 +1539,7 @@ TEST(huGetCommentsContaining, lists)
     cursor = 0;
     comm = huGetCommentsContainingZ(l.c, "ccc", & cursor);
     CHECK(comm != HU_NULLTOKEN);
-    exp = "cccc";
+    exp = "// cccc";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "c.gcc ccc 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "cp.gcc ccc 0 == exp");
     comm = huGetCommentsContainingZ(l.c, "ccc", & cursor);
@@ -1551,12 +1551,12 @@ TEST(huGetCommentsContaining, dicts)
     huSize_t cursor = 0;
     huToken const * comm = huGetCommentsContainingZ(d.a, "aaa", & cursor);
     CHECK(comm != HU_NULLTOKEN);
-    auto exp = "This is a aaaa right here.";
+    auto exp = "// This is a aaaa right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "a.gcc aaa 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "a.gcc aaa 0 == exp");
     comm = huGetCommentsContainingZ(d.a, "aaa", & cursor);
     CHECK(comm != HU_NULLTOKEN);
-    exp = "aaaa";
+    exp = "// aaaa";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "a.gcc aaa 1 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "a.gcc aaa 1 == exp");
     comm = huGetCommentsContainingZ(d.a, "aaa", & cursor);
@@ -1565,7 +1565,7 @@ TEST(huGetCommentsContaining, dicts)
     cursor = 0;
     comm = huGetCommentsContainingZ(d.a, "right here", & cursor);
     CHECK(comm != HU_NULLTOKEN);
-    exp = "This is a aaaa right here.";
+    exp = "// This is a aaaa right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "a.gcc aaa 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "a.gcc aaa 0 == exp");
     comm = huGetCommentsContainingZ(d.a, "right here", & cursor);
@@ -1574,11 +1574,11 @@ TEST(huGetCommentsContaining, dicts)
     cursor = 0;
     comm = huGetCommentsContainingZ(d.bp, "bp", & cursor);
     CHECK(comm != HU_NULLTOKEN);
-    exp = "This is a bp right here.";
+    exp = "// This is a bp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "bp.gcc bp 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "bp.gcc bp 0 == exp");
     comm = huGetCommentsContainingZ(d.bp, "bp", & cursor);
-    exp = "bp";
+    exp = "// bp";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "bp.gcc bp 1 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "bp.gcc bp 1 == exp");
     comm = huGetCommentsContainingZ(d.bp, "bp", & cursor);
@@ -1587,7 +1587,7 @@ TEST(huGetCommentsContaining, dicts)
     cursor = 0;
     comm = huGetCommentsContainingZ(d.bp, "right here", & cursor);
     CHECK(comm != HU_NULLTOKEN);
-    exp = "This is a bp right here.";
+    exp = "// This is a bp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "bp.gcc bp 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "bp.gcc bp 0 == exp");
     comm = huGetCommentsContainingZ(d.bp, "right here", & cursor);
@@ -1596,7 +1596,7 @@ TEST(huGetCommentsContaining, dicts)
     cursor = 0;
     comm = huGetCommentsContainingZ(d.b, "bbb", & cursor);
     CHECK(comm != HU_NULLTOKEN);
-    exp = "bbbb";
+    exp = "// bbbb";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "b.gcc bbb 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "b.gcc bbb 0 == exp");
     comm = huGetCommentsContainingZ(d.b, "bbb", & cursor);
@@ -1605,12 +1605,12 @@ TEST(huGetCommentsContaining, dicts)
     cursor = 0;
     comm = huGetCommentsContainingZ(d.cpp, "cpp", & cursor);
     CHECK(comm != HU_NULLTOKEN);
-    exp = "This is a cpp right here.";
+    exp = "// This is a cpp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cpp.gcc cpp 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "cpp.gcc cpp 0 == exp");
     comm = huGetCommentsContainingZ(d.cpp, "cpp", & cursor);
     CHECK(comm != HU_NULLTOKEN);
-    exp = "cpp";
+    exp = "// cpp";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cpp.gcc cpp 1 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "cpp.gcc cpp 1 == exp");
     comm = huGetCommentsContainingZ(d.cpp, "cpp", & cursor);
@@ -1619,7 +1619,7 @@ TEST(huGetCommentsContaining, dicts)
     cursor = 0;
     comm = huGetCommentsContainingZ(d.cpp, "right here", & cursor);
     CHECK(comm != HU_NULLTOKEN);
-    exp = "This is a cpp right here.";
+    exp = "// This is a cpp right here.";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cpp.gcc cpp 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "cpp.gcc cpp 0 == exp");
     comm = huGetCommentsContainingZ(d.cpp, "right here", & cursor);
@@ -1628,7 +1628,7 @@ TEST(huGetCommentsContaining, dicts)
     cursor = 0;
     comm = huGetCommentsContainingZ(d.cp, "cp", & cursor);
     CHECK(comm != HU_NULLTOKEN);
-    exp = "cp";
+    exp = "// cp";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "cp.gcc cp 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "cp.gcc cp 0 == exp");
     comm = huGetCommentsContainingZ(d.cp, "cp", & cursor);
@@ -1637,7 +1637,7 @@ TEST(huGetCommentsContaining, dicts)
     cursor = 0;
     comm = huGetCommentsContainingZ(d.c, "ccc", & cursor);
     CHECK(comm != HU_NULLTOKEN);
-    exp = "cccc";
+    exp = "// cccc";
     LONGS_EQUAL_TEXT(strlen(exp), comm->str.size, "c.gcc ccc 0 size = sz exp");
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "cp.gcc ccc 0 == exp");
     comm = huGetCommentsContainingZ(d.c, "ccc", & cursor);
@@ -2999,13 +2999,13 @@ TEST_GROUP(huGetTroveComment)
 TEST(huGetTroveComment, normal)
 {
     auto comm = huGetTroveComment(l.trove, 0);
-    auto exp = "This is a trove comment."sv;
+    auto exp = "// This is a trove comment."sv;
     CHECK_FALSE(comm == NULL);
     LONGS_EQUAL_TEXT(exp.size(), comm->str.size, "l comm 0 sz == exp sz");
     STRNCMP_EQUAL_TEXT(exp.data(), comm->str.ptr, exp.size(), "l comm 0 == exp");
 
     comm = huGetTroveComment(l.trove, 1);
-    exp = "This is also a trove comment."sv;
+    exp = "// This is also a trove comment."sv;
     CHECK_FALSE(comm == NULL);
     LONGS_EQUAL_TEXT(exp.size(), comm->str.size, "l comm 1 sz == exp sz");
     STRNCMP_EQUAL_TEXT(exp.data(), comm->str.ptr, exp.size(), "l comm 1 == exp");
