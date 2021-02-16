@@ -22,14 +22,6 @@
 #include "humon.h"
 
 
-/// Defining this turns off noexcept decorations on path functions 
-/// (operator /, etc). See the README.
-#ifdef HUMON_SUPPRESS_PATH_NOEXCEPT
-#define
-#else
-#define noexcept
-#endif
-
 /// Defining this enables exceptions to be thrown on unfound path calls 
 /// (hu::Trove::nodeByAddress, huNode::nodeByAddress, hu::Trove::operator/
 /// or hu::Node::operator/); Normally these silently fail, and it can be
@@ -834,7 +826,7 @@ namespace hu
         /// Extract the value from the node.
         static inline std::string_view extract(Node const & node)
         {
-            return extract(node.value().str());
+            return node.value().str();
         }
 
         /// Extract the value from the string.
@@ -851,7 +843,7 @@ namespace hu
         /// Extract the value from the node.
         static inline std::string extract(Node const & node)
         {
-            return extract(node.value().str());
+            return std::string(node.value().str());
         }
 
         /// Extract the value from the string.
