@@ -28,13 +28,13 @@ void printError(huEnumType_t errorResponse, char const * msg)
 {
     // Depending on errorResponse, output something
     FILE * stream = stdout;
-    if (errorResponse == HU_ERRORRESPONSE_STDERR || 
+    if (errorResponse == HU_ERRORRESPONSE_STDERR ||
         errorResponse == HU_ERRORRESPONSE_STDERRANSICOLOR)
         { stream = stderr; }
-    if (errorResponse == HU_ERRORRESPONSE_STDOUT || 
+    if (errorResponse == HU_ERRORRESPONSE_STDOUT ||
         errorResponse == HU_ERRORRESPONSE_STDERR)
         { fprintf(stream, "Error: %s\n", msg); }
-    else if (errorResponse == HU_ERRORRESPONSE_STDOUTANSICOLOR || 
+    else if (errorResponse == HU_ERRORRESPONSE_STDOUTANSICOLOR ||
              errorResponse == HU_ERRORRESPONSE_STDERRANSICOLOR)
         { fprintf(stream, "%sError%s: %s\n", ansi_lightRed, ansi_off, msg); }
 }
@@ -80,7 +80,7 @@ huEnumType_t huDeserializeTroveN(huTrove const ** trovePtr, char const * data, h
     huDeserializeOptions localDeserializeOptions;
     if (deserializeOptions == NULL)
     {
-        huInitDeserializeOptions(& localDeserializeOptions, HU_ENCODING_UTF8, true, 4, NULL);
+        huInitDeserializeOptions(& localDeserializeOptions, HU_ENCODING_UTF8, true, 4, NULL, HU_BUFFERMANAGEMENT_COPYANDOWN);
         deserializeOptions = & localDeserializeOptions;
     }
 
@@ -103,51 +103,70 @@ huEnumType_t huDeserializeTroveN(huTrove const ** trovePtr, char const * data, h
             return HU_ERROR_BADENCODING;
         }
     }
-    
+
     huTrove * trove = ourAlloc(& deserializeOptions->allocator, sizeof(huTrove));
     if (trove == HU_NULLTROVE)
     {
         printError(errorResponse, "Error: Out of memory.");
         return HU_ERROR_OUTOFMEMORY;
     }
-        
+
     initTrove(trove, deserializeOptions, errorResponse);
 
-    // We're guaranteed that UTF8 strings will be no longer than the transcoded UTF* 
+    // We're guaranteed that UTF8 strings will be no longer than the transcoded UTF*
     // equivalent, as long as we reject unpaired surrogates. MS filenames
     // can contain unpaired surrogates, and Humon will accept them if strictUnicode
     // is clear. At that point, a UTF8 string can be longer than its UTF16, so we
     // have to double the size.
-    huSize_t sizeFactor = deserializeOptions->allowUtf16UnmatchedSurrogates == false && 
+
+    huSize_t sizeFactor = deserializeOptions->allowUtf16UnmatchedSurrogates == false &&
                                (deserializeOptions->encoding == HU_ENCODING_UTF16_BE ||
                                 deserializeOptions->encoding == HU_ENCODING_UTF16_LE) ? 2 : 1;
-    char * newData = ourAlloc(& deserializeOptions->allocator,
-        dataLen * sizeFactor + 4);  // padding with 4 bytes of null at the end.
-    if (newData == NULL)
+
+    char const * newConstData;
+    huSize_t newConstDataLen = 0;
+
+    // dso.bufferManagement may encourage us to move instead of copy.
+    // This is only going to happen if the src is utf8, and we're ignoring unicode errors.
+    // Otherwise, set the bufferManagement to copy and clone the input string.
+    if (deserializeOptions->allowOutOfRangeCodePoints &&
+        deserializeOptions->allowUtf16UnmatchedSurrogates &&
+        deserializeOptions->encoding == HU_ENCODING_UTF8 &&
+        deserializeOptions->bufferManagement != HU_BUFFERMANAGEMENT_COPYANDOWN)
     {
-        ourFree(& deserializeOptions->allocator, trove);
-        printError(errorResponse, "Out of memory.");
-        return HU_ERROR_OUTOFMEMORY;
+        newConstData = inputDataView.ptr;
+        newConstDataLen = inputDataView.size;
+    }
+    else
+    {
+        char * newData;
+        deserializeOptions->bufferManagement = HU_BUFFERMANAGEMENT_COPYANDOWN;
+        newData = ourAlloc(& deserializeOptions->allocator, dataLen * sizeFactor);
+        if (newData == NULL)
+        {
+            ourFree(& deserializeOptions->allocator, trove);
+            printError(errorResponse, "Out of memory.");
+            return HU_ERROR_OUTOFMEMORY;
+        }
+
+        huSize_t transcodedLen = 0;
+        huEnumType_t error = transcodeToUtf8FromString(newData, & transcodedLen, & inputDataView, deserializeOptions);
+        if (error != HU_ERROR_NOERROR)
+        {
+            if (deserializeOptions->bufferManagement == HU_BUFFERMANAGEMENT_COPYANDOWN)
+                { ourFree(& deserializeOptions->allocator, newData); }
+            ourFree(& deserializeOptions->allocator, trove);
+            printError(errorResponse, "Transcoding failed.");
+            return error;
+        }
+
+        newConstData = newData;
+        newConstDataLen = transcodedLen;
     }
 
-    huSize_t transcodedLen = 0;
-    huEnumType_t error = transcodeToUtf8FromString(newData, & transcodedLen, & inputDataView, deserializeOptions);
-    if (error != HU_ERROR_NOERROR)
-    {
-        ourFree(& deserializeOptions->allocator, newData);
-        ourFree(& deserializeOptions->allocator, trove);
-        printError(errorResponse, "Transcoding failed.");
-        return error;
-    }
-
-    // transcodedLen is guaranteed to be <= dataLen.
-    newData[transcodedLen] = '\0';
-    newData[transcodedLen + 1] = '\0';
-    newData[transcodedLen + 2] = '\0';
-    newData[transcodedLen + 3] = '\0';
-
-    trove->dataString = newData;
-    trove->dataStringSize = transcodedLen;
+    trove->dataString = newConstData;
+    trove->dataStringSize = newConstDataLen;
+    trove->bufferManagement = deserializeOptions->bufferManagement;
 
     // Errors here are recorded in the trove object.
     tokenizeTrove(trove);
@@ -180,7 +199,7 @@ huEnumType_t huDeserializeTroveFromFile(huTrove const ** trovePtr, char const * 
     huDeserializeOptions localDeserializeOptions;
     if (deserializeOptions == NULL)
     {
-        huInitDeserializeOptions(& localDeserializeOptions, HU_ENCODING_UNKNOWN, true, 4, NULL);
+        huInitDeserializeOptions(& localDeserializeOptions, HU_ENCODING_UNKNOWN, true, 4, NULL, HU_BUFFERMANAGEMENT_COPYANDOWN);
         deserializeOptions = & localDeserializeOptions;
     }
 
@@ -190,6 +209,9 @@ huEnumType_t huDeserializeTroveFromFile(huTrove const ** trovePtr, char const * 
         { deserializeOptions->allocator.memRealloc = & sysRealloc; }
     if (deserializeOptions->allocator.memFree == NULL)
         { deserializeOptions->allocator.memFree = & sysFree; }
+
+    // This is obviously required for loading from file.
+    deserializeOptions->bufferManagement = HU_BUFFERMANAGEMENT_COPYANDOWN;
 
 	FILE * fp = openFile(path, "rb");
 	if (fp == NULL)
@@ -216,10 +238,10 @@ huEnumType_t huDeserializeTroveFromFile(huTrove const ** trovePtr, char const * 
             printError(errorResponse, "Could not determine Unicode encoding.");
             return HU_ERROR_BADENCODING;
         }
-    
+
         rewind(fp);
     }
-    
+
     huTrove * trove = ourAlloc(& deserializeOptions->allocator, sizeof(huTrove));
     if (trove == HU_NULLTROVE)
     {
@@ -230,7 +252,7 @@ huEnumType_t huDeserializeTroveFromFile(huTrove const ** trovePtr, char const * 
 
     initTrove(trove, deserializeOptions, errorResponse);
 
-    // We're guaranteed that UTF8 strings will be no longer than the transcoded UTF* 
+    // We're guaranteed that UTF8 strings will be no longer than the transcoded UTF*
     // equivalent, as long as we reject unpaired surrogates. MS filenames
     // can contain unpaired surrogates, and Humon will accept them if strictUnicode
     // is clear. At that point, a UTF8 string can be longer than its UTF16, so we
@@ -265,10 +287,11 @@ huEnumType_t huDeserializeTroveFromFile(huTrove const ** trovePtr, char const * 
 
     trove->dataString = newData;
     trove->dataStringSize = transcodedLen;
+    trove->bufferManagement = HU_BUFFERMANAGEMENT_COPYANDOWN;
 
     tokenizeTrove(trove);
     parseTrove(trove);
- 
+
     * trovePtr = trove;
 
     return huGetNumErrors(trove) == 0 ? HU_ERROR_NOERROR : HU_ERROR_TROVEHASERRORS;
@@ -289,7 +312,10 @@ void huDestroyTrove(huTrove const * trove)
 
     if (ncTrove->dataString != NULL)
     {
-        ourFree(& ncTrove->allocator, (char *) ncTrove->dataString);
+        if (ncTrove->bufferManagement == HU_BUFFERMANAGEMENT_COPYANDOWN ||
+            ncTrove->bufferManagement == HU_BUFFERMANAGEMENT_MOVEANDOWN)
+            { ourFree(& ncTrove->allocator, (char *) ncTrove->dataString); }
+
         ncTrove->dataString = NULL;
         ncTrove->dataStringSize = 0;
     }
@@ -330,9 +356,9 @@ huToken const * huGetToken(huTrove const * trove, huSize_t tokenIdx)
 }
 
 
-huToken * allocNewToken(huTrove * trove, huEnumType_t kind, 
-    char const * str, huSize_t size, 
-    huLine_t line, huCol_t col, huLine_t endLine, huCol_t endCol, 
+huToken * allocNewToken(huTrove * trove, huEnumType_t kind,
+    char const * str, huSize_t size,
+    huLine_t line, huCol_t col, huLine_t endLine, huCol_t endCol,
     huSize_t offsetIn, huSize_t offsetOut,
     char quoteChar)
 {
@@ -354,14 +380,14 @@ huToken * allocNewToken(huTrove * trove, huEnumType_t kind,
 
 #ifdef HUMON_CAVEPERSON_DEBUGGING
     printf ("%stoken%s: line: %s%lld%s  col: %s%lld%s  len: %s%lld%s  %s%s%s  '%s%.*s%s'\n",
-        ansi_darkYellow, ansi_off, 
-        ansi_white, (long long int) line, ansi_off, 
-        ansi_white, (long long int) col, ansi_off, 
-        ansi_white, (long long int) size, ansi_off, 
-        ansi_lightMagenta, huTokenKindToString(kind), ansi_off, 
+        ansi_darkYellow, ansi_off,
+        ansi_white, (long long int) line, ansi_off,
+        ansi_white, (long long int) col, ansi_off,
+        ansi_white, (long long int) size, ansi_off,
+        ansi_lightMagenta, huTokenKindToString(kind), ansi_off,
         ansi_white, (int) newToken->str.size, newToken->str.ptr, ansi_off);
 #endif
-    
+
     return newToken;
 }
 
@@ -525,9 +551,9 @@ bool huTroveHasAnnotationWithKeyN(huTrove const * trove, char const * key, huSiz
 #endif
 
     for (huSize_t i = 0; i < trove->annotations.numElements; ++i)
-    { 
+    {
         huAnnotation * anno = (huAnnotation *) trove->annotations.buffer + i;
-        if (anno->key->str.size == keyLen && 
+        if (anno->key->str.size == keyLen &&
             strncmp(anno->key->str.ptr, key, keyLen) == 0)
             { return true; }
     }
@@ -559,9 +585,9 @@ huToken const * huGetTroveAnnotationWithKeyN(huTrove const * trove, char const *
 #endif
 
     for (huSize_t i = 0; i < trove->annotations.numElements; ++i)
-    { 
+    {
         huAnnotation * anno = (huAnnotation *) trove->annotations.buffer + i;
-        if (anno->key->str.size == keyLen && 
+        if (anno->key->str.size == keyLen &&
             strncmp(anno->key->str.ptr, key, keyLen) == 0)
             { return anno->value; }
     }
@@ -594,9 +620,9 @@ huSize_t huGetNumTroveAnnotationsWithValueN(huTrove const * trove, char const * 
 
     huSize_t matches = 0;
     for (huSize_t i = 0; i < trove->annotations.numElements; ++i)
-    { 
+    {
         huAnnotation * anno = (huAnnotation *) trove->annotations.buffer + i;
-        if (anno->value->str.size == valueLen && 
+        if (anno->value->str.size == valueLen &&
             strncmp(anno->value->str.ptr, value, valueLen) == 0)
             { matches += 1; }
     }
@@ -629,9 +655,9 @@ huToken const * huGetTroveAnnotationWithValueN(huTrove const * trove, char const
 
     huToken const * token = HU_NULLTOKEN;
     for (; * cursor < trove->annotations.numElements; ++ * cursor)
-    { 
+    {
         huAnnotation const * anno = (huAnnotation *) trove->annotations.buffer + * cursor;
-        if (anno->value->str.size == valueLen && 
+        if (anno->value->str.size == valueLen &&
             strncmp(anno->value->str.ptr, value, valueLen) == 0)
             { token = anno->key; break; }
     }
@@ -874,7 +900,7 @@ huNode * allocNewNode(huTrove * trove, huEnumType_t nodeKind, huToken const * fi
 
 #ifdef HUMON_CAVEPERSON_DEBUGGING
     printf ("%snode%s: nodeIdx: %s%lld%s    firstToken: %s%lld%s    %s%s%s\n",
-        ansi_lightCyan, ansi_off, 
+        ansi_lightCyan, ansi_off,
         ansi_lightBlue, (long long) newNodeIdx, ansi_off,
         ansi_darkYellow, (long long)(firstToken - (huToken *) trove->tokens.buffer), ansi_off,
         ansi_lightMagenta, huNodeKindToString(nodeKind), ansi_off);
@@ -910,12 +936,12 @@ void recordTokenizeError(huTrove * trove, huEnumType_t errorCode, huLine_t line,
     if (trove->errorResponse == HU_ERRORRESPONSE_STDERR ||
         trove->errorResponse == HU_ERRORRESPONSE_STDOUT)
     {
-        fprintf (stream, "Error: line: %llu    col: %llu    %s\n", 
+        fprintf (stream, "Error: line: %llu    col: %llu    %s\n",
             (unsigned long long) line, (unsigned long long) col, huOutputErrorToString(errorCode));
     }
     else
     {
-        fprintf (stream, "%sError%s: line: %llu    col: %llu    %s\n", ansi_lightRed, ansi_off, 
+        fprintf (stream, "%sError%s: line: %llu    col: %llu    %s\n", ansi_lightRed, ansi_off,
             (unsigned long long) line, (unsigned long long) col, huOutputErrorToString(errorCode));
     }
 }
@@ -950,12 +976,12 @@ void recordParseError(huTrove * trove, huEnumType_t errorCode, huToken const * p
     if (trove->errorResponse == HU_ERRORRESPONSE_STDERR ||
         trove->errorResponse == HU_ERRORRESPONSE_STDOUT)
     {
-        fprintf(stream, "Error: line: %llu    col: %llu    %s\n", 
+        fprintf(stream, "Error: line: %llu    col: %llu    %s\n",
             (unsigned long long) pCur->line, (unsigned long long) pCur->col, huOutputErrorToString(errorCode));
     }
     else
     {
-        fprintf(stream, "%sError%s: line: %llu    col: %llu    %s\n", ansi_lightRed, ansi_off, 
+        fprintf(stream, "%sError%s: line: %llu    col: %llu    %s\n", ansi_lightRed, ansi_off,
             (unsigned long long) pCur->line, (unsigned long long) pCur->col, huOutputErrorToString(errorCode));
     }
 }
@@ -990,8 +1016,8 @@ huEnumType_t huSerializeTrove(huTrove const * trove, char * dest, huSize_t * des
     if (trove == HU_NULLTROVE || destLength == NULL)
         { return HU_ERROR_BADPARAMETER; }
     if (serializeOptions &&
-        (isNegative(serializeOptions->whitespaceFormat) || serializeOptions->whitespaceFormat >= 3 || 
-         isNegative(serializeOptions->indentSize) || 
+        (isNegative(serializeOptions->whitespaceFormat) || serializeOptions->whitespaceFormat >= 3 ||
+         isNegative(serializeOptions->indentSize) ||
          (serializeOptions->usingColors && serializeOptions->colorTable == NULL)))
         { return HU_ERROR_BADPARAMETER; }
 #endif
@@ -1054,8 +1080,8 @@ huEnumType_t huSerializeTroveToFile(huTrove const * trove, char const * path, hu
     if (trove == HU_NULLTROVE || path == NULL)
         { return HU_ERROR_BADPARAMETER; }
     if (serializeOptions &&
-        (isNegative(serializeOptions->whitespaceFormat) || serializeOptions->whitespaceFormat >= 3 || 
-         isNegative(serializeOptions->indentSize) || 
+        (isNegative(serializeOptions->whitespaceFormat) || serializeOptions->whitespaceFormat >= 3 ||
+         isNegative(serializeOptions->indentSize) ||
          (serializeOptions->usingColors && serializeOptions->colorTable == NULL) ||
          serializeOptions->newline.ptr == NULL || serializeOptions->newline.size < 1))
         { return HU_ERROR_BADPARAMETER; }

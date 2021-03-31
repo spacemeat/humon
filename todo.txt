@@ -2,8 +2,15 @@ DONE THIS CHECKIN:
 P1 get wise about noexcept
 P1 bug: '// ' seems to eat next line's token?
 P1 update doxygen file
+P1 remove requirement that dict keys be unique.
+P1 add functions for iterating over dict children with a specific key.
+P1 change huGetChildByKey*() to get the last node with a specific key.
+P1 modifier ops
 
 TODO:
+P1 print annotations on opening bracket instead of closing bracket
+P1 consolidated vectors for comments and annotations
+
 P2 begin() and end() for nodes
 P2 doxygen improvements
 P2 reasonable starting vector sizes for tokens, nodes, etc.
@@ -16,4 +23,3 @@ P1-2 linting
 P2 more erroneous humon tests
 P2 UTF8 digits for addressing
 P2 consider sorting dict keys and doing BSP search.
-P2 insertion ops

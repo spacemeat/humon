@@ -10,7 +10,7 @@ using namespace std::literals;
 
 struct htd_cppGeneralMix
 {
-    std::string_view ts = 
+    std::string_view ts =
 R"(// This is a trove comment.
 @{tx:ta, ta:ta, tb:tb}
 {                   @name:root  @otherName:root
@@ -59,7 +59,7 @@ R"(// This is a trove comment.
 
 struct htd_cppValues
 {
-    std::string_view ts = 
+    std::string_view ts =
 R"({
     int:213
     float:25.25
@@ -119,7 +119,8 @@ struct htd_comments
 
 struct htd_errors
 {
-    std::string_view ts0 = 
+    /*
+    std::string_view ts0 =
 R"({
     int:213
     float:25.25
@@ -127,9 +128,9 @@ R"({
     string:foo
     bool:true
 }
-)"sv;
+)"sv;*/
 
-    std::string_view ts1 = 
+    std::string_view ts1 =
 R"({
     int:213
     float:25.25
@@ -139,7 +140,7 @@ R"({
 }
 )"sv;
 
-    std::string_view ts2 = 
+    std::string_view ts2 =
 R"({
     int:213
     float:25.25
@@ -149,7 +150,7 @@ R"({
 }
 )"sv;
 
-    std::string_view ts3 = 
+    std::string_view ts3 =
 R"(@ {dup: foo dup: bar}
 {
     int:213
@@ -160,7 +161,7 @@ R"(@ {dup: foo dup: bar}
 }
 )"sv;
 
-    std::string_view ts4 = 
+    std::string_view ts4 =
 R"({@ dup: foo @ dup: bar
     int:213
     float:25.25
@@ -178,7 +179,7 @@ R"({@ dup: foo @ dup: bar
 
     void setup()
     {
-        trove0 = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts0, {}, hu::ErrorResponse::mum)));
+        //trove0 = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts0, {}, hu::ErrorResponse::mum)));
         trove1 = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts1, {}, hu::ErrorResponse::mum)));
         trove2 = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts2, {}, hu::ErrorResponse::mum)));
         trove3 = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts3, {}, hu::ErrorResponse::mum)));
@@ -193,7 +194,7 @@ R"({@ dup: foo @ dup: bar
 
 struct htd_wakka
 {
-    std::string_view ts = 
+    std::string_view ts =
 u8R"({
     \key: \val
     k\ey: v\al
@@ -222,3 +223,35 @@ u8R"({
     {
     }
 };
+
+
+struct htd_changes
+{
+    std::string_view ts =
+R"({
+    @a:b /**/aaa: AAA//wtf
+    bbb: [BBB @c:d BBB/**/ BBB]
+    ccc: {CCCa: cccA, CCCb: cccB, CCCc: cccC}
+}
+)"sv;
+
+    hu::Trove trove;
+    hu::Node root;
+    hu::Node aaa;
+    hu::Node bbb;
+    hu::Node ccc;
+
+    void setup()
+    {
+        trove = std::move(std::get<hu::Trove>(hu::Trove::fromString(ts)));
+        root = trove.root();
+        aaa = root.child(0);
+        bbb = root.child(1);
+        ccc = root.child(2);
+    }
+
+    void teardown()
+    {
+    }
+};
+

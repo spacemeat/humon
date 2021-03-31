@@ -6,7 +6,13 @@
 static void analyzeCharacter(huScanner * scanner)
 {
     huCursor * cursor = scanner->nextCursor;
-    if ((cursor->character[0] & 0b10000000) == 0)
+    if (scanner->nextCursor->character >= scanner->inputStr + scanner->inputStrLen)
+    {
+        cursor->charLength = 1;
+        cursor->codePoint = 0;
+        cursor->isEof = true;
+    }
+    else if ((cursor->character[0] & 0b10000000) == 0)
     {
         cursor->charLength = 1;
         cursor->codePoint = cursor->character[0];
@@ -49,9 +55,12 @@ static void analyzeCharacter(huScanner * scanner)
 
 static void analyzeWhitespace(huScanner * scanner)
 {
-    // NOTE: Opportunity to test perf here. Try breaking up the switch, 
+    // NOTE: Opportunity to test perf here. Try breaking up the switch,
     // to ensure we cover the most common single-byte cases first?
     huCursor * cursor = scanner->nextCursor;
+    if (cursor->isEof)
+        { return; }
+
     switch (cursor->codePoint)
     {
         case 0x09:      // '\t':
@@ -138,7 +147,7 @@ void nextCharacter(huScanner * scanner)
 void initScanner(huScanner * scanner, huTrove * trove, huCol_t tabLen, char const * str, huSize_t strLen)
 {
     * scanner = (huScanner) {
-        .trove = trove, 
+        .trove = trove,
         .tabLen = tabLen,
         .inputStr = str,
         .inputStrLen = strLen,
@@ -222,20 +231,17 @@ void eatLineWs(huScanner * scanner)
 
 static void eatDoubleSlashComment(huScanner * scanner, huSize_t * offsetIn)
 {
-    //huSize_t len = scanner->len;
-
     // The first two characters are already confirmed //, so, next please.
     nextCharacter(scanner);
     nextCharacter(scanner);
 
     eatLineWs(scanner);
-    // * offsetIn = scanner->len - len;
     (void) offsetIn;
 
     bool eating = true;
     while (eating)
     {
-        if (scanner->curCursor->isNewline == false && 
+        if (scanner->curCursor->isNewline == false &&
             scanner->curCursor->isError == false &&
             scanner->curCursor->isEof == false)
             { nextCharacter(scanner); }
@@ -251,7 +257,7 @@ static void eatCStyleComment(huScanner * scanner)
     huLine_t tokenStartLine = scanner->line;
     huCol_t tokenStartCol = scanner->col;
 
-    // The first two characters are already confirmed /*, so, next please.    
+    // The first two characters are already confirmed /*, so, next please.
     nextCharacter(scanner);
     nextCharacter(scanner);
 
@@ -265,7 +271,7 @@ static void eatCStyleComment(huScanner * scanner)
         else if (scanner->curCursor->isEof == true)
         {
             eating = false;
-            recordTokenizeError(scanner->trove, HU_ERROR_UNFINISHEDCSTYLECOMMENT, 
+            recordTokenizeError(scanner->trove, HU_ERROR_UNFINISHEDCSTYLECOMMENT,
                 tokenStartLine, tokenStartCol);
         }
         else if (scanner->curCursor->isNewline)
@@ -330,7 +336,7 @@ static void eatWord(huScanner * scanner)
                 break;
             }
         }
-    }    
+    }
 }
 
 
@@ -355,7 +361,7 @@ static void eatQuotedWord(huScanner * scanner)
         else if (scanner->curCursor->isEof)
         {
             eating = false;
-            recordTokenizeError(scanner->trove, HU_ERROR_UNFINISHEDQUOTE, 
+            recordTokenizeError(scanner->trove, HU_ERROR_UNFINISHEDQUOTE,
                 tokenStartLine, tokenStartCol);
         }
         else
@@ -389,7 +395,7 @@ static void eatHeredocTag(huScanner * scanner, huSize_t * tagLen)
         else if (scanner->curCursor->isEof)
         {
             eating = false;
-            recordTokenizeError(scanner->trove, HU_ERROR_UNFINISHEDQUOTE, 
+            recordTokenizeError(scanner->trove, HU_ERROR_UNFINISHEDQUOTE,
                 tokenStartLine, tokenStartCol);
         }
         else
@@ -445,7 +451,7 @@ static void eatHeredoc(huScanner * scanner, huSize_t * offsetIn, huSize_t * offs
     while (eating)
     {
         bool match = memcmp(scanner->curCursor->character, tagStart, tagLen) == 0;
-        
+
         if (scanner->curCursor->isError)
         {
             eating = false;
@@ -453,7 +459,7 @@ static void eatHeredoc(huScanner * scanner, huSize_t * offsetIn, huSize_t * offs
         else if (scanner->curCursor->isEof)
         {
             eating = false;
-            recordTokenizeError(scanner->trove, HU_ERROR_UNFINISHEDQUOTE, 
+            recordTokenizeError(scanner->trove, HU_ERROR_UNFINISHEDQUOTE,
                 tokenStartLine, tokenStartCol);
         }
         else if (match)
@@ -512,7 +518,7 @@ void tokenizeTrove(huTrove * trove)
 
         huCursor * cur = scanner.curCursor;
         char const * tokenStart = cur->character;
-        
+
         switch(scanner.curCursor->codePoint)
         {
         case '\0':
@@ -548,7 +554,7 @@ void tokenizeTrove(huTrove * trove)
             {
                 huSize_t offsetIn = 0;
                 eatDoubleSlashComment(& scanner, & offsetIn);
-                allocNewToken(trove, HU_TOKENKIND_COMMENT, tokenStart, 
+                allocNewToken(trove, HU_TOKENKIND_COMMENT, tokenStart,
                     scanner.len - len, line, col, line, scanner.col, offsetIn, 0, '\0');
             }
             else if (scanner.nextCursor->codePoint == '*')

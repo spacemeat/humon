@@ -7,8 +7,7 @@
             },
             "includePath": [
                 "${workspaceFolder}/include",
-                "${workspaceFolder}/src",
-                "/usr/include/python3.7m"
+                "${workspaceFolder}/src"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

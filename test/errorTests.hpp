@@ -32,7 +32,6 @@ TEST_GROUP(errors)
 
 TEST(errors, sugar)
 {
-    LONGS_EQUAL_TEXT(1, e.trove0.numErrors(), "t0 num errors");
     LONGS_EQUAL_TEXT(1, e.trove1.numErrors(), "t1 num errors");
     LONGS_EQUAL_TEXT(1, e.trove2.numErrors(), "t2 num errors");
     LONGS_EQUAL_TEXT(1, e.trove3.numErrors(), "t3 num errors");

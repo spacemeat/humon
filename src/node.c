@@ -67,7 +67,7 @@ huNode const * huGetChildByIndex(huNode const * node, huSize_t childOrdinal)
     if (childOrdinal >= huGetNumChildren(node))
         { return HU_NULLNODE; }
 
-    return huGetNodeByIndex(node->trove, 
+    return huGetNodeByIndex(node->trove,
         * (huSize_t *) getVectorElement(& node->childNodeIdxs, childOrdinal));
 }
 
@@ -97,7 +97,7 @@ huNode const * huGetChildByKeyN(huNode const * node, char const * key, huSize_t 
     if (node->kind != HU_NODEKIND_DICT)
         { return HU_NULLNODE; }
 
-    for (huSize_t i = 0; i < huGetNumChildren(node); ++i)
+    for (huSize_t i = huGetNumChildren(node) - 1; i >= 0; --i)
     {
         huNode const * childNode = huGetChildByIndex(node, i);
         if (keyLen == childNode->keyToken->str.size &&
@@ -119,7 +119,7 @@ huNode const * huGetFirstChild(huNode const * node)
     if (huGetNumChildren(node) == 0)
         { return HU_NULLNODE; }
 
-    return huGetNodeByIndex(node->trove, 
+    return huGetNodeByIndex(node->trove,
         * (huSize_t *) getVectorElement(& node->childNodeIdxs, 0));
 }
 
@@ -145,12 +145,101 @@ huNode const * huGetNextSibling(huNode const * node)
 }
 
 
+huNode const * huGetFirstChildWithKeyZ(huNode const * node, char const * key)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (key == NULL)
+        { return HU_NULLNODE; }
+#endif
+
+    size_t keyLenC = strlen(key);
+    if (keyLenC > maxOfType(huSize_t))
+        { return HU_NULLNODE; }
+
+    return huGetFirstChildWithKeyN(node, key, (huSize_t) keyLenC);
+}
+
+
+huNode const * huGetFirstChildWithKeyN(huNode const * node, char const * key, huSize_t keyLen)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (node == HU_NULLNODE || key == NULL || keyLen < 0)
+        { return HU_NULLNODE; }
+#endif
+
+    if (node->kind != HU_NODEKIND_DICT)
+        { return HU_NULLNODE; }
+
+    huSize_t numChildren = huGetNumChildren(node);
+    if (numChildren == 0)
+        { return HU_NULLNODE; }
+
+    for (huSize_t i = 0; i < numChildren; ++i)
+    {
+        huNode const * childNode = huGetChildByIndex(node, i);
+        if (keyLen == childNode->keyToken->str.size &&
+            strncmp(childNode->keyToken->str.ptr, key, keyLen) == 0)
+            { return childNode; }
+    }
+
+    return HU_NULLNODE;
+}
+
+
+huNode const * huGetNextSiblingWithKeyZ(huNode const * node, char const * key)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (key == NULL)
+        { return HU_NULLNODE; }
+#endif
+
+    size_t keyLenC = strlen(key);
+    if (keyLenC > maxOfType(huSize_t))
+        { return HU_NULLNODE; }
+
+    return huGetNextSiblingWithKeyN(node, key, (huSize_t) keyLenC);
+}
+
+
+huNode const * huGetNextSiblingWithKeyN(huNode const * node, char const * key, huSize_t keyLen)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (node == HU_NULLNODE || key == NULL || keyLen < 0)
+        { return HU_NULLNODE; }
+#endif
+
+    if (node->kind != HU_NODEKIND_DICT)
+        { return HU_NULLNODE; }
+
+    if (node->parentNodeIdx == -1)
+        { return HU_NULLNODE; }
+
+    huNode const * parentNode = huGetParent(node);
+    if (parentNode == HU_NULLNODE)
+        { return HU_NULLNODE; }
+
+    huSize_t numChildren = huGetNumChildren(parentNode);
+    if (numChildren == 0)
+        { return HU_NULLNODE; }
+
+    for (huSize_t i = node->childOrdinal + 1; i < numChildren; ++i)
+    {
+        huNode const * childNode = huGetChildByIndex(parentNode, i);
+        if (keyLen == childNode->keyToken->str.size &&
+            strncmp(childNode->keyToken->str.ptr, key, keyLen) == 0)
+            { return childNode; }
+    }
+
+    return HU_NULLNODE;
+}
+
+
 // Note, we're using huSize_t instead of huCol_t for col on purpose in these functions. col here is just the char offset into the address string.
 
 static bool eatAddressWord(huScanner * scanner, huSize_t * wordLen)
 {
     bool error = false;
-    
+
     // The first character is already confirmed a word char, so, next please.
     nextCharacter(scanner);
     * wordLen = scanner->curCursor->charLength;
@@ -373,11 +462,11 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
     huSize_t rawPartLen = scanner.len - wslen;
     if (rawPartLen == 0)
        { return HU_NULLNODE; }
-    
+
     huNode const * nextNode = HU_NULLNODE;
 
     // if '..', go up a level if we can
-    if (quoteChar == '\0' && wordLen == 2 && 
+    if (quoteChar == '\0' && wordLen == 2 &&
         wordStart[0] == '.' && wordStart[1] == '.')
             { nextNode = huGetParent(node); }
     else
@@ -398,7 +487,7 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
     // If the key or index is invalid, nextNode wil be set to HU_NULLNODE.
     if (nextNode == HU_NULLNODE)
         { return HU_NULLNODE; }
-    
+
     eatWs(& scanner);
 
     if (scanner.curCursor->isEof)
@@ -451,11 +540,11 @@ static void getNodeAddressRec(huNode const * node, PrintTracker * printer)
         { getNodeAddressRec(huGetParent(node), printer); }
     else
         { return; }
-    
+
     huNode const * parentNode = huGetParent(node);
 
-    appendString(printer, "/", 1);    
-    
+    appendString(printer, "/", 1);
+
     if (parentNode->kind == HU_NODEKIND_LIST)
     {
         huSize_t numBytes = log10i(node->childOrdinal) + 1;
@@ -545,7 +634,7 @@ void huGetAddress(huNode const * node, char * dest, huSize_t * destLen)
 
     // if node is root, do special return "/"
     if (node->parentNodeIdx == -1)
-    { 
+    {
         * destLen = 1;
         if (dest != NULL)
             { dest[0] = '/'; }
@@ -610,10 +699,10 @@ huStringView huGetTokenStream(huNode const * node)
 #endif
 
     char const * start = node->firstToken->rawStr.ptr;
-    char const * end = node->lastToken->rawStr.ptr + node->lastToken->rawStr.size; 
+    char const * end = node->lastToken->rawStr.ptr + node->lastToken->rawStr.size;
     str.ptr = start;
     str.size = (huSize_t)(end - start);
-    
+
     return str;
 }
 
@@ -666,7 +755,7 @@ bool huHasAnnotationWithKeyN(huNode const * node, char const * key, huSize_t key
 #endif
 
     for (int i = 0; i < node->annotations.numElements; ++i)
-    { 
+    {
         huAnnotation const * anno = (huAnnotation *) node->annotations.buffer + i;
         if (keyLen == anno->key->str.size &&
             strncmp(anno->key->str.ptr, key, keyLen) == 0)
@@ -700,7 +789,7 @@ huToken const * huGetAnnotationWithKeyN(huNode const * node, char const * key, h
 #endif
 
     for (huSize_t i = 0; i < node->annotations.numElements; ++i)
-    { 
+    {
         huAnnotation const * anno = (huAnnotation const *) node->annotations.buffer + i;
         if (keyLen == anno->key->str.size &&
             strncmp(anno->key->str.ptr, key, keyLen) == 0)
@@ -735,7 +824,7 @@ huSize_t huGetNumAnnotationsWithValueN(huNode const * node, char const * value, 
 
     huSize_t matches = 0;
     for (huSize_t i = 0; i < node->annotations.numElements; ++i)
-    { 
+    {
         huAnnotation const * anno = (huAnnotation const *) node->annotations.buffer + i;
         if (valueLen == anno->value->str.size &&
             strncmp(anno->value->str.ptr, value, valueLen) == 0)
@@ -833,7 +922,7 @@ bool huHasCommentsContainingN(huNode const * node, char const * containedText, h
     for (huSize_t idx = 0; idx < node->comments.numElements; ++ idx)
     {
         huToken const * comm = huGetComment(node, idx);
-        if (stringInString(comm->str.ptr, comm->str.size, 
+        if (stringInString(comm->str.ptr, comm->str.size,
                 containedText, containedTextLen))
             { return true; }
     }
@@ -868,7 +957,7 @@ huSize_t huGetNumCommentsContainingN(huNode const * node, char const * contained
     for (huSize_t idx = 0; idx < node->comments.numElements; ++ idx)
     {
         huToken const * comm = huGetComment(node, idx);
-        if (stringInString(comm->str.ptr, comm->str.size, 
+        if (stringInString(comm->str.ptr, comm->str.size,
                 containedText, containedTextLen))
             { matches += 1; }
     }
@@ -902,7 +991,7 @@ huToken const * huGetCommentsContainingN(huNode const * node, char const * conta
     for (; * cursor < node->comments.numElements; ++ * cursor)
     {
         huToken const * comm = huGetComment(node, * cursor);
-        if (stringInString(comm->str.ptr, comm->str.size, 
+        if (stringInString(comm->str.ptr, comm->str.size,
             containedText, containedTextLen))
         {
             * cursor += 1;

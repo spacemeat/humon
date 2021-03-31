@@ -9,7 +9,7 @@ FILE * openFile(char const * path, char const * mode)
 	struct stat fstatData;
 	if (stat(path, & fstatData) < 0)
         { return NULL; }
-    
+
 #ifdef _WIN32
     if ((_S_IFREG & fstatData.st_mode) == 0)
         { return NULL; }
@@ -152,7 +152,7 @@ char const * huOutputErrorToString(huEnumType_t rhs)
     case HU_ERROR_TOOMANYROOTS: return "too many roots";
     case HU_ERROR_NONUNIQUEKEY: return "non-unique key";
     case HU_ERROR_SYNTAXERROR: return "syntax error";
-    case HU_ERROR_NOTFOUND: return "not found";    
+    case HU_ERROR_NOTFOUND: return "not found";
     case HU_ERROR_ILLEGAL: return "illegal operation";
     case HU_ERROR_BADPARAMETER: return "bad parameter";
     case HU_ERROR_BADFILE: return "bad file";
@@ -226,7 +226,7 @@ bool isMachineBigEndian()
 }
 
 
-void huInitDeserializeOptions(huDeserializeOptions * params, huEnumType_t encoding, bool strictUnicode, huCol_t tabSize, huAllocator * customAllocator)
+void huInitDeserializeOptions(huDeserializeOptions * params, huEnumType_t encoding, bool strictUnicode, huCol_t tabSize, huAllocator const * customAllocator, huEnumType_t bufferManagement)
 {
     params->encoding = encoding;
     params->allowOutOfRangeCodePoints = ! strictUnicode;
@@ -243,24 +243,25 @@ void huInitDeserializeOptions(huDeserializeOptions * params, huEnumType_t encodi
             .memFree = & sysFree
         };
     }
+    params->bufferManagement = bufferManagement;
 }
 
 
 void huInitSerializeOptionsZ(huSerializeOptions * params, huEnumType_t whitespaceFormat, huCol_t indentSize,
-    bool indentWithTabs, bool usingColors, huStringView const * colorTable,  bool printComments, 
+    bool indentWithTabs, bool usingColors, huStringView const * colorTable,  bool printComments,
     char const * newline, bool printBom)
 {
     size_t newlineLenC = strlen(newline);
     if (newlineLenC > maxOfType(huSize_t))
         { newlineLenC = maxOfType(huSize_t); }
 
-    huInitSerializeOptionsN(params, whitespaceFormat, indentSize, indentWithTabs, usingColors, colorTable, 
+    huInitSerializeOptionsN(params, whitespaceFormat, indentSize, indentWithTabs, usingColors, colorTable,
         printComments, newline, (huSize_t) newlineLenC, printBom);
 }
 
 
 void huInitSerializeOptionsN(huSerializeOptions * params, huEnumType_t whitespaceFormat, huCol_t indentSize,
-    bool indentWithTabs, bool usingColors, huStringView const * colorTable,  bool printComments, 
+    bool indentWithTabs, bool usingColors, huStringView const * colorTable,  bool printComments,
     char const * newline, huSize_t newlineSize, bool printBom)
 {
     params->whitespaceFormat = whitespaceFormat;

@@ -76,13 +76,13 @@ void associateComment(huTrove * trove, huNode * node, huToken const * tok)
     if (node)
     {
         huGetAddress(node, address, & addLen);
-        printf("Associating comment: '%s%.*s%s' to node %s%.*s%s\n", 
+        printf("Associating comment: '%s%.*s%s' to node %s%.*s%s\n",
             ansi_darkGreen, (int)tok->str.size, tok->str.ptr, ansi_off,
             ansi_lightBlue, (int)addLen, address, ansi_off );
     }
     else
     {
-        printf("Associating comment: '%s%.*s%s' to trove\n", 
+        printf("Associating comment: '%s%.*s%s' to trove\n",
             ansi_darkGreen, (int)tok->str.size, tok->str.ptr, ansi_off);
     }
 #endif
@@ -92,7 +92,7 @@ void associateComment(huTrove * trove, huNode * node, huToken const * tok)
 void enqueueComment(huVector * commentQueue, huToken const * comment)
 {
     appendToVector(commentQueue, & comment, 1);
-    
+
 #ifdef HUMON_CAVEPERSON_DEBUGGING
     printf("Enqueuing comment: '%s%.*s%s'\n", ansi_darkGreen, (int)comment->str.size, comment->str.ptr, ansi_off);
 #endif
@@ -126,7 +126,7 @@ void associateEnqueuedComments(huTrove * trove, huNode * node, huVector * commen
                 ansi_lightBlue, (int)addLen, address, ansi_off);
         }
         else
-            { printf("Associating %s%lld%s enqueued comments to trove\n", 
+            { printf("Associating %s%lld%s enqueued comments to trove\n",
                 ansi_white, (long long) num, ansi_off); }
     }
 #endif
@@ -173,17 +173,8 @@ void setLastValueToken(huNode * node, huToken const * tok)
 }
 
 
-void addChildNode(huTrove * trove, huNode * node, huNode * child)
+void addChildNode(huNode * node, huNode * child)
 {
-    // check for duplicate keys
-    if (node->kind == HU_NODEKIND_DICT)
-    {
-        huStringView const * key = & child->keyToken->str;
-        if (huGetChildByKeyN(node, key->ptr, key->size) != HU_NULLNODE)
-            { recordParseError(trove, HU_ERROR_NONUNIQUEKEY, child->keyToken); }
-    }
-
-    // all claer, adopt the child
     child->parentNodeIdx = node->nodeIdx;
     appendToVector(& node->childNodeIdxs, & child->nodeIdx, 1);
     child->childOrdinal = node->childNodeIdxs.numElements - 1;
@@ -211,7 +202,7 @@ void addAnnotation(huTrove * trove, huNode * node, huToken const * keyToken)
     {
         if (huTroveHasAnnotationWithKeyN(trove, key->ptr, key->size))
             { recordParseError(trove, HU_ERROR_NONUNIQUEKEY, keyToken); }
-    }    
+    }
 
     huAnnotation * anno = NULL;
     huSize_t num = 1;
@@ -219,7 +210,7 @@ void addAnnotation(huTrove * trove, huNode * node, huToken const * keyToken)
         { anno = growVector(& node->annotations, & num); }
     else
         { anno = growVector(& trove->annotations, & num); }
-    
+
     if (num)
     {
         anno->key = keyToken;
@@ -251,7 +242,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
     while (* tokenIdx < trove->tokens.numElements)
     {
         huToken const * tok = huGetToken(trove, * tokenIdx);
-        
+
 #ifdef HUMON_CAVEPERSON_DEBUGGING
         char address[HUMON_ADDRESS_BLOCKSIZE];
         huSize_t addLen = HUMON_ADDRESS_BLOCKSIZE;
@@ -269,7 +260,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
             ansi_lightBlue, (int)addLen, address, ansi_off,
             ansi_white, (long long) depth, ansi_off,
             ansi_darkBlue, parseStateToString(state), ansi_off);
-        
+
 #endif
         * tokenIdx += 1;
         switch (state)
@@ -287,7 +278,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
                 if (nodeCreatedThisState &&
                     tok->line == nodeCreatedThisState->lastToken->line)
                     { associateComment(trove, nodeCreatedThisState, tok); }
-                else if (trove->lastAnnoToken && 
+                else if (trove->lastAnnoToken &&
                     tok->line == trove->lastAnnoToken->line)
                     { associateComment(trove, NULL, tok); }
                 else
@@ -309,7 +300,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
 
                     associateEnqueuedComments(trove, nodeCreatedThisState, commentQueue);
                     setValueToken(nodeCreatedThisState, tok);
-                    parseTroveRecursive(trove, tokenIdx, nodeCreatedThisState, depth + 1, 
+                    parseTroveRecursive(trove, tokenIdx, nodeCreatedThisState, depth + 1,
                         PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END, commentQueue);
 
                     nodeCreatedThisState = (huNode *) huGetNodeByIndex(trove, nctsIdx);
@@ -331,7 +322,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
 
                     associateEnqueuedComments(trove, nodeCreatedThisState, commentQueue);
                     setValueToken(nodeCreatedThisState, tok);
-                    parseTroveRecursive(trove, tokenIdx, nodeCreatedThisState, depth + 1, 
+                    parseTroveRecursive(trove, tokenIdx, nodeCreatedThisState, depth + 1,
                         PS_IN_DICT_EXPECT_KEY_OR_END, commentQueue);
 
                     nodeCreatedThisState = (huNode *) huGetNodeByIndex(trove, nctsIdx);
@@ -366,7 +357,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
                 // NOTE: nodeCreatedThisState will be NULL if we're in a trove annotation!
                 associateEnqueuedComments(trove, nodeCreatedThisState, commentQueue);
                 ensureContains(trove, nodeCreatedThisState, tok);
-                parseTroveRecursive(trove, tokenIdx, nodeCreatedThisState, depth + 1, 
+                parseTroveRecursive(trove, tokenIdx, nodeCreatedThisState, depth + 1,
                     PS_IN_ANNO_EXPECT_DICTSTART_OR_KEY, commentQueue);
                 break;
 
@@ -380,7 +371,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
         case PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END:
             switch (tok->kind)
             {
-            case HU_TOKENKIND_EOF: 
+            case HU_TOKENKIND_EOF:
                 recordParseError(trove, HU_ERROR_UNEXPECTEDEOF, tok);
                 return;
 
@@ -410,9 +401,9 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
                     huSize_t nctsIdx = nodeCreatedThisState->nodeIdx;
 
                     setValueToken(nodeCreatedThisState, tok);
-                    addChildNode(trove, parentNode, nodeCreatedThisState);
+                    addChildNode(parentNode, nodeCreatedThisState);
                     associateEnqueuedComments(trove, nodeCreatedThisState, commentQueue);
-                    parseTroveRecursive(trove, tokenIdx, nodeCreatedThisState, depth + 1, 
+                    parseTroveRecursive(trove, tokenIdx, nodeCreatedThisState, depth + 1,
                         PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END, commentQueue);
 
                     nodeCreatedThisState = (huNode *) huGetNodeByIndex(trove, nctsIdx);
@@ -433,9 +424,9 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
                     huSize_t nctsIdx = nodeCreatedThisState->nodeIdx;
 
                     setValueToken(nodeCreatedThisState, tok);
-                    addChildNode(trove, parentNode, nodeCreatedThisState);
+                    addChildNode(parentNode, nodeCreatedThisState);
                     associateEnqueuedComments(trove, nodeCreatedThisState, commentQueue);
-                    parseTroveRecursive(trove, tokenIdx, nodeCreatedThisState, depth + 1, 
+                    parseTroveRecursive(trove, tokenIdx, nodeCreatedThisState, depth + 1,
                         PS_IN_DICT_EXPECT_KEY_OR_END, commentQueue);
 
                     nodeCreatedThisState = (huNode *) huGetNodeByIndex(trove, nctsIdx);
@@ -455,7 +446,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
 
                     setValueToken(nodeCreatedThisState, tok);
                     setLastValueToken(nodeCreatedThisState, tok);
-                    addChildNode(trove, parentNode, nodeCreatedThisState);
+                    addChildNode(parentNode, nodeCreatedThisState);
                     associateEnqueuedComments(trove, nodeCreatedThisState, commentQueue);
                 }
                 break;
@@ -470,7 +461,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
                         { annoTarget = parentNode; }
                     ensureContains(trove, annoTarget, tok);
                     associateEnqueuedComments(trove, annoTarget, commentQueue);
-                    parseTroveRecursive(trove, tokenIdx, annoTarget, depth + 1, 
+                    parseTroveRecursive(trove, tokenIdx, annoTarget, depth + 1,
                         PS_IN_ANNO_EXPECT_DICTSTART_OR_KEY, commentQueue);
                 }
                 break;
@@ -523,8 +514,8 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
 
                     associateEnqueuedComments(trove, nodeCreatedThisState, commentQueue);
                     setKeyToken(nodeCreatedThisState, tok);
-                    addChildNode(trove, parentNode, nodeCreatedThisState);
-                    parseTroveRecursive(trove, tokenIdx, nodeCreatedThisState, depth + 1, 
+                    addChildNode(parentNode, nodeCreatedThisState);
+                    parseTroveRecursive(trove, tokenIdx, nodeCreatedThisState, depth + 1,
                         PS_IN_DICT_EXPECT_KVS, commentQueue);
 
                     nodeCreatedThisState = (huNode *) huGetNodeByIndex(trove, nctsIdx);
@@ -541,7 +532,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
                         { annoTarget = parentNode; }
                     ensureContains(trove, annoTarget, tok);
                     associateEnqueuedComments(trove, annoTarget, commentQueue);
-                    parseTroveRecursive(trove, tokenIdx, annoTarget, depth + 1, 
+                    parseTroveRecursive(trove, tokenIdx, annoTarget, depth + 1,
                         PS_IN_ANNO_EXPECT_DICTSTART_OR_KEY, commentQueue);
                 }
                 break;
@@ -563,7 +554,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
             // parentNode is the node we created when we encountered the key token.
             switch (tok->kind)
             {
-            case HU_TOKENKIND_EOF: 
+            case HU_TOKENKIND_EOF:
                 recordParseError(trove, HU_ERROR_UNEXPECTEDEOF, tok);
                 return;
 
@@ -578,7 +569,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
                     huSize_t parentIdx = parentNode->nodeIdx;
 
                     ensureContains(trove, parentNode, tok);
-                    parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1, 
+                    parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1,
                         PS_IN_DICT_EXPECT_START_OR_VALUE, commentQueue);
 
                     parentNode = (huNode *) huGetNodeByIndex(trove, parentIdx);
@@ -588,7 +579,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
             case HU_TOKENKIND_ANNOTATE:
                 // recursive(PS_IN_ANNO_EXPECT_DICTSTART_OR_KEY, parentNode)
                 ensureContains(trove, parentNode, tok);
-                parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1, 
+                parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1,
                     PS_IN_ANNO_EXPECT_DICTSTART_OR_KEY, commentQueue);
                 break;
 
@@ -603,7 +594,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
             // parentNode is the node we created when we encountered the key token.
             switch (tok->kind)
             {
-            case HU_TOKENKIND_EOF: 
+            case HU_TOKENKIND_EOF:
                 recordParseError(trove, HU_ERROR_UNEXPECTEDEOF, tok);
                 return;
 
@@ -620,7 +611,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
 
                     parentNode->kind = HU_NODEKIND_LIST;
                     setValueToken(parentNode, tok);
-                    parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1, 
+                    parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1,
                         PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END, commentQueue);
 
                     parentNode = (huNode *) huGetNodeByIndex(trove, parentIdx);
@@ -635,7 +626,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
 
                     parentNode->kind = HU_NODEKIND_DICT;
                     setValueToken(parentNode, tok);
-                    parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1, 
+                    parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1,
                         PS_IN_DICT_EXPECT_KEY_OR_END, commentQueue);
 
                     parentNode = (huNode *) huGetNodeByIndex(trove, parentIdx);
@@ -652,7 +643,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
             case HU_TOKENKIND_ANNOTATE:
                 // recursive(PS_IN_ANNO_EXPECT_DICTSTART_OR_KEY, parentNode)
                 ensureContains(trove, parentNode, tok);
-                parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1, 
+                parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1,
                     PS_IN_ANNO_EXPECT_DICTSTART_OR_KEY, commentQueue);
                 break;
 
@@ -666,7 +657,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
         case PS_IN_ANNO_EXPECT_DICTSTART_OR_KEY:
             switch (tok->kind)
             {
-            case HU_TOKENKIND_EOF: 
+            case HU_TOKENKIND_EOF:
                 recordParseError(trove, HU_ERROR_UNEXPECTEDEOF, tok);
                 return;
 
@@ -678,7 +669,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
             case HU_TOKENKIND_STARTDICT:
                 // recursive(PS_IN_ANNODICT_EXPECT_KEY_OR_END, parentNode)
                 ensureContains(trove, parentNode, tok);
-                parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1, 
+                parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1,
                     PS_IN_ANNODICT_EXPECT_KEY_OR_END, commentQueue);
                 return;
 
@@ -687,7 +678,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
                 // assign anno to parentNode
                 // recursive(PS_IN_ANNO_EXPECT_KVS, parentNode)
                 addAnnotation(trove, parentNode, tok);
-                parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1, 
+                parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1,
                     PS_IN_ANNO_EXPECT_KVS, commentQueue);
                 return;
 
@@ -701,7 +692,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
         case PS_IN_ANNO_EXPECT_KVS:
             switch (tok->kind)
             {
-            case HU_TOKENKIND_EOF: 
+            case HU_TOKENKIND_EOF:
                 recordParseError(trove, HU_ERROR_UNEXPECTEDEOF, tok);
                 return;
 
@@ -713,7 +704,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
             case HU_TOKENKIND_KEYVALUESEP:
                 // recursive(PS_IN_ANNO_EXPECT_VALUE, parentNode)
                 ensureContains(trove, parentNode, tok);
-                parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1, 
+                parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1,
                     PS_IN_ANNO_EXPECT_VALUE, commentQueue);
                 return;
 
@@ -727,7 +718,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
         case PS_IN_ANNO_EXPECT_VALUE:
             switch (tok->kind)
             {
-            case HU_TOKENKIND_EOF: 
+            case HU_TOKENKIND_EOF:
                 recordParseError(trove, HU_ERROR_UNEXPECTEDEOF, tok);
                 return;
 
@@ -751,7 +742,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
         case PS_IN_ANNODICT_EXPECT_KEY_OR_END:
             switch (tok->kind)
             {
-            case HU_TOKENKIND_EOF: 
+            case HU_TOKENKIND_EOF:
                 recordParseError(trove, HU_ERROR_UNEXPECTEDEOF, tok);
                 return;
 
@@ -765,7 +756,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
                 // assign anno to parentNode
                 // recursive(PS_IN_ANNODICT_EXPECT_KVS, parentNode)
                 addAnnotation(trove, parentNode, tok);
-                parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1, 
+                parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1,
                     PS_IN_ANNODICT_EXPECT_KVS, commentQueue);
                 break;
 
@@ -783,7 +774,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
         case PS_IN_ANNODICT_EXPECT_KVS:
             switch (tok->kind)
             {
-            case HU_TOKENKIND_EOF: 
+            case HU_TOKENKIND_EOF:
                 recordParseError(trove, HU_ERROR_UNEXPECTEDEOF, tok);
                 return;
 
@@ -795,7 +786,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
             case HU_TOKENKIND_KEYVALUESEP:
                 // recursive(PS_IN_ANNODICT_EXPECT_VALUE, parentNode)
                 ensureContains(trove, parentNode, tok);
-                parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1, 
+                parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1,
                     PS_IN_ANNODICT_EXPECT_VALUE, commentQueue);
                 return;
 
@@ -809,7 +800,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
         case PS_IN_ANNODICT_EXPECT_VALUE:
             switch (tok->kind)
             {
-            case HU_TOKENKIND_EOF: 
+            case HU_TOKENKIND_EOF:
                 recordParseError(trove, HU_ERROR_UNEXPECTEDEOF, tok);
                 return;
 
@@ -829,7 +820,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
                 break;
             }
             break;
-        }    
+        }
     }
 }
 

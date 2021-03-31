@@ -6,7 +6,7 @@
 #include "humon/ansiColors.h"
 
 
-// Even <stdlib.h> defines these macros in Visual Studio 2017 unless you 
+// Even <stdlib.h> defines these macros in Visual Studio 2017 unless you
 // switch off language extensions, in which case the compiler uses C89.
 #ifdef min
 #undef min
@@ -109,6 +109,8 @@ extern "C"
     huSize_t appendToVector(huVector * vector, void const * data, huSize_t numElements);
     /// Grows a growable vector, and return a pointer to the first element of the appended entries.
     void * growVector(huVector * vector, huSize_t * numElements);
+    /// Shrinks a growable vector from the end.
+    void shrinkVector(huVector * vector, huSize_t numElements);
 
     typedef struct huCursor_tag
     {
@@ -152,8 +154,8 @@ extern "C"
     void destroyNode(huNode const * node);
 
     /// Add a huToken to a trove's token array.
-    huToken * allocNewToken(huTrove * trove, huEnumType_t kind, char const * str, huSize_t size, 
-        huLine_t line, huCol_t col, huLine_t endLine, huCol_t endCol, 
+    huToken * allocNewToken(huTrove * trove, huEnumType_t kind, char const * str, huSize_t size,
+        huLine_t line, huCol_t col, huLine_t endLine, huCol_t endCol,
         huSize_t offsetIn, huSize_t offsetOut, char quoteChar);
     /// Add a huNode to a trove's node array.
     huNode * allocNewNode(huTrove * trove, huEnumType_t nodeKind, huToken const * firstToken);
@@ -178,7 +180,7 @@ extern "C"
     void parseTrove(huTrove * trove);
 
     /// Manages printing a dynamic string.
-    /** An object of this class manages a memory string which 
+    /** An object of this class manages a memory string which
      * is printed small bits at a time. It also tracks the kind
      * of text printed, so as to properly format the whitespace
      * according to settings. */

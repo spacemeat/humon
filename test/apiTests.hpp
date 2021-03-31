@@ -57,7 +57,7 @@ TEST(huGetParent, lists)
     POINTERS_EQUAL_TEXT(l.cpp, pn, "l.cp == l.cp.parent");
     pn = huGetParent(pn);
     POINTERS_EQUAL_TEXT(l.root, pn, "root == l.cpp.parent");
-    
+
     pn = huGetParent(l.root);
     POINTERS_EQUAL_TEXT(NULL, pn, "root's parent is not NULL");
 }
@@ -78,7 +78,7 @@ TEST(huGetParent, dicts)
     POINTERS_EQUAL_TEXT(d.cpp, pn, "d.cp == d.cp.parent");
     pn = huGetParent(pn);
     POINTERS_EQUAL_TEXT(d.root, pn, "root == d.cpp.parent");
-    
+
     pn = huGetParent(d.root);
     POINTERS_EQUAL_TEXT(NULL, pn, "root's parent is not NULL");
 }
@@ -1462,7 +1462,7 @@ TEST(huGetCommentsContaining, lists)
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "a.gcc aaa 1 == exp");
     comm = huGetCommentsContainingZ(l.a, "aaa", & cursor);
     POINTERS_EQUAL_TEXT(HU_NULLTOKEN, comm, "a.gcc aaa 2 = null");
-    
+
     cursor = 0;
     comm = huGetCommentsContainingZ(l.a, "right here", & cursor);
     CHECK(comm != HU_NULLTOKEN);
@@ -1561,7 +1561,7 @@ TEST(huGetCommentsContaining, dicts)
     STRNCMP_EQUAL_TEXT(exp, comm->str.ptr, comm->str.size, "a.gcc aaa 1 == exp");
     comm = huGetCommentsContainingZ(d.a, "aaa", & cursor);
     POINTERS_EQUAL_TEXT(HU_NULLTOKEN, comm, "a.gcc aaa 2 = null");
-    
+
     cursor = 0;
     comm = huGetCommentsContainingZ(d.a, "right here", & cursor);
     CHECK(comm != HU_NULLTOKEN);
@@ -2195,7 +2195,7 @@ TEST(huDeserializeTrove, pathological)
     huTrove const * trove = HU_NULLTROVE;
     int error = HU_ERROR_NOERROR;
     huDeserializeOptions params;
-    huInitDeserializeOptions(& params, HU_ENCODING_UTF8, true, 4, NULL);
+    huInitDeserializeOptions(& params, HU_ENCODING_UTF8, true, 4, NULL, HU_BUFFERMANAGEMENT_COPYANDOWN);
 
     error = huDeserializeTroveZ(NULL, "", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
@@ -2284,7 +2284,7 @@ TEST(huDeserializeTroveFromFile, malloc)
     alloc.memAlloc = myalloc;
     alloc.memRealloc = myrealloc;
     alloc.memFree = myfree;
-    huInitDeserializeOptions(& params, HU_ENCODING_UTF8, true, 4, & alloc);
+    huInitDeserializeOptions(& params, HU_ENCODING_UTF8, true, 4, & alloc, HU_BUFFERMANAGEMENT_COPYANDOWN);
 
     error = huDeserializeTroveFromFile(& trove, "test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_NOERROR, error);
@@ -2300,7 +2300,7 @@ TEST(huDeserializeTroveFromFile, pathological)
     huTrove const * trove = HU_NULLTROVE;
     int error = HU_ERROR_NOERROR;
     huDeserializeOptions params;
-    huInitDeserializeOptions(& params, HU_ENCODING_UTF8, true, 4, NULL);
+    huInitDeserializeOptions(& params, HU_ENCODING_UTF8, true, 4, NULL, HU_BUFFERMANAGEMENT_COPYANDOWN);
 
     error = huDeserializeTroveFromFile(NULL, "", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
@@ -3117,7 +3117,7 @@ TEST_GROUP(huFindNodesWithAnnotationKey)
 
 TEST(huFindNodesWithAnnotationKey, normal)
 {
-    huSize_t cursor = 0;    
+    huSize_t cursor = 0;
     huNode const * node = huFindNodesWithAnnotationKeyZ(l.trove, "a", & cursor);
     POINTERS_EQUAL_TEXT(l.a, node, "l fnbak a 0 == a");
     node = huFindNodesWithAnnotationKeyZ(l.trove, "a", & cursor);
@@ -3263,7 +3263,7 @@ TEST_GROUP(huFindNodesWithAnnotationValue)
 
 TEST(huFindNodesWithAnnotationValue, normal)
 {
-    huSize_t cursor = 0;    
+    huSize_t cursor = 0;
     huNode const * node = huFindNodesWithAnnotationValueZ(l.trove, "a", & cursor);
     POINTERS_EQUAL_TEXT(l.a, node, "l fnbav a 0 == a");
     node = huFindNodesWithAnnotationValueZ(l.trove, "a", & cursor);
@@ -3696,14 +3696,14 @@ static std::string makeFileName(std::string_view path, int WhitespaceFormat, boo
     else if (WhitespaceFormat == HU_WHITESPACEFORMAT_MINIMAL)
         { format = ".pm"; }
 
-    std::string consPath = std::string {path} + 
+    std::string consPath = std::string {path} +
         format +
         (printComments ? ".my" : ".mn") +
         (useColors ? ".ca" : ".cn") +
-        (printBom ? ".by" : ".bn") + 
+        (printBom ? ".by" : ".bn") +
         ".hu";
 
-    return consPath;        
+    return consPath;
 }
 
 
@@ -3852,12 +3852,12 @@ TEST(huSerializeTrove, correctness)
                         //if (testFile == testFiles[7])
                         //    { bool debugBreak = true; }
 
-                        auto [file, sz] = getFile(testFile, 
+                        auto [file, sz] = getFile(testFile,
                             WhitespaceFormat, useColors, printComments, printBom);
                         auto ttos = troveToString(testFile,
                             WhitespaceFormat, useColors, printComments, printBom);
                         std::string consPath = makeFileName(testFile, WhitespaceFormat, useColors, printComments, printBom);
-						
+
                         LONGS_EQUAL_TEXT(file.size(), ttos.size(), consPath.data());
                         MEMCMP_EQUAL_TEXT(file.data(), ttos.data(), file.size(), consPath.data());
                     }

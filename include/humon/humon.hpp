@@ -1,6 +1,6 @@
-/** @file 
+/** @file
  *  @brief This is the main header for the Humon C++ API. \#include this from your C++ code.
- **/ 
+ **/
 
 #pragma once
 
@@ -22,7 +22,7 @@
 #include "humon.h"
 
 
-/// Defining this enables exceptions to be thrown on unfound path calls 
+/// Defining this enables exceptions to be thrown on unfound path calls
 /// (hu::Trove::nodeByAddress, huNode::nodeByAddress, hu::Trove::operator/
 /// or hu::Node::operator/); Normally these silently fail, and it can be
 /// difficult to determine where. See the README.
@@ -110,7 +110,7 @@ namespace hu
         noError = capi::HU_ERROR_NOERROR,                       ///< No error.
         badEncoding = capi::HU_ERROR_BADENCODING,               ///< The Unicode encoding is malformed.
         unfinishedQuote = capi::HU_ERROR_UNFINISHEDQUOTE,       ///< The quoted text was not endquoted.
-        unfinishedCStyleComment = 
+        unfinishedCStyleComment =
             capi::HU_ERROR_UNFINISHEDCSTYLECOMMENT,             ///< The C-style comment was not closed.
         unexpectedEof = capi::HU_ERROR_UNEXPECTEDEOF,           ///< The text ended early.
         tooManyRoots = capi::HU_ERROR_TOOMANYROOTS,             ///< There is more than one root node detected.
@@ -147,12 +147,12 @@ namespace hu
         tokenStreamBegin = capi::HU_COLORCODE_TOKENSTREAMBEGIN,     ///< Beginning-of-token stream color code.
         tokenStreamEnd = capi::HU_COLORCODE_TOKENSTREAMEND,         ///< End-of-token stream color code.
         tokenEnd = capi::HU_COLORCODE_TOKENEND,                     ///< End-of-color code.
-        puncList = capi::HU_COLORCODE_PUNCLIST,                     ///< List punctuation style. ([,]) 
+        puncList = capi::HU_COLORCODE_PUNCLIST,                     ///< List punctuation style. ([,])
         puncDict = capi::HU_COLORCODE_PUNCDICT,                     ///< Dict punctuation style. ({,})
         puncKeyValueSep = capi::HU_COLORCODE_PUNCKEYVALUESEP,       ///< Key-value separator style. (:)
         puncAnnotate = capi::HU_COLORCODE_PUNCANNOTATE,             ///< Annotation mark style. (@)
         puncAnnotateDict = capi::HU_COLORCODE_PUNCANNOTATEDICT,     ///< Annotation dict punctuation style. ({,})
-        puncAnnotateKeyValueSep = 
+        puncAnnotateKeyValueSep =
             capi::HU_COLORCODE_PUNCANNOTATEKEYVALUESEP,             ///< Annotation key-value separator style. (:)
         key = capi::HU_COLORCODE_KEY,                               ///< Key style.
         value = capi::HU_COLORCODE_VALUE,                           ///< Value style.
@@ -163,6 +163,23 @@ namespace hu
 
         numColors = capi::HU_COLORCODE_NUMCOLORS                    ///< One past the last style code.
     };
+
+    enum class BufferManagement : hu::enumType_t
+    {
+        copyAndOwn = capi::HU_BUFFERMANAGEMENT_COPYANDOWN,  ///< The trove should copy the input buffer, and free the copy when destroyed.
+        moveAndOwn = capi::HU_BUFFERMANAGEMENT_MOVEANDOWN,  ///< The trove should use the input buffer without copying it, and free it when destroyed.
+        move = capi::HU_BUFFERMANAGEMENT_MOVE               ///< The trove should use the input buffer without copying it, and do nothing to it when destroyed.
+    };
+
+    inline bool validateSize(std::size_t sz)
+    {
+        if constexpr (sizeof(std::size_t) > sizeof(hu::size_t))
+        {
+            return sz < static_cast<std::size_t>(
+                std::numeric_limits<hu::size_t>::max());
+        }
+        return true;
+    }
 
     /// Conversion from capi::huStringView to std::string_view.
     inline std::string_view make_sv(capi::huStringView const & husv)
@@ -200,9 +217,9 @@ namespace hu
     {
     public:
         /// Construct with sane defaults.
-        DeserializeOptions(Encoding encoding = Encoding::unknown, bool strictUnicode = true, hu::col_t tabSize = 4, Allocator allocator = {})
+        DeserializeOptions(Encoding encoding = Encoding::unknown, bool strictUnicode = true, hu::col_t tabSize = 4, Allocator allocator = {}, BufferManagement bufferManagement = BufferManagement::copyAndOwn)
         {
-            capi::huInitDeserializeOptions(& cparams, static_cast<hu::enumType_t>(encoding), strictUnicode, tabSize, & allocator);
+            capi::huInitDeserializeOptions(& cparams, static_cast<hu::enumType_t>(encoding), strictUnicode, tabSize, & allocator, static_cast<hu::enumType_t>(bufferManagement));
         }
 
         /// Expect a particular Unicode encoding, or Encoding::unknown.
@@ -238,12 +255,12 @@ namespace hu
     {
     public:
         /// Construct with sane defaults.
-        SerializeOptions(WhitespaceFormat WhitespaceFormat = WhitespaceFormat::pretty, 
+        SerializeOptions(WhitespaceFormat WhitespaceFormat = WhitespaceFormat::pretty,
             hu::col_t indentSize = 4, bool indentWithTabs = false, std::optional<ColorTable> const & colors = {},
             bool printComments = true, std::string_view newline = "\n", bool printBom = false)
         {
             std::size_t newlineSize = newline.size();
-            if (newlineSize > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+            if (! validateSize(newlineSize))
                 { newlineSize = static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()); }
 
             capi::huInitSerializeOptionsN(& cparams, static_cast<hu::enumType_t>(WhitespaceFormat), indentSize, indentWithTabs,
@@ -267,7 +284,7 @@ namespace hu
                 for (hu::enumType_t i = 0; i < capi::HU_COLORCODE_NUMCOLORS; ++i)
                 {
                     std::size_t sz = sv[(size_t) i].size();
-                    if (sz > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+                    if (! validateSize(sz))
                         { sz = static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()); }
                     capiColorTable[(size_t) i].ptr = sv[(size_t) i].data();
                     capiColorTable[(size_t) i].size = static_cast<hu::size_t>(sz);
@@ -284,10 +301,10 @@ namespace hu
         void setNewline(std::string_view newline)
         {
             std::size_t sz = newline.size();
-            if (sz > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+            if (! validateSize(sz))
                 { sz = static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()); }
 
-            cparams.newline.ptr = newline.data(); 
+            cparams.newline.ptr = newline.data();
             cparams.newline.size = static_cast<hu::size_t>(sz);
         }
 
@@ -303,7 +320,7 @@ namespace hu
         {
             if (cparams.usingColors == false)
                 { return std::nullopt; }
-            
+
             ColorTable newColorTable;
             std::string_view * sv = newColorTable.data();
             for (hu::enumType_t i = 0; i < capi::HU_COLORCODE_NUMCOLORS; ++i)
@@ -346,7 +363,7 @@ namespace hu
 
     /// Encodes a token read from Humon text.
     /** This class encodes file location and buffer location information about a
-     * particular token in a Humon file. Every token is read and tracked with a 
+     * particular token in a Humon file. Every token is read and tracked with a
      * hu::Token. */
     class Token
     {
@@ -362,7 +379,7 @@ namespace hu
         operator bool() const          ///< Implicit validity test.
             { return isValid(); }
         TokenKind kind() const         ///< Returns the kind of token this is.
-            { check(); return isValid() ? static_cast<TokenKind>(ctoken->kind) 
+            { check(); return isValid() ? static_cast<TokenKind>(ctoken->kind)
                                         : static_cast<TokenKind>(capi::HU_TOKENKIND_NULL); }
         std::string_view rawStr() const   ///< Returns the raw string value of the token, including quotes or heredoc tags.
             { check(); return isValid() ? make_sv(ctoken->rawStr) : ""; }
@@ -414,7 +431,7 @@ namespace hu
     /// Encodes a Humon data node.
     /** Humon nodes make up a hierarchical structure, stemming from a single root node.
      * Humon troves contain a reference to the root, and store all nodes in an indexable
-     * array. A node is either a list, a dict, or a value node. Any number of comments 
+     * array. A node is either a list, a dict, or a value node. Any number of comments
      * and annotations can be associated to a node. */
     class Node
     {
@@ -459,7 +476,7 @@ namespace hu
             { check(); return capi::huGetNumChildren(cnode); }
 
         /// Returns the child node, by child index.
-        template <class IntType, 
+        template <class IntType,
             typename std::enable_if<
                 std::is_integral_v<IntType>, IntType>::type * = nullptr>
         Node child(IntType idx) const
@@ -470,12 +487,12 @@ namespace hu
             return capi::huGetChildByIndex(cnode, static_cast<hu::size_t>(idx));
         }
 
-        /// Returns the child node, by key (if this is a dict).
+        /// Returns the last child node with the specified key (if this is a dict).
         Node child(std::string_view key) const
         {
             check();
             std::size_t sz = key.size();
-            if (sz > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+            if (! validateSize(sz))
                 { return Node(HU_NULLNODE); }
             return capi::huGetChildByKeyN(cnode, key.data(), static_cast<hu::size_t>(sz));
         }
@@ -484,7 +501,25 @@ namespace hu
             { check(); return child(0); }
         Node nextSibling() const        ///< Returns the node ordinally after this one in the parent's children, or the null node if it's the last.
             { check(); return Node(capi::huGetNextSibling(cnode)); }
-        
+
+        Node firstChild(std::string_view key) const            ///< Returns the first child node of this node with the specified key.
+        {
+            check();
+            std::size_t sz = key.size();
+            if (! validateSize(sz))
+                { return Node(HU_NULLNODE); }
+            return Node(capi::huGetFirstChildWithKeyN(cnode, key.data(), static_cast<hu::size_t>(sz)));
+        }
+
+        Node nextSibling(std::string_view key) const        ///< Returns the node with the specified key ordinally after this one in the parent's children, or the null node if it's the last.
+        {
+            check();
+            std::size_t sz = key.size();
+            if (! validateSize(sz))
+                { return Node(HU_NULLNODE); }
+            return Node(capi::huGetNextSiblingWithKeyN(cnode, key.data(), static_cast<hu::size_t>(sz)));
+        }
+
         /// Access a node by an address relative to this node.
         /** A relative address is a single string, which contains as contents a `/`-delimited path
          * through the hierarchy. A key or index between the slashes indicates the child node to
@@ -493,7 +528,7 @@ namespace hu
         {
             check();
             std::size_t sz = relativeAddress.size();
-            if (sz > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+            if (! validateSize(sz))
                 { return Node(HU_NULLNODE); }
             return capi::huGetNodeByRelativeAddressN(cnode, relativeAddress.data(), static_cast<hu::size_t>(sz));
         }
@@ -509,7 +544,7 @@ namespace hu
         /// Returns the `idx`th annotation.
         /** Returns a <Token, Token> referencing the key and value of the annotation
          * accessed by index. */
-        std::tuple<Token, Token> annotation(hu::size_t idx) const 
+        std::tuple<Token, Token> annotation(hu::size_t idx) const
         {
             check();
             auto canno = capi::huGetAnnotation(cnode, idx);
@@ -540,44 +575,44 @@ namespace hu
         {
             check();
             std::size_t sz = key.size();
-            if (sz > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+            if (! validateSize(sz))
                 { return false; }
             return capi::huHasAnnotationWithKeyN(cnode, key.data(), static_cast<hu::size_t>(sz));
         }
 
         /// Returns a Token referencing the value of the annotation accessed by key.
-        Token const annotation(std::string_view key) const 
-        { 
+        Token const annotation(std::string_view key) const
+        {
             check();
             std::size_t sz = key.size();
-            if (sz > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+            if (! validateSize(sz))
                 { return Token(HU_NULLTOKEN); }
             auto canno = capi::huGetAnnotationWithKeyN(cnode, key.data(), static_cast<hu::size_t>(sz));
             return Token(canno);
         }
 
         /// Returns the number of annotations associated to this node, with the specified key.
-        /** A node can have multiple annotations, each with different keys which have the same 
+        /** A node can have multiple annotations, each with different keys which have the same
          * value. This function returns the number of annotations associated to this node with
          * the specified value. */
         hu::size_t numAnnotationsWithValue(std::string_view value) const
         {
             check();
             std::size_t sz = value.size();
-            if (sz > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+            if (! validateSize(sz))
                 { return 0; }
             return capi::huGetNumAnnotationsWithValueN(cnode, value.data(), static_cast<hu::size_t>(sz));
         }
-        
+
         /// Returns a new collection of all this node's annotations with the specified value.
-        /** Creates a new vector of Tokens, each referencing the key of an annotation that 
+        /** Creates a new vector of Tokens, each referencing the key of an annotation that
          * has the specified value. */
         [[nodiscard]] std::vector<Token> annotationsWithValue(std::string_view value) const
         {
             check();
             std::vector<Token> vec;
             std::size_t sz = value.size();
-            if (sz > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+            if (! validateSize(sz))
                 { return vec; }
 
             hu::size_t cursor = 0;
@@ -588,7 +623,7 @@ namespace hu
                 if (tok)
                     { vec.push_back(tok); }
             } while (tok != HU_NULLTOKEN);
-            
+
             return vec;
         }
 
@@ -597,7 +632,7 @@ namespace hu
             { check(); return capi::huGetNumComments(cnode); }
         /// Returns the `idx`th comment associated to this node.
         /** Returns a Token of the `idx`th ordinal comment associated with this node. */
-        Token comment(hu::size_t idx) const 
+        Token comment(hu::size_t idx) const
             { check(); return capi::huGetComment(cnode, idx); }
 
         /// Returns a new collection of all comments associated to this node.
@@ -617,7 +652,7 @@ namespace hu
         {
             check();
             std::size_t sz = containedString.size();
-            if (sz > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+            if (! validateSize(sz))
                 { return false; }
             return capi::huHasCommentsContainingN(cnode, containedString.data(), static_cast<hu::size_t>(sz));
         }
@@ -628,7 +663,7 @@ namespace hu
             check();
             std::vector<Token> vec;
             std::size_t sz = containedString.size();
-            if (sz > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+            if (! validateSize(sz))
                 { return vec; }
 
             hu::size_t cursor = 0;
@@ -643,14 +678,14 @@ namespace hu
         }
 
         /// Returns whether the specified index is a valid child index of this list or dict node.
-        template <class IntType, 
+        template <class IntType,
             typename std::enable_if<
                 std::is_integral_v<IntType>, IntType>::type * = nullptr>
         bool operator % (IntType idx) const
         {
             check();
             if (idx > 0 && static_cast<std::size_t>(idx) > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
-                { return false; }                
+                { return false; }
             auto cidx = static_cast<hu::size_t>(idx);
             if (isValid() && (kind() == NodeKind::dict || kind() == NodeKind::list))
                 { return cidx >= 0 && cidx < numChildren(); }
@@ -667,7 +702,7 @@ namespace hu
         }
 
         /// Returns the `idx`th child of this node.
-        template <class IntType, 
+        template <class IntType,
             typename std::enable_if<
                 std::is_integral_v<IntType>, IntType>::type * = nullptr>
         Node operator / (IntType idx) const
@@ -717,18 +752,18 @@ namespace hu
         }
 
         /// Returns the converted value of this value node.
-        /** Converts the string value of this value node into a `U`. The conversion is 
+        /** Converts the string value of this value node into a `U`. The conversion is
          * performed by passing a dummy object of type val<T> which, if implemented
          * for type U, will invoke that type's extract function. If there is no val<T>
          * defined, the default val<T> calls std::from_chars(... U&). Any type that
          * has an overload of std::from_chars (integers or floating point types), or a
          * specialization of val<T>, will return the converted value.
-         * 
+         *
          * Users can implement a specialization of val<T> for a custom type, providing
          * the analogous extract() member function.
-         * 
+         *
          * The purpose of val<T> is to allow users to write code like:
-         *      auto sv = materialsTrove / "assets" / "brick-diffuse" / "src" / 
+         *      auto sv = materialsTrove / "assets" / "brick-diffuse" / "src" /
          *                0 % h::val<string_view> {}; */
         template <class T>
         [[nodiscard]] inline T operator % (val<T> ve) const
@@ -738,7 +773,7 @@ namespace hu
         }
 
         /// Returns the entire text contained by this node and all its children.
-        /** The entire text of this node is returned, including all its children's 
+        /** The entire text of this node is returned, including all its children's
          * texts, and any comments and annotations associated to this node. */
         std::string_view tokenStream() const
         {
@@ -748,9 +783,9 @@ namespace hu
         }
 
         /// Generates and returns the address of this node.
-        /** Each node in a trove has a unique address, separate from its node index, 
+        /** Each node in a trove has a unique address, separate from its node index,
          * which is represented by a series of keys or index values from the root,
-         * separated by `/`s. The address is guaranteed to work with 
+         * separated by `/`s. The address is guaranteed to work with
          * Trove::nodeByAddress(). */
         [[nodiscard]] std::string address() const
         {
@@ -762,6 +797,8 @@ namespace hu
             capi::huGetAddress(cnode, s.data(), & len);
             return s;
         }
+
+        capi::huNode const * cNode() const { return cnode; }
 
     private:
         void check() const { checkNotNull(cnode); }
@@ -868,17 +905,53 @@ namespace hu
         {
             if (valStr[0] != 't' && valStr[0] != 'T')
                 { return false; }
-            
+
             if (valStr.size() == 1)
                 { return true; }
-            
+
             if (valStr.size() != 4)
                 { return false; }
 
-            return valStr == "true" || 
-                    valStr == "True" || 
+            return valStr == "true" ||
+                    valStr == "True" ||
                     valStr == "TRUE";
         }
+    };
+
+    class ChangeSet
+    {
+    public:
+        ChangeSet(Trove const & trove); // defined after Trove
+
+        ~ChangeSet()
+        {
+            capi::huDestroyChangeSet(& cchangeSet);
+        }
+
+        /// Record a node replacement / removal.
+	    hu::size_t replaceNode(Node const & node, std::string_view newString)
+        {
+            return capi::huReplaceNodeN(& cchangeSet, node.cNode(), newString.data(), newString.size());
+        }
+
+        /// Record appending to a list or dict.
+	    hu::size_t append(Node const & node, std::string_view newString)
+        {
+            return capi::huAppendN(& cchangeSet, node.cNode(), newString.data(), newString.size());
+        }
+
+        /// Record inserting into a list or dict.
+	    hu::size_t insertAtIndex(Node const & node, hu::size_t idx, std::string_view newString)
+        {
+            return capi::huInsertAtIndexN(& cchangeSet, node.cNode(), idx, newString.data(), newString.size());
+        }
+
+        capi::huChangeSet & cChangeSet() { return cchangeSet; }
+        capi::huTrove const * cTrove() const { return ctrove; }
+
+    private:
+        capi::huChangeSet cchangeSet;
+        capi::huTrove const * ctrove;
     };
 
 
@@ -892,19 +965,21 @@ namespace hu
         /// Creates a Trove from a UTF8 string.
         /** This function makes a new Trove object from the given string. If the string
          * is in a legal Humon format, the Trove will come back without errors, and fully
-         * ready to use. Otherwise the Trove will be in an erroneous state; it will not 
-         * be a null trove, but rather will be loaded with no nodes, and errors marking 
+         * ready to use. Otherwise the Trove will be in an erroneous state; it will not
+         * be a null trove, but rather will be loaded with no nodes, and errors marking
          * tokens. */
         [[nodiscard]] static DeserializeResult fromString(std::string_view data,
-            DeserializeOptions deserializeOptions = { Encoding::utf8 }, 
+            DeserializeOptions deserializeOptions = { Encoding::utf8 },
             ErrorResponse errorRespose = ErrorResponse::stderrAnsiColor)
         {
             capi::huTrove const * trove = HU_NULLTROVE;
-            if (data.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+
+            std::size_t sz = data.size();
+            if (! validateSize(sz))
                 { return ErrorCode::badParameter; }
 
-            auto error = capi::huDeserializeTroveN(& trove, data.data(), 
-                static_cast<hu::size_t>(data.size()), 
+            auto error = capi::huDeserializeTroveN(& trove, data.data(),
+                static_cast<hu::size_t>(sz),
                 & deserializeOptions.cparams, static_cast<hu::enumType_t>(errorRespose));
 
             if (error != capi::HU_ERROR_NOERROR &&
@@ -917,15 +992,15 @@ namespace hu
         /// Creates a Trove from a UTFn-encoded string.
         /** This function makes a new Trove object from the given string. If the string
          * is in a legal Humon format, the Trove will come back without errors, and fully
-         * ready to use. Otherwise the Trove will be in an erroneous state; it will not 
-         * be a null trove, but rather will be loaded with no nodes, and errors marking 
+         * ready to use. Otherwise the Trove will be in an erroneous state; it will not
+         * be a null trove, but rather will be loaded with no nodes, and errors marking
          * tokens. */
-        [[nodiscard]] static DeserializeResult fromString(char const * data, hu::size_t dataLen, 
-            DeserializeOptions deserializeOptions = { Encoding::utf8 }, 
+        [[nodiscard]] static DeserializeResult fromString(char const * data, hu::size_t dataLen,
+            DeserializeOptions deserializeOptions = { Encoding::utf8 },
             ErrorResponse errorRespose = ErrorResponse::stderrAnsiColor)
         {
             capi::huTrove const * trove = HU_NULLTROVE;
-            auto error = capi::huDeserializeTroveN(& trove, data, dataLen, 
+            auto error = capi::huDeserializeTroveN(& trove, data, dataLen,
                 & deserializeOptions.cparams, static_cast<hu::enumType_t>(errorRespose));
             if (error != capi::HU_ERROR_NOERROR &&
                 error != capi::HU_ERROR_TROVEHASERRORS)
@@ -937,18 +1012,20 @@ namespace hu
         /// Creates a Trove from a UTF8 file.
         /** This function makes a new Trove object from the given file. If the file
          * is in a legal Humon format, the Trove will come back without errors, and fully
-         * ready to use. Otherwise the Trove will be in an erroneous state; it will not 
-         * be a null trove, but rather will be loaded with no nodes, and errors marking 
+         * ready to use. Otherwise the Trove will be in an erroneous state; it will not
+         * be a null trove, but rather will be loaded with no nodes, and errors marking
          * tokens. */
         [[nodiscard]] static DeserializeResult fromFile(std::string_view path,
-            DeserializeOptions deserializeOptions = { Encoding::unknown }, 
+            DeserializeOptions deserializeOptions = { Encoding::unknown },
             ErrorResponse errorRespose = ErrorResponse::stderrAnsiColor)
         {
             capi::huTrove const * trove = HU_NULLTROVE;
-            if (path.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+
+            std::size_t sz = path.size();
+            if (! validateSize(sz))
                 { return ErrorCode::badParameter; }
 
-            auto error = capi::huDeserializeTroveFromFile(& trove, path.data(), 
+            auto error = capi::huDeserializeTroveFromFile(& trove, path.data(),
                 & deserializeOptions.cparams, static_cast<hu::enumType_t>(errorRespose));
             if (error != capi::HU_ERROR_NOERROR &&
                 error != capi::HU_ERROR_TROVEHASERRORS)
@@ -956,17 +1033,17 @@ namespace hu
             else
                 { return Trove(trove); }
         }
-                
+
         /// Creates a Trove from a UTF8 stream.
         /** This function makes a new Trove object from the given stream. If the stream
          * is in a legal Humon format, the Trove will come back without errors, and fully
-         * ready to use. Otherwise the Trove will be in an erroneous state; it will not 
-         * be a null trove, but rather will be loaded with no nodes, and errors marking 
+         * ready to use. Otherwise the Trove will be in an erroneous state; it will not
+         * be a null trove, but rather will be loaded with no nodes, and errors marking
          * tokens. This function does **not** close the stream once it has finished reading.
-         * 
+         *
          * If maxNumBytes == 0, `fromIstream` reads the stream until EOF is encountered.*/
-        [[nodiscard]] static DeserializeResult fromIstream(std::istream & in, 
-            DeserializeOptions deserializeOptions = { Encoding::unknown }, hu::size_t maxNumBytes = 0, 
+        [[nodiscard]] static DeserializeResult fromIstream(std::istream & in,
+            DeserializeOptions deserializeOptions = { Encoding::unknown }, hu::size_t maxNumBytes = 0,
             ErrorResponse errorResponse = ErrorResponse::stderrAnsiColor)
         {
             if (maxNumBytes == 0)
@@ -984,14 +1061,25 @@ namespace hu
                 return fromString(buffer.data(), deserializeOptions, errorResponse);
             }
         }
-    
+
+        /// Create a new trove, using recorded changes.
+        [[nodiscard]] static DeserializeResult fromChanges(ChangeSet & changes)
+        {
+            capi::huTrove const * newTrove = HU_NULLTROVE;
+            auto error = capi::huMakeChangedTrove(& newTrove, changes.cTrove(), & changes.cChangeSet());
+            if (error != capi::HU_ERROR_NOERROR &&
+                error != capi::HU_ERROR_TROVEHASERRORS)
+                { return static_cast<ErrorCode>(error); }
+            else
+                { return Trove(newTrove); }
+        }
     public:
         /// Construct a nullish Trove.
         Trove() { }
     private:
         /// Construction from static member functions.
         Trove(capi::huTrove const * ctrove) : ctrove(ctrove) { }
- 
+
     public:
         /// Move-construct a temporary trove object.
         Trove(Trove && rhs) noexcept
@@ -1039,7 +1127,7 @@ namespace hu
         hu::size_t numTokens() const      ///< Returns the number of tokens in the trove.
             { return capi::huGetNumTokens(ctrove); }
 
-        template <class IntType, 
+        template <class IntType,
             typename std::enable_if<
                 std::is_integral_v<IntType>, IntType>::type * = nullptr>
         Token token(IntType idx) const ///< Returns a Token by index.
@@ -1055,7 +1143,7 @@ namespace hu
         Node root() const          ///< Returns the root node of the trove.
             { return capi::huGetRootNode(ctrove); }
 
-        template <class IntType, 
+        template <class IntType,
             typename std::enable_if<
                 std::is_integral_v<IntType>, IntType>::type * = nullptr>
         Node nodeByIndex(IntType idx) const   ///< Returns a Node by index.
@@ -1069,14 +1157,15 @@ namespace hu
         /** Given a `/`-separated sequence of dict keys or indices, this function returns
          * a node in this trove which can be found by tracing nodes from the root. The address
          * must begin with a `/` when accessing from the Trove.
-         * \return Returns the {node and hu::ErrorCode::NoError} or {null node and 
+         * \return Returns the {node and hu::ErrorCode::NoError} or {null node and
          * the appropriate hu::ErrorCode}, */
         Node nodeByAddress(std::string_view address) const
         {
-            if (address.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+            std::size_t sz = address.size();
+            if (! validateSize(sz))
                 { return Node(HU_NULLNODE); }
             return Node(capi::huGetNodeByAddressN(
-                ctrove, address.data(), static_cast<hu::size_t>(address.size())));
+                ctrove, address.data(), static_cast<hu::size_t>(sz)));
         }
 
         /// Returns the number of errors encountered when tokenizing and parsing the Humon.
@@ -1084,7 +1173,7 @@ namespace hu
             { return ctrove ? capi::huGetNumErrors(ctrove) : 0; }
 
         /// Returns the `idx`th error encountered when tokenizing and parsing the Humon.
-        std::tuple<ErrorCode, Token> error(hu::size_t idx) const 
+        std::tuple<ErrorCode, Token> error(hu::size_t idx) const
         {
             auto cerr = capi::huGetError(ctrove, idx);
             return { static_cast<ErrorCode>(cerr->errorCode), Token(cerr->token) };
@@ -1106,9 +1195,9 @@ namespace hu
             { return capi::huGetNumTroveAnnotations(ctrove); }
 
         /// Returns the `idx`th annotation associated to this trove (not to any node).
-        std::tuple<Token, Token> troveAnnotation(hu::size_t idx) const 
-        { 
-            auto canno = capi::huGetTroveAnnotation(ctrove, idx); 
+        std::tuple<Token, Token> troveAnnotation(hu::size_t idx) const
+        {
+            auto canno = capi::huGetTroveAnnotation(ctrove, idx);
             return { Token(canno->key), Token(canno->value) };
         }
 
@@ -1123,43 +1212,48 @@ namespace hu
             return vec;
         }
 
-        /// Return the number of trove annotations associated to this trove (not to any node) with 
+        /// Return the number of trove annotations associated to this trove (not to any node) with
         /// the specified key.
         bool hasTroveAnnotation(std::string_view key) const
         {
-            if (key.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+            std::size_t sz = key.size();
+            if (! validateSize(sz))
                 { return false; }
             return capi::huTroveHasAnnotationWithKeyN(
-                ctrove, key.data(), static_cast<hu::size_t>(key.size()));
+                ctrove, key.data(), static_cast<hu::size_t>(sz));
         }
 
         /// Returns the value of the `idx`th annotation associated to this trove (not to any node)
         /// with the specified key.
-        Token troveAnnotation(std::string_view key) const 
+        Token troveAnnotation(std::string_view key) const
         {
-            if (key.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+            std::size_t sz = key.size();
+            if (! validateSize(sz))
                 { return Token(HU_NULLTROVE); }
             return capi::huGetTroveAnnotationWithKeyN(
-                ctrove, key.data(), static_cast<hu::size_t>(key.size()));
+                ctrove, key.data(), static_cast<hu::size_t>(sz));
         }
 
-        /// Return the number of trove annotations associated to this trove (not to any node) with 
+        /// Return the number of trove annotations associated to this trove (not to any node) with
         /// the specified value.
         hu::size_t numTroveAnnotationsWithValue(std::string_view value) const
         {
-            if (value.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
-                { return Token(HU_NULLTROVE); }
+            std::size_t sz = value.size();
+            if (! validateSize(sz))
+                { return 0; }
             return capi::huGetNumTroveAnnotationsWithValueN(
-                ctrove, value.data(), static_cast<hu::size_t>(value.size()));
+                ctrove, value.data(), static_cast<hu::size_t>(sz));
         }
 
-        /// Returns a new collection of all the keys of annotations associated to this trove (not 
+        /// Returns a new collection of all the keys of annotations associated to this trove (not
         /// to any node) with the specified value.
         [[nodiscard]] std::vector<Token> troveAnnotationsWithValue(std::string_view value) const
         {
             check();
             std::vector<Token> vec;
-            if (value.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+
+            std::size_t sz = value.size();
+            if (! validateSize(sz))
                 { return vec; }
 
             hu::size_t cursor = 0;
@@ -1167,11 +1261,11 @@ namespace hu
             do
             {
                 tok = capi::huGetTroveAnnotationWithValueN(
-                    ctrove, value.data(), static_cast<hu::size_t>(value.size()), & cursor);
+                    ctrove, value.data(), static_cast<hu::size_t>(sz), & cursor);
                 if (tok)
                     { vec.push_back(tok); }
             } while (tok != HU_NULLTOKEN);
-            
+
             return vec;
         }
 
@@ -1180,7 +1274,7 @@ namespace hu
             { return capi::huGetNumTroveComments(ctrove); }
 
         /// Returns the `idx`th comment associated to this trove (not to any node).
-        std::tuple<Token, Node> troveComment(hu::size_t idx) const 
+        std::tuple<Token, Node> troveComment(hu::size_t idx) const
         {
             auto ccomm = capi::huGetTroveComment(ctrove, idx);
             return { Token(ccomm), nullptr };
@@ -1195,14 +1289,16 @@ namespace hu
             for (hu::size_t i = 0; i < numComms; ++i)
                 { vec.push_back(troveComment(i)); }
             return vec;
-        }        
+        }
 
         /// Returns a new collection of all nodes that are associated an annotation with
         /// the specified key.
         [[nodiscard]] std::vector<Node> findNodesWithAnnotationKey(std::string_view key) const
         {
             std::vector<Node> vec;
-            if (key.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+
+            std::size_t sz = key.size();
+            if (! validateSize(sz))
                 { return vec; }
 
             hu::size_t cursor = 0;
@@ -1210,7 +1306,7 @@ namespace hu
             do
             {
                 node = capi::huFindNodesWithAnnotationKeyN(
-                    ctrove, key.data(), static_cast<hu::size_t>(key.size()), & cursor);
+                    ctrove, key.data(), static_cast<hu::size_t>(sz), & cursor);
                 if (node)
                     { vec.emplace_back(node); }
             } while(node != HU_NULLNODE);
@@ -1222,7 +1318,9 @@ namespace hu
         [[nodiscard]] std::vector<Node> findNodesWithAnnotationValue(std::string_view value) const
         {
             std::vector<Node> vec;
-            if (value.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+
+            std::size_t sz = value.size();
+            if (! validateSize(sz))
                 { return vec; }
 
             hu::size_t cursor = 0;
@@ -1230,7 +1328,7 @@ namespace hu
             do
             {
                 node = capi::huFindNodesWithAnnotationValueN(
-                    ctrove, value.data(), static_cast<hu::size_t>(value.size()), & cursor);
+                    ctrove, value.data(), static_cast<hu::size_t>(sz), & cursor);
                 if (node)
                     { vec.emplace_back(node); }
             } while(node != HU_NULLNODE);
@@ -1242,9 +1340,13 @@ namespace hu
         [[nodiscard]] std::vector<Node> findNodesWithAnnotationKeyValue(std::string_view key, std::string_view value) const
         {
             std::vector<Node> vec;
-            if (key.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+
+            std::size_t szk = key.size();
+            if (! validateSize(szk))
                 { return vec; }
-            if (value.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+
+            std::size_t szv = value.size();
+            if (! validateSize(szv))
                 { return vec; }
 
             hu::size_t cursor = 0;
@@ -1252,8 +1354,8 @@ namespace hu
             do
             {
                 node = capi::huFindNodesWithAnnotationKeyValueNN(
-                    ctrove, key.data(), static_cast<hu::size_t>(key.size()), 
-                    value.data(), static_cast<hu::size_t>(value.size()), & cursor);
+                    ctrove, key.data(), static_cast<hu::size_t>(szk),
+                    value.data(), static_cast<hu::size_t>(szv), & cursor);
                 if (node)
                     { vec.emplace_back(node); }
             } while(node != HU_NULLNODE);
@@ -1265,7 +1367,9 @@ namespace hu
         [[nodiscard]] std::vector<Node> findNodesByCommentContaining(std::string_view containedText) const
         {
             std::vector<Node> vec;
-            if (containedText.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+
+            std::size_t sz = containedText.size();
+            if (! validateSize(sz))
                 { return vec; }
 
             hu::size_t cursor = 0;
@@ -1273,7 +1377,7 @@ namespace hu
             do
             {
                 node = capi::huFindNodesByCommentContainingN(
-                    ctrove, containedText.data(), static_cast<hu::size_t>(containedText.size()), & cursor);
+                    ctrove, containedText.data(), static_cast<hu::size_t>(sz), & cursor);
                 if (node)
                     { vec.emplace_back(Node(node)); }
             } while(node != HU_NULLNODE);
@@ -1281,7 +1385,7 @@ namespace hu
         }
 
         /// Returns the entire token stream of a trove (its text), including all nodes and all comments and annotations.
-        /** This function returns the stored text as a view. It does not allocate or copy memory, 
+        /** This function returns the stored text as a view. It does not allocate or copy memory,
          * and cannot format the string.*/
         std::string_view tokenStream() const
         {
@@ -1298,7 +1402,7 @@ namespace hu
         }
 
         /// Serializes a trove with the minimum token stream necessary to accurately convey the data.
-        [[nodiscard]] std::variant<std::string, ErrorCode> toMinimalString(std::optional<ColorTable> const & colors = {}, 
+        [[nodiscard]] std::variant<std::string, ErrorCode> toMinimalString(std::optional<ColorTable> const & colors = {},
             bool printComments = true, std::string_view newline = "\n", bool printBom = false) const
         {
             SerializeOptions sp = { WhitespaceFormat::minimal, 0, false, colors, printComments, newline, printBom };
@@ -1307,26 +1411,26 @@ namespace hu
 
         /// Serializes a trove with whitespace formatting suitable for readability.
         [[nodiscard]] std::variant<std::string, ErrorCode> toPrettyString(hu::col_t indentSize = 4,
-            bool indentWithTabs = false, std::optional<ColorTable> const & colors = {}, bool printComments = true, 
-            std::string_view newline = "\n", bool printBom = false) const 
+            bool indentWithTabs = false, std::optional<ColorTable> const & colors = {}, bool printComments = true,
+            std::string_view newline = "\n", bool printBom = false) const
         {
             SerializeOptions sp = { WhitespaceFormat::pretty, indentSize, indentWithTabs, colors, printComments, newline, printBom };
             return toString(sp);
         }
 
         /// Serializes a trove to a UTF8-formatted string.
-        /** Creates a UTF8 string which encodes the trove, as seen in a Humon file. 
+        /** Creates a UTF8 string which encodes the trove, as seen in a Humon file.
          * The contents of the file are whitespace-formatted and colorized depending on
          * the parameters.
          * \return A variant containing either the encoded string, or an error code.*/
-        [[nodiscard]] std::variant<std::string, ErrorCode> toString(SerializeOptions & serializeOptions) const 
+        [[nodiscard]] std::variant<std::string, ErrorCode> toString(SerializeOptions & serializeOptions) const
         {
             hu::size_t strLength = 0;
             std::string s;
             auto error = capi::huSerializeTrove(ctrove, NULL, & strLength, & serializeOptions.cparams);
             if (error != capi::HU_ERROR_NOERROR)
                 { return static_cast<ErrorCode>(error); }
-            
+
             s.resize(strLength);
             error = capi::huSerializeTrove(ctrove, s.data(), & strLength, & serializeOptions.cparams);
             if (error != capi::HU_ERROR_NOERROR)
@@ -1336,7 +1440,7 @@ namespace hu
         }
 
         /// Serializes a trove with the exact input token stream.
-        [[nodiscard]] std::variant<hu::size_t, ErrorCode> toClonedFile(std::string_view path, 
+        [[nodiscard]] std::variant<hu::size_t, ErrorCode> toClonedFile(std::string_view path,
             bool printBom = false) const
         {
             SerializeOptions sp = { WhitespaceFormat::cloned, 0, false, std::nullopt, true, "", printBom };
@@ -1344,7 +1448,7 @@ namespace hu
         }
 
         /// Serializes a trove with the minimum token stream necessary to accurately convey the data.
-        [[nodiscard]] std::variant<hu::size_t, ErrorCode> toMinimalFile(std::string_view path, 
+        [[nodiscard]] std::variant<hu::size_t, ErrorCode> toMinimalFile(std::string_view path,
             std::optional<ColorTable> const & colors = {}, bool printComments = true,
             std::string_view newline = "\n", bool printBom = false) const
         {
@@ -1353,16 +1457,16 @@ namespace hu
         }
 
         /// Serializes a trove with whitespace formatting suitable for readability.
-        [[nodiscard]] std::variant<hu::size_t, ErrorCode> toPrettyFile(std::string_view path, 
+        [[nodiscard]] std::variant<hu::size_t, ErrorCode> toPrettyFile(std::string_view path,
             hu::col_t indentSize = 4, bool indentWithTabs = false, std::optional<ColorTable> const & colors = {}, bool printComments = true,
-            std::string_view newline = "\n", bool printBom = false) const 
+            std::string_view newline = "\n", bool printBom = false) const
         {
             SerializeOptions sp = { WhitespaceFormat::pretty, indentSize, indentWithTabs, colors, printComments, newline, printBom };
             return toFile(path, sp);
         }
 
         /// Serializes a trove to a UTF8-formatted file.
-        /** Creates or overwrites a UTF8 file which encodes the trove, as seen in a Humon file. 
+        /** Creates or overwrites a UTF8 file which encodes the trove, as seen in a Humon file.
          * The contents of the file are whitespace-formatted and colorized depending on
          * the parameters.
          * \return A variant containing either the number of bytes written to the file, or the
@@ -1371,7 +1475,8 @@ namespace hu
         [[nodiscard]] std::variant<hu::size_t, ErrorCode> toFile(std::string_view path, SerializeOptions & SerializeOptions) const
         {
             hu::size_t outputLength = 0;
-            if (path.size() > static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()))
+            std::size_t sz = path.size();
+            if (! validateSize(sz))
                 { return ErrorCode::badParameter; }
 
             auto error = capi::huSerializeTroveToFile(ctrove, path.data(), & outputLength, & SerializeOptions.cparams);
@@ -1383,7 +1488,7 @@ namespace hu
 
         /// Returns whether `idx` is a valid child index of the root node. (Whether root has
         /// at least `idx`+1 children.)
-        template <class IntType, 
+        template <class IntType,
             typename std::enable_if<
                 std::is_integral_v<IntType>, IntType>::type * = nullptr>
         bool operator % (IntType idx) const
@@ -1406,7 +1511,7 @@ namespace hu
 #endif
             if (! ch || idx < 0)
                 { return Node(HU_NULLNODE); }
-            
+
             ch = ch.child(idx);
 #ifdef HUMON_USE_NODE_PATH_EXCEPTIONS
             if (! ch)
@@ -1437,17 +1542,18 @@ namespace hu
             return ch;
         }
 
+        capi::huTrove const * getCTrove() const { return ctrove; }
+
     private:
         void check() const { checkNotNull(ctrove); }
 
         capi::huTrove const * ctrove = nullptr;
     };
 
-
     /// Fills an array with string table values for ANSI color terminals.
     inline ColorTable getAnsiColorTable()
     {
-        ColorTable table;        
+        ColorTable table;
         capi::huStringView nativeTable[capi::HU_COLORCODE_NUMCOLORS];
         capi::huFillAnsiColorTable(nativeTable);
         for (hu::enumType_t i = 0; i < capi::HU_COLORCODE_NUMCOLORS; ++i)
@@ -1455,4 +1561,11 @@ namespace hu
 
         return table;
     }
+
+    inline ChangeSet::ChangeSet(Trove const & trove)
+    {
+        ctrove = trove.getCTrove();
+        capi::huInitChangeSet(& cchangeSet, & ctrove->allocator);
+    }
+
 }

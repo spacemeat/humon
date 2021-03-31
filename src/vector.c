@@ -38,7 +38,7 @@ void initGrowableVector(huVector * vector, huSize_t elementSize, huAllocator con
 
 void destroyVector(huVector const * vector)
 {
-    // you bet your sweet bippy I'm casting away the const    
+    // you bet your sweet bippy I'm casting away the const
     if (vector->kind == HU_VECTORKIND_GROWABLE &&
         vector->buffer != NULL)
     {
@@ -122,7 +122,7 @@ void * growVector(huVector * vector, huSize_t * numElements)
             // if we grew, realloc
             if (vector->vectorCapacity > cap)
             {
-                vector->buffer = ourRealloc(vector->allocator, vector->buffer, 
+                vector->buffer = ourRealloc(vector->allocator, vector->buffer,
                     vector->vectorCapacity * vector->elementSize);
             }
 
@@ -131,7 +131,7 @@ void * growVector(huVector * vector, huSize_t * numElements)
         }
 
         return next;
-    
+
     default:
         return NULL;
     }
@@ -146,4 +146,13 @@ huSize_t appendToVector(huVector * vector, void const * data, huSize_t numElemen
         { memcpy(dest, data, maxAppend * vector->elementSize); }
 
     return maxAppend;
+}
+
+
+void shrinkVector(huVector * vector, huSize_t numElements)
+{
+    if (numElements > vector->numElements)
+        { numElements = vector->numElements; }
+
+    vector->numElements -= numElements;
 }

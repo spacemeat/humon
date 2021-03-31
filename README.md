@@ -126,7 +126,7 @@ There are a number of build options available to get just what you want: 32-bit 
 ### Integrating Humon into your application
 When you've successfully built, there will be an appropriate binary of interest in `build/bin`. The build system makes a static and shared library in Linux, and a static library and DLL (with import library) in Visual Studio.
 
-In Linux, you can install Humon into your system by invoking 
+In Linux, you can install Humon into your system by invoking
 
     ~/src/humon$ sudo install-linux.py
 
@@ -193,11 +193,11 @@ So, this project proposes Humon as a replacement for those tasks that XML is per
 
 *list*: A node that contains a sequential collection of zero or more nodes as children.  In the language, the list is the bounding `[ ]` around the child nodes. In the API, a list's children can be accessed by index.
 
-*dict*: A node that contains a sequential collection of zero or more nodes as children, where each node is associated with a key. In the language, the dict is the bounding `{ }` around the child nodes, each of which must be preceded by a key and `:`. In the API, a dict's children can be accessed by index or by key.
+*dict*: A node that contains a sequential collection of zero or more nodes as children, where each node is associated with a key. In the language, the dict is the bounding `{ }` around the child nodes, each of which must be preceded by a key and `:`. In the API, a dict's children can be accessed by index or by key. Keys need not be unique.
 
 *string*: An array of one or more Unicode code points that represents a key or value. All strings in Humon follow the same rules: Unquoted strings are the longest sequence of non-whitespace characters delimited by Humon punctuation, whitespace, or comment sequences. Quoted and heredoc'd strings are delimited by their quote characters only, and can contain newlines or anything else. There is no maximum length defined.
 
-*key*: An associated string for a dict's child node. Within a dict, keys must be unique.
+*key*: An associated string for a dict's child node. Within an annotation, keys must be unique.
 
 *value*: A node that contains a single string, or that string.
 
@@ -205,7 +205,7 @@ So, this project proposes Humon as a replacement for those tasks that XML is per
 
 *comment*: A character string that decorates a token stream, but is not part of the Humon dataset. They're mainly for humans to make notes, and you (probably) won't ever worry about them in code, but there are APIs to search for comments and get their associated nodes, in case that's useful.
 
-*annotation*: One of a collection of key:value string pairs associated to a node or a trove. They are exposed through separate APIs, and are globally searchable by key and/or value. Any node can have any number of annotations, as long as they have unique keys (like in a dict).
+*annotation*: One of a collection of key:value string pairs associated to a node or a trove. They are exposed through separate APIs, and are globally searchable by key and/or value. Any node can have any number of annotations, as long as they have unique keys (unlike in a dict).
 
 ### The principles applied to the language
 
@@ -226,7 +226,7 @@ Humon is intended to be used to describe data in almost any structure. Few probl
 
 To that end, Humon makes no assumptions about the meaning of values. There are no keywords. There are no special meanings to any tags or annotations or the text of comments. There are no automatic annotations for special nodes or anything. Nothing for you to memorize. Humon has little understanding of anything at all, which is *freeing*. It's up to the application using Humon to decide everything about structure without worrying about stumbling on some forgotten language rule.
 
-I mean, JSON does all this too. There's nothing revolutionary here, but Humon's syntax is *human-usable*, in an editing context.
+I mean, JSON does all this too. There's nothing revolutionary here, but the driving point is that Humon's syntax is *human-usable*, in an editing context.
 
 ### Humon language rules
 Okay, let's state some explicit rules, then.
@@ -241,7 +241,7 @@ There is no assumption made about the kind of the root node. If the first non-co
 Any kind of node can occupy any entry in any list. Lists don't have to contain nodes of a single kind; mix and match as you see fit.
 
 **Dicts are enclosed in {curly braces}.**
-Each dict entry must be a key:node pair. The node can be of any kind. Each key in a dict must be a string, and unique within the dict. There is no delimiting syntax between key:node pairs; just whitespace (maybe including commas if you like) if needed for disambiguation.
+Each dict entry must be a key:node pair. The node can be of any kind. Each key in a dict must be a string, and need not be unique within the dict. There is no delimiting syntax between key:node pairs; just whitespace (maybe including commas if you like) if needed for disambiguation.
 
 **Values are strings.**
 A string is a contiguous non-punctuation, non-whitespace string of Unicode code points, or a quoted string of Unicode code points, or a heredoc-tagged string of Unicode code points.
@@ -344,10 +344,10 @@ Commas are regarded by the tokenizer as whitespace. They are completely optional
         MOSFETs
     ]
     [resistors, caps, ICs, diodes, MOSFETs,]
-    ,,,[,resistors, 
+    ,,,[,resistors,
     caps    ,
          ICs, ,
-                 diodes 
+                 diodes
                MOSFETs,,,,,,, ],,,
 
 I find myself sometimes using commas when placing list or dict elements on one line, as on line `[1]` above, and not using them elsewise. In other words, what comes natural to my typing is legal Humon, and requires no grammarizing. I like designing structure without worrying about the punctuation; indeed, this little nit was one of the main motivations behind Humon's development.
@@ -356,9 +356,9 @@ I find myself sometimes using commas when placing list or dict elements on one l
 Any Unicode code points can be in any comments. Humon doesn't require your comments to contain any particular information. Because they have meaning to humans, they are not discarded by the parser; see below.
 
 **Annotations are their own thing, and exist out of band.**
-Annotations are the only sort of special syntax-y feature of Humon. The first working versions of the format didn't include them, but as I used Humon in those early days, I found that I wanted a convenient shorthand that sort of *jumped out of the structure* to provide context data, or specify certain rare conditions. Something formal and machineable, but that also didn't force modifications to the structure in place and were never strictly necessary. I settled on annotations.
+Annotations are the only sort of special syntax-y feature of Humon. The first working versions of the format didn't include them, but as I used Humon in those early days, I found that I wanted a convenient shorthand that was agnostic to the structure to provide context data, or specify certain rare conditions. Something formal and machineable, but that also didn't force modifications to the structure in place and were never strictly necessary. I settled on annotations.
 
-Every node can have any number of annotations, which appear *after or within* the node--specifically, *after* any token belonging or associated to a node. The trove can have them too, if an annotation appears before any other objects. Annotations begin with an `@` symbol, followed by either one key:value pair, or a dict of key:value pairs:
+Every node can have any number of annotations, which appear *after or within* the node--specifically, *after* any token belonging to or associated to a node. The trove can have them too, if an annotation appears before any other objects. Annotations begin with an `@` symbol, followed by either one key:value pair, or a dict of key:value pairs:
 
     [
         nostromo @ movie-ref: alien
@@ -369,7 +369,7 @@ Annotation values must be strings; an annotation value can't be a collection. Th
 
 Like dict entries, annotation keys must be unique among annotations associated to a particular node. Different nodes in a trove can have annotations with identical keys though.
 
-Practically, annotations aren't a necessary part of Humon. All their data could be baked into normal lists or dicts, and that's a fine way to design.
+Practically, annotations aren't a necessary part of Humon. All their data could be baked into normal lists or dicts, and that's a fine way to design, but it can get clunky in some cases.
 
 **Humon reads UTF-8, UTF-16, and UTF-32.**
 Humon supports reading files or in-memory strings encoded as any of:
@@ -398,7 +398,7 @@ If this is all Groot to you, just rest assured that Humon can load any text file
 **Humon writes UTF-8.**
 While Humon can read all the normal UTF-n formats, `Trove::toString`, `Trove::toFile`, and their sugar functions can only generate UTF-8, with or without BOM as you choose.
 
-> Why only UTF-8? It's the ubiquitous encoding for the web and most Linux and OSX things, and Windows APIs can fully deal with it. Humon transcodes the token stream into UTF-8 internally, and slams memory out on a `Trove::to*` call. See the manifesto at [this page](http://utf8everywhere.org/) to read an opinionated opinion.
+> Why only UTF-8? It's the ubiquitous encoding for the web and most Linux and OSX things, and Windows APIs can fully deal with it. Humon transcodes the token stream into UTF-8 internally, and slams memory out on a `Trove::to*` call. See the manifesto at [this page](http://utf8everywhere.org/) to read an opinionated opinion. I'd consider adding a control for this if anyone really wanted it.
 
 ## The C-family programming interfaces
 There are API specs for the C and C++ interfaces. The C API is fully featured but obtuse, as C APIs tend to be. The C++ API mainly wraps the C API, but also provides some nice features for more C++ish fun-time things. Since you'll usually be using the C++ API, we'll mainly discuss that.
@@ -592,7 +592,7 @@ There are also explicit member functions for getting nodes by child index or key
     node = node.parent();                                       
 
 ### Getting node data
-    
+
 So you've got a value node. Whooptie-doo. To get a value from it:
 
     node = trove / "bufferSources" / 0 / "monitoredForChanges";
@@ -639,7 +639,7 @@ Now you can use it:
     dependencies: {
         gcc: 9.2.1
     }
-    
+
     ...
 
     auto gccVersion = trove / "dependencies" / "gcc" % hu::val<V3>{}; 
@@ -784,7 +784,12 @@ So, if you want bad lookups to throw exceptions, but all other functions to beha
 **Objects in dicts remain in serial order.**
 This is different from some JSON libraries, that don't preserve the order of key-object pairs in dicts. Humon guarantees that, when you access a dict's children by index (as you would a list), they'll be returned in the order you expect. Humon can maintain an extra table for accessing dict entries quickly by key.
 
->Currently this is not implemented, and keys are searched in linear order. This is obviously on the fix-it list for larger dicts, but it's often the case that a linear search beats hash tables or binary searches for small numbers of entries <sup>[citation needed]</sup>.
+>Currently the extra table is not implemented, and keys are searched in linear order, from the end. This is obviously on the fix-it list for larger dicts, but it's often the case that a linear search beats hash tables or binary searches for small numbers of entries <sup>[citation needed]</sup>.
+
+**Keys in dicts need not be unique.**
+Multiple entries in a dict may have the same key. `hu::Node::getChild(std::string_view)` (and the C API underneath) starts its search from the end of the dict's entries and moves backwards. This has the effect that the last entry in a dict is the one taking precedence under this function.
+
+There is also `hu::node::firstChild(std::string_view)`, which starts its search at the first node, and `hu::node::nextSibling(std::string_view)` which moves forwards through the child nodes, looking for the given key.
 
 **Comments have no meaning, but they do have context.**
 Humon doesn't know or care about your comments, as already stated. But it doesn't discard them in the parsing process; they're preserved for searching and reserialization.
