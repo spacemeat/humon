@@ -201,11 +201,11 @@ static void printAnnotations(PrintTracker * printer, huVector const * annotation
     }
     else
     {
-        if (printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY && 
+        if (printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY &&
             (printer->currentDepth > 0 || isTroveAnnotations == false))
             { appendWs(printer, 1); }
     }
-    
+
     appendColoredString(printer, "@", 1, HU_COLORCODE_PUNCANNOTATE);
     if (printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
         { appendWs(printer, 1); }
@@ -225,7 +225,7 @@ static void printAnnotations(PrintTracker * printer, huVector const * annotation
         appendColoredString(printer, ":", 1, HU_COLORCODE_PUNCANNOTATEKEYVALUESEP);
         if (printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
             { appendWs(printer, 1); }
-        appendColoredToken(printer, anno->value, HU_COLORCODE_ANNOVALUE);        
+        appendColoredToken(printer, anno->value, HU_COLORCODE_ANNOVALUE);
     }
     if (numAnnos > 1)
     {
@@ -240,7 +240,7 @@ static void printAnnotations(PrintTracker * printer, huVector const * annotation
 
 
 static void printNode(PrintTracker * printer, huNode const * node)
-{    
+{
     huSize_t numComments = huGetNumComments(node);
     huSize_t commentIdx = 0;
 
@@ -272,6 +272,7 @@ static void printNode(PrintTracker * printer, huNode const * node)
     if (node->kind == HU_NODEKIND_LIST)
     {
         appendColoredString(printer, "[", 1, HU_COLORCODE_PUNCLIST);
+        printAnnotations(printer, & node->annotations, false);
         commentIdx = printAllTrailingComments(printer, node, node->valueToken, commentIdx);
 
         // print children
@@ -284,7 +285,7 @@ static void printNode(PrintTracker * printer, huNode const * node)
         }
 
         commentIdx = printAllPrecedingComments(printer, node, node->lastValueToken, commentIdx);
-        
+
         printer->currentDepth -= 1;
         if (printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
             { appendNewline(printer); }
@@ -301,6 +302,7 @@ static void printNode(PrintTracker * printer, huNode const * node)
     else if (node->kind == HU_NODEKIND_DICT)
     {
         appendColoredString(printer, "{", 1, HU_COLORCODE_PUNCDICT);
+        printAnnotations(printer, & node->annotations, false);
         commentIdx = printAllTrailingComments(printer, node, node->valueToken, commentIdx);
 
         // print children
@@ -326,8 +328,9 @@ static void printNode(PrintTracker * printer, huNode const * node)
     else if (node->kind == HU_NODEKIND_VALUE)
     {
         appendColoredToken(printer, node->valueToken, HU_COLORCODE_VALUE);
+        printAnnotations(printer, & node->annotations, false);
     }
-        
+
     //  print any same-line comments
     //  print comments preceding any annos
     //  print annos
@@ -342,9 +345,6 @@ static void printNode(PrintTracker * printer, huNode const * node)
             printForwardComment(printer, comm);
         }
     }
-
-    // print annotations
-    printAnnotations(printer, & node->annotations, false);
 }
 
 
@@ -368,8 +368,8 @@ void troveToPrettyString(huTrove const * trove, huVector * str, huSerializeOptio
 
     appendColor(& printer, HU_COLORCODE_TOKENSTREAMBEGIN);
 
-    // Print trove comments that precede the root node token; These are comments that appear before 
-    // or amidst trove annotations, before the root. These will all be the first trove comments, so 
+    // Print trove comments that precede the root node token; These are comments that appear before
+    // or amidst trove annotations, before the root. These will all be the first trove comments, so
     // just start scumming from 0.
     huSize_t troveCommentIdx = 0;
     huSize_t numTroveComments = huGetNumTroveComments(trove);
@@ -409,14 +409,14 @@ void troveToPrettyString(huTrove const * trove, huVector * str, huSerializeOptio
 
     if (printer.serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
         { appendNewline(& printer); }
-    
+
     appendColor(& printer, HU_COLORCODE_TOKENSTREAMEND);
 }
 
 
 static void setTableEntry(huStringView table[], huEnumType_t colorKind, char const * str)
 {
-    table[(size_t) colorKind].ptr = str; 
+    table[(size_t) colorKind].ptr = str;
     table[(size_t) colorKind].size = (huSize_t) strlen(str);
 }
 

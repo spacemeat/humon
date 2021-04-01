@@ -1,14 +1,7 @@
 DONE THIS CHECKIN:
-P1 get wise about noexcept
-P1 bug: '// ' seems to eat next line's token?
-P1 update doxygen file
-P1 remove requirement that dict keys be unique.
-P1 add functions for iterating over dict children with a specific key.
-P1 change huGetChildByKey*() to get the last node with a specific key.
-P1 modifier ops
+P1 print annotations on opening bracket instead of closing bracket
 
 TODO:
-P1 print annotations on opening bracket instead of closing bracket
 P1 consolidated vectors for comments and annotations
 
 P2 begin() and end() for nodes

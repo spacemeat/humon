@@ -1,5 +1,5 @@
 ﻿[34m@ [35mannoKey[34m: [95mannoVal
-[97m{
+[97m{ [34m@ [34m{ [35mЯ[34m: [95mtwo [35m⾀[34m: [95mthree [35m𠜎[34m: [95mfour [35mtwo[34m: [95mЯ [35mthree[34m: [95m⾀ [35mfour[34m: [95m𠜎 [34m}
     [36mkey[97m: [97m[
         [96mlist
     [97m]
@@ -228,5 +228,5 @@ The last character in the string should be '0'.
     [36mtwo[97m: [96mЯ
     [36mthree[97m: [96m⾀
     [36mfour[97m: [96m𠜎
-[97m} [34m@ [34m{ [35mЯ[34m: [95mtwo [35m⾀[34m: [95mthree [35m𠜎[34m: [95mfour [35mtwo[34m: [95mЯ [35mthree[34m: [95m⾀ [35mfour[34m: [95m𠜎 [34m}
+[97m}
 [0m

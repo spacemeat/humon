@@ -1,6 +1,6 @@
 ﻿/* comment */
 @ annoKey: annoVal
-{
+{ @ { Я: two ⾀: three 𠜎: four two: Я three: ⾀ four: 𠜎 }
     key: [
         list
     ]
@@ -238,4 +238,4 @@ The last character in the string should be '0'.
     two: Я
     three: ⾀
     four: 𠜎
-} @ { Я: two ⾀: three 𠜎: four two: Я three: ⾀ four: 𠜎 }
+}

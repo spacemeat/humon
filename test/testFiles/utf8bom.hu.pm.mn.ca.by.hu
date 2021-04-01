@@ -1,4 +1,4 @@
-﻿[34m@[35mannoKey[34m:[95mannoVal[97m{[36mkey[97m:[97m[[96mlist[97m][36motherKey[97m:[96memoji🤔 [36msomeBigText[97m:[96m^^UTF-8 encoded sample plain-text file
+﻿[34m@[35mannoKey[34m:[95mannoVal[97m{[34m@[34m{[35mЯ[34m:[95mtwo [35m⾀[34m:[95mthree [35m𠜎[34m:[95mfour [35mtwo[34m:[95mЯ [35mthree[34m:[95m⾀ [35mfour[34m:[95m𠜎[34m}[36mkey[97m:[97m[[96mlist[97m][36motherKey[97m:[96memoji🤔 [36msomeBigText[97m:[96m^^UTF-8 encoded sample plain-text file
 ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
 Markus Kuhn [ˈmaʳkʊs kuːn] &lt;mkuhn@acm.org> — 1999-08-20
@@ -214,4 +214,4 @@ Some 4-byte code points:
   𤷪 𥄫 𦉘 𦟌 𦧲 𦧺 𧨾 𨅝 𨈇 𨋢 𨳊 𨳍 𨳒 𩶘
 
 The last character in the string should be '0'.
-43210^^[36msomeOtherText[97m:[96mfoo [36mЯ[97m:[96mtwo [36m⾀[97m:[96mthree [36m𠜎[97m:[96mfour [36mtwo[97m:[96mЯ [36mthree[97m:[96m⾀ [36mfour[97m:[96m𠜎[97m}[34m@[34m{[35mЯ[34m:[95mtwo [35m⾀[34m:[95mthree [35m𠜎[34m:[95mfour [35mtwo[34m:[95mЯ [35mthree[34m:[95m⾀ [35mfour[34m:[95m𠜎[34m}[0m
+43210^^[36msomeOtherText[97m:[96mfoo [36mЯ[97m:[96mtwo [36m⾀[97m:[96mthree [36m𠜎[97m:[96mfour [36mtwo[97m:[96mЯ [36mthree[97m:[96m⾀ [36mfour[97m:[96m𠜎[97m}[0m

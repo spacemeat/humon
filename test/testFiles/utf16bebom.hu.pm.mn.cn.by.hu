@@ -1,4 +1,4 @@
-﻿@annoKey:annoVal{key:[list]otherKey:emoji🤔 someBigText:^^UTF-8 encoded sample plain-text file
+﻿@annoKey:annoVal{@{Я:two ⾀:three 𠜎:four two:Я three:⾀ four:𠜎}key:[list]otherKey:emoji🤔 someBigText:^^UTF-8 encoded sample plain-text file
 ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
 Markus Kuhn [ˈmaʳkʊs kuːn] &lt;mkuhn@acm.org> — 1999-08-20
@@ -214,4 +214,4 @@ Some 4-byte code points:
   𤷪 𥄫 𦉘 𦟌 𦧲 𦧺 𧨾 𨅝 𨈇 𨋢 𨳊 𨳍 𨳒 𩶘
 
 The last character in the string should be '0'.
-43210^^someOtherText:foo Я:two ⾀:three 𠜎:four two:Я three:⾀ four:𠜎}@{Я:two ⾀:three 𠜎:four two:Я three:⾀ four:𠜎}
+43210^^someOtherText:foo Я:two ⾀:three 𠜎:four two:Я three:⾀ four:𠜎}
