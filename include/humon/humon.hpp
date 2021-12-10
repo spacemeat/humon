@@ -14,6 +14,7 @@
 #include <charconv>
 #include <optional>
 #include <variant>
+#include <limits>
 
 // This macro wraps the C API in namespace hu::capi to keep global space pristine.
 // Because it's also extern "C", the namespace names are dropped from the linkage,
@@ -263,8 +264,15 @@ namespace hu
             if (! validateSize(newlineSize))
                 { newlineSize = static_cast<std::size_t>(std::numeric_limits<hu::size_t>::max()); }
 
+            capi::huStringView * colorTablePtr = NULL;
+            if (colors.has_value())
+            {
+                setColorTable(colors);
+                colorTablePtr = capiColorTable;
+            }
+
             capi::huInitSerializeOptionsN(& cparams, static_cast<hu::enumType_t>(WhitespaceFormat), indentSize, indentWithTabs,
-                false, capiColorTable, printComments, newline.data(), static_cast<hu::size_t>(newlineSize), printBom);
+                false, colorTablePtr, printComments, newline.data(), static_cast<hu::size_t>(newlineSize), printBom);
             setColorTable(colors);
         }
 
