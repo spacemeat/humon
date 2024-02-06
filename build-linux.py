@@ -4,331 +4,421 @@ import sys
 import os
 import os.path
 import subprocess
+from typing import final
 import ansi
 from getVersion import getVersion
 
 from runpy import run_path
 
 
-buildDir = "build"
-intDir = '/'.join([buildDir, "int"])
-intBinDir = '/'.join([intDir, "bin"])
-binDir = '/'.join([buildDir, "bin"])
-docsDir = '/'.join([buildDir, "docs"])
-docsDirC = '/'.join([docsDir, "humon-c"])
-docsDirCpp = '/'.join([docsDir, "humon-cpp"])
+BUILD_DIR = "build"
+INT_DIR = '/'.join([BUILD_DIR, "int"])
+INT_BIN_DIR = '/'.join([INT_DIR, "bin"])
+BIN_DIR = '/'.join([BUILD_DIR, "bin"])
+DOCS_DIR = '/'.join([BUILD_DIR, "docs"])
+DOCS_DIR_C = '/'.join([DOCS_DIR, "humon-c"])
+DOCS_DIR_CPP = '/'.join([DOCS_DIR, "humon-cpp"])
 
 
-def doShellCommand(cmd):
-    print (f"{ansi.lt_black_fg}{cmd}{ansi.all_off}")
-    return subprocess.run(cmd, shell=True, check=True).returncode
+def do_shell_command(cmd_str):
+    '''
+    Executes the command string in a shell subprocess. Since it is run in a subprocess,
+    variable assignments or diretory changes will not be maintained in subsequent calls
+    to do_shell_command.
+
+    Parameters:
+    - cmd_str: Full shell command string to execute.
+    '''
+    print (f"{ansi.lt_black_fg}{cmd_str}{ansi.all_off}")
+    return subprocess.run(cmd_str, shell=True, check=True).returncode
 
 
-def buildObj(target, src, incDirs, flags, arch32bit, debug, pic, cLanguage, tool):
-    global intDir
+def build_obj_file(target, src_file, inc_dirs, addl_flags,
+                   is_arch_32_bit, is_debug, pic, is_lang_c, toolkit):
+    '''
+    Builds an object file from the given parameters. 
 
-    incDirsArgs = [f"-I{incDir}" for incDir in incDirs]
+    Works by constructing a gcc or clang build command, and running it in a shell context.
+    
+    Parameters:
+    - target: The file name of the resulting object file, minus the '.o' suffix.
+    - src_file: A single source code path, relative to the top level directory.
+    - inc_dirs: A list of include directories, relative to the top level directory.
+    - addl_flags: A string containing additional flags to pass to the bulid command.
+    - is_arch_32_bit: Whether to target a 32-bit or 64-bit architecture.
+    - is_debug: Whether to include debug information in the build.
+    - is_lang_c: Whether we are building C or C++ code.
+    - toolkit: 'gcc' or 'clang'; if is_lang_c is false, the appropriate C++ variant will be used.
+    '''
+    inc_dirs_args = [f"-I{incDir}" for incDir in inc_dirs]
 
-    cmd = 'echo "No build tools set. Select from \"gcc\" or \"clang\"."'
-    if tool in ["gcc", "clang"]:
-        gFlag = "-g" if debug else ""
-        oFlag = "-O0" if debug else "-O3"
-        defs = f"{' -D_POSIX_C_SOURCE=200112L' if cLanguage else ''}"
-        defs += f"{' -D_FILE_OFFSET_BITS' if cLanguage and not arch32bit else ''}"
-        defs += flags
-        arch = "-m32" if arch32bit else ""
-        fpicFlag = "-fPIC" if pic else ""
+    cmd_str = 'echo "No build tools set. Select from \"gcc\" or \"clang\"."'
+    if toolkit in ["gcc", "clang"]:
+        g_flag = "-g" if is_debug else ""
+        o_flag = "-O0" if is_debug else "-O3"
+        defs = f"{' -D_POSIX_C_SOURCE=200112L' if is_lang_c else ''}"
+        defs += f"{' -D_FILE_OFFSET_BITS' if is_lang_c and not is_arch_32_bit else ''}"
+        arch = "-m32" if is_arch_32_bit else ""
+        fpic_flag = "-fPIC" if pic else ""
+        cmplr = ''
 
-        if tool == "gcc":
-            if cLanguage:
+        if toolkit == "gcc":
+            if is_lang_c:
                 cmplr = "gcc -std=c99"
             else:
                 cmplr = "g++ -std=c++17"
-        elif tool == "clang":
-            if cLanguage:
+        elif toolkit == "clang":
+            if is_lang_c:
                 cmplr = "clang -std=c99"
             else:
                 cmplr = "clang++ -std=c++17 -stdlib=libstdc++"
 
-        cmd=f"{cmplr} -Wall -Wextra -Werror -c {arch} {fpicFlag} {gFlag} {oFlag} {defs} {' '.join(incDirsArgs)} -o {target} {src}"
+        cmd_str=(f"{cmplr} -Wall -Wextra -Werror -c {arch} {fpic_flag} {g_flag} {o_flag} "
+                 f"{defs} {addl_flags} {' '.join(inc_dirs_args)} -o {target} {src_file}")
 
-    return doShellCommand(cmd)
+    return do_shell_command(cmd_str)
 
 
-def buildLib (target, srcList, incDirs, flags, arch32bit, debug, cLanguage, tool):
-    global intDir
-    global intBinDir
-    global binDir
+def build_lib_file(target, src_list, inc_dirs, addl_flags, is_arch_32_bit, is_debug,
+                   is_lang_c, toolkit):
+    '''
+    Builds an executable static library file from the given parameters. 
 
-    finalTarget = f"lib{target}.a"
+    Works by building each source path into object files with build_obj_file(), and then archiving
+    them by constructing a gcc or clang build command, and running it in a shell context.
+    
+    Parameters:
+    - target: The file name of the resulting static library, minus the 'lib' prefix or '.a' suffix.
+    - src_list: A list of source code paths, relative to the top level directory.
+    - inc_dirs: A list of include directories, relative to the top level directory.
+    - addl_flags: A string containing additional flags to pass to the bulid command.
+    - is_arch_32_bit: Whether to target a 32-bit or 64-bit architecture.
+    - is_debug: Whether to include debug information in the build.
+    - is_lang_c: Whether we are building C or C++ code.
+    - toolkit: 'gcc' or 'clang'; if is_lang_c is false, the appropriate C++ variant will be used.
+    '''
+    final_target = f"lib{target}.a"
 
-    intConfigDir = f"{intDir}/cfg{'-clang' if tool == 'clang' else '-gcc'}{'-32' if arch32bit else ''}{'-d' if debug else ''}"
-    if not os.path.exists(intConfigDir):
-        os.mkdir(intConfigDir)
-    intConfigDir += f"/{finalTarget}"
-    if not os.path.exists(intConfigDir):
-        os.mkdir(intConfigDir)
-    intBinConfigDir = f"{intBinDir}/cfg{'-clang' if tool == 'clang' else '-gcc'}{'-32' if arch32bit else ''}{'-d' if debug else ''}"
-    if not os.path.exists(intBinConfigDir):
-        os.mkdir(intBinConfigDir)
+    int_config_dir = (f"{INT_DIR}/cfg{'-clang' if toolkit == 'clang' else '-gcc'}"
+                      f"{'-32' if is_arch_32_bit else ''}{'-d' if is_debug else ''}")
+    if not os.path.exists(int_config_dir):
+        os.mkdir(int_config_dir)
+    int_config_dir += f"/{final_target}"
+    if not os.path.exists(int_config_dir):
+        os.mkdir(int_config_dir)
+    int_bin_config_dir = (f"{INT_BIN_DIR}/cfg{'-clang' if toolkit == 'clang' else '-gcc'}"
+                          f"{'-32' if is_arch_32_bit else ''}{'-d' if is_debug else ''}")
+    if not os.path.exists(int_bin_config_dir):
+        os.mkdir(int_bin_config_dir)
 
-    print (f"{ansi.dk_yellow_fg}Building static library {ansi.lt_yellow_fg}{intBinConfigDir}/{finalTarget}{ansi.all_off}")
+    print (f"{ansi.dk_yellow_fg}Building static library {ansi.lt_yellow_fg}{int_bin_config_dir}/"
+           f"{final_target}{ansi.all_off}")
 
     dotos = []
-    canProceed = True
-    for src in srcList:
-        doto = f"{intConfigDir}/{os.path.basename(src)}{'-32' if arch32bit else ''}{'-d' if debug else ''}.o"
+    can_proceed = True
+    for src_file in src_list:
+        doto = (f"{int_config_dir}/{os.path.basename(src_file)}{'-32' if is_arch_32_bit else ''}"
+                f"{'-d' if is_debug else ''}.o")
         dotos.append(doto)
-        if buildObj(doto, src, incDirs, flags, arch32bit, debug, False, cLanguage, tool) != 0:
-            canProceed = False
+        if build_obj_file(doto, src_file, inc_dirs, addl_flags, is_arch_32_bit, is_debug,
+                          False, is_lang_c, toolkit) != 0:
+            can_proceed = False
 
-    if canProceed:
-        cmd = 'echo "No build tools set. Select from \"gcc\" or \"clang\"."'
-        if tool in ["gcc", "clang"]:
-            cmd = f"ar cr -o {intBinConfigDir}/{finalTarget} {' '.join(dotos)}"
-            res = doShellCommand(cmd)
+    if can_proceed:
+        cmd_string = 'echo "No build tools set. Select from \"gcc\" or \"clang\"."'
+        if toolkit in ["gcc", "clang"]:
+            cmd_string = f"ar cr -o {int_bin_config_dir}/{final_target} {' '.join(dotos)}"
+            res = do_shell_command(cmd_string)
             if res != 0:
                 return res
 
-            cmd = f"cp {intBinConfigDir}/{finalTarget} {binDir}/{finalTarget}"
-            return doShellCommand(cmd)
+            cmd_string = f"cp {int_bin_config_dir}/{final_target} {BIN_DIR}/{final_target}"
+            return do_shell_command(cmd_string)
 
-    cmd = 'echo "Failure to build target. Aborting."'
-    return doShellCommand(cmd)
+    cmd_string = 'echo "Failure to build target. Aborting."'
+    return do_shell_command(cmd_string)
 
 
-def buildSo (target, srcList, incDirs, flags, arch32bit, debug, cLanguage, tool):
-    global intDir
-    global intBinDir
-    global binDir
+def build_shared_object_file (target, src_list, inc_irs, addl_flags, is_arch_32_bit, is_debug,
+                              is_lang_c, toolkit):
+    '''
+    Builds an executable shared object library file from the given parameters. 
 
+    Works by building each source path into object files with build_obj_file(), and then linking
+    them by constructing a gcc or clang build command, and running it in a shell context.
+    
+    Parameters:
+    - target: The file name of the resulting shared object file, minus the 'lib' prefix and the
+      '.so' suffix, as well as the version information in the name.
+    - src_list: A list of source code paths, relative to the top level directory.
+    - inc_dirs: A list of include directories, relative to the top level directory.
+    - addl_flags: A string containing additional flags to pass to the bulid command.
+    - is_arch_32_bit: Whether to target a 32-bit or 64-bit architecture.
+    - is_debug: Whether to include debug information in the build.
+    - is_lang_c: Whether we are building C or C++ code.
+    - toolkit: 'gcc' or 'clang'; if is_lang_c is false, the appropriate C++ variant will be used.
+    '''
     version = getVersion()
     v3 = f"{version['major']}.{version['minor']}.{version['patch']}"
-    v2 = f"{version['major']}.{version['minor']}"
     v1 = f"{version['major']}"
 
     linkername = f"lib{target}.so"
     soname = linkername + f".{v1}"
-    finalTarget = linkername + f".{v3}"
+    final_target = linkername + f".{v3}"
     target = linkername
 
-    intConfigDir = f"{intDir}/cfg{'-clang' if tool == 'clang' else '-gcc'}{'-32' if arch32bit else ''}{'-d' if debug else ''}"
-    if not os.path.exists(intConfigDir):
-        os.mkdir(intConfigDir)
-    intConfigDir += f"/{linkername}"
-    if not os.path.exists(intConfigDir):
-        os.mkdir(intConfigDir)
-    intBinConfigDir = f"{intBinDir}/cfg{'-clang' if tool == 'clang' else '-gcc'}{'-32' if arch32bit else ''}{'-d' if debug else ''}"
-    if not os.path.exists(intBinConfigDir):
-        os.mkdir(intBinConfigDir)
+    int_config_dir = (f"{INT_DIR}/cfg{'-clang' if toolkit == 'clang' else '-gcc'}"
+                      f"{'-32' if is_arch_32_bit else ''}{'-d' if is_debug else ''}")
+    if not os.path.exists(int_config_dir):
+        os.mkdir(int_config_dir)
+    int_config_dir += f"/{linkername}"
+    if not os.path.exists(int_config_dir):
+        os.mkdir(int_config_dir)
+    int_bin_config_dir = (f"{INT_BIN_DIR}/cfg{'-clang' if toolkit == 'clang' else '-gcc'}"
+                          f"{'-32' if is_arch_32_bit else ''}{'-d' if is_debug else ''}")
+    if not os.path.exists(int_bin_config_dir):
+        os.mkdir(int_bin_config_dir)
 
-    print (f"{ansi.dk_yellow_fg}Building shared library {ansi.lt_yellow_fg}{intBinConfigDir}/{target}{ansi.all_off}")
+    print (f"{ansi.dk_yellow_fg}Building shared library {ansi.lt_yellow_fg}{int_bin_config_dir}/"
+           f"{target}{ansi.all_off}")
 
     dotos = []
-    canProceed = True
-    for src in srcList:
-        doto = f"{intConfigDir}/{os.path.basename(src)}{'-d' if debug else ''}.o"
+    can_proceed = True
+    for src_file in src_list:
+        doto = f"{int_config_dir}/{os.path.basename(src_file)}{'-d' if is_debug else ''}.o"
         dotos.append(doto)
-        if buildObj(doto, src, incDirs, flags, arch32bit, debug, True, cLanguage, tool) != 0:
-            canProceed = False
+        if build_obj_file(doto, src_file, inc_irs, addl_flags, is_arch_32_bit, is_debug, True,
+                          is_lang_c, toolkit) != 0:
+            can_proceed = False
 
-    arch = "-m32" if arch32bit else ""
-    defs = f"{' -D_POSIX_C_SOURCE=200112L' if cLanguage else ''}"
-    defs += f"{' -D_FILE_OFFSET_BITS' if cLanguage and not arch32bit else ''}"
-    defs += flags
+    arch = "-m32" if is_arch_32_bit else ""
+    defs = f"{' -D_POSIX_C_SOURCE=200112L' if is_lang_c else ''}"
+    defs += f"{' -D_FILE_OFFSET_BITS' if is_lang_c and not is_arch_32_bit else ''}"
+    defs += addl_flags
 
-    if canProceed:
-        cmd = 'echo "No build tools set. Select from \"gcc\" or \"clang\"."'
+    if can_proceed:
+        cmd_string = 'echo "No build tools set. Select from \"gcc\" or \"clang\"."'
 
-        if tool == "gcc":
-            if cLanguage:
+        cmplr = ''
+        if toolkit == "gcc":
+            if is_lang_c:
                 cmplr = "gcc -std=c99"
             else:
                 cmplr = "g++ -std=c++17"
-        elif tool == "clang":
-            if cLanguage:
+        elif toolkit == "clang":
+            if is_lang_c:
                 cmplr = "clang -std=c99"
             else:
                 cmplr = "clang++ -std=c++17 -stdlib=libstdc++"
 
-        cmd = f"{cmplr} -Wall -Wextra -Werror -shared -Wl,-soname,{soname} {arch} {defs} -o {intBinConfigDir}/{target} {' '.join(dotos)}"
-        res = doShellCommand(cmd)
+        cmd_string = (f"{cmplr} -Wall -Wextra -Werror -shared -Wl,-soname,{soname} "
+                      f"{arch} {defs} -o {int_bin_config_dir}/{target} {' '.join(dotos)}")
+        res = do_shell_command(cmd_string)
         if res != 0:
             return res
 
-        cmd = f"cp {intBinConfigDir}/{target} {binDir}/{finalTarget}"
-        res = doShellCommand(cmd)
+        cmd_string = f"cp {int_bin_config_dir}/{target} {BIN_DIR}/{final_target}"
+        res = do_shell_command(cmd_string)
         if res != 0:
             return res
 
-        cmd = f"ln -sf {finalTarget} {binDir}/{soname}"
-        res = doShellCommand(cmd)
+        cmd_string = f"ln -sf {final_target} {BIN_DIR}/{soname}"
+        res = do_shell_command(cmd_string)
         if res != 0:
             return res
 
-        cmd = f"ln -sf {soname} {binDir}/{linkername}"
-        return doShellCommand(cmd)
+        cmd_string = f"ln -sf {soname} {BIN_DIR}/{linkername}"
+        return do_shell_command(cmd_string)
 
-    cmd = 'echo "Failure to build target. Aborting."'
-    return doShellCommand(cmd)
+    cmd_string = 'echo "Failure to build target. Aborting."'
+    return do_shell_command(cmd_string)
 
 
-def buildExe (target, srcList, incDirs, libDirs, staticLibs, sharedLibs, flags, arch32bit, debug, cLanguage, tool):
-    global intDir
-    global intBinDir
-    global binDir
+def build_exe_file (target, src_list, inc_dirs, lib_dirs, static_libs, shared_libs, addl_flags,
+                    is_arch_32_bit, is_debug, is_lang_c, toolkit):
+    '''
+    Builds an executable file from the given parameters. 
 
-    finalTarget = target
+    Works by constructing a gcc or clang build command, and running it in a shell context.
+    
+    Parameters:
+    - target: The file name of the resulting executable file.
+    - src_list: A list of source code paths, relative to the top level directory.
+    - inc_dirs: A list of include directories, relative to the top level directory.
+    - lib_dirs: A list of library directories, relative to the top level directory.
+    - static_libs: A list of static libraries (.a files) to include in the build command.
+    - shared_libs: A list of shared object libraries (.so files) to include in the build command.
+    - addl_flags: A string containing additional flags to pass to the bulid command.
+    - is_arch_32_bit: Whether to target a 32-bit or 64-bit architecture.
+    - is_debug: Whether to include debug information in the build.
+    - is_lang_c: Whether we are building C or C++ code.
+    - toolkit: 'gcc' or 'clang'; if is_lang_c is false, the appropriate C++ variant will be used.
+    '''
+    final_target = target
 
-    intBinConfigDir = f"{intBinDir}/cfg{'-clang' if tool == 'clang' else '-gcc'}{'-32' if arch32bit else ''}{'-d' if debug else ''}"
-    if not os.path.exists(intBinConfigDir):
-        os.mkdir(intBinConfigDir)
+    int_bin_config_dir = (f"{INT_BIN_DIR}/cfg{'-clang' if toolkit == 'clang' else '-gcc'}"
+                          f"{'-32' if is_arch_32_bit else ''}{'-d' if is_debug else ''}")
+    if not os.path.exists(int_bin_config_dir):
+        os.mkdir(int_bin_config_dir)
 
-    print (f"{ansi.dk_yellow_fg}Building executable {ansi.lt_yellow_fg}{intBinConfigDir}/{finalTarget}{ansi.all_off}")
+    print (f"{ansi.dk_yellow_fg}Building executable {ansi.lt_yellow_fg}{int_bin_config_dir}/"
+           f"{final_target}{ansi.all_off}")
 
-    if tool in ["gcc", "clang"]:
-        gFlag = "-g" if debug else ""
-        oFlag = "-O0" if debug else "-O3"
-        defs = f"{' -D_POSIX_C_SOURCE=200112L' if cLanguage else ''}"
-        defs += f"{' -D_FILE_OFFSET_BITS' if cLanguage and not arch32bit else ''}"
-        defs += flags
-        arch = "-m32" if arch32bit else ""
+    if toolkit in ["gcc", "clang"]:
+        g_flag = "-g" if is_debug else ""
+        o_flag = "-O0" if is_debug else "-O3"
+        defs = f"{' -D_POSIX_C_SOURCE=200112L' if is_lang_c else ''}"
+        defs += f"{' -D_FILE_OFFSET_BITS' if is_lang_c and not is_arch_32_bit else ''}"
+        defs += addl_flags
+        arch = "-m32" if is_arch_32_bit else ""
 
-        incDirsArgs = [f"-I{incDir}" for incDir in incDirs]
-        libDirsArgs = [f"-L{libDir}" for libDir in libDirs]
-        staticLibsArgs = [f"-l{lib}" for lib in staticLibs]
-        sharedLibsArgs = [f"-l{lib}" for lib in sharedLibs]
+        inc_dirs_args = [f"-I{incDir}" for incDir in inc_dirs]
+        lib_dirs_args = [f"-L{libDir}" for libDir in lib_dirs]
+        static_libs_args = [f"-l{lib}" for lib in static_libs]
+        shared_libs_args = [f"-l{lib}" for lib in shared_libs]
 
-        if tool == "gcc":
-            if cLanguage:
+        cmplr = ''
+        if toolkit == "gcc":
+            if is_lang_c:
                 cmplr = "gcc -std=c99"
             else:
                 cmplr = "g++ -std=c++17"
-        elif tool == "clang":
-            if cLanguage:
+        elif toolkit == "clang":
+            if is_lang_c:
                 cmplr = "clang -std=c99"
             else:
                 cmplr = "clang++ -std=c++17 -stdlib=libstdc++"
 
-        cmd = f'{cmplr} -Wall -Wextra -Werror {arch} {gFlag} {oFlag} {defs} {" ".join(incDirsArgs)} -o {intBinConfigDir}/{finalTarget} {" ".join(src)} {" ".join(libDirsArgs)} -Wl,-Bstatic {" ".join(staticLibsArgs)} -Wl,-Bdynamic {" ".join(sharedLibsArgs)} -Wl,-rpath,"\$ORIGIN"'
-        res = doShellCommand(cmd)
+        cmd_string = (f'{cmplr} -Wall -Wextra -Werror {arch} {g_flag} {o_flag} {defs} '
+                      f'{" ".join(inc_dirs_args)} -o {int_bin_config_dir}/{final_target} '
+                      f'{" ".join(src_list)} {" ".join(lib_dirs_args)} -Wl,-Bstatic '
+                      f'{" ".join(static_libs_args)} -Wl,-Bdynamic {" ".join(shared_libs_args)} '
+                      f'-Wl,-rpath,"$ORIGIN"')
+        res = do_shell_command(cmd_string)
         if res != 0:
             return res
 
-        cmd = f"cp {intBinConfigDir}/{finalTarget} {binDir}/{finalTarget}"
-        return doShellCommand(cmd)
+        cmd_string = f"cp {int_bin_config_dir}/{final_target} {BIN_DIR}/{final_target}"
+        return do_shell_command(cmd_string)
 
-    cmd = 'echo "No build tools set. Select from \"gcc\" or \"clang\"."'
-    return doShellCommand(cmd)
+    cmd_string = 'echo "No build tools set. Select from \"gcc\" or \"clang\"."'
+    return do_shell_command(cmd_string)
 
 
-def buildDocs():
-    if not os.path.exists(docsDir):
-        os.mkdir(docsDir)
+def build_docs():
+    ''' TODO: docstring '''
+    if not os.path.exists(DOCS_DIR):
+        os.mkdir(DOCS_DIR)
 
     version = getVersion()
     v3 = f"{version['major']}.{version['minor']}.{version['patch']}"
 
-    print (f"{ansi.dk_yellow_fg}Building API documents {ansi.lt_yellow_fg}{docsDir}{ansi.all_off}")
+    print (f"{ansi.dk_yellow_fg}Building API documents {ansi.lt_yellow_fg}{DOCS_DIR}{ansi.all_off}")
 
-    try:
-        isit = subprocess.run('whereis doxygen', shell=True, check=False, capture_output=True)
-        output = str(isit.stdout)
-        if isit.returncode == 0 and ':' in output and len(output.split(':')[1]) > 0:
-            doShellCommand(f'( cat dox-humon-c ; echo "PROJECT_NUMBER={v3}" ) | doxygen -')
-            doShellCommand(f'( cat dox-humon-cpp ; echo "PROJECT_NUMBER={v3}" ) | doxygen -')
-        else:
-            print ("doxygen not detected")
-    except:
+    isit = subprocess.run('whereis doxygen', shell=True, check=False, capture_output=True)
+    output = str(isit.stdout)
+    if isit.returncode == 0 and ':' in output and len(output.split(':')[1]) > 0:
+        do_shell_command(f'( cat dox-humon-c ; echo "PROJECT_NUMBER={v3}" ) | doxygen -')
+        do_shell_command(f'( cat dox-humon-cpp ; echo "PROJECT_NUMBER={v3}" ) | doxygen -')
+    else:
         print ("doxygen not detected")
 
 
-def buildReadme():
+def build_readme():
+    ''' TODO: docstring '''
     print (f"{ansi.dk_yellow_fg}Building {ansi.lt_yellow_fg}README.md{ansi.all_off}")
-    doShellCommand(f'./updateReadme.py')
+    do_shell_command('./updateReadme.py')
 
-if __name__ == "__main__":
-    clean = False
-    debug = False
-    tool = ""
-    arch32bit = False
-    buildAll = False
 
-    flags = ""
+def configure_from_args():
+    ''' TODO: docstring '''
+    is_clean = False
+    is_debug = False
+    toolkit = ""
+    is_arch_32_bit = False
+    build_all = False
+
+    addl_flags = ""
 
     # 32-bit build on 64-bit arch requires sudo apt install gcc-multilib g++-multilib
 
     for arg in sys.argv:
         if arg == "-clean":
-            clean = True
+            is_clean = True
         elif arg.startswith("-tool="):
-            tool = arg.split('=')[1]
+            toolkit = arg.split('=')[1]
         elif arg == "-debug":
-            debug = True
+            is_debug = True
         elif arg == "-arch=":
-            arch32bit = arg.split('=')[1] == '32'
+            is_arch_32_bit = arg.split('=')[1] == '32'
         elif arg == "-buildAll":
-            buildAll = True
+            build_all = True
         elif arg.startswith('-enumType='):
-            flags += ' -DHUMON_ENUM_TYPE="' + arg.split('=')[1] + '"'
+            addl_flags += ' -DHUMON_ENUM_TYPE="' + arg.split('=')[1] + '"'
         elif arg.startswith('-lineType='):
-            flags += ' -DHUMON_LINE_TYPE="' + arg.split('=')[1] + '"'
+            addl_flags += ' -DHUMON_LINE_TYPE="' + arg.split('=')[1] + '"'
         elif arg.startswith('-colType='):
-            flags += ' -DHUMON_COL_TYPE="' + arg.split('=')[1] + '"'
+            addl_flags += ' -DHUMON_COL_TYPE="' + arg.split('=')[1] + '"'
         elif arg.startswith('-sizeType='):
-            flags += ' -DHUMON_SIZE_TYPE="' + arg.split('=')[1] + '"'
+            addl_flags += ' -DHUMON_SIZE_TYPE="' + arg.split('=')[1] + '"'
         elif arg.startswith('-swagBlock='):
-            flags += ' -DHUMON_SWAG_BLOCKSIZE="' + arg.split('=')[1] + '"'
+            addl_flags += ' -DHUMON_SWAG_BLOCKSIZE="' + arg.split('=')[1] + '"'
         elif arg.startswith('-transcodeBlock='):
-            flags += ' -DHUMON_TRANSCODE_BLOCKSIZE="' + arg.split('=')[1] + '"'
+            addl_flags += ' -DHUMON_TRANSCODE_BLOCKSIZE="' + arg.split('=')[1] + '"'
         elif arg.startswith('-addressBlock='):
-            flags += ' -DHUMON_ADDRESS_BLOCKSIZE="' + arg.split('=')[1] + '"'
+            addl_flags += ' -DHUMON_ADDRESS_BLOCKSIZE="' + arg.split('=')[1] + '"'
         elif arg == "-noChecks":
-            flags += ' -DHUMON_NO_PARAMETER_CHECKS'
+            addl_flags += ' -DHUMON_NO_PARAMETER_CHECKS'
         elif arg == "-cavePerson":
-            flags += ' -DHUMON_CAVEPERSON_DEBUGGING'
+            addl_flags += ' -DHUMON_CAVEPERSON_DEBUGGING'
 #        elif arg == "-noLineCol":
 #            flags += ' -DHUMON_NO_LINE_COL'
 
-    if clean:
-        cmd = 'rm -rf build'
-        doShellCommand(cmd)
-        quit()
+    return (is_clean, is_debug, toolkit, is_arch_32_bit, build_all, addl_flags)
 
-    if debug:
-        flags += ' -DDEBUG'
 
-    if tool == '':
-        tool = 'gcc'
+def main():
+    ''' TODO: docstring '''
+    is_clean, is_debug, toolkit, is_arch_32_bit, build_all, addl_flags = configure_from_args()
+    if is_clean:
+        cmd = 'rm -r build/*'
+        do_shell_command(cmd)
+        sys.exit()
 
-    debugs = [debug]
-    tools = [tool]
-    arch32bits = [arch32bit]
-    if buildAll:
-        debugs = [True, False]
-        tools = ['gcc', 'clang']
-        arch32bits = [True, False]
+    if is_debug:
+        addl_flags += ' -DDEBUG'
 
-    if not os.path.exists(buildDir):
-        os.mkdir(buildDir)
+    if toolkit == '':
+        toolkit = 'gcc'
 
-    if not os.path.exists(intDir):
-        os.mkdir(intDir)
+    is_debug_list = [is_debug]
+    toolkit_list = [toolkit]
+    is_arch_32_bit_list = [is_arch_32_bit]
+    if build_all:
+        is_debug_list = [True, False]
+        toolkit_list = ['gcc', 'clang']
+        is_arch_32_bit_list = [True, False]
 
-    if not os.path.exists(intBinDir):
-        os.mkdir(intBinDir)
+    if not os.path.exists(BUILD_DIR):
+        os.mkdir(BUILD_DIR)
 
-    if not os.path.exists(binDir):
-        os.mkdir(binDir)
+    if not os.path.exists(INT_DIR):
+        os.mkdir(INT_DIR)
 
-    incDirs = [
+    if not os.path.exists(INT_BIN_DIR):
+        os.mkdir(INT_BIN_DIR)
+
+    if not os.path.exists(BIN_DIR):
+        os.mkdir(BIN_DIR)
+
+    inc_dirs = [
         "include",
         "src"
     ]
 
-    for arch32bit in arch32bits:
-        for tool in tools:
-            for debug in debugs:
+    for is_32_bit in is_arch_32_bit_list:
+        for toolkit in toolkit_list:
+            for is_debug in is_debug_list:
                 src = [
                     "src/ansiColors.c",
                     "src/encoding.c",
@@ -342,11 +432,14 @@ if __name__ == "__main__":
                     "src/changes.c"
                 ]
 
-                buildLib("humon", src, incDirs, flags, arch32bit, debug, True, tool)
-                buildSo( "humon", src, incDirs, flags, arch32bit, debug, True, tool)
+                build_lib_file("humon", src, inc_dirs, addl_flags, is_32_bit,
+                               is_debug, True, toolkit)
+                build_shared_object_file("humon", src, inc_dirs, addl_flags,
+                                         is_32_bit, is_debug, True, toolkit)
 
-                print (f'{ansi.dk_yellow_fg}Generating test src in {ansi.lt_yellow_fg}./test{ansi.all_off}')
-                doShellCommand("cd test && ./ztestMaker.py && cd ..")
+                print (f'{ansi.dk_yellow_fg}Generating test src in {ansi.lt_yellow_fg}'
+                       f'./test{ansi.all_off}')
+                do_shell_command("pushd test && ./ztestMaker.py; popd")
 
                 src = [
                     "test/ztest/ztest-main.cpp",
@@ -360,16 +453,23 @@ if __name__ == "__main__":
                 for test in tests:
                     src.append(''.join(["test/ztest/", test]))
 
-                buildExe("test", src, ["include"], [binDir], ["humon"], [], flags, arch32bit, debug, False, tool)
+                build_exe_file("test", src, ["include"], [BIN_DIR], ["humon"], [],
+                               addl_flags, is_arch_32_bit, is_debug, False, toolkit)
 
                 src = ["apps/readmeSrc/usage.c"]
-                buildExe("readmeSrc-c", src, ["include"], [binDir], ["humon"], [], flags, arch32bit, debug, True, tool)
+                build_exe_file("readmeSrc-c", src, ["include"], [BIN_DIR], ["humon"], [],
+                               addl_flags, is_arch_32_bit, is_debug, True, toolkit)
 
                 src = ["apps/readmeSrc/usage.cpp"]
-                buildExe("readmeSrc-cpp", src, ["include"], [binDir], ["humon"], [], flags, arch32bit, debug, False, tool)
+                build_exe_file("readmeSrc-cpp", src, ["include"], [BIN_DIR], ["humon"], [],
+                               addl_flags, is_arch_32_bit, is_debug, False, toolkit)
 
                 src = ["apps/hux/hux.cpp"]
-                buildExe("hux", src, ["include"], [binDir], [], ["humon"], flags, arch32bit, debug, False, tool)
+                build_exe_file("hux", src, ["include"], [BIN_DIR], [], ["humon"],
+                               addl_flags, is_arch_32_bit, is_debug, False, toolkit)
 
-    buildDocs()
-    buildReadme()
+    build_docs()
+    build_readme()
+
+if __name__ == "__main__":
+    main()
