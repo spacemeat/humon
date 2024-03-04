@@ -4,11 +4,11 @@ import sys
 import os
 import os.path
 import subprocess
-from typing import final
+#from typing import final
 import ansi
 from getVersion import getVersion
 
-from runpy import run_path
+#from runpy import run_path
 
 
 BUILD_DIR = "build"
@@ -439,7 +439,7 @@ def main():
 
                 print (f'{ansi.dk_yellow_fg}Generating test src in {ansi.lt_yellow_fg}'
                        f'./test{ansi.all_off}')
-                do_shell_command("pushd test && ./ztestMaker.py; popd")
+                do_shell_command("cd test && ./ztestMaker.py; cd ..")
 
                 src = [
                     "test/ztest/ztest-main.cpp",
