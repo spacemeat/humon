@@ -1105,7 +1105,7 @@ huEnumType_t huSerializeTroveToFile(huTrove const * trove, char const * path, hu
 
 	FILE * fp = openFile(path, "wb");
 	if (fp == NULL)
-        { ourFree(& trove->allocator, str); return error; }
+        { ourFree(& trove->allocator, str); return HU_ERROR_BADFILE; }
 
     huSize_t writeLength = (huSize_t) fwrite(str, sizeof(char), strLength, fp);
     ourFree(& trove->allocator, str);
