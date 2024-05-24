@@ -7,16 +7,19 @@
 FILE * openFile(char const * path, char const * mode)
 {
 	struct stat fstatData;
-	if (stat(path, & fstatData) < 0)
-        { return NULL; }
+	if (mode[0] == 'r')
+	{
+		if (stat(path, & fstatData) < 0)
+			{ return NULL; }
 
 #ifdef _WIN32
-    if ((_S_IFREG & fstatData.st_mode) == 0)
-        { return NULL; }
+		if ((_S_IFREG & fstatData.st_mode) == 0)
+			{ return NULL; }
 #else
-    if (S_ISREG(fstatData.st_mode) == false)
-        { return NULL; }
+		if (S_ISREG(fstatData.st_mode) == false)
+			{ return NULL; }
 #endif
+	}
 
     FILE * fp = NULL;
 #ifdef _WIN32
