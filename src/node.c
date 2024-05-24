@@ -219,8 +219,6 @@ huNode const * huGetNextSiblingWithKeyN(huNode const * node, char const * key, h
         { return HU_NULLNODE; }
 
     huSize_t numChildren = huGetNumChildren(parentNode);
-    if (numChildren == 0)
-        { return HU_NULLNODE; }
 
     for (huSize_t i = node->childOrdinal + 1; i < numChildren; ++i)
     {
