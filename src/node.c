@@ -208,14 +208,14 @@ huNode const * huGetNextSiblingWithKeyN(huNode const * node, char const * key, h
         { return HU_NULLNODE; }
 #endif
 
-    if (node->kind != HU_NODEKIND_DICT)
-        { return HU_NULLNODE; }
-
     if (node->parentNodeIdx == -1)
         { return HU_NULLNODE; }
 
     huNode const * parentNode = huGetParent(node);
     if (parentNode == HU_NULLNODE)
+        { return HU_NULLNODE; }
+
+    if (parentNode->kind != HU_NODEKIND_DICT)
         { return HU_NULLNODE; }
 
     huSize_t numChildren = huGetNumChildren(parentNode);
