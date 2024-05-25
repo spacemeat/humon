@@ -528,41 +528,41 @@ huAnnotation const * huGetTroveAnnotation(huTrove const * trove, huSize_t annota
 }
 
 
-bool huTroveHasAnnotationWithKeyZ(huTrove const * trove, char const * key)
+huSize_t huGetNumTroveAnnotationsWithKeyZ(huTrove const * trove, char const * key)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (key  == NULL)
-        { return false; }
+    if (key == NULL)
+        { return 0; }
 #endif
 
     size_t keyLenC = strlen(key);
     if (keyLenC > maxOfType(huSize_t))
-        { return false; }
+        { return 0; }
 
-    return huTroveHasAnnotationWithKeyN(trove, key, (huSize_t) keyLenC);
+    return huGetNumTroveAnnotationsWithKeyN(trove, key, (huSize_t) keyLenC);
 }
 
 
-bool huTroveHasAnnotationWithKeyN(huTrove const * trove, char const * key, huSize_t keyLen)
+huSize_t huGetNumTroveAnnotationsWithKeyN(huTrove const * trove, char const * key, huSize_t keyLen)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || key  == NULL || keyLen < 0)
-        { return false; }
+        { return 0; }
 #endif
 
+    huSize_t matches = 0;
     for (huSize_t i = 0; i < trove->annotations.numElements; ++i)
     {
         huAnnotation * anno = (huAnnotation *) trove->annotations.buffer + i;
         if (anno->key->str.size == keyLen &&
             strncmp(anno->key->str.ptr, key, keyLen) == 0)
-            { return true; }
+            { matches += 1; }
     }
 
-    return false;
+    return matches;
 }
 
-
-huToken const * huGetTroveAnnotationWithKeyZ(huTrove const * trove, char const * key)
+huToken const * huGetTroveAnnotationWithKeyZ(huTrove const * trove, char const * key, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (key  == NULL)
@@ -573,26 +573,28 @@ huToken const * huGetTroveAnnotationWithKeyZ(huTrove const * trove, char const *
     if (keyLenC > maxOfType(huSize_t))
         { return HU_NULLTOKEN; }
 
-    return huGetTroveAnnotationWithKeyN(trove, key, (huSize_t) keyLenC);
+    return huGetTroveAnnotationWithKeyN(trove, key, (huSize_t) keyLenC, cursor);
 }
 
 
-huToken const * huGetTroveAnnotationWithKeyN(huTrove const * trove, char const * key, huSize_t keyLen)
+huToken const * huGetTroveAnnotationWithKeyN(huTrove const * trove, char const * key, huSize_t keyLen, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (trove == HU_NULLTROVE || key  == NULL || keyLen < 0)
+    if (trove == HU_NULLTROVE || key  == NULL || keyLen < 0 || cursor == NULL || * cursor < 0)
         { return HU_NULLTOKEN; }
 #endif
 
-    for (huSize_t i = 0; i < trove->annotations.numElements; ++i)
+    huToken const * token = HU_NULLTOKEN;
+    for (; * cursor < trove->annotations.numElements; ++ * cursor)
     {
-        huAnnotation * anno = (huAnnotation *) trove->annotations.buffer + i;
+        huAnnotation const * anno = (huAnnotation *) trove->annotations.buffer + * cursor;
         if (anno->key->str.size == keyLen &&
             strncmp(anno->key->str.ptr, key, keyLen) == 0)
-            { return anno->value; }
+            { token = anno->value; break; }
     }
 
-    return HU_NULLTOKEN;
+    * cursor += 1;
+	return token;
 }
 
 
@@ -720,8 +722,8 @@ huNode const * huFindNodesWithAnnotationKeyN(huTrove const * trove, char const *
     for (; * cursor < numNodes; ++ * cursor)
     {
         huNode const * node = huGetNodeByIndex(trove, * cursor);
-        bool hasOne = huHasAnnotationWithKeyN(node, key, keyLen);
-        if (hasOne)
+        huSize_t numTokens = huGetNumAnnotationsWithKeyN(node, key, keyLen);
+        if (numTokens != 0)
         {
             * cursor += 1;
             return node;
@@ -830,8 +832,9 @@ huNode const * huFindNodesWithAnnotationKeyValueNN(huTrove const * trove, char c
     for (; * cursor < numNodes; ++ * cursor)
     {
         huNode const * node = huGetNodeByIndex(trove, * cursor);
-        huToken const * anno = huGetAnnotationWithKeyN(node, key, keyLen);
-        if (anno != HU_NULLTOKEN)
+		huSize_t annoCursor = 0;
+        huToken const * anno = huGetAnnotationWithKeyN(node, key, keyLen, & annoCursor);
+        if (anno != NULL)
         {
             if (anno->str.size == valueLen &&
                 strncmp(anno->str.ptr, value, valueLen) == 0)

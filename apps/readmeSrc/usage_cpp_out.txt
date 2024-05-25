@@ -64,7 +64,7 @@ k: numBits  v: 32
 k: numBytes  v: 4
 k: numBits  v: 32
 k: numBytes  v: 4
-hasNumBits: 1
+numBits: 1
 annoValue: 32
 annoKey: numBits
 node: /definitions/player/maxHp/type

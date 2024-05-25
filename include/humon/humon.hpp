@@ -115,7 +115,6 @@ namespace hu
             capi::HU_ERROR_UNFINISHEDCSTYLECOMMENT,             ///< The C-style comment was not closed.
         unexpectedEof = capi::HU_ERROR_UNEXPECTEDEOF,           ///< The text ended early.
         tooManyRoots = capi::HU_ERROR_TOOMANYROOTS,             ///< There is more than one root node detected.
-        nonuniqueKey = capi::HU_ERROR_NONUNIQUEKEY,             ///< A non-unique key was encountered in a dict or annotation.
         syntaxError = capi::HU_ERROR_SYNTAXERROR,               ///< General syntax error.
         notFound = capi::HU_ERROR_NOTFOUND,                     ///< No node could be found at the address.
         illegal = capi::HU_ERROR_ILLEGAL,                       ///< The operation was illegal.
@@ -579,24 +578,36 @@ namespace hu
         /** A node can have multiple annotations with the same key. This is legal in Humon, but
          * rare. This function returns the number of annotations associated to this node with
          * the specified key. */
-        bool hasAnnotation(std::string_view key) const
+		hu::size_t numAnnotationsWithKey(std::string_view key) const
         {
             check();
             std::size_t sz = key.size();
             if (! validateSize(sz))
-                { return false; }
-            return capi::huHasAnnotationWithKeyN(cnode, key.data(), static_cast<hu::size_t>(sz));
+                { return 0; }
+            return capi::huGetNumAnnotationsWithKeyN(cnode, key.data(), static_cast<hu::size_t>(sz));
         }
 
-        /// Returns a Token referencing the value of the annotation accessed by key.
-        Token const annotation(std::string_view key) const
+        /// Returns a new collection of all this node's annotations with the specified key.
+        /** Creates a new vector of Tokens, each referencing the key of an annotation that
+         * has the specified key. */
+        [[nodiscard]] std::vector<Token> annotationsWithKey(std::string_view key) const
         {
             check();
+            std::vector<Token> vec;
             std::size_t sz = key.size();
             if (! validateSize(sz))
-                { return Token(HU_NULLTOKEN); }
-            auto canno = capi::huGetAnnotationWithKeyN(cnode, key.data(), static_cast<hu::size_t>(sz));
-            return Token(canno);
+                { return vec; }
+
+            hu::size_t cursor = 0;
+            capi::huToken const * tok = HU_NULLTOKEN;
+            do
+            {
+                tok = capi::huGetAnnotationWithKeyN(cnode, key.data(), static_cast<hu::size_t>(sz), & cursor);
+                if (tok)
+                    { vec.push_back(tok); }
+            } while (tok != HU_NULLTOKEN);
+
+            return vec;
         }
 
         /// Returns the number of annotations associated to this node, with the specified key.
@@ -1222,24 +1233,37 @@ namespace hu
 
         /// Return the number of trove annotations associated to this trove (not to any node) with
         /// the specified key.
-        bool hasTroveAnnotation(std::string_view key) const
+        hu::size_t numTroveAnnotationsWithKey(std::string_view key) const
         {
             std::size_t sz = key.size();
             if (! validateSize(sz))
-                { return false; }
-            return capi::huTroveHasAnnotationWithKeyN(
+                { return 0; }
+            return capi::huGetNumTroveAnnotationsWithKeyN(
                 ctrove, key.data(), static_cast<hu::size_t>(sz));
         }
 
-        /// Returns the value of the `idx`th annotation associated to this trove (not to any node)
-        /// with the specified key.
-        Token troveAnnotation(std::string_view key) const
+        /// Returns a new collection of all the keys of annotations associated to this trove (not
+        /// to any node) with the specified key.
+        [[nodiscard]] std::vector<Token> troveAnnotationsWithKey(std::string_view key) const
         {
+            check();
+            std::vector<Token> vec;
+
             std::size_t sz = key.size();
             if (! validateSize(sz))
-                { return Token(HU_NULLTROVE); }
-            return capi::huGetTroveAnnotationWithKeyN(
-                ctrove, key.data(), static_cast<hu::size_t>(sz));
+                { return vec; }
+
+            hu::size_t cursor = 0;
+            capi::huToken const * tok = HU_NULLTOKEN;
+            do
+            {
+                tok = capi::huGetTroveAnnotationWithKeyN(
+                    ctrove, key.data(), static_cast<hu::size_t>(sz), & cursor);
+                if (tok)
+                    { vec.push_back(tok); }
+            } while (tok != HU_NULLTOKEN);
+
+            return vec;
         }
 
         /// Return the number of trove annotations associated to this trove (not to any node) with

@@ -359,10 +359,10 @@ int main(int argc, char ** argv)
             else if (k == "numBytes"sv) { /*...*/ }
         }
 
-        bool hasNumBits = node.hasAnnotation("numBits"sv);  // verify annotation by key
-                                                            /*!!!eol*/out << "hasNumBits: " << hasNumBits << "\n";
-        auto annoValue = node.annotation("numBits"sv);      // get annotation by key
-                                                            /*!!!eol*/out << "annoValue: " << annoValue << "\n";
+        int numBits = node.numAnnotationsWithKey("numBits"sv);  // verify annotation by key
+                                                            /*!!!eol*/out << "numBits: " << numBits << "\n";
+        auto && annoValue = node.annotationsWithKey("numBits"sv);      // get annotation by key
+                                                            /*!!!eol*/out << "annoValue: " << annoValue[0] << "\n";
         // many annotations in a single node might have the same value; run through them all
         for (auto & annoKey: node.annotationsWithValue("32"sv))
         {
@@ -413,10 +413,14 @@ int main(int argc, char ** argv)
         auto desRes = hu::Trove::fromFile("apps/readmeSrc/hudo.hu"sv);
         if (auto trove = get_if<hu::Trove>(& desRes))
         {
-            if (trove->troveAnnotation("app") != "hudo"sv)
+			auto && annos = trove->troveAnnotationsWithKey("app");
+            if (annos.size() == 0 || annos[0] != "hudo"sv)
                 { throw runtime_error("File is not a hudo file."); }
 
-            auto versionString = trove->troveAnnotation("hudo-version");
+			annos = trove->troveAnnotationsWithKey("hudo-version");
+			if (annos.size() == 0)
+				{ throw runtime_error("File has no version annotation."); }
+            auto versionString = annos[0];
             auto version = V3 { versionString.str() };
             if      (version < V3 { 0, 1, 0 }) { out << "Using version 0.0.x\n"; /*...*/ }
             else if (version < V3 { 0, 2, 0 }) { out << "Using version 0.1.x\n"; /*...*/ }

@@ -138,7 +138,6 @@ extern "C"
         HU_ERROR_UNFINISHEDCSTYLECOMMENT,   ///< The C-style comment was not closed.
         HU_ERROR_UNEXPECTEDEOF,             ///< The text ended early.
         HU_ERROR_TOOMANYROOTS,              ///< There is more than one root node detected.
-        HU_ERROR_NONUNIQUEKEY,              ///< A non-unique key was encountered in a dict or annotation.
         HU_ERROR_SYNTAXERROR,               ///< General syntax error.
         HU_ERROR_NOTFOUND,                  ///< No node could be found at the address.
         HU_ERROR_ILLEGAL,                   ///< The address or node was illegal.
@@ -390,14 +389,15 @@ extern "C"
     /// Returns an annotation object associated to a node, by index.
 	HUMON_PUBLIC huAnnotation const * huGetAnnotation(huNode const * node, huSize_t annotationIdx);
 
-    /// Returns whether there is an annotation associated to a node with a specific key.
-	HUMON_PUBLIC bool huHasAnnotationWithKeyZ(huNode const * node, char const * key);
-    /// Returns whether there is an annotation associated to a node with a specific key.
-	HUMON_PUBLIC bool huHasAnnotationWithKeyN(huNode const * node, char const * key, huSize_t keyLen);
+    /// Returns the number of annotations associated to a node with a specific value.
+	HUMON_PUBLIC huSize_t huGetNumAnnotationsWithKeyZ(huNode const * node, char const * key);
+    /// Returns the number of annotations associated to a node with a specific value.
+	HUMON_PUBLIC huSize_t huGetNumAnnotationsWithKeyN(huNode const * node, char const * key, huSize_t valueLen);
+
     /// Returns the value token of an annoation object associated to a node, with the specified key.
-	HUMON_PUBLIC huToken const * huGetAnnotationWithKeyZ(huNode const * node, char const * key);
+	HUMON_PUBLIC huToken const * huGetAnnotationWithKeyZ(huNode const * node, char const * key, huSize_t * cursor);
     /// Returns the value token of an annoation object associated to a node, with the specified key.
-	HUMON_PUBLIC huToken const * huGetAnnotationWithKeyN(huNode const * node, char const * key, huSize_t keyLen);
+	HUMON_PUBLIC huToken const * huGetAnnotationWithKeyN(huNode const * node, char const * key, huSize_t keyLen, huSize_t * cursor);
 
     /// Returns the number of annotations associated to a node with a specific value.
 	HUMON_PUBLIC huSize_t huGetNumAnnotationsWithValueZ(huNode const * node, char const * value);
@@ -508,26 +508,34 @@ extern "C"
     /// Returns an annotation from a trove by index.
 	HUMON_PUBLIC huAnnotation const * huGetTroveAnnotation(huTrove const * trove, huSize_t annotationIdx);
 
-    /// Returns whether any annotations are associated to a trove with a specific key.
-	HUMON_PUBLIC bool huTroveHasAnnotationWithKeyZ(huTrove const * trove, char const * key);
-    /// Returns whether any annotations are associated to a trove with a specific key.
-	HUMON_PUBLIC bool huTroveHasAnnotationWithKeyN(huTrove const * trove, char const * key, huSize_t keyLen);
-    /// Returns an annoation object associated to a trove, by key and index.
-	HUMON_PUBLIC huToken const * huGetTroveAnnotationWithKeyZ(huTrove const * trove, char const * key);
-    /// Returns an annoation object associated to a trove, by key and index.
-	HUMON_PUBLIC huToken const * huGetTroveAnnotationWithKeyN(huTrove const * trove, char const * key, huSize_t keyLen);
+    /// Returns the number of annotations associated to a trove with a specific value.
+	HUMON_PUBLIC huSize_t huGetNumTroveAnnotationsWithKeyZ(huTrove const * trove, char const * key);
+    /// Returns the number of annotations associated to a trove with a specific value.
+	HUMON_PUBLIC huSize_t huGetNumTroveAnnotationsWithKeyN(huTrove const * trove, char const * key, huSize_t keyLen);
+    /// Returns an annoation value associated to a trove, by key and index.
+    /** Call this function continually to iterate over all the annotations. For `cursor`, be sure
+     * to pass the address of an integer whose value is 0 for the first call; subsequent calls
+     * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
+     * to the caller.*/
+	HUMON_PUBLIC huToken const * huGetTroveAnnotationWithKeyZ(huTrove const * trove, char const * key, huSize_t * cursor);
+    /// Returns an annoation value associated to a trove, by key and index.
+    /** Call this function continually to iterate over all the annotations. For `cursor`, be sure
+     * to pass the address of an integer whose value is 0 for the first call; subsequent calls
+     * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
+     * to the caller.*/
+	HUMON_PUBLIC huToken const * huGetTroveAnnotationWithKeyN(huTrove const * trove, char const * key, huSize_t keyLen, huSize_t * cursor);
 
     /// Returns the number of annotations associated to a trove with a specific value.
 	HUMON_PUBLIC huSize_t huGetNumTroveAnnotationsWithValueZ(huTrove const * trove, char const * value);
     /// Returns the number of annotations associated to a trove with a specific value.
 	HUMON_PUBLIC huSize_t huGetNumTroveAnnotationsWithValueN(huTrove const * trove, char const * value, huSize_t valueLen);
-    /// Returns an annoation object associated to a trove, by value and index.
+    /// Returns an annoation key associated to a trove, by value and index.
     /** Call this function continually to iterate over all the annotations. For `cursor`, be sure
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
 	HUMON_PUBLIC huToken const * huGetTroveAnnotationWithValueZ(huTrove const * trove, char const * value, huSize_t * cursor);
-    /// Returns an annoation object associated to a trove, by value and index.
+    /// Returns an annoation key associated to a trove, by value and index.
     /** Call this function continually to iterate over all the annotations. For `cursor`, be sure
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning

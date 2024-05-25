@@ -191,19 +191,6 @@ void addChildNode(huNode * node, huNode * child)
 
 void addAnnotation(huTrove * trove, huNode * node, huToken const * keyToken)
 {
-    // check for duplicate keys
-    huStringView const * key = & keyToken->str;
-    if (node)
-    {
-        if (huHasAnnotationWithKeyN(node, key->ptr, key->size))
-            { recordParseError(trove, HU_ERROR_NONUNIQUEKEY, keyToken); }
-    }
-    else
-    {
-        if (huTroveHasAnnotationWithKeyN(trove, key->ptr, key->size))
-            { recordParseError(trove, HU_ERROR_NONUNIQUEKEY, keyToken); }
-    }
-
     huAnnotation * anno = NULL;
     huSize_t num = 1;
     if (node)

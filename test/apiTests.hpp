@@ -694,81 +694,6 @@ TEST_GROUP(huHasAnnotationWithKey)
     }
 };
 
-TEST(huHasAnnotationWithKey, lists)
-{
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(l.root, "name"), "root.hawk name == true");
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(l.root, "otherName"), "root.hawk otherName == true");
-    CHECK_EQUAL_TEXT(false, huHasAnnotationWithKeyZ(l.root, "foo"), "root.hawk foo == false");
-
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(l.a, "a"), "a.hawk a == true");
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(l.a, "type"), "a.hawk type == true");
-    CHECK_EQUAL_TEXT(false, huHasAnnotationWithKeyZ(l.a, "foo"), "a.hawk foo == false");
-
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(l.bp, "b"), "bp.hawk b == true");
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(l.bp, "type"), "bp.hawk type == true");
-    CHECK_EQUAL_TEXT(false, huHasAnnotationWithKeyZ(l.bp, "foo"), "bp.hawk foo == false");
-
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(l.b, "b"), "b.hawk b == true");
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(l.b, "type"), "b.hawk type == true");
-    CHECK_EQUAL_TEXT(false, huHasAnnotationWithKeyZ(l.b, "foo"), "b.hawk foo == false");
-
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(l.cpp, "c"), "cpp.hawk c == true");
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(l.cpp, "type"), "cpp.hawk type == true");
-    CHECK_EQUAL_TEXT(false, huHasAnnotationWithKeyZ(l.cpp, "foo"), "cpp.hawk foo == false");
-
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(l.cp, "c"), "cp.hawk c == true");
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(l.cp, "type"), "cp.hawk type == true");
-    CHECK_EQUAL_TEXT(false, huHasAnnotationWithKeyZ(l.cp, "foo"), "cp.hawk foo == false");
-
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(l.c, "c"), "c.hawk c == true");
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(l.c, "type"), "c.hawk type == true");
-    CHECK_EQUAL_TEXT(false, huHasAnnotationWithKeyZ(l.c, "foo"), "c.hawk foo == false");
-}
-
-TEST(huHasAnnotationWithKey, dicts)
-{
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(d.root, "name"), "root.hawk name == true");
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(d.root, "otherName"), "root.hawk otherName == true");
-    CHECK_EQUAL_TEXT(false, huHasAnnotationWithKeyZ(d.root, "foo"), "root.hawk foo == false");
-
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(d.a, "a"), "a.hawk a == true");
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(d.a, "type"), "a.hawk type == true");
-    CHECK_EQUAL_TEXT(false, huHasAnnotationWithKeyZ(d.a, "foo"), "a.hawk foo == false");
-
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(d.bp, "b"), "bp.hawk b == true");
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(d.bp, "type"), "bp.hawk type == true");
-    CHECK_EQUAL_TEXT(false, huHasAnnotationWithKeyZ(d.bp, "foo"), "bp.hawk foo == false");
-
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(d.b, "b"), "b.hawk b == true");
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(d.b, "type"), "b.hawk type == true");
-    CHECK_EQUAL_TEXT(false, huHasAnnotationWithKeyZ(d.b, "foo"), "b.hawk foo == false");
-
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(d.cpp, "c"), "cpp.hawk c == true");
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(d.cpp, "type"), "cpp.hawk type == true");
-    CHECK_EQUAL_TEXT(false, huHasAnnotationWithKeyZ(d.cpp, "foo"), "cpp.hawk foo == false");
-
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(d.cp, "c"), "cp.hawk c == true");
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(d.cp, "type"), "cp.hawk type == true");
-    CHECK_EQUAL_TEXT(false, huHasAnnotationWithKeyZ(d.cp, "foo"), "cp.hawk foo == false");
-
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(d.c, "c"), "c.hawk c == true");
-    CHECK_EQUAL_TEXT(true, huHasAnnotationWithKeyZ(d.c, "type"), "c.hawk type == true");
-    CHECK_EQUAL_TEXT(false, huHasAnnotationWithKeyZ(d.c, "foo"), "c.hawk foo == false");
-}
-
-TEST(huHasAnnotationWithKey, pathological)
-{
-    CHECK_EQUAL_TEXT(false, huHasAnnotationWithKeyZ(NULL, ""), "NULL.hawk '' == false");
-    CHECK_EQUAL_TEXT(false, huHasAnnotationWithKeyZ(NULL, "foo"), "NULL.hawk foo == false");
-    CHECK_EQUAL_TEXT(false, huHasAnnotationWithKeyZ(HU_NULLNODE, ""), "null.hawk '' == false");
-    CHECK_EQUAL_TEXT(false, huHasAnnotationWithKeyZ(HU_NULLNODE, "foo"), "null.hawk foo == false");
-    CHECK_EQUAL_TEXT(false, huHasAnnotationWithKeyZ(l.root, ""), "root.hawk '' == false");
-    CHECK_EQUAL_TEXT(false, huHasAnnotationWithKeyZ(l.root, NULL), "root.hawk NULL == false");
-    CHECK_EQUAL_TEXT(false, huHasAnnotationWithKeyZ(d.root, ""), "root.hawk '' == false");
-    CHECK_EQUAL_TEXT(false, huHasAnnotationWithKeyZ(d.root, NULL), "root.hawk NULL == false");
-}
-
-
 TEST_GROUP(huGetAnnotationWithKey)
 {
     htd_listOfLists l;
@@ -789,134 +714,204 @@ TEST_GROUP(huGetAnnotationWithKey)
 
 TEST(huGetAnnotationWithKey, lists)
 {
-    CHECK(huGetAnnotationWithKeyZ(l.root, "name") != NULL);
+	huSize_t cursor = 0;
+    CHECK(huGetAnnotationWithKeyZ(l.root, "name", & cursor) != NULL);
 
-    auto anno = huGetAnnotationWithKeyZ(l.root, "name")->str;
+	cursor = 0;
+    auto anno = huGetAnnotationWithKeyZ(l.root, "name", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("root"), anno.size, "root.anno name size = sz root");
     STRNCMP_EQUAL_TEXT("root", anno.ptr, anno.size, "root.anno name == root");
-    anno = huGetAnnotationWithKeyZ(l.root, "otherName")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(l.root, "otherName", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("root"), anno.size, "root.anno otherName size = sz root");
     STRNCMP_EQUAL_TEXT("root", anno.ptr, anno.size, "root.anno otherName == root");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(l.root, "foo"), "root.hawk foo == false");
+	cursor = 0;
+    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(l.root, "foo", & cursor), "root.hawk foo == false");
 
-    anno = huGetAnnotationWithKeyZ(l.a, "a")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(l.a, "a", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("a"), anno.size, "a.anno a size = sz a");
     STRNCMP_EQUAL_TEXT("a", anno.ptr, anno.size, "a.anno a == a");
-    anno = huGetAnnotationWithKeyZ(l.a, "type")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(l.a, "type", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("value"), anno.size, "a.anno type size = sz value");
     STRNCMP_EQUAL_TEXT("value", anno.ptr, anno.size, "a.anno type == value");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(l.a, "foo"), "a.anno foo == null");
+	cursor = 0;
+    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(l.a, "foo", & cursor), "a.anno foo == null");
 
-    anno = huGetAnnotationWithKeyZ(l.bp, "b")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(l.bp, "b", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("bp"), anno.size, "bp.anno b size = sz bp");
     STRNCMP_EQUAL_TEXT("bp", anno.ptr, anno.size, "bp.anno a == bp");
-    anno = huGetAnnotationWithKeyZ(l.bp, "type")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(l.bp, "type", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("list"), anno.size, "bp.anno type size = sz list");
     STRNCMP_EQUAL_TEXT("list", anno.ptr, anno.size, "bp.anno type == list");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(l.bp, "foo"), "bp.anno foo == null");
+	cursor = 0;
+    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(l.bp, "foo", & cursor), "bp.anno foo == null");
 
-    anno = huGetAnnotationWithKeyZ(l.b, "b")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(l.b, "b", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("b"), anno.size, "b.anno b size = sz b");
     STRNCMP_EQUAL_TEXT("b", anno.ptr, anno.size, "b.anno b == b");
-    anno = huGetAnnotationWithKeyZ(l.b, "type")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(l.b, "type", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("value"), anno.size, "b.anno type size = sz value");
     STRNCMP_EQUAL_TEXT("value", anno.ptr, anno.size, "b.anno type == value");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(l.b, "foo"), "b.anno foo == null");
+	cursor = 0;
+    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(l.b, "foo", & cursor), "b.anno foo == null");
 
-    anno = huGetAnnotationWithKeyZ(l.cpp, "c")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(l.cpp, "c", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("cpp"), anno.size, "cpp.anno b size = sz cpp");
     STRNCMP_EQUAL_TEXT("cpp", anno.ptr, anno.size, "cpp.anno b == cpp");
-    anno = huGetAnnotationWithKeyZ(l.cpp, "type")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(l.cpp, "type", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("list"), anno.size, "cpp.anno type size = sz list");
     STRNCMP_EQUAL_TEXT("list", anno.ptr, anno.size, "cpp.anno type == list");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(l.cpp, "foo"), "cpp.anno foo == null");
+	cursor = 0;
+    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(l.cpp, "foo", & cursor), "cpp.anno foo == null");
 
-    anno = huGetAnnotationWithKeyZ(l.cp, "c")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(l.cp, "c", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("cp"), anno.size, "cp.anno c size = sz cp");
     STRNCMP_EQUAL_TEXT("cp", anno.ptr, anno.size, "cp.anno c == cp");
-    anno = huGetAnnotationWithKeyZ(l.cp, "type")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(l.cp, "type", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("list"), anno.size, "cp.anno type size = sz list");
     STRNCMP_EQUAL_TEXT("list", anno.ptr, anno.size, "cp.anno type == list");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(l.cp, "foo"), "cp.anno foo == null");
+	cursor = 0;
+    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(l.cp, "foo", & cursor), "cp.anno foo == null");
 
-    anno = huGetAnnotationWithKeyZ(l.c, "c")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(l.c, "c", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("c"), anno.size, "c.anno c size = sz c");
     STRNCMP_EQUAL_TEXT("c", anno.ptr, anno.size, "c.anno c == c");
-    anno = huGetAnnotationWithKeyZ(l.c, "type")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(l.c, "type", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("value"), anno.size, "c.anno type size = sz value");
     STRNCMP_EQUAL_TEXT("value", anno.ptr, anno.size, "c.anno type == value");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(l.c, "foo"), "c.anno foo == null");
+	cursor = 0;
+    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(l.c, "foo", & cursor), "c.anno foo == null");
 }
 
 TEST(huGetAnnotationWithKey, dicts)
 {
-    CHECK(huGetAnnotationWithKeyZ(d.root, "name") != NULL);
+	huSize_t cursor = 0;
+    CHECK(huGetAnnotationWithKeyZ(d.root, "name", & cursor) != NULL);
 
-    auto anno = huGetAnnotationWithKeyZ(d.root, "name")->str;
+	cursor = 0;
+    auto anno = huGetAnnotationWithKeyZ(d.root, "name", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("root"), anno.size, "root.anno name size = sz root");
     STRNCMP_EQUAL_TEXT("root", anno.ptr, anno.size, "root.anno name == root");
-    anno = huGetAnnotationWithKeyZ(d.root, "otherName")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(d.root, "otherName", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("root"), anno.size, "root.anno otherName size = sz root");
     STRNCMP_EQUAL_TEXT("root", anno.ptr, anno.size, "root.anno otherName == root");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(d.root, "foo"), "root.hawk foo == false");
+	cursor = 0;
+    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(d.root, "foo", & cursor), "root.hawk foo == false");
 
-    anno = huGetAnnotationWithKeyZ(d.a, "a")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(d.a, "a", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("a"), anno.size, "a.anno a size = sz a");
     STRNCMP_EQUAL_TEXT("a", anno.ptr, anno.size, "a.anno a == a");
-    anno = huGetAnnotationWithKeyZ(d.a, "type")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(d.a, "type", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("value"), anno.size, "a.anno type size = sz value");
     STRNCMP_EQUAL_TEXT("value", anno.ptr, anno.size, "a.anno type == value");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(d.a, "foo"), "a.anno foo == null");
+	cursor = 0;
+    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(d.a, "foo", & cursor), "a.anno foo == null");
 
-    anno = huGetAnnotationWithKeyZ(d.bp, "b")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(d.bp, "b", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("bp"), anno.size, "bp.anno b size = sz bp");
     STRNCMP_EQUAL_TEXT("bp", anno.ptr, anno.size, "bp.anno b == bp");
-    anno = huGetAnnotationWithKeyZ(d.bp, "type")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(d.bp, "type", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("dict"), anno.size, "bp.anno type size = sz dict");
     STRNCMP_EQUAL_TEXT("dict", anno.ptr, anno.size, "bp.anno type == dict");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(d.bp, "foo"), "bp.anno foo == null");
+	cursor = 0;
+    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(d.bp, "foo", & cursor), "bp.anno foo == null");
 
-    anno = huGetAnnotationWithKeyZ(d.b, "b")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(d.b, "b", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("b"), anno.size, "b.anno b size = sz b");
     STRNCMP_EQUAL_TEXT("b", anno.ptr, anno.size, "b.anno b == b");
-    anno = huGetAnnotationWithKeyZ(d.b, "type")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(d.b, "type", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("value"), anno.size, "b.anno type size = sz value");
     STRNCMP_EQUAL_TEXT("value", anno.ptr, anno.size, "b.anno type == value");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(d.b, "foo"), "b.anno foo == null");
+	cursor = 0;
+    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(d.b, "foo", & cursor), "b.anno foo == null");
 
-    anno = huGetAnnotationWithKeyZ(d.cpp, "c")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(d.cpp, "c", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("cpp"), anno.size, "cpp.anno b size = sz cpp");
     STRNCMP_EQUAL_TEXT("cpp", anno.ptr, anno.size, "cpp.anno b == cpp");
-    anno = huGetAnnotationWithKeyZ(d.cpp, "type")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(d.cpp, "type", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("dict"), anno.size, "cpp.anno type size = sz dict");
     STRNCMP_EQUAL_TEXT("dict", anno.ptr, anno.size, "cpp.anno type == dict");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(d.cpp, "foo"), "cpp.anno foo == null");
+	cursor = 0;
+    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(d.cpp, "foo", & cursor), "cpp.anno foo == null");
 
-    anno = huGetAnnotationWithKeyZ(d.cp, "c")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(d.cp, "c", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("cp"), anno.size, "cp.anno c size = sz cp");
     STRNCMP_EQUAL_TEXT("cp", anno.ptr, anno.size, "cp.anno c == cp");
-    anno = huGetAnnotationWithKeyZ(d.cp, "type")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(d.cp, "type", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("dict"), anno.size, "cp.anno type size = sz dict");
     STRNCMP_EQUAL_TEXT("dict", anno.ptr, anno.size, "cp.anno type == dict");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(d.cp, "foo"), "cp.anno foo == null");
+	cursor = 0;
+    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(d.cp, "foo", & cursor), "cp.anno foo == null");
 
-    anno = huGetAnnotationWithKeyZ(d.c, "c")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(d.c, "c", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("c"), anno.size, "c.anno c size = sz c");
     STRNCMP_EQUAL_TEXT("c", anno.ptr, anno.size, "c.anno c == c");
-    anno = huGetAnnotationWithKeyZ(d.c, "type")->str;
+	cursor = 0;
+    anno = huGetAnnotationWithKeyZ(d.c, "type", & cursor)->str;
     LONGS_EQUAL_TEXT(strlen("value"), anno.size, "c.anno type size = sz value");
     STRNCMP_EQUAL_TEXT("value", anno.ptr, anno.size, "c.anno type == value");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(d.c, "foo"), "c.anno foo == null");
+	cursor = 0;
+    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(d.c, "foo", & cursor), "c.anno foo == null");
 }
 
 TEST(huGetAnnotationWithKey, pathological)
 {
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(NULL, ""), "NULL.anno '' == null");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(NULL, "foo"), "NULL.anno foo == null");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(HU_NULLNODE, ""), "null.anno '' == null");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(HU_NULLNODE, "foo"), "null.anno foo == null");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(l.root, ""), "root.anno '' == null");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(l.root, NULL), "root.anno NULL == null");
+	huSize_t negOne = -1;
+	huSize_t thou = 1000;
+	huSize_t zero = 0;
+
+	auto lroot = l.root;
+
+	const huNode * nodes[] =     {lroot, NULL, HU_NULLNODE};
+	const char * keys[] =        {"foo", NULL, ""};
+	huSize_t * cursors[] =       {& zero, NULL, & negOne, & thou};
+
+	for (long unsigned c = 0; c < sizeof(cursors) / sizeof(cursors[0]); ++c)
+	{
+		huSize_t * pc = cursors[c];
+		huSize_t pcv = 0;
+		if (pc != NULL)
+			{ pcv = * pc; }
+		for (long unsigned k = 0; k < sizeof(keys) / sizeof(keys[0]); ++k)
+		{
+			const char * pk = keys[k];
+			for (long unsigned n = 0; n < sizeof(nodes) / sizeof(nodes[0]); ++n)
+			{
+				const huNode * pn = nodes[n];
+				if (c != 0 || k != 0 || n != 0)
+				{
+					POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(pn, pk, pc), "");
+					if (pc != NULL)
+						{ LONGS_EQUAL(pcv, * pc); }
+					* pc = pcv;
+				}
+			}
+		}
+	}
 }
 
 
@@ -2740,44 +2735,6 @@ TEST(huGetTroveAnnotation, pathological)
 }
 
 
-TEST_GROUP(huTroveHasAnnotationWithKey)
-{
-    htd_listOfLists l;
-    htd_dictOfDicts d;
-
-    void setup()
-    {
-        l.setup();
-        d.setup();
-    }
-
-    void teardown()
-    {
-        d.teardown();
-        l.teardown();
-    }
-};
-
-TEST(huTroveHasAnnotationWithKey, normal)
-{
-    CHECK_TEXT(huTroveHasAnnotationWithKeyZ(l.trove, "tx"), "l thawk tx");
-    CHECK_TEXT(huTroveHasAnnotationWithKeyZ(l.trove, "ta"), "l thawk ta");
-    CHECK_TEXT(huTroveHasAnnotationWithKeyZ(l.trove, "tb"), "l thawk tb");
-    CHECK_TEXT(huTroveHasAnnotationWithKeyZ(l.trove, "foo") == false, "l thawk foo == false");
-
-    CHECK_TEXT(huTroveHasAnnotationWithKeyZ(d.trove, "tx"), "d thawk tx");
-    CHECK_TEXT(huTroveHasAnnotationWithKeyZ(d.trove, "ta"), "d thawk ta");
-    CHECK_TEXT(huTroveHasAnnotationWithKeyZ(d.trove, "tb"), "d thawk tb");
-    CHECK_TEXT(huTroveHasAnnotationWithKeyZ(d.trove, "foo") == false, "d thawk foo == false");
-}
-
-TEST(huTroveHasAnnotationWithKey, pathological)
-{
-    CHECK_TEXT(false == huTroveHasAnnotationWithKeyZ(NULL, 0), "NULL thawk 0 == false");
-    CHECK_TEXT(false == huTroveHasAnnotationWithKeyZ(HU_NULLTROVE, 0), "NULL thawk 0 == false");
-}
-
-
 TEST_GROUP(huGetTroveAnnotationWithKey)
 {
     htd_listOfLists l;
@@ -2798,32 +2755,38 @@ TEST_GROUP(huGetTroveAnnotationWithKey)
 
 TEST(huGetTroveAnnotationWithKey, normal)
 {
-    auto anno = huGetTroveAnnotationWithKeyZ(l.trove, "tx");
+	huSize_t cursor = 0;
+    auto anno = huGetTroveAnnotationWithKeyZ(l.trove, "tx", & cursor);
     CHECK_TEXT(anno != HU_NULLTOKEN, "l anno tx not NULL");
     LONGS_EQUAL_TEXT(2, anno->str.size, "l anno tx v sz == 2");
     STRNCMP_EQUAL_TEXT("ta", anno->str.ptr, anno->str.size, "l anno tx v == ta");
 
-    anno = huGetTroveAnnotationWithKeyZ(l.trove, "ta");
+	cursor = 0;
+    anno = huGetTroveAnnotationWithKeyZ(l.trove, "ta", & cursor);
     CHECK_TEXT(anno != HU_NULLTOKEN, "l anno ta not NULL");
     LONGS_EQUAL_TEXT(2, anno->str.size, "l anno ta v sz == 2");
     STRNCMP_EQUAL_TEXT("ta", anno->str.ptr, anno->str.size, "l anno ta v == ta");
 
-    anno = huGetTroveAnnotationWithKeyZ(l.trove, "tb");
+	cursor = 0;
+    anno = huGetTroveAnnotationWithKeyZ(l.trove, "tb", & cursor);
     CHECK_TEXT(anno != HU_NULLTOKEN, "l anno tb not NULL");
     LONGS_EQUAL_TEXT(2, anno->str.size, "l anno tb v sz == 2");
     STRNCMP_EQUAL_TEXT("tb", anno->str.ptr, anno->str.size, "l anno tb v == tb");
 
-    anno = huGetTroveAnnotationWithKeyZ(d.trove, "tx");
+	cursor = 0;
+    anno = huGetTroveAnnotationWithKeyZ(d.trove, "tx", & cursor);
     CHECK_TEXT(anno != HU_NULLTOKEN, "l anno tx not NULL");
     LONGS_EQUAL_TEXT(2, anno->str.size, "l anno tx v sz == 2");
     STRNCMP_EQUAL_TEXT("ta", anno->str.ptr, anno->str.size, "l anno tx v == ta");
 
-    anno = huGetTroveAnnotationWithKeyZ(d.trove, "ta");
+	cursor = 0;
+    anno = huGetTroveAnnotationWithKeyZ(d.trove, "ta", & cursor);
     CHECK_TEXT(anno != HU_NULLTOKEN, "l anno ta not NULL");
     LONGS_EQUAL_TEXT(2, anno->str.size, "l anno ta v sz == 2");
     STRNCMP_EQUAL_TEXT("ta", anno->str.ptr, anno->str.size, "l anno ta v == ta");
 
-    anno = huGetTroveAnnotationWithKeyZ(d.trove, "tb");
+	cursor = 0;
+    anno = huGetTroveAnnotationWithKeyZ(d.trove, "tb", & cursor);
     CHECK_TEXT(anno != HU_NULLTOKEN, "l anno tb not NULL");
     LONGS_EQUAL_TEXT(2, anno->str.size, "l anno tb v sz == 2");
     STRNCMP_EQUAL_TEXT("tb", anno->str.ptr, anno->str.size, "l anno tb v == tb");
@@ -2831,14 +2794,36 @@ TEST(huGetTroveAnnotationWithKey, normal)
 
 TEST(huGetTroveAnnotationWithKey, pathological)
 {
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetTroveAnnotationWithKeyZ(NULL, "tx"), "NULL anno tx == NULL");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetTroveAnnotationWithKeyZ(HU_NULLTROVE, "tx"), "null anno tx == NULL");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetTroveAnnotationWithKeyZ(l.trove, "tq"), "l anno tq == NULL");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetTroveAnnotationWithKeyZ(l.trove, ""), "l anno '' == NULL");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetTroveAnnotationWithKeyZ(l.trove, NULL), "l anno NULL == NULL");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetTroveAnnotationWithKeyZ(d.trove, "tq"), "d anno tq == NULL");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetTroveAnnotationWithKeyZ(d.trove, ""), "d anno '' == NULL");
-    POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetTroveAnnotationWithKeyZ(d.trove, NULL), "d anno NULL == NULL");
+	huSize_t negOne = -1;
+	huSize_t thou = 1000;
+	huSize_t zero = 0;
+
+	const huTrove * troves[] =   {l.trove, d.trove, NULL, HU_NULLNODE};
+	const char * keys[] =        {"foo", NULL, ""};
+	huSize_t * cursors[] =       {& zero, NULL, & negOne, & thou};
+
+	for (long unsigned c = 0; c < sizeof(cursors) / sizeof(cursors[0]); ++c)
+	{
+		huSize_t * pc = cursors[c];
+		huSize_t pcv = 0;
+		if (pc != NULL)
+			{ pcv = * pc; }
+		for (long unsigned k = 0; k < sizeof(keys) / sizeof(keys[0]); ++k)
+		{
+			const char * pk = keys[k];
+			for (long unsigned t = 0; t < sizeof(troves) / sizeof(troves[0]); ++t)
+			{
+				const huTrove * pt = troves[t];
+				if (c != 0 || k != 0 || (t != 0 && t != 1))
+				{
+					POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetTroveAnnotationWithKeyZ(pt, pk, pc), "");
+					if (pc != NULL)
+						{ LONGS_EQUAL(pcv, * pc); }
+					* pc = pcv;
+				}
+			}
+		}
+	}
 }
 
 

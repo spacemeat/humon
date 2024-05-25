@@ -682,9 +682,9 @@ Annotations are described in detail below. They're essentially per-node metadata
         else if (k == "numBytes"sv) { /*...*/ }
     }
 
-    bool hasNumBits = node.hasAnnotation("numBits"sv);  // verify annotation by key
+    int numBits = node.numAnnotationsWithKey("numBits"sv);  // verify annotation by key
                                                         
-    auto annoValue = node.annotation("numBits"sv);      // get annotation by key
+    auto && annoValue = node.annotationsWithKey("numBits"sv);      // get annotation by key
                                                         
     // many annotations in a single node might have the same value; run through them all
     for (auto & annoKey: node.annotationsWithValue("32"sv))
@@ -874,10 +874,14 @@ If no nodes appear before an annotation, it applies to the trove. A great way to
     auto desRes = hu::Trove::fromFile("apps/readmeSrc/hudo.hu"sv);
     if (auto trove = get_if<hu::Trove>(& desRes))
     {
-        if (trove->troveAnnotation("app") != "hudo"sv)
+uto && annos = trove->troveAnnotationsWithKey("app");
+        if (annos.size() == 0 || annos[0] != "hudo"sv)
             { throw runtime_error("File is not a hudo file."); }
 
-        auto versionString = trove->troveAnnotation("hudo-version");
+nnos = trove->troveAnnotationsWithKey("hudo-version");
+f (annos.size() == 0)
+{ throw runtime_error("File has no version annotation."); }
+        auto versionString = annos[0];
         auto version = V3 { versionString.str() };
         if      (version < V3 { 0, 1, 0 }) { out << "Using version 0.0.x\n"; /*...*/ }
         else if (version < V3 { 0, 2, 0 }) { out << "Using version 0.1.x\n"; /*...*/ }

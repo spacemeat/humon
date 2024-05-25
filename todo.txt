@@ -1,15 +1,11 @@
 DONE THIS CHECKIN:
-P1 trove.c:1106 bad return value
-P1 utils.c:10 if (mode[0] == 'r') {...}
-P1 node.c:222 unnecessary check
+P1 get nth annotation by key
 
 TODO:
 P1 consolidated vectors for comments and annotations
 P1 write to any UTF mode
-P1 get nth annotation by key
 P1 address for nth key has no format /foo/bar:2/baz
 P1 nix redundant firstchildwithkey
-P2 node.c:211 node->parentNode->kind should be dict
 
 P2 begin() and end() for nodes
 P2 doxygen improvements

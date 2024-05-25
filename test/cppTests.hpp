@@ -128,10 +128,10 @@ TEST(cppSugar, sugar)
 TEST(cppSugar, annos)
 {
     LONGS_EQUAL(3, m.trove.numTroveAnnotations());
-    LONGS_EQUAL(true, m.trove.hasTroveAnnotation("tx"));
-    LONGS_EQUAL(true, m.trove.hasTroveAnnotation("ta"));
-    LONGS_EQUAL(true, m.trove.hasTroveAnnotation("tb"));
-    LONGS_EQUAL(false, m.trove.hasTroveAnnotation("foo"));
+    LONGS_EQUAL(1, m.trove.numTroveAnnotationsWithKey("tx"));
+    LONGS_EQUAL(1, m.trove.numTroveAnnotationsWithKey("ta"));
+    LONGS_EQUAL(1, m.trove.numTroveAnnotationsWithKey("tb"));
+    LONGS_EQUAL(0, m.trove.numTroveAnnotationsWithKey("foo"));
     LONGS_EQUAL(2, m.trove.numTroveAnnotationsWithValue("ta"));
     LONGS_EQUAL(1, m.trove.numTroveAnnotationsWithValue("tb"));
 

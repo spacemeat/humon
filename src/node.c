@@ -730,68 +730,71 @@ huAnnotation const * huGetAnnotation(huNode const * node, huSize_t annotationIdx
 }
 
 
-bool huHasAnnotationWithKeyZ(huNode const * node, char const * key)
+HUMON_PUBLIC huSize_t huGetNumAnnotationsWithKeyZ(huNode const * node, char const * key)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (key == NULL)
-        { return false; }
+        { return 0; }
 #endif
 
     size_t keyLenC = strlen(key);
     if (keyLenC > maxOfType(huSize_t))
-        { return false; }
+        { return 0; }
 
-    return huHasAnnotationWithKeyN(node, key, (huSize_t) keyLenC);
+    return huGetNumAnnotationsWithKeyN(node, key, (huSize_t) keyLenC);
 }
 
-
-bool huHasAnnotationWithKeyN(huNode const * node, char const * key, huSize_t keyLen)
+HUMON_PUBLIC huSize_t huGetNumAnnotationsWithKeyN(huNode const * node, char const * key, huSize_t keyLen)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (node == HU_NULLNODE || key == NULL || keyLen < 0)
-        { return false; }
+        { return 0; }
 #endif
 
-    for (int i = 0; i < node->annotations.numElements; ++i)
-    {
-        huAnnotation const * anno = (huAnnotation *) node->annotations.buffer + i;
-        if (keyLen == anno->key->str.size &&
-            strncmp(anno->key->str.ptr, key, keyLen) == 0)
-            { return true; }
-    }
-
-    return false;
-}
-
-
-huToken const * huGetAnnotationWithKeyZ(huNode const * node, char const * key)
-{
-#ifdef HUMON_CHECK_PARAMS
-    if (key == NULL)
-        { return HU_NULLTOKEN; }
-#endif
-
-    size_t keyLenC = strlen(key);
-    if (keyLenC > maxOfType(huSize_t))
-        { return HU_NULLTOKEN; }
-
-    return huGetAnnotationWithKeyN(node, key, (huSize_t) keyLenC);
-}
-
-
-huToken const * huGetAnnotationWithKeyN(huNode const * node, char const * key, huSize_t keyLen)
-{
-#ifdef HUMON_CHECK_PARAMS
-    if (node == HU_NULLNODE || key == NULL || keyLen < 0)
-        { return HU_NULLTOKEN; }
-#endif
-
+    huSize_t matches = 0;
     for (huSize_t i = 0; i < node->annotations.numElements; ++i)
     {
         huAnnotation const * anno = (huAnnotation const *) node->annotations.buffer + i;
         if (keyLen == anno->key->str.size &&
             strncmp(anno->key->str.ptr, key, keyLen) == 0)
-            { return anno->value; }
+            { matches += 1; }
+    }
+
+    return matches;
+}
+
+
+huToken const * huGetAnnotationWithKeyZ(huNode const * node, char const * key, huSize_t * cursor)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (key == NULL)
+        { return HU_NULLTOKEN; }
+#endif
+
+    size_t keyLenC = strlen(key);
+    if (keyLenC > maxOfType(huSize_t))
+        { return HU_NULLTOKEN; }
+
+    return huGetAnnotationWithKeyN(node, key, (huSize_t) keyLenC, cursor);
+}
+
+
+huToken const * huGetAnnotationWithKeyN(huNode const * node, char const * key, huSize_t keyLen, huSize_t * cursor)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (node == HU_NULLNODE || key == NULL || keyLen < 0 || cursor == NULL || * cursor < 0)
+        { return HU_NULLTOKEN; }
+#endif
+
+    for (; * cursor < node->annotations.numElements; ++ * cursor)
+    {
+        huAnnotation const * anno = (huAnnotation *) node->annotations.buffer + * cursor;
+        if (keyLen == anno->key->str.size &&
+            strncmp(anno->key->str.ptr, key, keyLen) == 0)
+        {
+            * cursor += 1;
+            return anno->value;
+        }
     }
 
     return HU_NULLTOKEN;
