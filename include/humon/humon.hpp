@@ -255,9 +255,9 @@ namespace hu
     {
     public:
         /// Construct with sane defaults.
-        SerializeOptions(WhitespaceFormat WhitespaceFormat = WhitespaceFormat::pretty,
+        SerializeOptions(WhitespaceFormat whitespaceFormat = WhitespaceFormat::pretty,
             hu::col_t indentSize = 4, bool indentWithTabs = false, std::optional<ColorTable> const & colors = {},
-            bool printComments = true, std::string_view newline = "\n", bool printBom = false)
+            bool printComments = true, std::string_view newline = "\n", Encoding encoding = Encoding::utf8, bool printBom = false)
         {
             std::size_t newlineSize = newline.size();
             if (! validateSize(newlineSize))
@@ -270,13 +270,15 @@ namespace hu
                 colorTablePtr = capiColorTable;
             }
 
-            capi::huInitSerializeOptionsN(& cparams, static_cast<hu::enumType_t>(WhitespaceFormat), indentSize, indentWithTabs,
-                false, colorTablePtr, printComments, newline.data(), static_cast<hu::size_t>(newlineSize), printBom);
+            capi::huInitSerializeOptionsN(& cparams, static_cast<hu::enumType_t>(whitespaceFormat), indentSize, indentWithTabs,
+                false, colorTablePtr, printComments, newline.data(), static_cast<hu::size_t>(newlineSize), static_cast<hu::enumType_t>(encoding), printBom);
             setColorTable(colors);
         }
 
+		/// Set the encoding.
+		void setEncoding(Encoding encoding) { cparams.encoding = static_cast<hu::enumType_t>(encoding); }
         /// Set the whitespace formatting.
-        void setFormat(WhitespaceFormat WhitespaceFormat) { cparams.whitespaceFormat = static_cast<hu::enumType_t>(WhitespaceFormat); }
+        void setFormat(WhitespaceFormat whitespaceFormat) { cparams.whitespaceFormat = static_cast<hu::enumType_t>(whitespaceFormat); }
         /// Set the number of spaces to use for indentation.
         void setIndentSize(hu::col_t indentSize) { cparams.indentSize = indentSize; }
         /// Use tab instead of spaces for indentation.
@@ -315,6 +317,8 @@ namespace hu
             cparams.newline.size = static_cast<hu::size_t>(sz);
         }
 
+		/// Get the encoding.
+		Encoding encoding() const { return static_cast<Encoding>(cparams.encoding); }
         /// Get the whitespace formatting.
         WhitespaceFormat whitespaceFormat() const { return static_cast<WhitespaceFormat>(cparams.whitespaceFormat); }
         /// Get the number of spaces to use for indentation.
@@ -1427,26 +1431,26 @@ namespace hu
         }
 
         /// Serializes a trove with the exact input token stream.
-        [[nodiscard]] std::variant<std::string, ErrorCode> toClonedString(bool printBom = false) const
+        [[nodiscard]] std::variant<std::string, ErrorCode> toClonedString(Encoding encoding = Encoding::utf8, bool printBom = false) const
         {
-            SerializeOptions sp = { WhitespaceFormat::cloned, 0, false, std::nullopt, true, "", printBom };
+            SerializeOptions sp = { WhitespaceFormat::cloned, 0, false, std::nullopt, true, "", encoding, printBom };
             return toString(sp);
         }
 
         /// Serializes a trove with the minimum token stream necessary to accurately convey the data.
         [[nodiscard]] std::variant<std::string, ErrorCode> toMinimalString(std::optional<ColorTable> const & colors = {},
-            bool printComments = true, std::string_view newline = "\n", bool printBom = false) const
+            bool printComments = true, std::string_view newline = "\n", Encoding encoding = Encoding::utf8, bool printBom = false) const
         {
-            SerializeOptions sp = { WhitespaceFormat::minimal, 0, false, colors, printComments, newline, printBom };
+            SerializeOptions sp = { WhitespaceFormat::minimal, 0, false, colors, printComments, newline, encoding, printBom };
             return toString(sp);
         }
 
         /// Serializes a trove with whitespace formatting suitable for readability.
         [[nodiscard]] std::variant<std::string, ErrorCode> toPrettyString(hu::col_t indentSize = 4,
             bool indentWithTabs = false, std::optional<ColorTable> const & colors = {}, bool printComments = true,
-            std::string_view newline = "\n", bool printBom = false) const
+            std::string_view newline = "\n", Encoding encoding = Encoding::utf8, bool printBom = false) const
         {
-            SerializeOptions sp = { WhitespaceFormat::pretty, indentSize, indentWithTabs, colors, printComments, newline, printBom };
+            SerializeOptions sp = { WhitespaceFormat::pretty, indentSize, indentWithTabs, colors, printComments, newline, encoding, printBom };
             return toString(sp);
         }
 
@@ -1473,27 +1477,27 @@ namespace hu
 
         /// Serializes a trove with the exact input token stream.
         [[nodiscard]] std::variant<hu::size_t, ErrorCode> toClonedFile(std::string_view path,
-            bool printBom = false) const
+            Encoding encoding = Encoding::utf8, bool printBom = false) const
         {
-            SerializeOptions sp = { WhitespaceFormat::cloned, 0, false, std::nullopt, true, "", printBom };
+            SerializeOptions sp = { WhitespaceFormat::cloned, 0, false, std::nullopt, true, "", encoding, printBom };
             return toFile(path, sp);
         }
 
         /// Serializes a trove with the minimum token stream necessary to accurately convey the data.
         [[nodiscard]] std::variant<hu::size_t, ErrorCode> toMinimalFile(std::string_view path,
             std::optional<ColorTable> const & colors = {}, bool printComments = true,
-            std::string_view newline = "\n", bool printBom = false) const
+            std::string_view newline = "\n", Encoding encoding = Encoding::utf8, bool printBom = false) const
         {
-            SerializeOptions sp = { WhitespaceFormat::minimal, 0, false, colors, printComments, newline, printBom };
+            SerializeOptions sp = { WhitespaceFormat::minimal, 0, false, colors, printComments, newline, encoding, printBom };
             return toFile(path, sp);
         }
 
         /// Serializes a trove with whitespace formatting suitable for readability.
         [[nodiscard]] std::variant<hu::size_t, ErrorCode> toPrettyFile(std::string_view path,
             hu::col_t indentSize = 4, bool indentWithTabs = false, std::optional<ColorTable> const & colors = {}, bool printComments = true,
-            std::string_view newline = "\n", bool printBom = false) const
+            std::string_view newline = "\n", Encoding encoding = Encoding::utf8, bool printBom = false) const
         {
-            SerializeOptions sp = { WhitespaceFormat::pretty, indentSize, indentWithTabs, colors, printComments, newline, printBom };
+            SerializeOptions sp = { WhitespaceFormat::pretty, indentSize, indentWithTabs, colors, printComments, newline, encoding, printBom };
             return toFile(path, sp);
         }
 

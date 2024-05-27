@@ -3873,7 +3873,7 @@ TEST_GROUP(huSerializeTrove)
         huStringView colors[HU_COLORCODE_NUMCOLORS];
         if (useColors)
             { huFillAnsiColorTable(colors); }
-        huInitSerializeOptionsZ(& SerializeOptions, format, 4, false, useColors, colors, printComments, "\n", printBom);
+        huInitSerializeOptionsZ(& SerializeOptions, format, 4, false, useColors, colors, printComments, "\n", HU_ENCODING_UTF8, printBom);
 
         error = huSerializeTrove(tc, NULL, & toStrLen, & SerializeOptions);
         if (error != HU_ERROR_NOERROR)
@@ -3926,7 +3926,7 @@ TEST(huSerializeTrove, pathological)
     huEnumType_t error = HU_ERROR_NOERROR;
     huSize_t strLen = 1024;
     huSerializeOptions params;
-    huInitSerializeOptionsZ(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, false, NULL, true, "\n", false);
+    huInitSerializeOptionsZ(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, false, NULL, true, "\n", HU_ENCODING_UTF8, false);
 
     error = huSerializeTrove(NULL, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "NULL->str sz == 0");
@@ -3938,47 +3938,52 @@ TEST(huSerializeTrove, pathological)
     error = huSerializeTrove(l.trove, NULL, NULL, & params);
 
     strLen = 1024;
-    huInitSerializeOptionsZ(& params, 3, 4, false, false, NULL, true, "\n", false);
+    huInitSerializeOptionsZ(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, false, NULL, true, "\n", HU_ENCODING_UNKNOWN, false);
+    error = huSerializeTrove(l.trove, NULL, & strLen, & params);
+    LONGS_EQUAL_TEXT(HU_ERROR_BADENCODING, error, "null->str sz == 0");
+
+    strLen = 1024;
+    huInitSerializeOptionsZ(& params, 3, 4, false, false, NULL, true, "\n", HU_ENCODING_UTF8, false);
     error = huSerializeTrove(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
     strLen = 1024;
-    huInitSerializeOptionsZ(& params, -1, 4, false, false, NULL, true, "\n", false);
+    huInitSerializeOptionsZ(& params, -1, 4, false, false, NULL, true, "\n", HU_ENCODING_UTF8, false);
     error = huSerializeTrove(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
     if (isSignedType(huCol_t))
     {
         strLen = 1024;
-        huInitSerializeOptionsZ(& params, HU_WHITESPACEFORMAT_CLONED, -1, false, false, NULL, true, "\n", false);
+        huInitSerializeOptionsZ(& params, HU_WHITESPACEFORMAT_CLONED, -1, false, false, NULL, true, "\n", HU_ENCODING_UTF8, false);
         error = huSerializeTrove(l.trove, NULL, & strLen, & params);
         LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
     }
 
     strLen = 1024;
-    huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_MINIMAL, 4, false, false, NULL, true, NULL, 1, false);
+    huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_MINIMAL, 4, false, false, NULL, true, NULL, 1, HU_ENCODING_UTF8, false);
     error = huSerializeTrove(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
     strLen = 1024;
-    huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_MINIMAL, 4, false, false, NULL, true, "\n", 0, false);
+    huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_MINIMAL, 4, false, false, NULL, true, "\n", 0, HU_ENCODING_UTF8, false);
     error = huSerializeTrove(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
     strLen = 1024;
-    huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_PRETTY, 4, false, false, NULL, true, NULL, 1, false);
+    huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_PRETTY, 4, false, false, NULL, true, NULL, 1, HU_ENCODING_UTF8, false);
     error = huSerializeTrove(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
     strLen = 1024;
-    huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_PRETTY, 4, false, false, NULL, true, "\n", 0, false);
+    huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_PRETTY, 4, false, false, NULL, true, "\n", 0, HU_ENCODING_UTF8, false);
     error = huSerializeTrove(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
     if (isSignedType(huCol_t))
     {
         strLen = 1024;
-        huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_PRETTY, 4, false, false, NULL, true, "\n", -1, false);
+        huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_PRETTY, 4, false, false, NULL, true, "\n", -1, HU_ENCODING_UTF8, false);
         error = huSerializeTrove(l.trove, NULL, & strLen, & params);
         LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
     }
@@ -4024,7 +4029,7 @@ TEST(huSerializeTroveToFile, pathological)
         { remove(validFile); }
 
     huSerializeOptions params;
-    huInitSerializeOptionsZ(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, false, NULL, false, "\n", false);
+    huInitSerializeOptionsZ(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, false, NULL, false, "\n", HU_ENCODING_UTF8, false);
 
     huEnumType_t error = HU_ERROR_NOERROR;
     huSize_t fileLen = 0;
@@ -4051,7 +4056,7 @@ TEST(huSerializeTroveToFile, pathological)
     error = huSerializeTroveToFile(HU_NULLTROVE, "/", & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
 
-    huInitSerializeOptionsZ(& params, 3, 4, false, false, NULL, false, "\n", false);
+    huInitSerializeOptionsZ(& params, 3, 4, false, false, NULL, false, "\n", HU_ENCODING_UTF8, false);
     error = huSerializeTroveToFile(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = haveAccess(validFile);
@@ -4059,7 +4064,7 @@ TEST(huSerializeTroveToFile, pathological)
     if (acc != -1)
         { remove(validFile); }
 
-    huInitSerializeOptionsZ(& params, -1, 4, false, false, NULL, false, "\n", false);
+    huInitSerializeOptionsZ(& params, -1, 4, false, false, NULL, false, "\n", HU_ENCODING_UTF8, false);
     error = huSerializeTroveToFile(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = haveAccess(validFile);
@@ -4069,7 +4074,7 @@ TEST(huSerializeTroveToFile, pathological)
 
     if (isSignedType(huCol_t))
     {
-        huInitSerializeOptionsZ(& params, HU_WHITESPACEFORMAT_CLONED, -1, false, false, NULL, false, "\n", false);
+        huInitSerializeOptionsZ(& params, HU_WHITESPACEFORMAT_CLONED, -1, false, false, NULL, false, "\n", HU_ENCODING_UTF8, false);
         error = huSerializeTroveToFile(l.trove, validFile, & fileLen, & params);
         LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
         acc = haveAccess(validFile);
@@ -4078,7 +4083,7 @@ TEST(huSerializeTroveToFile, pathological)
             { remove(validFile); }
     }
 
-    huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, false, NULL, false, NULL, 1, false);
+    huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, false, NULL, false, NULL, 1, HU_ENCODING_UTF8, false);
     error = huSerializeTroveToFile(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = haveAccess(validFile);
@@ -4086,7 +4091,7 @@ TEST(huSerializeTroveToFile, pathological)
     if (acc != -1)
         { remove(validFile); }
 
-    huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, true, NULL, false, "\n", 1, false);
+    huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, true, NULL, false, "\n", 1, HU_ENCODING_UTF8, false);
     error = huSerializeTroveToFile(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = haveAccess(validFile);
@@ -4094,7 +4099,7 @@ TEST(huSerializeTroveToFile, pathological)
     if (acc != -1)
         { remove(validFile); }
 
-    huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_PRETTY, 4, false, false, NULL, false, "\n", 0, false);
+    huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_PRETTY, 4, false, false, NULL, false, "\n", 0, HU_ENCODING_UTF8, false);
     error = huSerializeTroveToFile(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = haveAccess(validFile);
@@ -4104,7 +4109,7 @@ TEST(huSerializeTroveToFile, pathological)
 
     if (isSignedType(huSize_t))
     {
-        huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, false, NULL, false, "\n", -1, false);
+        huInitSerializeOptionsN(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, false, NULL, false, "\n", -1, HU_ENCODING_UTF8, false);
         error = huSerializeTroveToFile(l.trove, validFile, & fileLen, & params);
         LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
         acc = haveAccess(validFile);

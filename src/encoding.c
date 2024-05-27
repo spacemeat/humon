@@ -1121,7 +1121,7 @@ huEnumType_t transcodeToUtf8FromFile(char * dest, huSize_t * numBytesEncoded, FI
         char * block = buf;
         huSize_t blockSize = (huSize_t) fread(block, 1, HUMON_TRANSCODE_BLOCKSIZE, fp);
         if (blockSize == 0)
-            { return HU_ERROR_BADENCODING; }
+            { return HU_ERROR_BADFILE; }
         huSize_t bytesRead = blockSize;
 
         // skip the BOM if there is one
@@ -1143,7 +1143,7 @@ huEnumType_t transcodeToUtf8FromFile(char * dest, huSize_t * numBytesEncoded, FI
         {
             blockSize = (huSize_t) fread(block, 1, HUMON_TRANSCODE_BLOCKSIZE, fp);
             if (blockSize == 0)
-                { return HU_ERROR_BADENCODING; }
+                { return HU_ERROR_BADFILE; }
             bytesRead += blockSize;
 
             enc = transcodeToUtf8FromBlock(dest + encodedLen, block, blockSize, & reader);

@@ -1023,12 +1023,17 @@ huEnumType_t huSerializeTrove(huTrove const * trove, char * dest, huSize_t * des
          isNegative(serializeOptions->indentSize) ||
          (serializeOptions->usingColors && serializeOptions->colorTable == NULL)))
         { return HU_ERROR_BADPARAMETER; }
+
+	// This is temporary until we add more unicode formats.
+	if (serializeOptions &&
+		serializeOptions->encoding != HU_ENCODING_UTF8)
+		{ return HU_ERROR_BADENCODING; }
 #endif
 
     huSerializeOptions localSerializeOptions;
     if (serializeOptions == NULL)
     {
-        huInitSerializeOptionsN(& localSerializeOptions, HU_WHITESPACEFORMAT_PRETTY, 4, false, false, NULL, true, "\n", 1, false );
+        huInitSerializeOptionsN(& localSerializeOptions, HU_WHITESPACEFORMAT_PRETTY, 4, false, false, NULL, true, "\n", 1, HU_ENCODING_UTF8, false);
         serializeOptions = & localSerializeOptions;
     }
 
@@ -1088,6 +1093,11 @@ huEnumType_t huSerializeTroveToFile(huTrove const * trove, char const * path, hu
          (serializeOptions->usingColors && serializeOptions->colorTable == NULL) ||
          serializeOptions->newline.ptr == NULL || serializeOptions->newline.size < 1))
         { return HU_ERROR_BADPARAMETER; }
+
+	// This is temporary until we add more unicode formats.
+	if (serializeOptions &&
+		serializeOptions->encoding != HU_ENCODING_UTF8)
+		{ return HU_ERROR_BADENCODING; }
 #endif
 
     if (destLength)

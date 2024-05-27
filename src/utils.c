@@ -249,22 +249,25 @@ void huInitDeserializeOptions(huDeserializeOptions * params, huEnumType_t encodi
 }
 
 
-void huInitSerializeOptionsZ(huSerializeOptions * params, huEnumType_t whitespaceFormat, huCol_t indentSize,
-    bool indentWithTabs, bool usingColors, huStringView const * colorTable,  bool printComments,
-    char const * newline, bool printBom)
+void huInitSerializeOptionsZ(
+	huSerializeOptions * params, huEnumType_t whitespaceFormat,
+	huCol_t indentSize, bool indentWithTabs, bool usingColors, huStringView const * colorTable,
+	bool printComments, char const * newline, huEnumType_t encoding, bool printBom)
 {
     size_t newlineLenC = strlen(newline);
     if (newlineLenC > maxOfType(huSize_t))
         { newlineLenC = maxOfType(huSize_t); }
 
-    huInitSerializeOptionsN(params, whitespaceFormat, indentSize, indentWithTabs, usingColors, colorTable,
-        printComments, newline, (huSize_t) newlineLenC, printBom);
+    huInitSerializeOptionsN(
+		params, whitespaceFormat, indentSize, indentWithTabs,
+		usingColors, colorTable, printComments, newline, (huSize_t) newlineLenC, encoding, printBom);
 }
 
 
-void huInitSerializeOptionsN(huSerializeOptions * params, huEnumType_t whitespaceFormat, huCol_t indentSize,
-    bool indentWithTabs, bool usingColors, huStringView const * colorTable,  bool printComments,
-    char const * newline, huSize_t newlineSize, bool printBom)
+void huInitSerializeOptionsN(
+	huSerializeOptions * params, huEnumType_t whitespaceFormat,
+	huCol_t indentSize, bool indentWithTabs, bool usingColors, huStringView const * colorTable,
+	bool printComments, char const * newline, huSize_t newlineSize, huEnumType_t encoding, bool printBom)
 {
     params->whitespaceFormat = whitespaceFormat;
     params->indentSize = indentSize;
@@ -273,5 +276,6 @@ void huInitSerializeOptionsN(huSerializeOptions * params, huEnumType_t whitespac
     params->colorTable = colorTable;
     params->printComments = printComments;
     params->newline = (huStringView) { newline, newlineSize };
+	params->encoding = encoding;
     params->printBom = printBom;
 }

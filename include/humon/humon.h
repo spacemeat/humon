@@ -302,9 +302,10 @@ extern "C"
         huCol_t indentSize;                 ///< The number of spaces to indent if not using tabs.
         bool indentWithTabs;                ///< Whether to use `\t` for indentation.
         bool usingColors;                   ///< Whether to inject color codes into the output.
-        huStringView const * colorTable;    ///< The color table to use, or NULL.
+        huStringView const * colorTable;    ///< The color table to use, or NULL;
         bool printComments;                 ///< Whether to print or skip printing comments.
         huStringView newline;               ///< The string to use for newlines.
+        huEnumType_t encoding;              ///< The Unicode encoding of the output.
         bool printBom;                      ///< Whether to print the UTF-8 BOM.
     } huSerializeOptions;
 
@@ -312,10 +313,10 @@ extern "C"
 
     /// Fill in a huSerializeOptions struct quickly.
 	HUMON_PUBLIC void huInitSerializeOptionsZ(huSerializeOptions * params, huEnumType_t whitespaceFormat, huCol_t indentSize, bool indentWithTabs,
-        bool usingColors, huStringView const * colorTable,  bool printComments, char const * newline, bool printBom);
+        bool usingColors, huStringView const * colorTable,  bool printComments, char const * newline, huEnumType_t encoding, bool printBom);
     /// Fill in a huSerializeOptions struct quickly.
 	HUMON_PUBLIC void huInitSerializeOptionsN(huSerializeOptions * params, huEnumType_t whitespaceFormat, huCol_t indentSize, bool indentWithTabs,
-        bool usingColors, huStringView const * colorTable,  bool printComments, char const * newline, huSize_t newlineSize, bool printBom);
+        bool usingColors, huStringView const * colorTable,  bool printComments, char const * newline, huSize_t newlineSize, huEnumType_t encoding, bool printBom);
 
     /// Encodes a Humon data node.
     /** Humon nodes make up a hierarchical structure, stemming from a single root node.

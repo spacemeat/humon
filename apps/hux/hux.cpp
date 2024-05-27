@@ -113,6 +113,7 @@ int main(int argc, char ** argv)
     int indentSize = 4;
     bool indentWithTabs = false;
     UsingColors usingColors = UsingColors::none;
+	Encoding encoding = Encoding::utf8;
     bool printBom = false;
 
     ExpectedArgument expectedArg = ExpectedArgument::cmdSwitch;
@@ -280,7 +281,7 @@ int main(int argc, char ** argv)
     {
     case WhitespaceFormat::cloned:
         {
-            auto ret = trove.toClonedString(printBom);
+            auto ret = trove.toClonedString(encoding, printBom);
             if (auto str = get_if<std::string>(& ret))
                 { output = std::move(* str); }
             else
@@ -289,7 +290,7 @@ int main(int argc, char ** argv)
         break;
     case WhitespaceFormat::minimal:
         {
-            auto ret = trove.toMinimalString(colorTable, printComments, "\n", printBom);
+            auto ret = trove.toMinimalString(colorTable, printComments, "\n", encoding, printBom);
             if (auto str = get_if<std::string>(& ret))
                 { output = std::move(* str); }
             else
@@ -298,7 +299,7 @@ int main(int argc, char ** argv)
         break;
     case WhitespaceFormat::pretty:
         {
-            auto ret = trove.toPrettyString(indentSize, indentWithTabs, colorTable, printComments, "\n", printBom);
+            auto ret = trove.toPrettyString(indentSize, indentWithTabs, colorTable, printComments, "\n", encoding, printBom);
             if (auto && str = get_if<std::string>(& ret))
                 { output = std::move(* str); }
             else
