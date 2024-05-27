@@ -197,7 +197,7 @@ So, this project proposes Humon as a replacement for those tasks that XML is per
 
 *string*: An array of one or more Unicode code points that represents a key or value. All strings in Humon follow the same rules: Unquoted strings are the longest sequence of non-whitespace characters delimited by Humon punctuation, whitespace, or comment sequences. Quoted and heredoc'd strings are delimited by their quote characters only, and can contain newlines or anything else. There is no maximum length defined.
 
-*key*: An associated string for a dict's child node. Within an annotation, keys must be unique.
+*key*: An associated string for a dict's child node. Within an annotation, keys need not be unique.
 
 *value*: A node that contains a single string, or that string.
 
@@ -205,7 +205,7 @@ So, this project proposes Humon as a replacement for those tasks that XML is per
 
 *comment*: A character string that decorates a token stream, but is not part of the Humon dataset. They're mainly for humans to make notes, and you (probably) won't ever worry about them in code, but there are APIs to search for comments and get their associated nodes, in case that's useful.
 
-*annotation*: One of a collection of key:value string pairs associated to a node or a trove. They are exposed through separate APIs, and are globally searchable by key and/or value. Any node can have any number of annotations, as long as they have unique keys (unlike in a dict).
+*annotation*: One of a collection of key:value string pairs associated to a node or a trove. They are exposed through separate APIs, and are globally searchable by key and/or value. Any node can have any number of annotations, and they can have nonunique keys.
 
 ### The principles applied to the language
 
@@ -241,7 +241,7 @@ There is no assumption made about the kind of the root node. If the first non-co
 Any kind of node can occupy any entry in any list. Lists don't have to contain nodes of a single kind; mix and match as you see fit.
 
 **Dicts are enclosed in {curly braces}.**
-Each dict entry must be a key:node pair. The node can be of any kind. Each key in a dict must be a string, and need not be unique within the dict. There is no delimiting syntax between key:node pairs; just whitespace (maybe including commas if you like) if needed for disambiguation.
+Each dict entry must be a key:node pair. The node can be of any kind. Each key in a dict must be a string, and need *not* be unique within the dict (unlinke JSON). There is no delimiting syntax between key:node pairs; just whitespace (maybe including commas if you like) if needed for disambiguation.
 
 **Values are strings.**
 A string is a contiguous non-punctuation, non-whitespace string of Unicode code points, or a quoted string of Unicode code points, or a heredoc-tagged string of Unicode code points.
@@ -367,7 +367,7 @@ Every node can have any number of annotations, which appear *after or within* th
 
 Annotation values must be strings; an annotation value can't be a collection. That way lies some madness.
 
-Like dict entries, annotation keys must be unique among annotations associated to a particular node. Different nodes in a trove can have annotations with identical keys though.
+Like dict entries, annotation keys can be nonunique among annotations associated to a particular node. Different nodes in a trove can obviously have annotations with identical keys.
 
 Practically, annotations aren't a necessary part of Humon. All their data could be baked into normal lists or dicts, and that's a fine way to design, but it can get clunky in some cases.
 
@@ -396,9 +396,11 @@ Either way, special Unicode code points like continuations are simply considered
 If this is all Groot to you, just rest assured that Humon can load any text file that any web server, browser, or basic text editor generally produces, regardless of platform / OS.
 
 **Humon writes UTF-8.**
-While Humon can read all the normal UTF-n formats, `Trove::toString`, `Trove::toFile`, and their sugar functions can only generate UTF-8, with or without BOM as you choose.
+While Humon can read all the normal UTF-n formats, `Trove::toString`, `Trove::toFile`, and their sugar functions can currently only generate UTF-8, with or without BOM as you choose.
 
-> Why only UTF-8? It's the ubiquitous encoding for the web and most Linux and OSX things, and Windows APIs can fully deal with it. Humon transcodes the token stream into UTF-8 internally, and slams memory out on a `Trove::to*` call. See the manifesto at [this page](http://utf8everywhere.org/) to read an opinionated opinion. I'd consider adding a control for this if anyone really wanted it.
+> Why only UTF-8? It's the ubiquitous encoding for the web and most Linux and OSX things, and Windows APIs can fully deal with it. Humon transcodes the token stream into UTF-8 internally, and slams memory out on a `Trove::to*` call. There are placeholder variables for future encodings; eventually all the HU_ENCODING_* encodings should be supported.
+
+> See the manifesto at [this page](http://utf8everywhere.org/) to read an opinionated opinion I happen to agree with. But, in the future, all the standard encodings *will* be supported for output.
 
 ## The C-family programming interfaces
 There are API specs for the C and C++ interfaces. The C API is fully featured but obtuse, as C APIs tend to be. The C++ API mainly wraps the C API, but also provides some nice features for more C++ish fun-time things. Since you'll usually be using the C++ API, we'll mainly discuss that.
@@ -529,7 +531,13 @@ There are some finnicky bits about node addresses when considering that a dict's
 
     /foo/'20'/baz/
 
-`hu::Node::address()` always returns an address that is legal to use in `hu::Trove::nodeByAddress()` to find the node again. `hu::Node::address()` will appropriately single-enquote terms (`'`) if the key is numeric, and will heredoc strings with `/`s in them to disambiguate such keys in the address format.
+Since keys can be nonunique in Humon, you can disambiguate a key in an address like:
+
+    /foo/bar:23/baz
+
+The foo dictionary has at least 24 child nodes with the key 'bar'.
+
+`hu::Node::address()` always returns an address that is legal to use in `hu::Trove::nodeByAddress()` to find the node again. `hu::Node::address()` will appropriately single-enquote terms (`'`) if the key is numeric, and will heredoc strings with `/`s or `:`s in them to disambiguate such keys in the address format.
 
     {
         bufferSources: {
