@@ -273,6 +273,39 @@ static bool eatAddressWord(huScanner * scanner, huSize_t * wordLen)
     return error == false;
 }
 
+static bool eatSharedKeyIdx(huScanner * scanner, char const ** word, huSize_t * wordLen)
+{
+    bool error = false;
+
+    * word = scanner->curCursor->character;
+    * wordLen = 0;
+
+	bool eating = true;
+	while (eating)
+	{
+        if (scanner->curCursor->isError)
+        {
+            eating = false;
+            error = true;
+        }
+		else if (scanner->curCursor->isEof)
+		{
+			eating = false;
+		}
+		else if (scanner->curCursor->codePoint < '0' ||
+		         scanner->curCursor->codePoint > '9')
+		{
+			eating = false;
+		}
+        else
+        {
+            nextCharacter(scanner);
+            * wordLen += scanner->curCursor->charLength;
+        }
+	}
+
+	return error == false;
+}
 
 static bool eatQuotedAddressWord(huScanner * scanner, char const ** word, huSize_t * wordLen)
 {
@@ -411,7 +444,6 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
     char const * rawWordStart = address + wslen;
     char const * wordStart = rawWordStart;
     huSize_t wordLen = 0;
-    bool quoted = false;
     char quoteChar = '\0';
     bool error = false;
 
@@ -463,23 +495,79 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
 
     huNode const * nextNode = HU_NULLNODE;
 
+    eatWs(& scanner);
+
+	// interpret :nnn
+	bool hasSharedKeyIdx = false;
+	huSize_t sharedKeyIdx = 0;
+	if (scanner.curCursor->codePoint == ':')
+	{
+		nextCharacter(& scanner);
+
+		eatWs(& scanner);
+
+		char const * sharedKeyIdxWordStart; // = wordStart + wordLen + 1;
+		huSize_t sharedKeyIdxWordLen = 0;
+		error = ! eatSharedKeyIdx(& scanner, & sharedKeyIdxWordStart, & sharedKeyIdxWordLen);
+		if (error)
+			{ return HU_NULLNODE; }
+
+		char * wordEnd;
+		unsigned long long sharedKeyIdxParsed = strtoull(sharedKeyIdxWordStart, & wordEnd, 10);
+		if (wordEnd - sharedKeyIdxWordStart == sharedKeyIdxWordLen && sharedKeyIdxParsed <= maxOfType(huSize_t))
+		{
+			hasSharedKeyIdx = true;
+			sharedKeyIdx = (huSize_t) sharedKeyIdxParsed;
+		}
+		else
+			{ return HU_NULLNODE; }
+	}
+
     // if '..', go up a level if we can
     if (quoteChar == '\0' && wordLen == 2 &&
         wordStart[0] == '.' && wordStart[1] == '.')
-            { nextNode = huGetParent(node); }
+	{
+		if (hasSharedKeyIdx == false)
+			{ nextNode = huGetParent(node); }
+		else
+			{ return HU_NULLNODE; }
+	}
     else
     {
         if (quoteChar == '\0')
         {
             char * wordEnd;
             unsigned long long index = strtoull(wordStart, & wordEnd, 10);
-            if (quoted == false && wordEnd - wordStart == wordLen && index <= maxOfType(huSize_t))
-                { nextNode = huGetChildByIndex(node, (huSize_t) index); }
+            if (wordEnd - wordStart == wordLen && index <= maxOfType(huSize_t))
+			{
+				if (hasSharedKeyIdx == false)
+					{ nextNode = huGetChildByIndex(node, (huSize_t) index); }
+				else
+					{ return HU_NULLNODE; }
+			}
             else
-                { nextNode = huGetChildByKeyN(node, wordStart, wordLen); }
+			{
+				if (hasSharedKeyIdx)
+				{
+					nextNode = huGetFirstChildWithKeyN(node, wordStart, wordLen);
+					for (huSize_t i = 0; i < sharedKeyIdx; ++i)
+						{ nextNode = huGetNextSiblingWithKeyN(nextNode, wordStart, wordLen); }
+				}
+				else
+					{ nextNode = huGetChildByKeyN(node, wordStart, wordLen); }
+			}
         }
         else
-            { nextNode = huGetChildByKeyN(node, wordStart, wordLen); }
+		{
+			if (hasSharedKeyIdx)
+			{
+				nextNode = huGetFirstChildWithKeyN(node, wordStart, wordLen);
+				for (huSize_t i = 0; i < sharedKeyIdx; ++i)
+					{ nextNode = huGetNextSiblingWithKeyN(nextNode, wordStart, wordLen); }
+			}
+			else
+				{ nextNode = huGetChildByKeyN(node, wordStart, wordLen); }
+		}
     }
 
     // If the key or index is invalid, nextNode wil be set to HU_NULLNODE.
@@ -566,19 +654,30 @@ static void getNodeAddressRec(huNode const * node, PrintTracker * printer)
         huStringView const * key = & node->keyToken->str;
 
         //  if key is not quoted
-        //      if key contains a '/',
+        //      if key contains a '/' or ':',
         //          determine the best heredoc string
         //          append heredoc string
         //          append string
         //          append heredoc string
-        //      else
+        //      else if key is all numbers,
+		//			append '\''
+		//			append string
+		//			append '\''
+		//		else
+		//			append string
+		//	else,
+		//		append quoted string
+		//	if sharedKeyIdx > 0,
+		//		append ':'
+		//		append idx
 
         bool isQuoted = node->keyToken->quoteChar != '\0';
 
         if (! isQuoted)
         {
             char * slashIdx = memchr(key->ptr, '/', key->size);
-            if (slashIdx != NULL)
+            char * colonIdx = memchr(key->ptr, ':', key->size);
+            if (slashIdx != NULL || colonIdx != NULL)
             {
 #define HEREDOC_TAG_LEN (16)
                 char heredocTag[HEREDOC_TAG_LEN] = "^^";
@@ -616,6 +715,26 @@ static void getNodeAddressRec(huNode const * node, PrintTracker * printer)
         {
             appendString(printer, node->keyToken->rawStr.ptr, node->keyToken->rawStr.size);
         }
+		if (node->sharedKeyIdx > 0 || 
+			huGetNextSiblingWithKeyN(node, key->ptr, key->size) != NULL)
+		{
+			appendString(printer, ":", 1);
+			huSize_t numBytes = log10i(node->sharedKeyIdx) + 1;
+			char * nn = growVector(str, & numBytes);
+
+			// If we're printing the string and not just counting,
+			if (str->elementSize > 0)
+			{
+				nn += numBytes; // set nn to past the end of the new bits so we can print it in reverse
+				huSize_t cv = node->sharedKeyIdx;
+				for (huSize_t i = 0; i < numBytes; ++i)
+				{
+					nn -= 1;
+					* nn = '0' + cv % 10;
+					cv /= 10;
+				}
+			}
+		}
     }
 }
 
@@ -676,6 +795,12 @@ bool huHasKey(huNode const * node)
 huToken const * huGetKey(huNode const * node)
 {
     return node->keyToken;
+}
+
+
+huSize_t huGetSharedKeyIndex(huNode const * node)
+{
+	return node->sharedKeyIdx;
 }
 
 

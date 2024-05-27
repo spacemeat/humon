@@ -235,6 +235,38 @@ R"({
 };
 
 
+struct htd_sharedKeys
+{
+	std::string_view ts =
+R"({
+	aaa: ['aaa:0', 0, 'aaa: 0']
+	ccc/: ['^^ccc/^^:0', 0, ' ^^ccc/^^ : 0']
+	aaa: ['aaa:1', 1, ' aaa :1']
+	'ccc/': ["'ccc/':1", 1, "'ccc/' :    1"]
+	aaa: ['aaa:2', 2, '     aaa:2   ']
+	aaa: ['aaa:3', 3, '         aaa   :    3   ']
+	'bbb:': ["'bbb:':0", 0, "      'bbb:':0     "]
+	^foo^bbb:^foo^: ['^foo^bbb:^foo^:1', 1, '  ^foo^bbb:^foo^ : 1 ']
+}
+)"sv;
+
+	int error = HU_ERROR_NOERROR;
+	huTrove const * trove = NULL;
+	huNode const * root;
+
+	void setup()
+	{
+        error = huDeserializeTroveN(& trove, ts.data(), (int) ts.size(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
+        root = huGetRootNode(trove);
+	}
+
+	void teardown()
+	{
+        huDestroyTrove(trove);
+	}
+};
+
+
 struct htd_withSomeStrings
 {
     std::string_view ts = 

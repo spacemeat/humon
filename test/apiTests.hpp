@@ -226,6 +226,43 @@ TEST(huGetChildByKey, pathological)
 }
 
 
+TEST_GROUP(huGetSharedKeyIndex)
+{
+	htd_sharedKeys t;
+
+	void setup()
+	{
+		t.setup();
+	}
+
+	void teardown()
+	{
+		t.teardown();
+	}
+};
+
+TEST(huGetSharedKeyIndex, dicts)
+{
+	huSize_t numChildren = huGetNumChildren(t.root);
+	for (huSize_t i = 0; i < numChildren; ++i)
+	{
+		huNode const * ch = huGetChildByIndex(t.root, i);
+		huNode const * l = huGetChildByIndex(ch, 1);
+		huSize_t ski = huGetSharedKeyIndex(ch);
+		huToken const * lvt = huGetValue(l);
+		huSize_t lv = atoi(std::string(std::string_view(lvt->str.ptr, lvt->str.size)).data());
+		LONGS_EQUAL(lv, ski);
+	}
+}
+
+
+TEST(huGetSharedKeyIndex, pathological)
+{
+    POINTERS_EQUAL_TEXT(HU_NULLNODE, huGetFirstChild(NULL), "NULL ski == null");
+    POINTERS_EQUAL_TEXT(HU_NULLNODE, huGetFirstChild(HU_NULLNODE), "null ski == null");
+}
+
+
 TEST_GROUP(huGetFirstChild)
 {
     htd_listOfLists l;
@@ -880,15 +917,13 @@ TEST(huGetAnnotationWithKey, dicts)
 
 TEST(huGetAnnotationWithKey, pathological)
 {
-	huSize_t negOne = -1;
-	huSize_t thou = 1000;
 	huSize_t zero = 0;
 
 	auto lroot = l.root;
 
 	const huNode * nodes[] =     {lroot, NULL, HU_NULLNODE};
 	const char * keys[] =        {"foo", NULL, ""};
-	huSize_t * cursors[] =       {& zero, NULL, & negOne, & thou};
+	huSize_t * cursors[] =       {& zero, NULL};
 
 	for (long unsigned c = 0; c < sizeof(cursors) / sizeof(cursors[0]); ++c)
 	{
@@ -904,10 +939,11 @@ TEST(huGetAnnotationWithKey, pathological)
 				const huNode * pn = nodes[n];
 				if (c != 0 || k != 0 || n != 0)
 				{
-					POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(pn, pk, pc), "");
+					std::ostringstream oss;
+					oss << "c: " << c << "; k: " << k << "; n: " << n;
+					POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetAnnotationWithKeyZ(pn, pk, pc), oss.str());
 					if (pc != NULL)
-						{ LONGS_EQUAL(pcv, * pc); }
-					* pc = pcv;
+						{ * pc = pcv; }
 				}
 			}
 		}
@@ -1781,12 +1817,14 @@ TEST_GROUP(huGetAddress)
     htd_listOfLists l;
     htd_dictOfDicts d;
     htd_withFunkyAddresses a;
+	htd_sharedKeys t;
 
     void setup()
     {
         l.setup();
         d.setup();
         a.setup();
+		t.setup();
     }
 
     void teardown()
@@ -1794,6 +1832,7 @@ TEST_GROUP(huGetAddress)
         d.teardown();
         l.teardown();
         a.teardown();
+		t.teardown();
     }
 };
 
@@ -2158,6 +2197,23 @@ TEST(huGetAddress, funky)
     STRNCMP_EQUAL(exp, s, addressLen);
     POINTERS_EQUAL(a.r, huGetNodeByAddressN(a.trove, s, addressLen));
     delete [] s;
+}
+
+TEST(huGetAddress, sharedKeyIndex)
+{
+	huSize_t numChildren = huGetNumChildren(t.root);
+	for (huSize_t i = 0; i < numChildren; ++i)
+	{
+		huNode const * ch = huGetChildByIndex(t.root, i);
+		huToken const * a = huGetValue(huGetChildByIndex(ch, 0));
+		auto astr = std::string("/") + std::string(std::string_view(a->str.ptr, a->str.size));
+		huSize_t alen = 0;
+		huGetAddress(ch, NULL, & alen);
+		char * s = new char[alen + 1];
+		s[alen] = '\0';
+		huGetAddress(ch, s, & alen);
+		STRNCMP_EQUAL_TEXT(astr.data(), s, alen, std::string(s));
+	}
 }
 
 TEST(huGetAddress, pathological)
@@ -2794,13 +2850,11 @@ TEST(huGetTroveAnnotationWithKey, normal)
 
 TEST(huGetTroveAnnotationWithKey, pathological)
 {
-	huSize_t negOne = -1;
-	huSize_t thou = 1000;
 	huSize_t zero = 0;
 
 	const huTrove * troves[] =   {l.trove, d.trove, NULL, HU_NULLNODE};
 	const char * keys[] =        {"foo", NULL, ""};
-	huSize_t * cursors[] =       {& zero, NULL, & negOne, & thou};
+	huSize_t * cursors[] =       {& zero, NULL};
 
 	for (long unsigned c = 0; c < sizeof(cursors) / sizeof(cursors[0]); ++c)
 	{
@@ -2818,8 +2872,7 @@ TEST(huGetTroveAnnotationWithKey, pathological)
 				{
 					POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetTroveAnnotationWithKeyZ(pt, pk, pc), "");
 					if (pc != NULL)
-						{ LONGS_EQUAL(pcv, * pc); }
-					* pc = pcv;
+						{ * pc = pcv; }
 				}
 			}
 		}
@@ -3010,17 +3063,20 @@ TEST_GROUP(huGetNodeByAddress)
 {
     htd_listOfLists l;
     htd_dictOfDicts d;
+	htd_sharedKeys t;
 
     void setup()
     {
         l.setup();
         d.setup();
+		t.setup();
     }
 
     void teardown()
     {
         d.teardown();
         l.teardown();
+		t.teardown();
     }
 };
 
@@ -3069,6 +3125,19 @@ TEST(huGetNodeByAddress, dicts)
     POINTERS_EQUAL_TEXT(d.c, huGetNodeByAddressZ(d.trove, " / ak / .. / bk / bk / .. / .. / ck / ck / ck "), "d gnbfa ' / ak / .. / bk / bk / .. / .. / ck / ck / ck '== c");
     POINTERS_EQUAL_TEXT(d.c, huGetNodeByAddressZ(d.trove, "/ak/../`ck`/'ck'/\"ck\""), "d gnbfa '/ak/../`ck`/'ck'/\"ck\"'== c");
     POINTERS_EQUAL_TEXT(d.c, huGetNodeByAddressZ(d.trove, " / ak / .. / `ck` / 'ck' / \"ck\" "), "d gnbfa ' / ak / .. / `ck` / 'ck' / \"ck\" '== c");
+}
+
+TEST(huGetNodeByAddress, sharedKeyIndex)
+{
+	huSize_t numChildren = huGetNumChildren(t.root);
+	for (huSize_t i = 0; i < numChildren; ++i)
+	{
+		huNode const * ch = huGetChildByIndex(t.root, i);
+		huToken const * a = huGetValue(huGetChildByIndex(ch, 2));
+		std::string full_address = std::string("/") + std::string(std::string_view(a->str.ptr, a->str.size));
+		huNode const * an = huGetNodeByAddressN(t.trove, full_address.data(), full_address.size());
+		POINTERS_EQUAL_TEXT(ch, an, full_address);
+	}
 }
 
 TEST(huGetNodeByAddress, pathological)

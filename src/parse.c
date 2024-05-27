@@ -501,6 +501,13 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
 
                     associateEnqueuedComments(trove, nodeCreatedThisState, commentQueue);
                     setKeyToken(nodeCreatedThisState, tok);
+
+					huSize_t sharedKeyIdx = 0;
+					huNode const * lastChildNodeWithKey = huGetChildByKeyN(parentNode, tok->str.ptr, tok->str.size);
+					if (lastChildNodeWithKey != NULL)
+						{ sharedKeyIdx = lastChildNodeWithKey->sharedKeyIdx + 1; }
+					nodeCreatedThisState->sharedKeyIdx = sharedKeyIdx;
+
                     addChildNode(parentNode, nodeCreatedThisState);
                     parseTroveRecursive(trove, tokenIdx, nodeCreatedThisState, depth + 1,
                         PS_IN_DICT_EXPECT_KVS, commentQueue);

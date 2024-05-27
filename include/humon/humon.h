@@ -329,6 +329,7 @@ extern "C"
         huEnumType_t kind;                  ///< A huNodeKind value.
         huToken const * firstToken;         ///< The first token which contributes to this node, including any annotation and comment tokens.
         huToken const * keyToken;           ///< The key token if the node is inside a dict.
+		huSize_t sharedKeyIdx;				///< The index of the node with the same key as other nodes, if inside a dict.
         huToken const * valueToken;         ///< The first token of this node's actual value; for a container, it points to the opening brac(e|ket).
         huToken const * lastValueToken;     ///< The last token of this node's actual value; for a container, it points to the closing brac(e|ket).
         huToken const * lastToken;          ///< The last token of this node, including any annotation and comment tokens.
@@ -377,6 +378,9 @@ extern "C"
 
     /// Returns the key token for this node, or NULL if this node is not a child of a dict.
 	HUMON_PUBLIC huToken const * huGetKey(huNode const * node);
+
+	/// Returns the shaerd key index for this node.
+	HUMON_PUBLIC huSize_t huGetSharedKeyIndex(huNode const * node);
 
     /// Returns the value token for this node.
 	HUMON_PUBLIC huToken const * huGetValue(huNode const * node);
