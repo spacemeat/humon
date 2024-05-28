@@ -153,6 +153,7 @@ compile_humon_lib_static = p.CompilePhase({
         'node.c',
         'parse.c',
         'printing.c',
+        'token.c',
         'tokenize.c',
         'trove.c',
         'utils.c',

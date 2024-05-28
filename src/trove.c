@@ -40,7 +40,7 @@ void printError(huEnumType_t errorResponse, char const * msg)
 }
 
 
-huEnumType_t huDeserializeTroveZ(huTrove const ** trovePtr, char const * data, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse)
+huEnumType_t huDeserializeTroveZ(huTrove ** trovePtr, char const * data, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse)
 {
     if (trovePtr)
         { * trovePtr = HU_NULLTROVE; }
@@ -59,7 +59,7 @@ huEnumType_t huDeserializeTroveZ(huTrove const ** trovePtr, char const * data, h
 }
 
 
-huEnumType_t huDeserializeTroveN(huTrove const ** trovePtr, char const * data, huSize_t dataLen, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse)
+huEnumType_t huDeserializeTroveN(huTrove ** trovePtr, char const * data, huSize_t dataLen, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse)
 {
     if (trovePtr)
         { * trovePtr = HU_NULLTROVE; }
@@ -178,7 +178,7 @@ huEnumType_t huDeserializeTroveN(huTrove const ** trovePtr, char const * data, h
 }
 
 
-huEnumType_t huDeserializeTroveFromFile(huTrove const ** trovePtr, char const * path, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse)
+huEnumType_t huDeserializeTroveFromFile(huTrove ** trovePtr, char const * path, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse)
 {
     if (trovePtr != NULL)
         { * trovePtr = HU_NULLTROVE; }
@@ -298,36 +298,47 @@ huEnumType_t huDeserializeTroveFromFile(huTrove const ** trovePtr, char const * 
 }
 
 
-void huDestroyTrove(huTrove const * trove)
+void huDestroyTrove(huTrove * trove)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE)
         { return; }
 #endif
 
-    huTrove * ncTrove = (huTrove *) trove;
+    //huTrove * ncTrove = (huTrove *) trove;
 
-    for (int i = 0; i < ncTrove->nodes.numElements; ++i)
-        { destroyNode(huGetNodeByIndex(ncTrove, i)); }
+    for (int i = 0; i < trove->nodes.numElements; ++i)
+        { destroyNode(huGetNodeByIndex(trove, i)); }
 
-    if (ncTrove->dataString != NULL)
+    if (trove->dataString != NULL)
     {
-        if (ncTrove->bufferManagement == HU_BUFFERMANAGEMENT_COPYANDOWN ||
-            ncTrove->bufferManagement == HU_BUFFERMANAGEMENT_MOVEANDOWN)
-            { ourFree(& ncTrove->allocator, (char *) ncTrove->dataString); }
+        if (trove->bufferManagement == HU_BUFFERMANAGEMENT_COPYANDOWN ||
+            trove->bufferManagement == HU_BUFFERMANAGEMENT_MOVEANDOWN)
+            { ourFree(& trove->allocator, (char *) trove->dataString); }
 
-        ncTrove->dataString = NULL;
-        ncTrove->dataStringSize = 0;
+        trove->dataString = NULL;
+        trove->dataStringSize = 0;
     }
 
-    destroyVector(& ncTrove->tokens);
-    destroyVector(& ncTrove->nodes);
-    destroyVector(& ncTrove->errors);
+    destroyVector(& trove->tokens);
+    destroyVector(& trove->nodes);
+    destroyVector(& trove->errors);
 
-    destroyVector(& ncTrove->annotations);
-    destroyVector(& ncTrove->comments);
+    destroyVector(& trove->annotations);
+    destroyVector(& trove->comments);
 
-    ourFree(& ncTrove->allocator, ncTrove);
+    ourFree(& trove->allocator, trove);
+}
+
+
+huAllocator const * huGetAllocator(huTrove const * trove)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (trove == HU_NULLTROVE)
+        { return NULL; }
+#endif
+
+	return & trove->allocator;
 }
 
 

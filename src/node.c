@@ -35,6 +35,94 @@ void destroyNode(huNode const * node)
 }
 
 
+huEnumType_t huGetNodeKind(huNode const * node)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (node == HU_NULLNODE)
+        { return HU_NODEKIND_NULL; }
+#endif
+
+	return node->kind;
+}
+
+
+huSize_t huGetNodeIndex(huNode const * node)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (node == HU_NULLNODE)
+        { return -1; }
+#endif
+
+	return node->nodeIdx;
+}
+
+
+huToken const * huGetFirstToken(huNode const * node)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (node == HU_NULLNODE)
+        { return HU_NULLTOKEN; }
+#endif
+
+	return node->firstToken;
+}
+
+
+huToken const * huGetKeyToken(huNode const * node)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (node == HU_NULLNODE)
+        { return HU_NULLTOKEN; }
+#endif
+
+	return node->keyToken;
+}
+
+
+huToken const * huGetValueToken(huNode const * node)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (node == HU_NULLNODE)
+        { return HU_NULLTOKEN; }
+#endif
+
+	return node->valueToken;
+}
+
+
+huToken const * huGetLastValueToken(huNode const * node)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (node == HU_NULLNODE)
+        { return HU_NULLTOKEN; }
+#endif
+
+	return node->lastValueToken;
+}
+
+
+huToken const * huGetLastToken(huNode const * node)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (node == HU_NULLNODE)
+        { return HU_NULLTOKEN; }
+#endif
+
+	return node->lastToken;
+}
+
+
+huSize_t huGetChildOrdinal(huNode const * node)
+{
+#ifdef HUMON_CHECK_PARAMS
+    if (node == HU_NULLNODE)
+        { return -1; }
+#endif
+
+	return node->childOrdinal;
+}
+
+
 huNode const * huGetParent(huNode const * node)
 {
 #ifdef HUMON_CHECK_PARAMS

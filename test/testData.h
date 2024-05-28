@@ -28,7 +28,7 @@ R"(// This is a trove comment.
 )"sv;
 
     int error = HU_ERROR_NOERROR;
-    huTrove const * trove = NULL;
+    huTrove * trove = NULL;
     huNode const * root;
     huNode const * a;
     huNode const * bp;
@@ -78,7 +78,7 @@ R"(// This is a trove comment.
 )"sv;
 
     int error = HU_ERROR_NOERROR;
-    huTrove const * trove = NULL;
+    huTrove * trove = NULL;
     huNode const * root;
     huNode const * a;
     huNode const * bp;
@@ -129,7 +129,7 @@ R"(// This is a trove comment.
 )"sv;
 
     int error = HU_ERROR_NOERROR;
-    huTrove const * trove = NULL;
+    huTrove * trove = NULL;
     huNode const * root;
     huNode const * a;
     huNode const * bp;
@@ -183,7 +183,7 @@ R"({
 )"sv;
 
     int error = HU_ERROR_NOERROR;
-    huTrove const * trove = NULL;
+    huTrove * trove = NULL;
     huNode const * root;
     huNode const * a;
     huNode const * b;
@@ -251,7 +251,7 @@ R"({
 )"sv;
 
 	int error = HU_ERROR_NOERROR;
-	huTrove const * trove = NULL;
+	huTrove * trove = NULL;
 	huNode const * root;
 
 	void setup()
@@ -279,7 +279,7 @@ R"({
 )"sv;
 
     int error = HU_ERROR_NOERROR;
-    huTrove const * trove = NULL;
+    huTrove * trove = NULL;
     huNode const * root;
     huNode const * aaa;
     huNode const * ccc;

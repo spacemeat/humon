@@ -203,6 +203,68 @@ extern "C"
     /// This prints a trove to a whitespace-formatted string.
     void troveToPrettyString(huTrove const * trove, huVector * str, huSerializeOptions * serializeOptions);
 
+
+    /// Encodes a token read from Humon text.
+    /** This structure encodes file location and buffer location information about a
+     * particular token in a Humon file. Every token is read and tracked with a huToken. */
+    struct huToken_tag
+    {
+        short kind;                 ///< The kind of token this is (huTokenKind).
+        char quoteChar;             ///< Whether the token is a quoted string.
+        huStringView rawStr;        ///< A view of the token raw string.
+        huStringView str;           ///< A view of the token unenquoted string.
+        huLine_t line;              ///< The line number in the file where the token begins.
+        huCol_t col;                ///< The column number in the file where the token begins.
+        huLine_t endLine;           ///< The line number in the file where the token ends.
+        huCol_t endCol;             ///< The column number in the file where the token end.
+    };
+
+    /// Encodes a Humon data node.
+    /** Humon nodes make up a hierarchical structure, stemming from a single root node.
+     * Humon troves contain a reference to the root, and store all nodes in an indexable
+     * array. A node is either a list, a dict, or a value node. Any number of comments
+     * and annotations can be associated to a node. */
+    struct huNode_tag
+    {
+        struct huTrove_tag const * trove;   ///< The trove tracking this node.
+        huSize_t nodeIdx;                   ///< The index of this node in its trove's tracking array.
+        huEnumType_t kind;                  ///< A huNodeKind value.
+        huToken const * firstToken;         ///< The first token which contributes to this node, including any annotation and comment tokens.
+        huToken const * keyToken;           ///< The key token if the node is inside a dict.
+		huSize_t sharedKeyIdx;				///< The index of the node with the same key as other nodes, if inside a dict.
+        huToken const * valueToken;         ///< The first token of this node's actual value; for a container, it points to the opening brac(e|ket).
+        huToken const * lastValueToken;     ///< The last token of this node's actual value; for a container, it points to the closing brac(e|ket).
+        huToken const * lastToken;          ///< The last token of this node, including any annotation and comment tokens.
+
+        huSize_t parentNodeIdx;             ///< The parent node's index, or -1 if this node is the root.
+        huSize_t childOrdinal;              ///< The index of this node vis a vis its sibling nodes (starting at 0).
+
+        huVector childNodeIdxs;             ///< Manages a huSize_t []. Stores the node inexes of each child node, if this node is a collection.
+        huVector annotations;               ///< Manages a huAnnotation []. Stores the annotations associated to this node.
+        huVector comments;                  ///< Manages a huComment []. Stores the comments associated to this node.
+    };
+
+    /// Encodes a Humon data trove.
+    /** A trove stores all the tokens and nodes in a loaded Humon file. It is your main access
+     * to the Humon object data. Troves are created by Humon functions that load from file or
+     * string, and can output Humon to file or string as well. */
+    struct huTrove_tag
+    {
+        huEnumType_t encoding;                      ///< The input Unicode encoding for loads.
+        char const * dataString;                    ///< The buffer containing the Humon text as loaded. Owned by the trove. Humon takes care to NULL-terminate this string.
+        huSize_t dataStringSize;                    ///< The size of the buffer.
+        huAllocator allocator;                      ///< A custom memory allocator.
+        huVector tokens;                            ///< Manages a huToken []. This is the array of tokens lexed from the Humon text.
+        huVector nodes;                             ///< Manages a huNode []. This is the array of node objects parsed from tokens.
+        huVector errors;                            ///< Manages a huError []. This is an array of errors encountered during load.
+        huEnumType_t errorResponse;                 ///< How the trove respones to errors during load.
+		huCol_t inputTabSize;			            ///< The tab length Humon uses to compute column values for tokens.
+        huVector annotations;                       ///< Manages a huAnnotation []. Contains the annotations associated to the trove.
+        huVector comments;                          ///< Manages a huComment[]. Contains the comments associated to the trove.
+        huToken const * lastAnnoToken;              ///< Token referencing the last token of any trove annotations.
+        huEnumType_t bufferManagement;              ///< How to manage the input buffer. (One of huBufferManagement.)
+    };
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

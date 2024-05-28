@@ -260,7 +260,7 @@ static void serializeChangedTokenString(char * dest, huSize_t * destLength, huTr
 }
 
 
-huEnumType_t huMakeChangedTrove(huTrove const ** newTrove, huTrove const * srcTrove, huChangeSet * changeSet)
+huEnumType_t huMakeChangedTrove(huTrove ** newTrove, huTrove const * srcTrove, huChangeSet * changeSet)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (newTrove == NULL || srcTrove == HU_NULLNODE || changeSet == NULL)

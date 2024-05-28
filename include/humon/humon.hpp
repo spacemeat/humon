@@ -390,20 +390,20 @@ namespace hu
         operator bool() const          ///< Implicit validity test.
             { return isValid(); }
         TokenKind kind() const         ///< Returns the kind of token this is.
-            { check(); return isValid() ? static_cast<TokenKind>(ctoken->kind)
+            { check(); return isValid() ? static_cast<TokenKind>(huGetTokenKind(ctoken))
                                         : static_cast<TokenKind>(capi::HU_TOKENKIND_NULL); }
         std::string_view rawStr() const   ///< Returns the raw string value of the token, including quotes or heredoc tags.
-            { check(); return isValid() ? make_sv(ctoken->rawStr) : ""; }
+            { check(); return isValid() ? make_sv(* huGetRawString(ctoken)) : ""; }
         std::string_view str() const   ///< Returns the string value of the token.
-            { check(); return isValid() ? make_sv(ctoken->str) : ""; }
+            { check(); return isValid() ? make_sv(* huGetString(ctoken)) : ""; }
         hu::line_t line() const               ///< Returns the line number of the first character of the token in the file.
-            { check(); return isValid() ? ctoken->line : 0; }
+            { check(); return isValid() ? huGetLine(ctoken) : 0; }
         hu::col_t col() const                ///< Returns the column number of the first character of the token in the file.
-            { check(); return isValid() ? ctoken->col : 0; }
+            { check(); return isValid() ? huGetColumn(ctoken) : 0; }
         hu::line_t endLine() const            ///< Returns the line number of the last character of the token in the file.
-            { check(); return isValid() ? ctoken->endLine : 0; }
+            { check(); return isValid() ? huGetEndLine(ctoken) : 0; }
         hu::col_t endCol() const             ///< Returns the column number of the last character of the token in the file.
-            { check(); return isValid() ? ctoken->endCol : 0; }
+            { check(); return isValid() ? huGetEndColumn(ctoken) : 0; }
         operator std::string_view()    ///< String view conversion.
             { return str(); }
 
@@ -467,22 +467,22 @@ namespace hu
         bool isRoot() const              ///< Returns whether is node is the root node.
             { check(); return nodeIndex() == 0; }
         hu::size_t nodeIndex() const              ///< Returns the node index within the trove. Rarely needed.
-            { check(); return isValid() ? cnode->nodeIdx : -1; }
+            { check(); return isValid() ? huGetNodeIndex(cnode) : -1; }
         NodeKind kind() const              ///< Returns the kind of node this is.
-            { check(); return isValid() ? static_cast<NodeKind>(cnode->kind)
+            { check(); return isValid() ? static_cast<NodeKind>(huGetNodeKind(cnode))
                                         : static_cast<NodeKind>(capi::HU_NODEKIND_NULL); }
         Token firstToken() const           ///< Returns the first token which contributes to this node, including any annotation and comment tokens.
-            { check(); return Token(isValid() ? cnode->firstToken : HU_NULLTOKEN); }
+            { check(); return Token(isValid() ? huGetFirstToken(cnode) : HU_NULLTOKEN); }
         Token firstValueToken() const      ///< Returns the first token of this node's actual value; for a container, it points to the opening brac(e|ket).
-            { check(); return Token(isValid() ? cnode->valueToken : HU_NULLTOKEN); }
+            { check(); return Token(isValid() ? huGetValueToken(cnode) : HU_NULLTOKEN); }
         Token lastValueToken() const       ///< Returns the last token of this node's actual value; for a container, it points to the closing brac(e|ket).
-            { check(); return Token(isValid() ? cnode->lastValueToken : HU_NULLTOKEN); }
+            { check(); return Token(isValid() ? huGetLastValueToken(cnode) : HU_NULLTOKEN); }
         Token lastToken() const            ///< Returns the last token of this node, including any annotation and comment tokens.
-            { check(); return Token(isValid() ? cnode->lastToken : HU_NULLTOKEN); }
+            { check(); return Token(isValid() ? huGetLastToken(cnode) : HU_NULLTOKEN); }
         Node parent() const                ///< Returns the parent node of this node, or the null node if this is the root.
             { check(); return Node(capi::huGetParent(cnode)); }
         hu::size_t childOrdinal() const           ///< Returns the index of this node vis a vis its sibling nodes (starting at 0).
-            { check(); return isValid() ? cnode->childOrdinal : -1; }
+            { check(); return isValid() ? huGetChildOrdinal(cnode) : -1; }
         hu::size_t numChildren() const            ///< Returns the number of children of this node.
             { check(); return capi::huGetNumChildren(cnode); }
 
@@ -546,9 +546,9 @@ namespace hu
         bool hasKey() const                ///< Returns whether this node has a key. (If it's in a dict.)
             { check(); return capi::huHasKey(cnode); }
         Token key() const                  ///< Returns the key token, or the null token if this is not in a dict.
-            { check(); return Token(isValid() ? cnode->keyToken : HU_NULLTOKEN); }
+            { check(); return Token(isValid() ? huGetKeyToken(cnode) : HU_NULLTOKEN); }
         Token value() const                ///< Returns the first value token that encodes this node.
-            { check(); return Token(isValid() ? cnode->valueToken : HU_NULLTOKEN); }
+            { check(); return Token(isValid() ? huGetValueToken(cnode) : HU_NULLTOKEN); }
         hu::size_t numAnnotations() const         ///< Returns the number of annotations associated to this node.
             { check(); return capi::huGetNumAnnotations(cnode); }
 
@@ -995,7 +995,7 @@ namespace hu
             DeserializeOptions deserializeOptions = { Encoding::utf8 },
             ErrorResponse errorRespose = ErrorResponse::stderrAnsiColor)
         {
-            capi::huTrove const * trove = HU_NULLTROVE;
+            capi::huTrove * trove = HU_NULLTROVE;
 
             std::size_t sz = data.size();
             if (! validateSize(sz))
@@ -1022,7 +1022,7 @@ namespace hu
             DeserializeOptions deserializeOptions = { Encoding::utf8 },
             ErrorResponse errorRespose = ErrorResponse::stderrAnsiColor)
         {
-            capi::huTrove const * trove = HU_NULLTROVE;
+            capi::huTrove * trove = HU_NULLTROVE;
             auto error = capi::huDeserializeTroveN(& trove, data, dataLen,
                 & deserializeOptions.cparams, static_cast<hu::enumType_t>(errorRespose));
             if (error != capi::HU_ERROR_NOERROR &&
@@ -1042,7 +1042,7 @@ namespace hu
             DeserializeOptions deserializeOptions = { Encoding::unknown },
             ErrorResponse errorRespose = ErrorResponse::stderrAnsiColor)
         {
-            capi::huTrove const * trove = HU_NULLTROVE;
+            capi::huTrove * trove = HU_NULLTROVE;
 
             std::size_t sz = path.size();
             if (! validateSize(sz))
@@ -1088,7 +1088,7 @@ namespace hu
         /// Create a new trove, using recorded changes.
         [[nodiscard]] static DeserializeResult fromChanges(ChangeSet & changes)
         {
-            capi::huTrove const * newTrove = HU_NULLTROVE;
+            capi::huTrove * newTrove = HU_NULLTROVE;
             auto error = capi::huMakeChangedTrove(& newTrove, changes.cTrove(), & changes.cChangeSet());
             if (error != capi::HU_ERROR_NOERROR &&
                 error != capi::HU_ERROR_TROVEHASERRORS)
@@ -1101,7 +1101,7 @@ namespace hu
         Trove() { }
     private:
         /// Construction from static member functions.
-        Trove(capi::huTrove const * ctrove) : ctrove(ctrove) { }
+        Trove(capi::huTrove * ctrove) : ctrove(ctrove) { }
 
     public:
         /// Move-construct a temporary trove object.
@@ -1583,7 +1583,7 @@ namespace hu
     private:
         void check() const { checkNotNull(ctrove); }
 
-        capi::huTrove const * ctrove = nullptr;
+        capi::huTrove * ctrove = nullptr;
     };
 
     /// Fills an array with string table values for ANSI color terminals.
@@ -1601,7 +1601,7 @@ namespace hu
     inline ChangeSet::ChangeSet(Trove const & trove)
     {
         ctrove = trove.getCTrove();
-        capi::huInitChangeSet(& cchangeSet, & ctrove->allocator);
+        capi::huInitChangeSet(& cchangeSet, huGetAllocator(ctrove));
     }
 
 }

@@ -6,6 +6,7 @@
 #include <unistd.h>
 #endif
 #include "humon/humon.h"
+#include "../src/humon.internal.h"
 #include "ztest/ztest.hpp"
 #include "testData.h"
 
@@ -2243,7 +2244,7 @@ TEST_GROUP(huDeserializeTrove)
 // Patho cases only for this method. Used extensively elsewhere.
 TEST(huDeserializeTrove, pathological)
 {
-    huTrove const * trove = HU_NULLTROVE;
+    huTrove * trove = HU_NULLTROVE;
     int error = HU_ERROR_NOERROR;
     huDeserializeOptions params;
     huInitDeserializeOptions(& params, HU_ENCODING_UTF8, true, 4, NULL, HU_BUFFERMANAGEMENT_COPYANDOWN);
@@ -2251,24 +2252,24 @@ TEST(huDeserializeTrove, pathological)
     error = huDeserializeTroveZ(NULL, "", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
 
-    trove = (huTrove const *) 4;
+    trove = (huTrove *) 4;
     error = huDeserializeTroveZ(& trove, NULL, & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromString NULL == NULL");
 
-    trove = (huTrove const *) 4;
+    trove = (huTrove *) 4;
     error = huDeserializeTroveZ(& trove, "", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_NOERROR, error);
     CHECK_TEXT(HU_NULLTROVE != trove, "fromString '' != NULL");
     huDestroyTrove(trove);
 
-    trove = (huTrove const *) 4;
+    trove = (huTrove *) 4;
     params.encoding = -1;
     error = huDeserializeTroveZ(& trove, "[]", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "encoding=-1 == NULL");
 
-    trove = (huTrove const *) 4;
+    trove = (huTrove *) 4;
     params.encoding = HU_ENCODING_UNKNOWN + 1;
     error = huDeserializeTroveZ(& trove, "[]", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
@@ -2276,7 +2277,7 @@ TEST(huDeserializeTrove, pathological)
 
     if (isSignedType(huCol_t))
     {
-        trove = (huTrove const *) 4;
+        trove = (huTrove *) 4;
         params.encoding = HU_ENCODING_UTF8;
         params.tabSize = -1;
         error = huDeserializeTroveZ(& trove, "[]", & params, HU_ERRORRESPONSE_MUM);
@@ -2284,13 +2285,13 @@ TEST(huDeserializeTrove, pathological)
         POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "tabs=-1 == NULL");
     }
 
-    trove = (huTrove const *) 4;
+    trove = (huTrove *) 4;
     params.tabSize = 4;
     error = huDeserializeTroveZ(& trove, "[]", & params, -1);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "errorResponse=-1 == NULL");
 
-    trove = (huTrove const *) 4;
+    trove = (huTrove *) 4;
     error = huDeserializeTroveZ(& trove, "[]", & params, HU_ERRORRESPONSE_NUMRESPONSES);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "errorResponse=big == NULL");
@@ -2327,7 +2328,7 @@ void myfree(void * allocator, void * alloc)
 
 TEST(huDeserializeTroveFromFile, malloc)
 {
-    huTrove const * trove = HU_NULLTROVE;
+    huTrove * trove = HU_NULLTROVE;
     int error = HU_ERROR_NOERROR;
     huDeserializeOptions params;
     huAllocator alloc;
@@ -2348,7 +2349,7 @@ TEST(huDeserializeTroveFromFile, malloc)
 
 TEST(huDeserializeTroveFromFile, pathological)
 {
-    huTrove const * trove = HU_NULLTROVE;
+    huTrove * trove = HU_NULLTROVE;
     int error = HU_ERROR_NOERROR;
     huDeserializeOptions params;
     huInitDeserializeOptions(& params, HU_ENCODING_UTF8, true, 4, NULL, HU_BUFFERMANAGEMENT_COPYANDOWN);
@@ -2357,33 +2358,33 @@ TEST(huDeserializeTroveFromFile, pathological)
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromFile NULL == NULL");
 
-    trove = (huTrove const *) 4;
+    trove = (huTrove *) 4;
     error = huDeserializeTroveFromFile(& trove, NULL, & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromFile NULL == NULL");
 
-    trove = (huTrove const *) 4;
+    trove = (huTrove *) 4;
     error = huDeserializeTroveFromFile(& trove, "", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADFILE, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromFile '' == NULL");
 
-    trove = (huTrove const *) 4;
+    trove = (huTrove *) 4;
     error = huDeserializeTroveFromFile(& trove, "..", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADFILE, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromFile .. == NULL");
 
-    trove = (huTrove const *) 4;
+    trove = (huTrove *) 4;
     error = huDeserializeTroveFromFile(& trove, "/", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADFILE, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromFile / == NULL");
 
-    trove = (huTrove const *) 4;
+    trove = (huTrove *) 4;
     params.encoding = -1;
     error = huDeserializeTroveFromFile(& trove, "test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromFile encoding=-1 == NULL");
 
-    trove = (huTrove const *) 4;
+    trove = (huTrove *) 4;
     params.encoding = HU_ENCODING_UNKNOWN + 1;
     error = huDeserializeTroveFromFile(& trove, "test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
@@ -2391,7 +2392,7 @@ TEST(huDeserializeTroveFromFile, pathological)
 
     if (isSignedType(huCol_t))
     {
-        trove = (huTrove const *) 4;
+        trove = (huTrove *) 4;
         params.encoding = HU_ENCODING_UTF8;
         params.tabSize = -1;
         error = huDeserializeTroveFromFile(& trove, "test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_MUM);
@@ -2399,13 +2400,13 @@ TEST(huDeserializeTroveFromFile, pathological)
         POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromFile tabSize=-1 == NULL");
     }
 
-    trove = (huTrove const *) 4;
+    trove = (huTrove *) 4;
     params.tabSize = 4;
     error = huDeserializeTroveFromFile(& trove, "test/testFiles/utf8.hu", & params, -1);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromFile errorResponse=-1 == NULL");
 
-    trove = (huTrove const *) 4;
+    trove = (huTrove *) 4;
     error = huDeserializeTroveFromFile(& trove, "test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_NUMRESPONSES);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromFile errorResponse=high == NULL");
@@ -2852,7 +2853,7 @@ TEST(huGetTroveAnnotationWithKey, pathological)
 {
 	huSize_t zero = 0;
 
-	const huTrove * troves[] =   {l.trove, d.trove, NULL, HU_NULLNODE};
+	huTrove * troves[] =   {l.trove, d.trove, NULL, HU_NULLNODE};
 	const char * keys[] =        {"foo", NULL, ""};
 	huSize_t * cursors[] =       {& zero, NULL};
 
@@ -2867,7 +2868,7 @@ TEST(huGetTroveAnnotationWithKey, pathological)
 			const char * pk = keys[k];
 			for (long unsigned t = 0; t < sizeof(troves) / sizeof(troves[0]); ++t)
 			{
-				const huTrove * pt = troves[t];
+				huTrove * pt = troves[t];
 				if (c != 0 || k != 0 || (t != 0 && t != 1))
 				{
 					POINTERS_EQUAL_TEXT(HU_NULLTOKEN, huGetTroveAnnotationWithKeyZ(pt, pk, pc), "");
@@ -3818,7 +3819,7 @@ TEST(huGetTroveTokenStream, correctness)
     for (auto testFile : testFiles_TokenStream)
     {
         auto [src, sz] = getFile(testFile);
-        huTrove const * trove;
+        huTrove * trove;
         huEnumType_t err = huDeserializeTroveFromFile(& trove, testFile.data(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
         LONGS_EQUAL(HU_ERROR_NOERROR, err);
         auto sv = huGetTroveTokenStream(trove);
@@ -3863,7 +3864,7 @@ TEST_GROUP(huSerializeTrove)
 
     std::string troveToString(std::string_view srcFile, int format, bool useColors, bool printComments, bool printBom)
     {
-        huTrove const * tc = nullptr;
+        huTrove * tc = nullptr;
         huEnumType_t error = huDeserializeTroveFromFile(& tc, srcFile.data(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
         if (error != HU_ERROR_NOERROR)
             { return "<could not make trove>"; }

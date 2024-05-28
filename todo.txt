@@ -1,7 +1,8 @@
 DONE THIS CHECKIN:
-P1 address for nth key has no format /foo/bar:2/baz
+P1 Opacify some structures
 
 TODO:
+P1 typedef-tag enums
 P1 consolidated vectors for comments and annotations
 P1 write to any UTF mode
 

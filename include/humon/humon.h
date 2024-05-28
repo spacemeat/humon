@@ -239,17 +239,15 @@ extern "C"
     /// Encodes a token read from Humon text.
     /** This structure encodes file location and buffer location information about a
      * particular token in a Humon file. Every token is read and tracked with a huToken. */
-    typedef struct huToken_tag
-    {
-        short kind;                 ///< The kind of token this is (huTokenKind).
-        char quoteChar;             ///< Whether the token is a quoted string.
-        huStringView rawStr;        ///< A view of the token raw string.
-        huStringView str;           ///< A view of the token unenquoted string.
-        huLine_t line;              ///< The line number in the file where the token begins.
-        huCol_t col;                ///< The column number in the file where the token begins.
-        huLine_t endLine;           ///< The line number in the file where the token ends.
-        huCol_t endCol;             ///< The column number in the file where the token end.
-    } huToken;
+    typedef struct huToken_tag huToken;
+
+	HUMON_PUBLIC short huGetTokenKind(huToken const * token);
+	HUMON_PUBLIC huStringView const * huGetRawString(huToken const * token);
+	HUMON_PUBLIC huStringView const * huGetString(huToken const * token);
+	HUMON_PUBLIC huLine_t huGetLine(huToken const * token);
+	HUMON_PUBLIC huCol_t huGetColumn(huToken const * token);
+	HUMON_PUBLIC huLine_t huGetEndLine(huToken const * token);
+	HUMON_PUBLIC huCol_t huGetEndColumn(huToken const * token);
 
     /// Encodes an annotation entry for a node or trove.
     /** Nodes and troves can have a plurality of annotations. They are always key-value string
@@ -323,25 +321,16 @@ extern "C"
      * Humon troves contain a reference to the root, and store all nodes in an indexable
      * array. A node is either a list, a dict, or a value node. Any number of comments
      * and annotations can be associated to a node. */
-    typedef struct huNode_tag
-    {
-        struct huTrove_tag const * trove;   ///< The trove tracking this node.
-        huSize_t nodeIdx;                   ///< The index of this node in its trove's tracking array.
-        huEnumType_t kind;                  ///< A huNodeKind value.
-        huToken const * firstToken;         ///< The first token which contributes to this node, including any annotation and comment tokens.
-        huToken const * keyToken;           ///< The key token if the node is inside a dict.
-		huSize_t sharedKeyIdx;				///< The index of the node with the same key as other nodes, if inside a dict.
-        huToken const * valueToken;         ///< The first token of this node's actual value; for a container, it points to the opening brac(e|ket).
-        huToken const * lastValueToken;     ///< The last token of this node's actual value; for a container, it points to the closing brac(e|ket).
-        huToken const * lastToken;          ///< The last token of this node, including any annotation and comment tokens.
+    typedef struct huNode_tag huNode;
 
-        huSize_t parentNodeIdx;             ///< The parent node's index, or -1 if this node is the root.
-        huSize_t childOrdinal;              ///< The index of this node vis a vis its sibling nodes (starting at 0).
-
-        huVector childNodeIdxs;             ///< Manages a huSize_t []. Stores the node inexes of each child node, if this node is a collection.
-        huVector annotations;               ///< Manages a huAnnotation []. Stores the annotations associated to this node.
-        huVector comments;                  ///< Manages a huComment []. Stores the comments associated to this node.
-    } huNode;
+	HUMON_PUBLIC huEnumType_t huGetNodeKind(huNode const * node);
+	HUMON_PUBLIC huSize_t huGetNodeIndex(huNode const * node);
+	HUMON_PUBLIC huToken const * huGetFirstToken(huNode const * node);
+	HUMON_PUBLIC huToken const * huGetKeyToken(huNode const * node);
+	HUMON_PUBLIC huToken const * huGetValueToken(huNode const * node);
+	HUMON_PUBLIC huToken const * huGetLastValueToken(huNode const * node);
+	HUMON_PUBLIC huToken const * huGetLastToken(huNode const * node);
+	HUMON_PUBLIC huSize_t huGetChildOrdinal(huNode const * node);
 
     /// Gets a pointer to a node's parent.
 	HUMON_PUBLIC huNode const * huGetParent(huNode const * node);
@@ -459,32 +448,20 @@ extern "C"
     /** A trove stores all the tokens and nodes in a loaded Humon file. It is your main access
      * to the Humon object data. Troves are created by Humon functions that load from file or
      * string, and can output Humon to file or string as well. */
-    typedef struct huTrove_tag
-    {
-        huEnumType_t encoding;                      ///< The input Unicode encoding for loads.
-        char const * dataString;                    ///< The buffer containing the Humon text as loaded. Owned by the trove. Humon takes care to NULL-terminate this string.
-        huSize_t dataStringSize;                    ///< The size of the buffer.
-        huAllocator allocator;                      ///< A custom memory allocator.
-        huVector tokens;                            ///< Manages a huToken []. This is the array of tokens lexed from the Humon text.
-        huVector nodes;                             ///< Manages a huNode []. This is the array of node objects parsed from tokens.
-        huVector errors;                            ///< Manages a huError []. This is an array of errors encountered during load.
-        huEnumType_t errorResponse;                 ///< How the trove respones to errors during load.
-		huCol_t inputTabSize;			            ///< The tab length Humon uses to compute column values for tokens.
-        huVector annotations;                       ///< Manages a huAnnotation []. Contains the annotations associated to the trove.
-        huVector comments;                          ///< Manages a huComment[]. Contains the comments associated to the trove.
-        huToken const * lastAnnoToken;              ///< Token referencing the last token of any trove annotations.
-        huEnumType_t bufferManagement;              ///< How to manage the input buffer. (One of huBufferManagement.)
-    } huTrove;
+    typedef struct huTrove_tag huTrove;
 
     /// Creates a trove from a NULL-terminated string of Humon text.
-	HUMON_PUBLIC huEnumType_t huDeserializeTroveZ(huTrove const ** trove, char const * data, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse);
+	HUMON_PUBLIC huEnumType_t huDeserializeTroveZ(huTrove ** trove, char const * data, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse);
     /// Creates a trove from a string view of Humon text.
-	HUMON_PUBLIC huEnumType_t huDeserializeTroveN(huTrove const ** trove, char const * data, huSize_t dataLen, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse);
+	HUMON_PUBLIC huEnumType_t huDeserializeTroveN(huTrove ** trove, char const * data, huSize_t dataLen, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse);
     /// Creates a trove from a file.
-	HUMON_PUBLIC huEnumType_t huDeserializeTroveFromFile(huTrove const ** trove, char const * path, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse);
+	HUMON_PUBLIC huEnumType_t huDeserializeTroveFromFile(huTrove ** trove, char const * path, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse);
 
     /// Reclaims all memory owned by a trove.
-	HUMON_PUBLIC void huDestroyTrove(huTrove const * trove);
+	HUMON_PUBLIC void huDestroyTrove(huTrove * trove);
+
+	/// Gets the allocator owned by this trove.
+	HUMON_PUBLIC huAllocator const * huGetAllocator(huTrove const * trove);
 
     /// Returns the number of tokens in a trove.
 	HUMON_PUBLIC huSize_t huGetNumTokens(huTrove const * trove);
@@ -662,7 +639,7 @@ extern "C"
 	HUMON_PUBLIC huSize_t huInsertAtIndexN(huChangeSet * changeSet, huNode const * node, huSize_t idx, char const * newString, huSize_t newStringLength);
 
     /// Create a new trove, using recorded changes.
-    HUMON_PUBLIC huEnumType_t huMakeChangedTrove(huTrove const ** newTrove, huTrove const * srcTrove, huChangeSet * changeSet);
+    HUMON_PUBLIC huEnumType_t huMakeChangedTrove(huTrove ** newTrove, huTrove const * srcTrove, huChangeSet * changeSet);
 
 #ifdef __cplusplus
 } // extern "C"

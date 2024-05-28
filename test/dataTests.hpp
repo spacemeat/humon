@@ -2,13 +2,14 @@
 #include <string_view>
 #include "ztest/ztest.hpp"
 #include "humon/humon.h"
+#include "../src/humon.internal.h"
 
 using namespace std::literals;
 
 
 TEST_GROUP(emptyString)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -50,7 +51,7 @@ TEST(emptyString, numTroveComments)
 
 TEST_GROUP(commentsOnly)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -94,7 +95,7 @@ TEST(commentsOnly, numTroveComments)
 
 TEST_GROUP(singleValue)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -171,7 +172,7 @@ TEST(singleValue, lastValue)
 
 TEST_GROUP(singleEmptyList)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -254,7 +255,7 @@ TEST(singleEmptyList, lastValue)
 
 TEST_GROUP(singleEmptyDict)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -337,7 +338,7 @@ TEST(singleEmptyDict, lastValue)
 
 TEST_GROUP(listWithOneValue)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -474,7 +475,7 @@ TEST(listWithOneValue, childLastValue)
 
 TEST_GROUP(dictWithOneValue)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -623,7 +624,7 @@ TEST(dictWithOneValue, childLastValue)
 
 TEST_GROUP(listWithTwoValues)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -776,7 +777,7 @@ TEST(listWithTwoValues, threeValue)
 
 TEST_GROUP(dictWithTwoValues)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -962,7 +963,7 @@ TEST(dictWithTwoValues, threeValue)
 
 TEST_GROUP(listInList)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -1032,7 +1033,7 @@ TEST(listInList, childNumChildren)
 
 TEST_GROUP(dictInList)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -1101,7 +1102,7 @@ TEST(dictInList, childNumChildren)
 
 TEST_GROUP(listInDict)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -1185,7 +1186,7 @@ TEST(listInDict, childNumChildren)
 
 TEST_GROUP(dictInDict)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -1267,7 +1268,7 @@ TEST(dictInDict, childNumChildren)
 
 TEST_GROUP(multipleNestedLists)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -1313,7 +1314,7 @@ TEST(multipleNestedLists, values)
 
 TEST_GROUP(oneAnnoOnly)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -1343,7 +1344,7 @@ TEST(oneAnnoOnly, values)
 
 TEST_GROUP(oneValueAnno)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -1373,7 +1374,7 @@ TEST(oneValueAnno, values)
 
 TEST_GROUP(oneValueTwoAnno)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -1409,7 +1410,7 @@ TEST(oneValueTwoAnno, values)
 
 TEST_GROUP(oneValueTwoAnnoGroup)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -1445,7 +1446,7 @@ TEST(oneValueTwoAnnoGroup, values)
 
 TEST_GROUP(oneEmptyListTwoAnnoGroup)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -1481,7 +1482,7 @@ TEST(oneEmptyListTwoAnnoGroup, values)
 
 TEST_GROUP(oneEmptyListTwoAnnoLast)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -1517,7 +1518,7 @@ TEST(oneEmptyListTwoAnnoLast, values)
 
 TEST_GROUP(oneEmptyDictTwoAnnoGroup)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -1553,7 +1554,7 @@ TEST(oneEmptyDictTwoAnnoGroup, values)
 
 TEST_GROUP(oneEmptyDictTwoAnnoLast)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -1589,7 +1590,7 @@ TEST(oneEmptyDictTwoAnnoLast, values)
 
 TEST_GROUP(oneValueListTwoAnnoGroup)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -1626,7 +1627,7 @@ TEST(oneValueListTwoAnnoGroup, values)
 
 TEST_GROUP(oneValueDictFourAnno)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
@@ -1673,7 +1674,7 @@ TEST(oneValueDictFourAnno, values)
 
 TEST_GROUP(heredocs)
 {
-  huTrove const * trove = NULL;
+  huTrove * trove = NULL;
 
   void setup()
   {
