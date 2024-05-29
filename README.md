@@ -972,7 +972,6 @@ Here's what you can set, and the restrictions. Use the switch to pass in to the 
 
 | switch            | macro           | default          | requirements                 |
 |----------------   |-------------    |----------------- |----------------------------- |
-| -enumType=<type>  | HUMON_ENUM_TYPE | char             | integer, signed or unsigned  |
 | -lineType=<type>  | HUMON_LINE_TYPE | long             | integer, signed or unsigned  |
 | -colType=<type>   | HUMON_COL_TYPE  | long             | integer, signed or unsigned  |
 | -sizeType=<type>  | HUMON_SIZE_TYPE | long/long long*  | integer, signed              |

@@ -814,6 +814,9 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
                 break;
             }
             break;
+
+		case PS_DONE:
+			break;
         }
     }
 }
