@@ -20,7 +20,7 @@ void appendString(PrintTracker * printer, char const * addend, huSize_t size)
 }
 
 
-static void appendColor(PrintTracker * printer, huEnumType_t colorCode)
+static void appendColor(PrintTracker * printer, huColorCode colorCode)
 {
     if (printer->serializeOptions->usingColors == false)
         { return; }
@@ -92,7 +92,7 @@ static void appendNewline(PrintTracker * printer)
 }
 
 
-static void appendColoredString(PrintTracker * printer, char const * addend, huSize_t size, huEnumType_t colorCode)
+static void appendColoredString(PrintTracker * printer, char const * addend, huSize_t size, huColorCode colorCode)
 {
     appendColor(printer, colorCode);
     appendString(printer, addend, size);
@@ -101,7 +101,7 @@ static void appendColoredString(PrintTracker * printer, char const * addend, huS
 }
 
 
-static void appendColoredToken(PrintTracker * printer, huToken const * tok, huEnumType_t colorCode)
+static void appendColoredToken(PrintTracker * printer, huToken const * tok, huColorCode colorCode)
 {
     // prevent adjacent unquoted words from abutting
     if (printer->lastPrintWasUnquotedWord && tok->kind != HU_TOKENKIND_COMMENT)
@@ -414,7 +414,7 @@ void troveToPrettyString(huTrove const * trove, huVector * str, huSerializeOptio
 }
 
 
-static void setTableEntry(huStringView table[], huEnumType_t colorKind, char const * str)
+static void setTableEntry(huStringView table[], huColorCode colorKind, char const * str)
 {
     table[(size_t) colorKind].ptr = str;
     table[(size_t) colorKind].size = (huSize_t) strlen(str);

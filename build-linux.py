@@ -353,8 +353,6 @@ def configure_from_args():
             is_arch_32_bit = arg.split('=')[1] == '32'
         elif arg == "-buildAll":
             build_all = True
-        elif arg.startswith('-enumType='):
-            addl_flags += ' -DHUMON_ENUM_TYPE="' + arg.split('=')[1] + '"'
         elif arg.startswith('-lineType='):
             addl_flags += ' -DHUMON_LINE_TYPE="' + arg.split('=')[1] + '"'
         elif arg.startswith('-colType='):

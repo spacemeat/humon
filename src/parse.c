@@ -1,7 +1,7 @@
 #include <string.h>
 #include "humon.internal.h"
 
-enum parseState
+typedef enum parseState_tag
 {
     PS_TOP_LEVEL_EXPECT_START_OR_VALUE,
     PS_IN_LIST_EXPECT_START_OR_VALUE_OR_END,
@@ -15,10 +15,10 @@ enum parseState
     PS_IN_ANNODICT_EXPECT_KVS,
     PS_IN_ANNODICT_EXPECT_VALUE,
     PS_DONE
-};
+} parseState;
 
 
-char const * parseStateToString(huEnumType_t rhs)
+char const * parseStateToString(parseState rhs)
 {
     switch(rhs)
     {
@@ -222,7 +222,7 @@ void setLastAnnotationValue(huTrove * trove, huNode * node, huToken const * valu
 
 
 // Pay special notice to whether we break or return from a particular case.
-void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNode, huSize_t depth, huEnumType_t state, huVector * commentQueue)
+void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNode, huSize_t depth, parseState state, huVector * commentQueue)
 {
     huNode * nodeCreatedThisState = NULL;
 

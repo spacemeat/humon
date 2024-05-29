@@ -4,7 +4,7 @@
 #include "humon.internal.h"
 
 
-void initTrove(huTrove * trove, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse)
+void initTrove(huTrove * trove, huDeserializeOptions * deserializeOptions, huErrorResponse errorResponse)
 {
     trove->dataString = NULL;
     trove->dataStringSize = 0;
@@ -24,7 +24,7 @@ void initTrove(huTrove * trove, huDeserializeOptions * deserializeOptions, huEnu
 }
 
 
-void printError(huEnumType_t errorResponse, char const * msg)
+void printError(huErrorResponse errorResponse, char const * msg)
 {
     // Depending on errorResponse, output something
     FILE * stream = stdout;
@@ -40,7 +40,7 @@ void printError(huEnumType_t errorResponse, char const * msg)
 }
 
 
-huEnumType_t huDeserializeTroveZ(huTrove ** trovePtr, char const * data, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse)
+huErrorCode huDeserializeTroveZ(huTrove ** trovePtr, char const * data, huDeserializeOptions * deserializeOptions, huErrorResponse errorResponse)
 {
     if (trovePtr)
         { * trovePtr = HU_NULLTROVE; }
@@ -59,7 +59,7 @@ huEnumType_t huDeserializeTroveZ(huTrove ** trovePtr, char const * data, huDeser
 }
 
 
-huEnumType_t huDeserializeTroveN(huTrove ** trovePtr, char const * data, huSize_t dataLen, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse)
+huErrorCode huDeserializeTroveN(huTrove ** trovePtr, char const * data, huSize_t dataLen, huDeserializeOptions * deserializeOptions, huErrorResponse errorResponse)
 {
     if (trovePtr)
         { * trovePtr = HU_NULLTROVE; }
@@ -150,7 +150,7 @@ huEnumType_t huDeserializeTroveN(huTrove ** trovePtr, char const * data, huSize_
         }
 
         huSize_t transcodedLen = 0;
-        huEnumType_t error = transcodeToUtf8FromString(newData, & transcodedLen, & inputDataView, deserializeOptions);
+        huErrorCode error = transcodeToUtf8FromString(newData, & transcodedLen, & inputDataView, deserializeOptions);
         if (error != HU_ERROR_NOERROR)
         {
             if (deserializeOptions->bufferManagement == HU_BUFFERMANAGEMENT_COPYANDOWN)
@@ -178,7 +178,7 @@ huEnumType_t huDeserializeTroveN(huTrove ** trovePtr, char const * data, huSize_
 }
 
 
-huEnumType_t huDeserializeTroveFromFile(huTrove ** trovePtr, char const * path, huDeserializeOptions * deserializeOptions, huEnumType_t errorResponse)
+huErrorCode huDeserializeTroveFromFile(huTrove ** trovePtr, char const * path, huDeserializeOptions * deserializeOptions, huErrorResponse errorResponse)
 {
     if (trovePtr != NULL)
         { * trovePtr = HU_NULLTROVE; }
@@ -221,7 +221,7 @@ huEnumType_t huDeserializeTroveFromFile(huTrove ** trovePtr, char const * path, 
     }
 
     huSize_t dataLen = 0;
-    huEnumType_t gfsError = getFileSize(fp, & dataLen, errorResponse);
+    huErrorCode gfsError = getFileSize(fp, & dataLen, errorResponse);
     if (gfsError != HU_ERROR_NOERROR)
     {
         fclose(fp);
@@ -270,7 +270,7 @@ huEnumType_t huDeserializeTroveFromFile(huTrove ** trovePtr, char const * path, 
     }
 
     huSize_t transcodedLen = 0;
-    huEnumType_t error = transcodeToUtf8FromFile(newData, & transcodedLen, fp, dataLen, deserializeOptions);
+    huErrorCode error = transcodeToUtf8FromFile(newData, & transcodedLen, fp, dataLen, deserializeOptions);
     fclose(fp);
     if (error != HU_ERROR_NOERROR)
     {
@@ -367,7 +367,7 @@ huToken const * huGetToken(huTrove const * trove, huSize_t tokenIdx)
 }
 
 
-huToken * allocNewToken(huTrove * trove, huEnumType_t kind,
+huToken * allocNewToken(huTrove * trove, huTokenKind kind,
     char const * str, huSize_t size,
     huLine_t line, huCol_t col, huLine_t endLine, huCol_t endCol,
     huSize_t offsetIn, huSize_t offsetOut,
@@ -897,7 +897,7 @@ huNode const * huFindNodesByCommentContainingN(huTrove const * trove, char const
 }
 
 
-huNode * allocNewNode(huTrove * trove, huEnumType_t nodeKind, huToken const * firstToken)
+huNode * allocNewNode(huTrove * trove, huNodeKind nodeKind, huToken const * firstToken)
 {
     huSize_t num = 1;
 
@@ -924,7 +924,7 @@ huNode * allocNewNode(huTrove * trove, huEnumType_t nodeKind, huToken const * fi
 }
 
 
-void recordTokenizeError(huTrove * trove, huEnumType_t errorCode, huLine_t line, huCol_t col)
+void recordTokenizeError(huTrove * trove, huErrorCode errorCode, huLine_t line, huCol_t col)
 {
 	if (trove == NULL)
         { return; }
@@ -961,7 +961,7 @@ void recordTokenizeError(huTrove * trove, huEnumType_t errorCode, huLine_t line,
 }
 
 
-void recordParseError(huTrove * trove, huEnumType_t errorCode, huToken const * pCur)
+void recordParseError(huTrove * trove, huErrorCode errorCode, huToken const * pCur)
 {
     // Let's not worry about unexptected EOF if we've encountered other errors.
     // Yeah, maybe.
@@ -1021,7 +1021,7 @@ huStringView huGetTroveTokenStream(huTrove const * trove)
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
 
 
-huEnumType_t huSerializeTrove(huTrove const * trove, char * dest, huSize_t * destLength, huSerializeOptions * serializeOptions)
+huErrorCode huSerializeTrove(huTrove const * trove, char * dest, huSize_t * destLength, huSerializeOptions * serializeOptions)
 {
     if (dest == NULL && destLength != NULL)
         { * destLength = 0; }
@@ -1093,7 +1093,7 @@ huEnumType_t huSerializeTrove(huTrove const * trove, char * dest, huSize_t * des
 
 #pragma GCC diagnostic pop
 
-huEnumType_t huSerializeTroveToFile(huTrove const * trove, char const * path, huSize_t * destLength, huSerializeOptions * serializeOptions)
+huErrorCode huSerializeTroveToFile(huTrove const * trove, char const * path, huSize_t * destLength, huSerializeOptions * serializeOptions)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || path == NULL)
@@ -1115,7 +1115,7 @@ huEnumType_t huSerializeTroveToFile(huTrove const * trove, char const * path, hu
         { * destLength = 0; }
 
     huSize_t strLength = 0;
-    huEnumType_t error = huSerializeTrove(trove, NULL, & strLength, serializeOptions);
+    huErrorCode error = huSerializeTrove(trove, NULL, & strLength, serializeOptions);
     if (error != HU_ERROR_NOERROR)
         { return error; }
 

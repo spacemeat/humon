@@ -70,7 +70,7 @@ huSize_t const bomSizes[] = { sizeof(utf8_bom), sizeof(utf16be_bom), sizeof(utf1
 
 typedef struct ReadState_tag
 {
-    huEnumType_t encoding;
+    huEncoding encoding;
     huDeserializeOptions * deserializeOptions;
     bool maybe;
     uint32_t partialCodePoint;
@@ -78,7 +78,7 @@ typedef struct ReadState_tag
     huSize_t numCodePoints;
     huSize_t numNuls;
     huSize_t numAsciiRangeCodePoints;
-    huEnumType_t errorCode;
+    huErrorCode errorCode;
     char const * errorOffset;
     bool machineIsBigEndian;
 } ReadState;
@@ -165,9 +165,9 @@ static void initReaders(ReadState readers[], huDeserializeOptions * deserializeO
 }
 
 
-static huEnumType_t getEncodingFromBom(huStringView const * data, huSize_t * numBomChars)
+static huEncoding getEncodingFromBom(huStringView const * data, huSize_t * numBomChars)
 {
-    huEnumType_t encoding = HU_ENCODING_UNKNOWN;
+    huEncoding encoding = HU_ENCODING_UNKNOWN;
 
     // look for 32bit first, then 16bit
     if (memcmp(utf32le_bom, data->ptr, min(data->size, bomSizes[HU_ENCODING_UTF32_LE])) == 0)
@@ -444,14 +444,14 @@ static void swagEncodingFromBlock(char const * block, huSize_t blockSize, ReadSt
 
 
 // Can return HU_ENCODING_UNKNOWN, in which case we should keep checking blocks.
-static huEnumType_t findLikelyEncoding(ReadState readers[], huSize_t numValidEncodings)
+static huEncoding findLikelyEncoding(ReadState readers[], huSize_t numValidEncodings)
 {
     if (numValidEncodings == 0) // shouldn't ever happen
         { return HU_ENCODING_UNKNOWN; }
 
     if (numValidEncodings == 1)
     {
-        for (huEnumType_t i = 0; i < HU_ENCODING_UNKNOWN; ++i)
+        for (huEncoding i = 0; i < HU_ENCODING_UNKNOWN; ++i)
         {
             if (readers[(size_t)i].maybe)
                 { return i; }
@@ -589,9 +589,9 @@ static void disqualifyIncompleteEncodings(ReadState readers[], huSize_t numValid
 /*  POST: The encoding detected from the file is returned. If HU_ENCODING_UNKNONWN
     is returned, then there was an error; we'll always just choose a legal one if
     we can't decide which is best.*/
-huEnumType_t swagEncodingFromString(huStringView const * data, huSize_t * numBomChars, huDeserializeOptions * deserializeOptions)
+huEncoding swagEncodingFromString(huStringView const * data, huSize_t * numBomChars, huDeserializeOptions * deserializeOptions)
 {
-    huEnumType_t bomEncoding = getEncodingFromBom(data, numBomChars);
+    huEncoding bomEncoding = getEncodingFromBom(data, numBomChars);
 
 #ifdef HUMON_CAVEPERSON_DEBUGGING
     if (bomEncoding != HU_ENCODING_UNKNOWN)
@@ -604,7 +604,7 @@ huEnumType_t swagEncodingFromString(huStringView const * data, huSize_t * numBom
         { return bomEncoding; }
 
     huSize_t numValidEncodings = (huSize_t) HU_ENCODING_UNKNOWN;
-    huEnumType_t bestEncoding = HU_ENCODING_UNKNOWN;
+    huEncoding bestEncoding = HU_ENCODING_UNKNOWN;
     ReadState readers[HU_ENCODING_UNKNOWN];
 
     initReaders(readers, deserializeOptions);
@@ -619,7 +619,7 @@ huEnumType_t swagEncodingFromString(huStringView const * data, huSize_t * numBom
         swagEncodingFromBlock(block, blockSize, readers, & numValidEncodings);
 
         // if there's a clear winning encoding even among legal ones, choose it early
-        huEnumType_t winningEncoding = findLikelyEncoding(readers, numValidEncodings);
+        huEncoding winningEncoding = findLikelyEncoding(readers, numValidEncodings);
         if (winningEncoding != HU_ENCODING_UNKNOWN)
         {
             bestEncoding = winningEncoding;
@@ -636,7 +636,7 @@ huEnumType_t swagEncodingFromString(huStringView const * data, huSize_t * numBom
     if (bytesRead == data->size)
     {
         disqualifyIncompleteEncodings(readers, numValidEncodings);
-        huEnumType_t winningEncoding = findLikelyEncoding(readers, numValidEncodings);
+        huEncoding winningEncoding = findLikelyEncoding(readers, numValidEncodings);
         if (winningEncoding != HU_ENCODING_UNKNOWN)
             { bestEncoding = winningEncoding; }
     }
@@ -666,7 +666,7 @@ huEnumType_t swagEncodingFromString(huStringView const * data, huSize_t * numBom
     POST: The encoding detected from the file is returned. If HU_ENCODING_UNKNONWN
     is returned, then there was an error; we'll always just choose a legal one if
     we can't decide which is best.*/
-huEnumType_t swagEncodingFromFile(FILE * fp, huSize_t fileSize, huSize_t * numBomChars, huDeserializeOptions * deserializeOptions)
+huEncoding swagEncodingFromFile(FILE * fp, huSize_t fileSize, huSize_t * numBomChars, huDeserializeOptions * deserializeOptions)
 {
     huSize_t numValidEncodings = HU_ENCODING_UNKNOWN;
     ReadState readers[HU_ENCODING_UNKNOWN];
@@ -684,7 +684,7 @@ huEnumType_t swagEncodingFromFile(FILE * fp, huSize_t fileSize, huSize_t * numBo
     bytesRead += blockSize;
 
     huStringView sv = { .ptr = block, .size = blockSize };
-    huEnumType_t bestEncoding = getEncodingFromBom(& sv, numBomChars);
+    huEncoding bestEncoding = getEncodingFromBom(& sv, numBomChars);
     if (bestEncoding != HU_ENCODING_UNKNOWN)
         { return bestEncoding; }
 
@@ -694,7 +694,7 @@ huEnumType_t swagEncodingFromFile(FILE * fp, huSize_t fileSize, huSize_t * numBo
         swagEncodingFromBlock(block, blockSize, readers, & numValidEncodings);
 
         // if there's a clear winning encoding even among legal ones, choose it early
-        huEnumType_t winningEncoding = findLikelyEncoding(readers, numValidEncodings);
+        huEncoding winningEncoding = findLikelyEncoding(readers, numValidEncodings);
         if (winningEncoding != HU_ENCODING_UNKNOWN)
         {
             bestEncoding = winningEncoding;
@@ -714,7 +714,7 @@ huEnumType_t swagEncodingFromFile(FILE * fp, huSize_t fileSize, huSize_t * numBo
     if (bytesRead == fileSize)
     {
         disqualifyIncompleteEncodings(readers, numValidEncodings);
-        huEnumType_t winningEncoding = findLikelyEncoding(readers, numValidEncodings);
+        huEncoding winningEncoding = findLikelyEncoding(readers, numValidEncodings);
         if (winningEncoding != HU_ENCODING_UNKNOWN)
             { bestEncoding = winningEncoding; }
     }
@@ -999,7 +999,7 @@ static huSize_t transcodeToUtf8FromBlock(char * dest, char const * block, huSize
     PRE: srcEncoding is not HU_ENCODING_UNKNOWN
     Sets *numBytesEncoded and returns a HU_ERROR_*.
 */
-huEnumType_t transcodeToUtf8FromString(char * dest, huSize_t * numBytesEncoded, huStringView const * src, huDeserializeOptions * deserializeOptions)
+huErrorCode transcodeToUtf8FromString(char * dest, huSize_t * numBytesEncoded, huStringView const * src, huDeserializeOptions * deserializeOptions)
 {
     if (deserializeOptions->encoding == HU_ENCODING_UNKNOWN)
         { return HU_ERROR_BADPARAMETER; }
@@ -1082,7 +1082,7 @@ huEnumType_t transcodeToUtf8FromString(char * dest, huSize_t * numBytesEncoded, 
 }
 
 
-huEnumType_t transcodeToUtf8FromFile(char * dest, huSize_t * numBytesEncoded, FILE * fp, huSize_t srcLen, huDeserializeOptions * deserializeOptions)
+huErrorCode transcodeToUtf8FromFile(char * dest, huSize_t * numBytesEncoded, FILE * fp, huSize_t srcLen, huDeserializeOptions * deserializeOptions)
 {
     if (deserializeOptions->encoding == HU_ENCODING_UNKNOWN)
         { return HU_ERROR_BADPARAMETER; }

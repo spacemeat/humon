@@ -2264,13 +2264,13 @@ TEST(huDeserializeTrove, pathological)
     huDestroyTrove(trove);
 
     trove = (huTrove *) 4;
-    params.encoding = -1;
+    params.encoding = (huEncoding) -1;
     error = huDeserializeTroveZ(& trove, "[]", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "encoding=-1 == NULL");
 
     trove = (huTrove *) 4;
-    params.encoding = HU_ENCODING_UNKNOWN + 1;
+    params.encoding = (huEncoding)(HU_ENCODING_UNKNOWN + 1);
     error = huDeserializeTroveZ(& trove, "[]", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "encoding=unk+1 == NULL");
@@ -2287,7 +2287,7 @@ TEST(huDeserializeTrove, pathological)
 
     trove = (huTrove *) 4;
     params.tabSize = 4;
-    error = huDeserializeTroveZ(& trove, "[]", & params, -1);
+    error = huDeserializeTroveZ(& trove, "[]", & params, (huErrorResponse) -1);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "errorResponse=-1 == NULL");
 
@@ -2379,13 +2379,13 @@ TEST(huDeserializeTroveFromFile, pathological)
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromFile / == NULL");
 
     trove = (huTrove *) 4;
-    params.encoding = -1;
+    params.encoding = (huEncoding) -1;
     error = huDeserializeTroveFromFile(& trove, "test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromFile encoding=-1 == NULL");
 
     trove = (huTrove *) 4;
-    params.encoding = HU_ENCODING_UNKNOWN + 1;
+    params.encoding = (huEncoding)(HU_ENCODING_UNKNOWN + 1);
     error = huDeserializeTroveFromFile(& trove, "test/testFiles/utf8.hu", & params, HU_ERRORRESPONSE_MUM);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromFile encoding=unk+1 == NULL");
@@ -2402,7 +2402,7 @@ TEST(huDeserializeTroveFromFile, pathological)
 
     trove = (huTrove *) 4;
     params.tabSize = 4;
-    error = huDeserializeTroveFromFile(& trove, "test/testFiles/utf8.hu", & params, -1);
+    error = huDeserializeTroveFromFile(& trove, "test/testFiles/utf8.hu", & params, (huErrorResponse) -1);
     LONGS_EQUAL(HU_ERROR_BADPARAMETER, error);
     POINTERS_EQUAL_TEXT(HU_NULLTROVE, trove, "fromFile errorResponse=-1 == NULL");
 
@@ -3789,9 +3789,9 @@ static std::tuple<std::string, huSize_t> getFile(std::string_view path)
     return { str, fileSize };
 }
 
-static std::tuple<std::string, huSize_t> getFile(std::string_view path, huEnumType_t WhitespaceFormat, bool useColors, bool printComments, bool printBom)
+static std::tuple<std::string, huSize_t> getFile(std::string_view path, huWhitespaceFormat whitespaceFormat, bool useColors, bool printComments, bool printBom)
 {
-    std::string consPath = makeFileName(path, WhitespaceFormat, useColors, printComments, printBom);
+    std::string consPath = makeFileName(path, whitespaceFormat, useColors, printComments, printBom);
     return getFile(consPath);
 }
 
@@ -3820,7 +3820,7 @@ TEST(huGetTroveTokenStream, correctness)
     {
         auto [src, sz] = getFile(testFile);
         huTrove * trove;
-        huEnumType_t err = huDeserializeTroveFromFile(& trove, testFile.data(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
+        huErrorCode err = huDeserializeTroveFromFile(& trove, testFile.data(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
         LONGS_EQUAL(HU_ERROR_NOERROR, err);
         auto sv = huGetTroveTokenStream(trove);
         LONGS_EQUAL(sz, sv.size);
@@ -3862,10 +3862,10 @@ TEST_GROUP(huSerializeTrove)
         l.teardown();
     }
 
-    std::string troveToString(std::string_view srcFile, int format, bool useColors, bool printComments, bool printBom)
+    std::string troveToString(std::string_view srcFile, huWhitespaceFormat format, bool useColors, bool printComments, bool printBom)
     {
         huTrove * tc = nullptr;
-        huEnumType_t error = huDeserializeTroveFromFile(& tc, srcFile.data(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
+        huErrorCode error = huDeserializeTroveFromFile(& tc, srcFile.data(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
         if (error != HU_ERROR_NOERROR)
             { return "<could not make trove>"; }
 
@@ -3896,7 +3896,7 @@ TEST(huSerializeTrove, correctness)
 {
     for (auto testFile : testFiles_Serialize)
     {
-        for (huEnumType_t WhitespaceFormat = 0; WhitespaceFormat < 3; ++WhitespaceFormat)
+        for (int whitespaceFormat = 0; whitespaceFormat < 3; ++whitespaceFormat)
         {
             for (bool useColors = false; ! useColors; useColors = !useColors)
             {
@@ -3908,10 +3908,10 @@ TEST(huSerializeTrove, correctness)
                         //    { bool debugBreak = true; }
 
                         auto [file, sz] = getFile(testFile,
-                            WhitespaceFormat, useColors, printComments, printBom);
+                            (huWhitespaceFormat) whitespaceFormat, useColors, printComments, printBom);
                         auto ttos = troveToString(testFile,
-                            WhitespaceFormat, useColors, printComments, printBom);
-                        std::string consPath = makeFileName(testFile, WhitespaceFormat, useColors, printComments, printBom);
+                            (huWhitespaceFormat) whitespaceFormat, useColors, printComments, printBom);
+                        std::string consPath = makeFileName(testFile, (huWhitespaceFormat) whitespaceFormat, useColors, printComments, printBom);
 
                         LONGS_EQUAL_TEXT(file.size(), ttos.size(), consPath.data());
                         MEMCMP_EQUAL_TEXT(file.data(), ttos.data(), file.size(), consPath.data());
@@ -3924,7 +3924,7 @@ TEST(huSerializeTrove, correctness)
 
 TEST(huSerializeTrove, pathological)
 {
-    huEnumType_t error = HU_ERROR_NOERROR;
+    huErrorCode error = HU_ERROR_NOERROR;
     huSize_t strLen = 1024;
     huSerializeOptions params;
     huInitSerializeOptionsZ(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, false, NULL, true, "\n", HU_ENCODING_UTF8, false);
@@ -3944,12 +3944,12 @@ TEST(huSerializeTrove, pathological)
     LONGS_EQUAL_TEXT(HU_ERROR_BADENCODING, error, "null->str sz == 0");
 
     strLen = 1024;
-    huInitSerializeOptionsZ(& params, 3, 4, false, false, NULL, true, "\n", HU_ENCODING_UTF8, false);
+    huInitSerializeOptionsZ(& params, (huWhitespaceFormat) 3, 4, false, false, NULL, true, "\n", HU_ENCODING_UTF8, false);
     error = huSerializeTrove(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
     strLen = 1024;
-    huInitSerializeOptionsZ(& params, -1, 4, false, false, NULL, true, "\n", HU_ENCODING_UTF8, false);
+    huInitSerializeOptionsZ(& params, (huWhitespaceFormat) -1, 4, false, false, NULL, true, "\n", HU_ENCODING_UTF8, false);
     error = huSerializeTrove(l.trove, NULL, & strLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->str sz == 0");
 
@@ -4032,7 +4032,7 @@ TEST(huSerializeTroveToFile, pathological)
     huSerializeOptions params;
     huInitSerializeOptionsZ(& params, HU_WHITESPACEFORMAT_CLONED, 4, false, false, NULL, false, "\n", HU_ENCODING_UTF8, false);
 
-    huEnumType_t error = HU_ERROR_NOERROR;
+    huErrorCode error = HU_ERROR_NOERROR;
     huSize_t fileLen = 0;
 
     error = huSerializeTroveToFile(NULL, validFile, & fileLen, & params);
@@ -4057,7 +4057,7 @@ TEST(huSerializeTroveToFile, pathological)
     error = huSerializeTroveToFile(HU_NULLTROVE, "/", & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
 
-    huInitSerializeOptionsZ(& params, 3, 4, false, false, NULL, false, "\n", HU_ENCODING_UTF8, false);
+    huInitSerializeOptionsZ(& params, (huWhitespaceFormat) 3, 4, false, false, NULL, false, "\n", HU_ENCODING_UTF8, false);
     error = huSerializeTroveToFile(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = haveAccess(validFile);
@@ -4065,7 +4065,7 @@ TEST(huSerializeTroveToFile, pathological)
     if (acc != -1)
         { remove(validFile); }
 
-    huInitSerializeOptionsZ(& params, -1, 4, false, false, NULL, false, "\n", HU_ENCODING_UTF8, false);
+    huInitSerializeOptionsZ(& params, (huWhitespaceFormat) -1, 4, false, false, NULL, false, "\n", HU_ENCODING_UTF8, false);
     error = huSerializeTroveToFile(l.trove, validFile, & fileLen, & params);
     LONGS_EQUAL_TEXT(HU_ERROR_BADPARAMETER, error, "null->file sz == 0");
     acc = haveAccess(validFile);

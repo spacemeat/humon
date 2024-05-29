@@ -1,8 +1,7 @@
 DONE THIS CHECKIN:
-P1 Opacify some structures
+P1 Convert all huEnumType_t to their correct enum typedefs.
 
 TODO:
-P1 typedef-tag enums
 P1 consolidated vectors for comments and annotations
 P1 write to any UTF mode
 

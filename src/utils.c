@@ -31,7 +31,7 @@ FILE * openFile(char const * path, char const * mode)
 }
 
 
-huEnumType_t getFileSize(FILE * fp, huSize_t * fileLen, huEnumType_t errorResponse)
+huErrorCode getFileSize(FILE * fp, huSize_t * fileLen, huErrorResponse errorResponse)
 {
 #ifdef _WIN32
 	if (_fseeki64(fp, 0, SEEK_END) != 0)
@@ -84,7 +84,7 @@ bool stringInString(char const * haystack, huSize_t haystackLen, char const * ne
 }
 
 
-char const * huEncodingToString(huEnumType_t rhs)
+char const * huEncodingToString(huEncoding rhs)
 {
     switch(rhs)
     {
@@ -99,7 +99,7 @@ char const * huEncodingToString(huEnumType_t rhs)
 }
 
 
-char const * huTokenKindToString(huEnumType_t rhs)
+char const * huTokenKindToString(huTokenKind rhs)
 {
     switch(rhs)
     {
@@ -118,7 +118,7 @@ char const * huTokenKindToString(huEnumType_t rhs)
 }
 
 
-char const * huNodeKindToString(huEnumType_t rhs)
+char const * huNodeKindToString(huNodeKind rhs)
 {
     switch(rhs)
     {
@@ -131,7 +131,7 @@ char const * huNodeKindToString(huEnumType_t rhs)
 }
 
 
-char const * huWhitespaceFormatToString(huEnumType_t rhs)
+char const * huWhitespaceFormatToString(huWhitespaceFormat rhs)
 {
     switch(rhs)
     {
@@ -143,7 +143,7 @@ char const * huWhitespaceFormatToString(huEnumType_t rhs)
 }
 
 
-char const * huOutputErrorToString(huEnumType_t rhs)
+char const * huOutputErrorToString(huErrorCode rhs)
 {
     switch(rhs)
     {
@@ -228,7 +228,7 @@ bool isMachineBigEndian()
 }
 
 
-void huInitDeserializeOptions(huDeserializeOptions * params, huEnumType_t encoding, bool strictUnicode, huCol_t tabSize, huAllocator const * customAllocator, huEnumType_t bufferManagement)
+void huInitDeserializeOptions(huDeserializeOptions * params, huEncoding encoding, bool strictUnicode, huCol_t tabSize, huAllocator const * customAllocator, huBufferManagement bufferManagement)
 {
     params->encoding = encoding;
     params->allowOutOfRangeCodePoints = ! strictUnicode;
@@ -250,9 +250,9 @@ void huInitDeserializeOptions(huDeserializeOptions * params, huEnumType_t encodi
 
 
 void huInitSerializeOptionsZ(
-	huSerializeOptions * params, huEnumType_t whitespaceFormat,
+	huSerializeOptions * params, huWhitespaceFormat whitespaceFormat,
 	huCol_t indentSize, bool indentWithTabs, bool usingColors, huStringView const * colorTable,
-	bool printComments, char const * newline, huEnumType_t encoding, bool printBom)
+	bool printComments, char const * newline, huEncoding encoding, bool printBom)
 {
     size_t newlineLenC = strlen(newline);
     if (newlineLenC > maxOfType(huSize_t))
@@ -265,9 +265,9 @@ void huInitSerializeOptionsZ(
 
 
 void huInitSerializeOptionsN(
-	huSerializeOptions * params, huEnumType_t whitespaceFormat,
+	huSerializeOptions * params, huWhitespaceFormat whitespaceFormat,
 	huCol_t indentSize, bool indentWithTabs, bool usingColors, huStringView const * colorTable,
-	bool printComments, char const * newline, huSize_t newlineSize, huEnumType_t encoding, bool printBom)
+	bool printComments, char const * newline, huSize_t newlineSize, huEncoding encoding, bool printBom)
 {
     params->whitespaceFormat = whitespaceFormat;
     params->indentSize = indentSize;

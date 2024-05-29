@@ -1,6 +1,6 @@
 #include "humon.internal.h"
 
-short huGetTokenKind(huToken const * token)
+huTokenKind huGetTokenKind(huToken const * token)
 {
 	return token->kind;
 }

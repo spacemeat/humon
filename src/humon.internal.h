@@ -83,10 +83,10 @@ extern "C"
     void * ourRealloc(huAllocator const * allocator, void * alloc, size_t len);
     void ourFree(huAllocator const * allocator, void * alloc);
 
-    void printError(huEnumType_t errorResponse, char const * msg);
+    void printError(huErrorResponse errorResponse, char const * msg);
 
     FILE * openFile(char const * path, char const * mode);
-    huEnumType_t getFileSize(FILE * fp, huSize_t * fileLen, huEnumType_t errorResponse);
+    huErrorCode getFileSize(FILE * fp, huSize_t * fileLen, huErrorResponse errorResponse);
 
     /// Returns whether a string is contained in another string.
     bool stringInString(char const * haystack, huSize_t haystackLen, char const * needle, huSize_t needleLen);
@@ -154,25 +154,25 @@ extern "C"
     void destroyNode(huNode const * node);
 
     /// Add a huToken to a trove's token array.
-    huToken * allocNewToken(huTrove * trove, huEnumType_t kind, char const * str, huSize_t size,
+    huToken * allocNewToken(huTrove * trove, huTokenKind kind, char const * str, huSize_t size,
         huLine_t line, huCol_t col, huLine_t endLine, huCol_t endCol,
         huSize_t offsetIn, huSize_t offsetOut, char quoteChar);
     /// Add a huNode to a trove's node array.
-    huNode * allocNewNode(huTrove * trove, huEnumType_t nodeKind, huToken const * firstToken);
+    huNode * allocNewNode(huTrove * trove, huNodeKind nodeKind, huToken const * firstToken);
 
     /// Add a huError to a trove's error array during tokenization.
-    void recordTokenizeError(huTrove * trove, huEnumType_t errorCode, huLine_t line, huCol_t col);
+    void recordTokenizeError(huTrove * trove, huErrorCode errorCode, huLine_t line, huCol_t col);
     /// Add a huError to a trove's error array during parsing.
-    void recordParseError(huTrove * trove, huEnumType_t errorCode, huToken const * pCur);
+    void recordParseError(huTrove * trove, huErrorCode errorCode, huToken const * pCur);
 
     /// Attempt to determine the Unicode encoding of a string in memory.
-    huEnumType_t swagEncodingFromString(huStringView const * data, huSize_t * numBomChars, huDeserializeOptions * deserializeOptions);
+    huEncoding swagEncodingFromString(huStringView const * data, huSize_t * numBomChars, huDeserializeOptions * deserializeOptions);
     /// Attempt to determine the Unicode encoding of a file.
-    huEnumType_t swagEncodingFromFile(FILE * fp, huSize_t fileSize, huSize_t * numBomChars, huDeserializeOptions * deserializeOptions);
+    huEncoding swagEncodingFromFile(FILE * fp, huSize_t fileSize, huSize_t * numBomChars, huDeserializeOptions * deserializeOptions);
     /// Transcode a string in memory from its native encoding to a UTF-8 memory buffer.
-    huEnumType_t transcodeToUtf8FromString(char * dest, huSize_t * numBytesEncoded, huStringView const * src, huDeserializeOptions * deserializeOptions);
+    huErrorCode transcodeToUtf8FromString(char * dest, huSize_t * numBytesEncoded, huStringView const * src, huDeserializeOptions * deserializeOptions);
     /// Transcode a file from its native encoding to a UTF-8 memory buffer.
-    huEnumType_t transcodeToUtf8FromFile(char * dest, huSize_t * numBytesEncoded, FILE * fp, huSize_t srcLen, huDeserializeOptions * deserializeOptions);
+    huErrorCode transcodeToUtf8FromFile(char * dest, huSize_t * numBytesEncoded, FILE * fp, huSize_t srcLen, huDeserializeOptions * deserializeOptions);
 
     /// Extracts the tokens from a token stream.
     void tokenizeTrove(huTrove * trove);
@@ -228,7 +228,7 @@ extern "C"
     {
         struct huTrove_tag const * trove;   ///< The trove tracking this node.
         huSize_t nodeIdx;                   ///< The index of this node in its trove's tracking array.
-        huEnumType_t kind;                  ///< A huNodeKind value.
+        huNodeKind kind;                  ///< A huNodeKind value.
         huToken const * firstToken;         ///< The first token which contributes to this node, including any annotation and comment tokens.
         huToken const * keyToken;           ///< The key token if the node is inside a dict.
 		huSize_t sharedKeyIdx;				///< The index of the node with the same key as other nodes, if inside a dict.
@@ -250,19 +250,19 @@ extern "C"
      * string, and can output Humon to file or string as well. */
     struct huTrove_tag
     {
-        huEnumType_t encoding;                      ///< The input Unicode encoding for loads.
+        huEncoding encoding;                      ///< The input Unicode encoding for loads.
         char const * dataString;                    ///< The buffer containing the Humon text as loaded. Owned by the trove. Humon takes care to NULL-terminate this string.
         huSize_t dataStringSize;                    ///< The size of the buffer.
         huAllocator allocator;                      ///< A custom memory allocator.
         huVector tokens;                            ///< Manages a huToken []. This is the array of tokens lexed from the Humon text.
         huVector nodes;                             ///< Manages a huNode []. This is the array of node objects parsed from tokens.
         huVector errors;                            ///< Manages a huError []. This is an array of errors encountered during load.
-        huEnumType_t errorResponse;                 ///< How the trove respones to errors during load.
+        huErrorResponse errorResponse;                 ///< How the trove respones to errors during load.
 		huCol_t inputTabSize;			            ///< The tab length Humon uses to compute column values for tokens.
         huVector annotations;                       ///< Manages a huAnnotation []. Contains the annotations associated to the trove.
         huVector comments;                          ///< Manages a huComment[]. Contains the comments associated to the trove.
         huToken const * lastAnnoToken;              ///< Token referencing the last token of any trove annotations.
-        huEnumType_t bufferManagement;              ///< How to manage the input buffer. (One of huBufferManagement.)
+        huBufferManagement bufferManagement;              ///< How to manage the input buffer. (One of huBufferManagement.)
     };
 
 #ifdef __cplusplus

@@ -4,7 +4,7 @@
 #include "humon.internal.h"
 
 
-static huSize_t changeTrove(huChangeSet * changeSet, huNode const * node, huEnumType_t changeKind, huSize_t childIdx, char const * replacementString, huSize_t replacementStringLength)
+static huSize_t changeTrove(huChangeSet * changeSet, huNode const * node, huChangeKind changeKind, huSize_t childIdx, char const * replacementString, huSize_t replacementStringLength)
 {
     if (changeKind == HU_CHANGEKIND_INSERT)
     {
@@ -260,7 +260,7 @@ static void serializeChangedTokenString(char * dest, huSize_t * destLength, huTr
 }
 
 
-huEnumType_t huMakeChangedTrove(huTrove ** newTrove, huTrove const * srcTrove, huChangeSet * changeSet)
+huErrorCode huMakeChangedTrove(huTrove ** newTrove, huTrove const * srcTrove, huChangeSet * changeSet)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (newTrove == NULL || srcTrove == HU_NULLNODE || changeSet == NULL)
@@ -293,7 +293,7 @@ huEnumType_t huMakeChangedTrove(huTrove ** newTrove, huTrove const * srcTrove, h
         newString = ourAlloc(& srcTrove->allocator, len);
         serializeChangedTokenString(newString, & len, srcTrove, changeSet);
 
-        huEnumType_t ret = huDeserializeTroveN(newTrove, newString, len, & dso, HU_ERRORRESPONSE_MUM);
+        huErrorCode ret = huDeserializeTroveN(newTrove, newString, len, & dso, HU_ERRORRESPONSE_MUM);
         // We told it to move instead of copy, but it can decide better depending on things.
         // This is just defensive though, and is unlikely to occur.
         if ((*newTrove)->bufferManagement == HU_BUFFERMANAGEMENT_COPYANDOWN)

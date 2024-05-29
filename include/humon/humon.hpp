@@ -33,13 +33,12 @@
 /// The Humon namespace.
 namespace hu
 {
-    typedef hu::capi::huEnumType_t enumType_t;
     typedef hu::capi::huLine_t line_t;
     typedef hu::capi::huCol_t col_t;
     typedef hu::capi::huSize_t size_t;
 
     /// Specifies a UTFn text encoding.
-    enum class Encoding : hu::enumType_t
+    enum class Encoding
     {
         utf8 = capi::HU_ENCODING_UTF8,
         utf16be = capi::HU_ENCODING_UTF16_BE,
@@ -52,11 +51,11 @@ namespace hu
     /// Return a string representation of a hu::Encoding.
     inline char const * to_string(Encoding rhs)
     {
-        return capi::huEncodingToString(static_cast<hu::enumType_t>(rhs));
+        return capi::huEncodingToString(static_cast<capi::huEncoding>(rhs));
     }
 
     /// Specifies the kind of data represented by a particular hu::Token.
-    enum class TokenKind : hu::enumType_t
+    enum class TokenKind
     {
         null = capi::HU_TOKENKIND_NULL,                 ///< Invalid token. Malformed, or otherwise nonexistent.
         eof = capi::HU_TOKENKIND_EOF,                   ///< The end of the token stream or string.
@@ -73,11 +72,11 @@ namespace hu
     /// Return a string representation of a hu::TokenKind.
     inline char const * to_string(TokenKind rhs)
     {
-        return capi::huTokenKindToString(static_cast<hu::enumType_t>(rhs));
+        return capi::huTokenKindToString(static_cast<capi::huTokenKind>(rhs));
     }
 
     /// Specifies the kind of node represented by a particular hu::Node.
-    enum class NodeKind : hu::enumType_t
+    enum class NodeKind
     {
         null = capi::HU_NODEKIND_NULL,      ///< Invalid node. An invalid address returns a null node.
         list = capi::HU_NODEKIND_LIST,      ///< List node. The node contains a sequence of unassociated objects in maintained order.
@@ -88,11 +87,11 @@ namespace hu
     /// Return a string representation of a hu::NodeKind.
     inline char const * to_string(NodeKind rhs)
     {
-        return capi::huNodeKindToString(static_cast<hu::enumType_t>(rhs));
+        return capi::huNodeKindToString(static_cast<capi::huNodeKind>(rhs));
     }
 
     /// Specifies the style of whitespacing in Humon text.
-    enum class WhitespaceFormat : hu::enumType_t
+    enum class WhitespaceFormat
     {
         cloned = capi::HU_WHITESPACEFORMAT_CLONED,              ///< Byte-for-byte copy of the original.
         minimal = capi::HU_WHITESPACEFORMAT_MINIMAL,            ///< Reduces as much whitespace as possible.
@@ -102,11 +101,11 @@ namespace hu
     /// Return a string representation of a hu::WhitespaceFormat.
     inline char const * to_string(WhitespaceFormat rhs)
     {
-        return capi::huWhitespaceFormatToString(static_cast<hu::enumType_t>(rhs));
+        return capi::huWhitespaceFormatToString(static_cast<capi::huWhitespaceFormat>(rhs));
     }
 
     /// Specifies a tokenizing or parsing error code, or lookup error.
-    enum class ErrorCode : hu::enumType_t
+    enum class ErrorCode
     {
         noError = capi::HU_ERROR_NOERROR,                       ///< No error.
         badEncoding = capi::HU_ERROR_BADENCODING,               ///< The Unicode encoding is malformed.
@@ -127,11 +126,11 @@ namespace hu
     /// Return a string representation of a hu::ErrorCode.
     inline char const * to_string(ErrorCode rhs)
     {
-        return capi::huOutputErrorToString(static_cast<hu::enumType_t>(rhs));
+        return capi::huOutputErrorToString(static_cast<capi::huErrorCode>(rhs));
     }
 
     /// Specifies how a trove responds to errors.
-    enum class ErrorResponse : hu::enumType_t
+    enum class ErrorResponse
     {
         mum = capi::HU_ERRORRESPONSE_MUM,
         toStdout = capi::HU_ERRORRESPONSE_STDOUT,
@@ -142,7 +141,7 @@ namespace hu
     };
 
     /// Specifies a style ID for colorized printing.
-    enum class ColorCode : hu::enumType_t
+    enum class ColorCode
     {
         tokenStreamBegin = capi::HU_COLORCODE_TOKENSTREAMBEGIN,     ///< Beginning-of-token stream color code.
         tokenStreamEnd = capi::HU_COLORCODE_TOKENSTREAMEND,         ///< End-of-token stream color code.
@@ -164,7 +163,7 @@ namespace hu
         numColors = capi::HU_COLORCODE_NUMCOLORS                    ///< One past the last style code.
     };
 
-    enum class BufferManagement : hu::enumType_t
+    enum class BufferManagement
     {
         copyAndOwn = capi::HU_BUFFERMANAGEMENT_COPYANDOWN,  ///< The trove should copy the input buffer, and free the copy when destroyed.
         moveAndOwn = capi::HU_BUFFERMANAGEMENT_MOVEANDOWN,  ///< The trove should use the input buffer without copying it, and free it when destroyed.
@@ -219,11 +218,11 @@ namespace hu
         /// Construct with sane defaults.
         DeserializeOptions(Encoding encoding = Encoding::unknown, bool strictUnicode = true, hu::col_t tabSize = 4, Allocator allocator = {}, BufferManagement bufferManagement = BufferManagement::copyAndOwn)
         {
-            capi::huInitDeserializeOptions(& cparams, static_cast<hu::enumType_t>(encoding), strictUnicode, tabSize, & allocator, static_cast<hu::enumType_t>(bufferManagement));
+            capi::huInitDeserializeOptions(& cparams, static_cast<capi::huEncoding>(encoding), strictUnicode, tabSize, & allocator, static_cast<capi::huBufferManagement>(bufferManagement));
         }
 
         /// Expect a particular Unicode encoding, or Encoding::unknown.
-        void setEncoding(Encoding encoding) { cparams.encoding = static_cast<hu::enumType_t>(encoding); }
+        void setEncoding(Encoding encoding) { cparams.encoding = static_cast<capi::huEncoding>(encoding); }
         /// Allow code points that are out of Unicode range.
         void setAllowOutOfRangeCodePoints(bool shallWe) { cparams.allowOutOfRangeCodePoints = shallWe; }
         /// Allow unpaired surrogate code units in UTF-16.
@@ -270,15 +269,15 @@ namespace hu
                 colorTablePtr = capiColorTable;
             }
 
-            capi::huInitSerializeOptionsN(& cparams, static_cast<hu::enumType_t>(whitespaceFormat), indentSize, indentWithTabs,
-                false, colorTablePtr, printComments, newline.data(), static_cast<hu::size_t>(newlineSize), static_cast<hu::enumType_t>(encoding), printBom);
+            capi::huInitSerializeOptionsN(& cparams, static_cast<capi::huWhitespaceFormat>(whitespaceFormat), indentSize, indentWithTabs,
+                false, colorTablePtr, printComments, newline.data(), static_cast<hu::size_t>(newlineSize), static_cast<capi::huEncoding>(encoding), printBom);
             setColorTable(colors);
         }
 
 		/// Set the encoding.
-		void setEncoding(Encoding encoding) { cparams.encoding = static_cast<hu::enumType_t>(encoding); }
+		void setEncoding(Encoding encoding) { cparams.encoding = static_cast<capi::huEncoding>(encoding); }
         /// Set the whitespace formatting.
-        void setFormat(WhitespaceFormat whitespaceFormat) { cparams.whitespaceFormat = static_cast<hu::enumType_t>(whitespaceFormat); }
+        void setFormat(WhitespaceFormat whitespaceFormat) { cparams.whitespaceFormat = static_cast<capi::huWhitespaceFormat>(whitespaceFormat); }
         /// Set the number of spaces to use for indentation.
         void setIndentSize(hu::col_t indentSize) { cparams.indentSize = indentSize; }
         /// Use tab instead of spaces for indentation.
@@ -290,7 +289,7 @@ namespace hu
             if (colors)
             {
                 std::string_view const * sv = (* colors).data();
-                for (hu::enumType_t i = 0; i < capi::HU_COLORCODE_NUMCOLORS; ++i)
+                for (int i = 0; i < capi::HU_COLORCODE_NUMCOLORS; ++i)
                 {
                     std::size_t sz = sv[(size_t) i].size();
                     if (! validateSize(sz))
@@ -334,7 +333,7 @@ namespace hu
 
             ColorTable newColorTable;
             std::string_view * sv = newColorTable.data();
-            for (hu::enumType_t i = 0; i < capi::HU_COLORCODE_NUMCOLORS; ++i)
+            for (int i = 0; i < capi::HU_COLORCODE_NUMCOLORS; ++i)
             {
                 sv[(size_t) i] = { capiColorTable[(size_t) i].ptr,
                                    static_cast<std::size_t>(capiColorTable[(size_t) i].size) };
@@ -993,7 +992,7 @@ namespace hu
          * tokens. */
         [[nodiscard]] static DeserializeResult fromString(std::string_view data,
             DeserializeOptions deserializeOptions = { Encoding::utf8 },
-            ErrorResponse errorRespose = ErrorResponse::stderrAnsiColor)
+            ErrorResponse errorResponse = ErrorResponse::stderrAnsiColor)
         {
             capi::huTrove * trove = HU_NULLTROVE;
 
@@ -1003,7 +1002,7 @@ namespace hu
 
             auto error = capi::huDeserializeTroveN(& trove, data.data(),
                 static_cast<hu::size_t>(sz),
-                & deserializeOptions.cparams, static_cast<hu::enumType_t>(errorRespose));
+                & deserializeOptions.cparams, static_cast<capi::huErrorResponse>(errorResponse));
 
             if (error != capi::HU_ERROR_NOERROR &&
                 error != capi::HU_ERROR_TROVEHASERRORS)
@@ -1020,11 +1019,11 @@ namespace hu
          * tokens. */
         [[nodiscard]] static DeserializeResult fromString(char const * data, hu::size_t dataLen,
             DeserializeOptions deserializeOptions = { Encoding::utf8 },
-            ErrorResponse errorRespose = ErrorResponse::stderrAnsiColor)
+            ErrorResponse errorResponse = ErrorResponse::stderrAnsiColor)
         {
             capi::huTrove * trove = HU_NULLTROVE;
             auto error = capi::huDeserializeTroveN(& trove, data, dataLen,
-                & deserializeOptions.cparams, static_cast<hu::enumType_t>(errorRespose));
+                & deserializeOptions.cparams, static_cast<capi::huErrorResponse>(errorResponse));
             if (error != capi::HU_ERROR_NOERROR &&
                 error != capi::HU_ERROR_TROVEHASERRORS)
                 { return static_cast<ErrorCode>(error); }
@@ -1040,7 +1039,7 @@ namespace hu
          * tokens. */
         [[nodiscard]] static DeserializeResult fromFile(std::string_view path,
             DeserializeOptions deserializeOptions = { Encoding::unknown },
-            ErrorResponse errorRespose = ErrorResponse::stderrAnsiColor)
+            ErrorResponse errorResponse = ErrorResponse::stderrAnsiColor)
         {
             capi::huTrove * trove = HU_NULLTROVE;
 
@@ -1049,7 +1048,7 @@ namespace hu
                 { return ErrorCode::badParameter; }
 
             auto error = capi::huDeserializeTroveFromFile(& trove, path.data(),
-                & deserializeOptions.cparams, static_cast<hu::enumType_t>(errorRespose));
+                & deserializeOptions.cparams, static_cast<capi::huErrorResponse>(errorResponse));
             if (error != capi::HU_ERROR_NOERROR &&
                 error != capi::HU_ERROR_TROVEHASERRORS)
                 { return static_cast<ErrorCode>(error); }
@@ -1592,7 +1591,7 @@ namespace hu
         ColorTable table;
         capi::huStringView nativeTable[capi::HU_COLORCODE_NUMCOLORS];
         capi::huFillAnsiColorTable(nativeTable);
-        for (hu::enumType_t i = 0; i < capi::HU_COLORCODE_NUMCOLORS; ++i)
+        for (int i = 0; i < capi::HU_COLORCODE_NUMCOLORS; ++i)
             { table[(size_t) i] = {nativeTable[(size_t) i].ptr, static_cast<std::size_t>(nativeTable[(size_t) i].size)}; }
 
         return table;

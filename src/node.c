@@ -35,7 +35,7 @@ void destroyNode(huNode const * node)
 }
 
 
-huEnumType_t huGetNodeKind(huNode const * node)
+huNodeKind huGetNodeKind(huNode const * node)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (node == HU_NULLNODE)
