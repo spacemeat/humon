@@ -11,7 +11,7 @@ Latest version: !!!HUMON_VERSION!!!
 Humon may refer to any of three things:
 1. A general text-based, structured language format similar to JSON,
 1. some programming interfaces that understand it, like that described here, and
-1. a reference implementation of said interface with bindings to several programming languages, like that defined by this repo.
+1. a reference implementation of said interface with bindings to several programming languages, like that defined by this repo and others.
 
 Mainly, Humon takes some of the roles that JSON has been taking lately, but with an eye towards the human side of the experience. It is intended to be convenient to create and maintain data structures by hand.
 
@@ -94,6 +94,8 @@ In Windows, you can open the root-level `humon.sln` file in Visual Studio 2017 o
 
 There are a number of build options available to get just what you want: 32-bit architecture, debug vs release builds, and a few switches to customize the runtime. See [this here section here](#buildingHumon).
 
+> A new build system is in the works. It does build, but the binaries are placed in a different tree, and installation is not yet inmplemented. See [Pyke](https://github.com/spacemeat/pyke) and the [makefile](make.py) for this. Soon the nasty bash scripts will be a thing of the past.
+
 ### Integrating Humon into your application
 When you've successfully built, there will be an appropriate binary of interest in `build/bin`. The build system makes a static and shared library in Linux, and a static library and DLL (with import library) in Visual Studio.
 
@@ -108,7 +110,9 @@ As an alternative to installing, you can simply copy the lib from `build/bin` an
 If you're building a Windows project in Visual Studio, and you want to use the static library, simply `#include <humon/humon.h>` or `#includde <humon/humon.hpp>`, and link against the lib. If you want to use the DLL, define the HUMON_USING_DLL preprocessor symbol (either with a preceding `#define` or by passing `-DHUMON_USING_DLL` to the build) and link against the import lib.
 
 ### Humon version
-Humon uses semver in its language/API versioning scheme: `major.minor.patch` For changes that do not affect the API or correct behavior, the patch is incremented. For changes that only add to the API but do not break builds or behaviors, the minor value is incremented. For breaking changes, the major value is incremented. The version refers to the C/C++ API version; the Humon *format* is considered stable.
+Humon is still in its 0 major version, as it is still changing its API to eventually settle down. While it's not yet in version 1, the version increases are somewhat arbitrary.
+
+Once mature, Humon will use semver in its language/API versioning scheme: `major.minor.patch` For changes that do not affect the API or correct behavior, the patch is incremented. For changes that only add to the API but do not break builds or behaviors, the minor value is incremented. For breaking changes, the major value is incremented. The version refers to the C/C++ API version; the Humon *format* is considered stable.
 
 The version number is defined in the C/C++ API as `HUMON_MAJORVERSION`, `HUMON_MINORVERSION`, and `HUMON_PATCHVERSION`.
 
@@ -168,7 +172,7 @@ So, this project proposes Humon as a replacement for those tasks that XML is per
 
 *string*: An array of one or more Unicode code points that represents a key or value. All strings in Humon follow the same rules: Unquoted strings are the longest sequence of non-whitespace characters delimited by Humon punctuation, whitespace, or comment sequences. Quoted and heredoc'd strings are delimited by their quote characters only, and can contain newlines or anything else. There is no maximum length defined.
 
-*key*: An associated string for a dict's child node. Within an annotation, keys need not be unique.
+*key*: An associated string for a dict's child node. Within a dict or an annotation, keys need not be unique.
 
 *value*: A node that contains a single string, or that string.
 
@@ -212,18 +216,18 @@ There is no assumption made about the kind of the root node. If the first non-co
 Any kind of node can occupy any entry in any list. Lists don't have to contain nodes of a single kind; mix and match as you see fit.
 
 **Dicts are enclosed in {curly braces}.**
-Each dict entry must be a key:node pair. The node can be of any kind. Each key in a dict must be a string, and need *not* be unique within the dict (unlinke JSON). There is no delimiting syntax between key:node pairs; just whitespace (maybe including commas if you like) if needed for disambiguation.
+Each dict entry must be a key:node pair. The node can be of any kind. Each key in a dict must be a string, and need *not* be unique within the dict (unlike JSON). There is no delimiting syntax between key:node pairs; just whitespace (maybe including commas if you like) if needed for disambiguation.
 
 **Values are strings.**
 A string is a contiguous non-punctuation, non-whitespace string of Unicode code points, or a quoted string of Unicode code points, or a heredoc-tagged string of Unicode code points.
 
-For non-quoted strings, the first unescaped whitespace or punctuation character encountered ends the string, and begins a new token. This obviously includes newlines and spaces, but also commas. Quotes that are encountered *within* the string (but not the beginning) are included with it, and are not matched against any other quotes later in the string. So, `value"with'quotes` is tokenized as one whole token string.
+For non-quoted strings, the first whitespace or punctuation character encountered ends the string, and begins a new token. This obviously includes newlines and spaces, but also commas. Quotes that are encountered *within* the string (but not the beginning) are included with it, and are not matched against any other quotes later in the string. So, `value"with'quotes` is tokenized as one whole token string.
 
 There is no notion of backslashing or other escape sequences. What you see is what you get. This is true for quoted strings as well.
 
 You can use any quote character (`'`, `"`, `` ` ``) to begin a string. It doesn't matter which you use; they all work the same way. A quoted string value starts after the quote, and ends just before the next corresponding quote. Quoted strings can span multiple lines of text. Newlines are included in the string.
 
-    "Fiery the angels rose, and as they rose deep thunder roll'd.
+    "Fiery the angels rose, & as they rose deep thunder roll'd
     Around their shores: indignant burning with the fires of Orc."
 
 Humon also supports heredoc-style strings. These are good for inserting code snippets or other wild and wacky text in languages that may use your quote characters. (JavaScript and JSX and such wind up using all three.) They're also good when generating Humon programmatically, and you don't know exactly what quotes characters are in there and you don't really want to check:
@@ -261,7 +265,7 @@ The specific whitespacing of heredoc values is nuanced. That's because our (real
         inv: ^^        return 1/$1;^^
     }
 
-Above, `min`'s value starts at the first 'i' in 'if'. `max`'s value starts at the newline *before* the first 'i' in its 'if', and that newline is included it in the token. In the case that the token starts on the same line as the heredoc tag as in `neg` and `inv`, the token includes all the characters between the tags, including preceding and trailing whitespace.
+Above, `min`'s value starts at the first whitespace character in the line with 'if'. `max`'s value starts at the newline *before* the first 'i' in its 'if', and that newline is included it in the token. In the case that the token starts on the same line as the heredoc tag as in `neg` and `inv`, the token includes all the characters between the tags, including preceding and trailing whitespace.
 
 > The specific rule is: After the heredoc tag, if the next non-whitespace character is on the same line as the tag, then all text right after the heredoc tag is included in the token, including any whitespace between the tag and the character. Conversely, if the next non-whitespace character is on a different line, then all whitespace after the heredoc tag is skipped, up to and including the *first* newline. Then all text after that is included in the token.
 
@@ -368,6 +372,8 @@ While Humon can read all the normal UTF-n formats, `Trove::toString`, `Trove::to
 > Why only UTF-8? It's the ubiquitous encoding for the web and most Linux and OSX things, and Windows APIs can fully deal with it. Humon transcodes the token stream into UTF-8 internally, and slams memory out on a `Trove::to*` call. There are placeholder variables for future encodings; eventually all the HU_ENCODING_* encodings should be supported.
 
 > See the manifesto at [this page](http://utf8everywhere.org/) to read an opinionated opinion I happen to agree with. But, in the future, all the standard encodings *will* be supported for output.
+
+> Basically, I haven't got round to it yet.
 
 ## The C-family programming interfaces
 There are API specs for the C and C++ interfaces. The C API is fully featured but obtuse, as C APIs tend to be. The C++ API mainly wraps the C API, but also provides some nice features for more C++ish fun-time things. Since you'll usually be using the C++ API, we'll mainly discuss that.
@@ -549,7 +555,7 @@ Similar APIs also exist for nodes and troves that search comment content and ret
 
 ### Formatting a token stream
 
-There are APIs for serializing a trove back to memory or a stream. There are three whitespace formatting options to serialize Humon objects:
+There are APIs for serializing a trove back to memory or a file. There are three whitespace formatting choices to serialize Humon objects:
 1. **Cloned**: A direct copy of the original token stream is produced, including all comments and commas and whitespace. Just a brainless memory slam.
 1. **Minimal**: This reduces whitespace to at most one character each to pare down length. Humon does as much as it can, but if you choose to preserve comments in the minified output, you may notice that not all newlines get replaced. This is because the next read operation on the resultant token stream must replicate the comment associations from the original, and that requires some comments to be on their own line. Also, C++-style `//comment`s end in a newline, and the token after must be on its own line, so those newlines are also preserved.
 1. **Pretty**: This produces a clean, indented, eminently readable string.
@@ -575,14 +581,14 @@ Humon provides a function to make a `hu::ColorTable` with ANSI terminal color co
 ### The principles applied to the C-family APIs
 Maybe you'd call them behaviors, but they embody the Humon principles.
 
-**CRLF-style newlines (often made in Windows or Symbian OS) are regarded as one newline object.**
+**CRLF-style newlines (often made in Windows [or Symbian OS :)]) are regarded as one newline object.**
 This is mostly for recording line numbers in token objects, for error reporting and other things that need token placement information. In general, it does what you expect.
 
 **All non-whitespace, non-quote characters are part of some token.**
 Only whitespace characters like spaces, newlines, and commas are discarded from tracking in the tokenizer.
 
 **All tokens are part of some node, xor the trove.**
-During a load, a Humon token stream is tokenized into a list of token objects, and then those tokens are parsed into a node hierarchy. Every single token object is owned by exactly one node, or by the trove itself in a few cases. A trove can completely reconstruct a Humon token stream from the nodes and tokens, including reconstructing comments and annotations with their appropriate associations.
+During a load, a Humon token stream is tokenized into an array of token objects, and then those tokens are parsed into a node hierarchy. Every single token object is owned by exactly one node, or by the trove itself in a few cases. A trove can completely reconstruct a Humon token stream from the nodes and tokens, including reconstructing comments and annotations with their appropriate associations.
 
 **All keys and values are strings.**
 As stated, Humon makes no assumptions about the data type of a value. `"True"`, `"true"`, and `true` are all the same type of thing to Humon: a four-character string. (Though, of course, case is preserved and considered when searching.)
@@ -593,7 +599,7 @@ Usually boolean and numeric values are computational though, and matter to the a
 Once loaded, a Humon trove does not move or change. This has implications:
 1. Accessing raw value data is quick. You basically get a pointer and size. Since the data behind it doesn't move or change, that value pointer is good for the life of the trove.
 1. String values returned by APIs are *not* NULL-terminated. (In C++, they translate directly to `std::string_view`s.)
-1. String values contain all the characters exactly as seen in the token stream. They do not contain any surrounding quotes or heredoc tags. If strings contain CRLF newlines in the token stream, they'll appear that way in raw string accesses too. (You can also get the raw string values, which do contain the enquoting characters.)
+1. String values contain all the characters exactly as seen in the token stream. They do not contain any surrounding quotes or heredoc tags. If strings contain CRLF newlines in the token stream, they'll appear that way in string accesses too. (You can also get the raw string values, which do contain the enquoting characters.)
 1. String values are UTF-8-encoded.
 1. The whole token stream must be in contiguous memory.
 1. When serializing back to another stream or file from a Humon trove, the exact source can be emitted without any conversion, since the original string is still in memory (encoded as UTF-8). This is the most performant way to generate a Humon token stream from a trove. Use `hu::Trove::tokenStream` and `hu::Node::tokenStream` for this.
@@ -610,9 +616,9 @@ So, if you want bad lookups to throw exceptions, but all other functions to beha
     #include <humon/humon.hpp>
 
 **Objects in dicts remain in serial order.**
-This is different from some JSON libraries, that don't preserve the order of key-object pairs in dicts. Humon guarantees that, when you access a dict's children by index (as you would a list), they'll be returned in the order you expect. Humon can maintain an extra table for accessing dict entries quickly by key.
+This is different from some JSON libraries, that don't preserve the order of key-object pairs in dicts. Humon guarantees that, when you access a dict's children by index (as you would a list), they'll be returned in the order you expect.
 
->Currently the extra table is not implemented, and keys are searched in linear order, from the end. This is obviously on the fix-it list for larger dicts, but it's often the case that a linear search beats hash tables or binary searches for small numbers of entries <sup>[citation needed]</sup>.
+>Currently, keys are searched in linear order, from the end. It's often the case that a linear search beats hash tables or binary searches for small numbers of entries <sup>[citation needed]</sup>.
 
 **Keys in dicts need not be unique.**
 Multiple entries in a dict may have the same key. `hu::Node::getChild(std::string_view)` (and the C API underneath) starts its search from the end of the dict's entries and moves backwards. This has the effect that the last entry in a dict is the one taking precedence under this function.
@@ -642,7 +648,7 @@ You can get the comments on any node or the trove, and you can search for a comm
 
 1. Any comment that starts on a line of text that contains no other non-comment tokens before it is *associated forward*. That means the next non-comment token encountered in the token stream specifies the node to which the comment will be associated. If there are no non-comment tokens left in the stream, the comment applies to the trove.
 
-
+'''
     [
         // craftsman
         "table saw"
@@ -653,16 +659,18 @@ You can get the comments on any node or the trove, and you can search for a comm
         // makita
         "impact driver"
     ]
+'''
 
-1. Any comment that appears on a line of text *after* a non-comment token is *associated backward*. That means a comment which trails a value or punctuation symbol on the same line of text is associated to that value or collection, respectively. These are mainly for comments that trail elements in a vertical list:
+1. Any comment that appears on the same line of text *after* a non-comment token is *associated backward*. That means a comment which trails a value or punctuation symbol on the same line of text is associated to that value or collection, respectively. These are mainly for comments that trail elements in a vertical list:
 
-
+'''
     [
         "table saw"     // craftsman
         "drill press"   // delta
         "chop saw"      // dewalt
         "impact driver" // makita
     ]
+'''
 
 These rules allow you to write comments naturally within the structure of the token stream, and their associations will be what you'd expect a human to interpret as well.
 

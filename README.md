@@ -4,14 +4,14 @@
 
 *Note: Certain language in this document assumes you are human.*
 
-Latest version: 1.0.1
+Latest version: 0.1.1
 
 ## Introduction
 
 Humon may refer to any of three things:
 1. A general text-based, structured language format similar to JSON,
 1. some programming interfaces that understand it, like that described here, and
-1. a reference implementation of said interface with bindings to several programming languages, like that defined by this repo.
+1. a reference implementation of said interface with bindings to several programming languages, like that defined by this repo and others.
 
 Mainly, Humon takes some of the roles that JSON has been taking lately, but with an eye towards the human side of the experience. It is intended to be convenient to create and maintain data structures by hand.
 
@@ -915,7 +915,7 @@ For Linux development, you can install a successful build with `{humon}/install-
 The following are built in Linux:
 
 * libhumon.a               - static library for Linux
-* libhumon.so.1.0.1        - shared library for Linux
+* libhumon.so.0.1.1        - shared library for Linux
 * test                     - test binary
 * hux                      - a command-line tool for transformatting and validating Humon data
 * readmeSrc-c              - a small sample with example code from this README.md
