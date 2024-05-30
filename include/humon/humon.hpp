@@ -166,7 +166,7 @@ namespace hu
     enum class BufferManagement
     {
         copyAndOwn = capi::HU_BUFFERMANAGEMENT_COPYANDOWN,  ///< The trove should copy the input buffer, and free the copy when destroyed.
-        moveAndOwn = capi::HU_BUFFERMANAGEMENT_MOVEANDOWN,  ///< The trove should use the input buffer without copying it, and free it when destroyed.
+        moveAndOwn = capi::HU_BUFFERMANAGEMENT_MOVEANDOWN,  ///< The trove should use the input buffer without copying it, and free it when destroyed. NOTE: You should provide an Annocator when using this option.
         move = capi::HU_BUFFERMANAGEMENT_MOVE               ///< The trove should use the input buffer without copying it, and do nothing to it when destroyed.
     };
 

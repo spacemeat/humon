@@ -1,5 +1,4 @@
 DONE THIS CHECKIN:
-P1 Consider renaming "annotations" to "metatags".
 
 TODO:
 P1 Put version number in windows bins
