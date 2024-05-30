@@ -423,6 +423,7 @@ def main():
                     "src/node.c",
                     "src/parse.c",
                     "src/printing.c",
+                    "src/token.c",
                     "src/tokenize.c",
                     "src/trove.c",
                     "src/utils.c",
