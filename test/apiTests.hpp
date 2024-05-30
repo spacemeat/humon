@@ -395,7 +395,7 @@ TEST(huHasKey, pathological)
 }
 
 
-TEST_GROUP(huGetTokenStream)
+TEST_GROUP(huGetSourceText)
 {
     htd_listOfLists l;
     htd_dictOfDicts d;
@@ -416,7 +416,7 @@ TEST_GROUP(huGetTokenStream)
     }
 };
 
-TEST(huGetTokenStream, lists)
+TEST(huGetSourceText, lists)
 {
     auto strA = R"(// This is a aaaa right here.
     a           @a:a        @type:value     // aaaa)"sv;
@@ -433,9 +433,9 @@ TEST(huGetTokenStream, lists)
         ]       @c:cp       @type:list      // cp
     ]           @c:cpp      @type:list      // cpp)"sv;
 
-    auto sA = huGetTokenStream(l.a);
-    auto sBp = huGetTokenStream(l.bp);
-    auto sCpp = huGetTokenStream(l.cpp);
+    auto sA = huGetSourceText(l.a);
+    auto sBp = huGetSourceText(l.bp);
+    auto sCpp = huGetSourceText(l.cpp);
 
     LONGS_EQUAL_TEXT(strA.size(), sA.size, "a sz");
     STRNCMP_EQUAL_TEXT(strA.data(), sA.ptr, strA.size(), "a str");
@@ -445,7 +445,7 @@ TEST(huGetTokenStream, lists)
     STRNCMP_EQUAL_TEXT(strCpp.data(), sCpp.ptr, strCpp.size(), "cpp str");
 }
 
-TEST(huGetTokenStream, dicts)
+TEST(huGetSourceText, dicts)
 {
     auto strA = R"(// This is a aaaa right here.
     ak:a            @a:a        @type:value     // aaaa)"sv;
@@ -462,9 +462,9 @@ TEST(huGetTokenStream, dicts)
         }           @c:cp       @type:dict      // cp
     }               @c:cpp      @type:dict      // cpp)"sv;
 
-    auto sA = huGetTokenStream(d.a);
-    auto sBp = huGetTokenStream(d.bp);
-    auto sCpp = huGetTokenStream(d.cpp);
+    auto sA = huGetSourceText(d.a);
+    auto sBp = huGetSourceText(d.bp);
+    auto sCpp = huGetSourceText(d.cpp);
 
     LONGS_EQUAL_TEXT(strA.size(), sA.size, "a sz");
     STRNCMP_EQUAL_TEXT(strA.data(), sA.ptr, strA.size(), "a str");
@@ -474,17 +474,17 @@ TEST(huGetTokenStream, dicts)
     STRNCMP_EQUAL_TEXT(strCpp.data(), sCpp.ptr, strCpp.size(), "cpp str");
 }
 
-TEST(huGetTokenStream, stringy)
+TEST(huGetSourceText, stringy)
 {
     auto strA = R"("aaa": bbb)"sv;
     auto strB = R"(ccc: "ddd")"sv;
     auto strC = R"("eee": "fff")"sv;
     auto strD = R"(ggg: hhh)"sv;
 
-    auto sA = huGetTokenStream(s.aaa);
-    auto sB = huGetTokenStream(s.ccc);
-    auto sC = huGetTokenStream(s.eee);
-    auto sD = huGetTokenStream(s.ggg);
+    auto sA = huGetSourceText(s.aaa);
+    auto sB = huGetSourceText(s.ccc);
+    auto sC = huGetSourceText(s.eee);
+    auto sD = huGetSourceText(s.ggg);
 
     LONGS_EQUAL_TEXT(strA.size(), sA.size, "aaa sz");
     STRNCMP_EQUAL_TEXT(strA.data(), sA.ptr, strA.size(), "aaa str");
@@ -496,13 +496,13 @@ TEST(huGetTokenStream, stringy)
     STRNCMP_EQUAL_TEXT(strD.data(), sD.ptr, strD.size(), "ggg str");
 }
 
-TEST(huGetTokenStream, pathological)
+TEST(huGetSourceText, pathological)
 {
-    auto str = huGetTokenStream(NULL);
+    auto str = huGetSourceText(NULL);
     LONGS_EQUAL_TEXT(0, str.size, "NULL -> 0 sz");
     POINTERS_EQUAL_TEXT(NULL, str.ptr, "NULL -> 0 sz");
 
-    str = huGetTokenStream(HU_NULLNODE);
+    str = huGetSourceText(HU_NULLNODE);
     LONGS_EQUAL_TEXT(0, str.size, "NULL -> 0 sz");
     POINTERS_EQUAL_TEXT(NULL, str.ptr, "NULL -> 0 sz");
 }
@@ -3796,14 +3796,14 @@ static std::tuple<std::string, huSize_t> getFile(std::string_view path, huWhites
 }
 
 
-std::string testFiles_TokenStream[] = {
+std::string testFiles_SourceText[] = {
     "test/testFiles/comments.hu",
     "test/testFiles/commentsCstyle.hu",
     "test/testFiles/quothTheHumon.hu",
     "test/testFiles/utf8.hu",
 };
 
-TEST_GROUP(huGetTroveTokenStream)
+TEST_GROUP(huGetTroveSourceText)
 {
     void setup()
     {
@@ -3814,15 +3814,15 @@ TEST_GROUP(huGetTroveTokenStream)
     }
 };
 
-TEST(huGetTroveTokenStream, correctness)
+TEST(huGetTroveSourceText, correctness)
 {
-    for (auto testFile : testFiles_TokenStream)
+    for (auto testFile : testFiles_SourceText)
     {
         auto [src, sz] = getFile(testFile);
         huTrove * trove;
         huErrorCode err = huDeserializeTroveFromFile(& trove, testFile.data(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
         LONGS_EQUAL(HU_ERROR_NOERROR, err);
-        auto sv = huGetTroveTokenStream(trove);
+        auto sv = huGetTroveSourceText(trove);
         LONGS_EQUAL(sz, sv.size);
         STRNCMP_EQUAL(src.data(), sv.ptr, sz);
     }

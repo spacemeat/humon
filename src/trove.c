@@ -1001,7 +1001,7 @@ void recordParseError(huTrove * trove, huErrorCode errorCode, huToken const * pC
 }
 
 
-huStringView huGetTroveTokenStream(huTrove const * trove)
+huStringView huGetTroveSourceText(huTrove const * trove)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE)

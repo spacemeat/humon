@@ -1672,7 +1672,7 @@ TEST(oneValueDictFourAnno, values)
 }
 
 
-TEST_GROUP(heredocs)
+TEST_GROUP(tagquotes)
 {
   huTrove * trove = NULL;
 
@@ -1718,7 +1718,7 @@ value
   }
 };
 
-TEST(heredocs, keys)
+TEST(tagquotes, keys)
 {
   auto exp = "fkey0"sv;
   auto r = huGetRootNode(trove);
@@ -1771,7 +1771,7 @@ TEST(heredocs, keys)
 }
 
 
-TEST(heredocs, values)
+TEST(tagquotes, values)
 {
   auto exp = "value"sv;
   auto r = huGetRootNode(trove);

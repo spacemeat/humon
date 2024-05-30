@@ -1,19 +1,22 @@
 DONE THIS CHECKIN:
-P1 Convert all huEnumType_t to their correct enum typedefs.
+P1 Replace "token stream" -- that's a terrible descriptor for "text".
+P1 Consider renaming "heredoc".
 
 TODO:
-P1 consolidated vectors for comments and annotations
+P1 Put version number in windows bins
+P1 Consider \0 in text.
+P1 Consider renaming "annotations" to "tags".
+P1 Better C++ interfaces -- specifically, the return variant is painful.
 P1 write to any UTF mode
-
-P2 begin() and end() for nodes
-P2 doxygen improvements
+P1 line/column tracking disablement
+P1 begin() and end() for nodes
+P1 C++20 rev
+P1 Improved error state transitions
+P1 more erroneous humon tests
+P1 UTF8 digits for addressing
+P2 doxygen improvements?
 P2 reasonable starting vector sizes for tokens, nodes, etc.
 P2 man page for hux
 P2 32/64 bit /usr/local/bin locations?
 P2 consolidate deserializeOption unicode flags?
-P2 Improved error state transitions
-P2 vcpkg/conan
-P1-2 linting
-P2 more erroneous humon tests
-P2 UTF8 digits for addressing
-P2 consider sorting dict keys and doing BSP search.
+P2 vcpkg/conan?

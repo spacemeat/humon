@@ -80,7 +80,7 @@
 			]
 		},
 
-		"heredocValue": {
+		"tagQuotedValue": {
 			"name": "string.quoted.single.humon",
 			"begin": "\\^.*\\^",
 			"end": "\\^.*\\^",
@@ -101,7 +101,7 @@
 				}, {
 					"include": "#doubleQuotedValue"
 				}, {
-					"include": "#heredocValue"
+					"include": "#tagQuotedValue"
 				}
 			]
 		},

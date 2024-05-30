@@ -91,7 +91,7 @@ extern "C"
     typedef enum huTokenKind_tag
     {
         HU_TOKENKIND_NULL,          ///< Invalid token. Malformed, or otherwise nonexistent.
-        HU_TOKENKIND_EOF,           ///< The end of the token stream or string.
+        HU_TOKENKIND_EOF,           ///< The end of the source text.
         HU_TOKENKIND_STARTLIST,     ///< The opening '[' of a list.
         HU_TOKENKIND_ENDLIST,       ///< The closing ']' of a list.
         HU_TOKENKIND_STARTDICT,     ///< The opening '{' of a dict.
@@ -163,8 +163,8 @@ extern "C"
     /// Specifies a style ID for colorized printing.
     typedef enum huColorCode_tag
     {
-        HU_COLORCODE_TOKENSTREAMBEGIN,          ///< Beginning-of-token stream color code.
-        HU_COLORCODE_TOKENSTREAMEND,            ///< End-of-token stream color code.
+        HU_COLORCODE_TOKENSTREAMBEGIN,          ///< Beginning-of-source text color code.
+        HU_COLORCODE_TOKENSTREAMEND,            ///< End-of-source text color code.
         HU_COLORCODE_TOKENEND,                  ///< End-of-token color code.
         HU_COLORCODE_PUNCLIST,                  ///< List punctuation style. ([,])
         HU_COLORCODE_PUNCDICT,                  ///< Dict punctuation style. ({,})
@@ -415,7 +415,7 @@ extern "C"
 	HUMON_PUBLIC huToken const * huGetValue(huNode const * node);
 
     /// Returns the entire nested text of a node, including child nodes and associated comments and annotations.
-	HUMON_PUBLIC huStringView huGetTokenStream(huNode const * node);
+	HUMON_PUBLIC huStringView huGetSourceText(huNode const * node);
 
     /// Returns the number of annotations associated to a node.
 	HUMON_PUBLIC huSize_t huGetNumAnnotations(huNode const * node);
@@ -663,10 +663,10 @@ extern "C"
 	HUMON_PUBLIC huNode const * huFindNodesByCommentContainingN(huTrove const * trove,
 		char const * containedText, huSize_t containedTextLen, huSize_t * cursor);
 
-    /// Returns the entire token stream of a trove (its text), including all nodes and all comments and annotations.
+    /// Returns the entire source text of a trove, including all nodes and all comments and annotations.
     /** This function returns the stored text as a view. It does not allocate or copy memory,
      * and cannot format the string.*/
-	HUMON_PUBLIC huStringView huGetTroveTokenStream(huTrove const * trove);
+	HUMON_PUBLIC huStringView huGetTroveSourceText(huTrove const * trove);
 
     /// Serializes a trove to text.
     /** This function makes a new copy of the token steram, optionally with formatting options.*/

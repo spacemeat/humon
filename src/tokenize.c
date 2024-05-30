@@ -375,7 +375,7 @@ static void eatQuotedWord(huScanner * scanner)
 }
 
 
-static void eatHeredocTag(huScanner * scanner, huSize_t * tagLen)
+static void eatTagQuoteTag(huScanner * scanner, huSize_t * tagLen)
 {
     // record the location for error reporting
     huLine_t tokenStartLine = scanner->line;
@@ -429,7 +429,7 @@ static void eatMatch(huScanner * scanner, huSize_t matchLen)
 }
 
 
-static void eatHeredoc(huScanner * scanner, huSize_t * offsetIn, huSize_t * offsetOut)
+static void eatTagQuotedWord(huScanner * scanner, huSize_t * offsetIn, huSize_t * offsetOut)
 {
     // record the location for error reporting
     huLine_t tokenStartLine = scanner->line;
@@ -440,7 +440,7 @@ static void eatHeredoc(huScanner * scanner, huSize_t * offsetIn, huSize_t * offs
 
     char const * tokenRawStart = scanner->curCursor->character;
 
-    eatHeredocTag(scanner, & tagLen);
+    eatTagQuoteTag(scanner, & tagLen);
 
     char const * tokenStart = scanner->curCursor->character;
 
@@ -581,7 +581,7 @@ void tokenizeTrove(huTrove * trove)
         case '^':
             {
                 huSize_t offsetIn = 0, offsetOut = 0;
-                eatHeredoc(& scanner, & offsetIn, & offsetOut);
+                eatTagQuotedWord(& scanner, & offsetIn, & offsetOut);
                 allocNewToken(trove, HU_TOKENKIND_WORD, tokenStart, scanner.len - len, line, col, scanner.line, scanner.col, offsetIn, offsetOut, '^');
             }
             break;

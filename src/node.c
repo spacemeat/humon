@@ -431,7 +431,7 @@ static bool eatQuotedAddressWord(huScanner * scanner, char const ** word, huSize
 }
 
 
-static bool eatHeredocTag(huScanner * scanner, huSize_t * tagLen)
+static bool eatTagQuoteTag(huScanner * scanner, huSize_t * tagLen)
 {
     bool error = false;
 
@@ -463,7 +463,7 @@ static bool eatHeredocTag(huScanner * scanner, huSize_t * tagLen)
 }
 
 
-static bool eatHeredocWord(huScanner * scanner, char const * tag, huSize_t tagLen, huSize_t * wordLen)
+static bool eatTagQuotedAddressWord(huScanner * scanner, char const * tag, huSize_t tagLen, huSize_t * wordLen)
 {
     * wordLen = 0;
     bool error = false;
@@ -558,14 +558,14 @@ huNode const * huGetNodeByRelativeAddressN(huNode const * node, char const * add
         {
             huSize_t tagLen = 0;
             char const * tag = scanner.curCursor->character;
-            error = ! eatHeredocTag(& scanner, & tagLen);
+            error = ! eatTagQuoteTag(& scanner, & tagLen);
             if (error)
                 { break; }
             wordStart += tagLen;
-            error = ! eatHeredocWord(& scanner, tag, tagLen, & wordLen);
+            error = ! eatTagQuotedAddressWord(& scanner, tag, tagLen, & wordLen);
             if (error)
                 { break; }
-            error = ! eatHeredocTag(& scanner, & tagLen);
+            error = ! eatTagQuoteTag(& scanner, & tagLen);
             quoteChar = '^';
         }
         break;
@@ -743,10 +743,10 @@ static void getNodeAddressRec(huNode const * node, PrintTracker * printer)
 
         //  if key is not quoted
         //      if key contains a '/' or ':',
-        //          determine the best heredoc string
-        //          append heredoc string
+        //          determine the best tagquote string
+        //          append tagquote string
         //          append string
-        //          append heredoc string
+        //          append tagquote string
         //      else if key is all numbers,
 		//			append '\''
 		//			append string
@@ -767,19 +767,19 @@ static void getNodeAddressRec(huNode const * node, PrintTracker * printer)
             char * colonIdx = memchr(key->ptr, ':', key->size);
             if (slashIdx != NULL || colonIdx != NULL)
             {
-#define HEREDOC_TAG_LEN (16)
-                char heredocTag[HEREDOC_TAG_LEN] = "^^";
+#define TAGQUOTE_LEN (16)
+                char tagQuote[TAGQUOTE_LEN] = "^^";
                 int foundLen = 2;
-                bool foundOne = ! stringInString(key->ptr, key->size, heredocTag, foundLen);
+                bool foundOne = ! stringInString(key->ptr, key->size, tagQuote, foundLen);
                 for (int i = 0; foundOne == false; ++i)
                 {
-                    foundLen = snprintf(heredocTag, HEREDOC_TAG_LEN, "^%d^", i);
-                    foundOne = ! stringInString(key->ptr, key->size, heredocTag, foundLen);
+                    foundLen = snprintf(tagQuote, TAGQUOTE_LEN, "^%d^", i);
+                    foundOne = ! stringInString(key->ptr, key->size, tagQuote, foundLen);
                 }
 
-                appendString(printer, heredocTag, foundLen);
+                appendString(printer, tagQuote, foundLen);
                 appendString(printer, key->ptr, key->size);
-                appendString(printer, heredocTag, foundLen);
+                appendString(printer, tagQuote, foundLen);
             }
             else
             {
@@ -898,7 +898,7 @@ huToken const * huGetValue(huNode const * node)
 }
 
 
-huStringView huGetTokenStream(huNode const * node)
+huStringView huGetSourceText(huNode const * node)
 {
     huStringView str;
     str.ptr = NULL;

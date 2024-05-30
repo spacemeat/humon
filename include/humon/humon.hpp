@@ -58,7 +58,7 @@ namespace hu
     enum class TokenKind
     {
         null = capi::HU_TOKENKIND_NULL,                 ///< Invalid token. Malformed, or otherwise nonexistent.
-        eof = capi::HU_TOKENKIND_EOF,                   ///< The end of the token stream or string.
+        eof = capi::HU_TOKENKIND_EOF,                   ///< The end of the source text.
         startList = capi::HU_TOKENKIND_STARTLIST,       ///< The opening '[' of a list.
         endList = capi::HU_TOKENKIND_ENDLIST,           ///< The closing ']' of a list.
         startDict = capi::HU_TOKENKIND_STARTDICT,       ///< The opening '{' of a dict.
@@ -143,8 +143,8 @@ namespace hu
     /// Specifies a style ID for colorized printing.
     enum class ColorCode
     {
-        tokenStreamBegin = capi::HU_COLORCODE_TOKENSTREAMBEGIN,     ///< Beginning-of-token stream color code.
-        tokenStreamEnd = capi::HU_COLORCODE_TOKENSTREAMEND,         ///< End-of-token stream color code.
+        sourceTextBegin = capi::HU_COLORCODE_TOKENSTREAMBEGIN,     ///< Beginning-of-source text color code.
+        sourceTextEnd = capi::HU_COLORCODE_TOKENSTREAMEND,         ///< End-of-source text color code.
         tokenEnd = capi::HU_COLORCODE_TOKENEND,                     ///< End-of-color code.
         puncList = capi::HU_COLORCODE_PUNCLIST,                     ///< List punctuation style. ([,])
         puncDict = capi::HU_COLORCODE_PUNCDICT,                     ///< Dict punctuation style. ({,})
@@ -227,7 +227,7 @@ namespace hu
         void setAllowOutOfRangeCodePoints(bool shallWe) { cparams.allowOutOfRangeCodePoints = shallWe; }
         /// Allow unpaired surrogate code units in UTF-16.
         void setAllowUtf16UnmatchedSurrogates(bool shallWe) { cparams.allowUtf16UnmatchedSurrogates = shallWe; }
-        /// Use this tab size when computing the column of a token and the token stream contains tabs.
+        /// Use this tab size when computing the column of a token and the source text contains tabs.
         void setTabSize(hu::col_t tabSize) { cparams.tabSize = tabSize; }
         /// Customize the memory allocation functions used in all of Humon's API.
         void setAllocator(Allocator allocator)
@@ -240,7 +240,7 @@ namespace hu
         bool allowOutOfRangeCodePoints() const { return cparams.allowOutOfRangeCodePoints; }
         /// Get whether unpaired surrogates in UTF-16 are allowed.
         bool allowUtf16UnmatchedSurrogates() const { return cparams.allowUtf16UnmatchedSurrogates; }
-        /// Get the tab size used to compute column information in token streams that contain tabs.
+        /// Get the tab size used to compute column information in source text that contain tabs.
         hu::col_t tabSize() const { return cparams.tabSize; }
         /// Get the allocator used to handle memory.
         Allocator getAllocator() const { return Allocator { cparams.allocator }; }
@@ -391,7 +391,7 @@ namespace hu
         TokenKind kind() const         ///< Returns the kind of token this is.
             { check(); return isValid() ? static_cast<TokenKind>(huGetTokenKind(ctoken))
                                         : static_cast<TokenKind>(capi::HU_TOKENKIND_NULL); }
-        std::string_view rawStr() const   ///< Returns the raw string value of the token, including quotes or heredoc tags.
+        std::string_view rawStr() const   ///< Returns the raw string value of the token, including quotes.
             { check(); return isValid() ? make_sv(* huGetRawString(ctoken)) : ""; }
         std::string_view str() const   ///< Returns the string value of the token.
             { check(); return isValid() ? make_sv(* huGetString(ctoken)) : ""; }
@@ -797,10 +797,10 @@ namespace hu
         /// Returns the entire text contained by this node and all its children.
         /** The entire text of this node is returned, including all its children's
          * texts, and any comments and annotations associated to this node. */
-        std::string_view tokenStream() const
+        std::string_view sourceText() const
         {
             check();
-            auto sv = capi::huGetTokenStream(cnode);
+            auto sv = capi::huGetSourceText(cnode);
             return make_sv(sv);
         }
 
@@ -1419,24 +1419,24 @@ namespace hu
             return vec;
         }
 
-        /// Returns the entire token stream of a trove (its text), including all nodes and all comments and annotations.
+        /// Returns the entire source text of a trove (its text), including all nodes and all comments and annotations.
         /** This function returns the stored text as a view. It does not allocate or copy memory,
          * and cannot format the string.*/
-        std::string_view tokenStream() const
+        std::string_view soureText() const
         {
             check();
-            auto sv = capi::huGetTroveTokenStream(ctrove);
+            auto sv = capi::huGetTroveSourceText(ctrove);
             return make_sv(sv);
         }
 
-        /// Serializes a trove with the exact input token stream.
+        /// Serializes a trove with the exact input source text.
         [[nodiscard]] std::variant<std::string, ErrorCode> toClonedString(Encoding encoding = Encoding::utf8, bool printBom = false) const
         {
             SerializeOptions sp = { WhitespaceFormat::cloned, 0, false, std::nullopt, true, "", encoding, printBom };
             return toString(sp);
         }
 
-        /// Serializes a trove with the minimum token stream necessary to accurately convey the data.
+        /// Serializes a trove with the minimum source text necessary to accurately convey the data.
         [[nodiscard]] std::variant<std::string, ErrorCode> toMinimalString(std::optional<ColorTable> const & colors = {},
             bool printComments = true, std::string_view newline = "\n", Encoding encoding = Encoding::utf8, bool printBom = false) const
         {
@@ -1474,7 +1474,7 @@ namespace hu
             return s;
         }
 
-        /// Serializes a trove with the exact input token stream.
+        /// Serializes a trove with the exact input source text.
         [[nodiscard]] std::variant<hu::size_t, ErrorCode> toClonedFile(std::string_view path,
             Encoding encoding = Encoding::utf8, bool printBom = false) const
         {
@@ -1482,7 +1482,7 @@ namespace hu
             return toFile(path, sp);
         }
 
-        /// Serializes a trove with the minimum token stream necessary to accurately convey the data.
+        /// Serializes a trove with the minimum source text necessary to accurately convey the data.
         [[nodiscard]] std::variant<hu::size_t, ErrorCode> toMinimalFile(std::string_view path,
             std::optional<ColorTable> const & colors = {}, bool printComments = true,
             std::string_view newline = "\n", Encoding encoding = Encoding::utf8, bool printBom = false) const
