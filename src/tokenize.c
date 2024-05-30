@@ -546,7 +546,7 @@ void tokenizeTrove(huTrove * trove)
             nextCharacter(& scanner);
             break;
         case '@':
-            allocNewToken(trove, HU_TOKENKIND_ANNOTATE, tokenStart, cur->charLength, line, col, line, col + 1, 0, 0, '\0');
+            allocNewToken(trove, HU_TOKENKIND_METATAG, tokenStart, cur->charLength, line, col, line, col + 1, 0, 0, '\0');
             nextCharacter(& scanner);
             break;
         case '/':

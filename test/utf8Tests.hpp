@@ -64,28 +64,28 @@ TEST(utf8, keys)
     ch = root / "four";
     MEMCMP_EQUAL(u8"𠜎", ch.value().str().data(), 2);
 
-    auto [k, v] = root.annotation(0);
+    auto [k, v] = root.metatag(0);
     LONGS_EQUAL(k.str().size(), 2);
     MEMCMP_EQUAL(u8"Я", k.str().data(), 2);
     STRNCMP_EQUAL("two", v.str().data(), strlen("two"));
-    tie(k, v) = root.annotation(1);
+    tie(k, v) = root.metatag(1);
     LONGS_EQUAL(k.str().size(), 3);
     MEMCMP_EQUAL(u8"⾀", k.str().data(), 3);
     STRNCMP_EQUAL("three", v.str().data(), strlen("three"));
-    tie(k, v) = root.annotation(2);
+    tie(k, v) = root.metatag(2);
     LONGS_EQUAL(k.str().size(), 4);
     MEMCMP_EQUAL(u8"𠜎", k.str().data(), 4);
     STRNCMP_EQUAL("four", v.str().data(), strlen("four"));
 
-    tie(k, v) = root.annotation(3);
+    tie(k, v) = root.metatag(3);
     STRNCMP_EQUAL("two", k.str().data(), strlen("two"));
     LONGS_EQUAL(v.str().size(), 2);
     MEMCMP_EQUAL(u8"Я", v.str().data(), 2);
-    tie(k, v) = root.annotation(4);
+    tie(k, v) = root.metatag(4);
     STRNCMP_EQUAL("three", k.str().data(), strlen("three"));
     LONGS_EQUAL(v.str().size(), 3);
     MEMCMP_EQUAL(u8"⾀", v.str().data(), 3);
-    tie(k, v) = root.annotation(5);
+    tie(k, v) = root.metatag(5);
     STRNCMP_EQUAL("four", k.str().data(), strlen("four"));
     LONGS_EQUAL(v.str().size(), 4);
     MEMCMP_EQUAL(u8"𠜎", v.str().data(), 4);

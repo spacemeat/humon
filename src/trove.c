@@ -17,10 +17,10 @@ void initTrove(huTrove * trove, huDeserializeOptions * deserializeOptions, huErr
     trove->errorResponse = errorResponse;
     trove->inputTabSize = deserializeOptions->tabSize;
 
-    initGrowableVector(& trove->annotations, sizeof(huAnnotation), & trove->allocator);
+    initGrowableVector(& trove->metatags, sizeof(huMetatag), & trove->allocator);
     initGrowableVector(& trove->comments, sizeof(huComment), & trove->allocator);
 
-    trove->lastAnnoToken = NULL;
+    trove->lastMetatagToken = NULL;
 }
 
 
@@ -324,7 +324,7 @@ void huDestroyTrove(huTrove * trove)
     destroyVector(& trove->nodes);
     destroyVector(& trove->errors);
 
-    destroyVector(& trove->annotations);
+    destroyVector(& trove->metatags);
     destroyVector(& trove->comments);
 
     ourFree(& trove->allocator, trove);
@@ -512,34 +512,34 @@ huError const * huGetError(huTrove const * trove, huSize_t errorIdx)
 }
 
 
-huSize_t huGetNumTroveAnnotations(huTrove const * trove)
+huSize_t huGetNumTroveMetatags(huTrove const * trove)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE)
         { return 0; }
 #endif
 
-    return trove->annotations.numElements;
+    return trove->metatags.numElements;
 }
 
 
-huAnnotation const * huGetTroveAnnotation(huTrove const * trove, huSize_t annotationIdx)
+huMetatag const * huGetTroveMetatag(huTrove const * trove, huSize_t metatagIdx)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (trove == HU_NULLTROVE || annotationIdx < 0)
+    if (trove == HU_NULLTROVE || metatagIdx < 0)
         { return NULL; }
 #endif
 
-    if (annotationIdx < trove->annotations.numElements)
+    if (metatagIdx < trove->metatags.numElements)
     {
-        return (huAnnotation *) trove->annotations.buffer + annotationIdx;
+        return (huMetatag *) trove->metatags.buffer + metatagIdx;
     }
 
     return NULL;
 }
 
 
-huSize_t huGetNumTroveAnnotationsWithKeyZ(huTrove const * trove, char const * key)
+huSize_t huGetNumTroveMetatagsWithKeyZ(huTrove const * trove, char const * key)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (key == NULL)
@@ -550,11 +550,11 @@ huSize_t huGetNumTroveAnnotationsWithKeyZ(huTrove const * trove, char const * ke
     if (keyLenC > maxOfType(huSize_t))
         { return 0; }
 
-    return huGetNumTroveAnnotationsWithKeyN(trove, key, (huSize_t) keyLenC);
+    return huGetNumTroveMetatagsWithKeyN(trove, key, (huSize_t) keyLenC);
 }
 
 
-huSize_t huGetNumTroveAnnotationsWithKeyN(huTrove const * trove, char const * key, huSize_t keyLen)
+huSize_t huGetNumTroveMetatagsWithKeyN(huTrove const * trove, char const * key, huSize_t keyLen)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || key  == NULL || keyLen < 0)
@@ -562,18 +562,18 @@ huSize_t huGetNumTroveAnnotationsWithKeyN(huTrove const * trove, char const * ke
 #endif
 
     huSize_t matches = 0;
-    for (huSize_t i = 0; i < trove->annotations.numElements; ++i)
+    for (huSize_t i = 0; i < trove->metatags.numElements; ++i)
     {
-        huAnnotation * anno = (huAnnotation *) trove->annotations.buffer + i;
-        if (anno->key->str.size == keyLen &&
-            strncmp(anno->key->str.ptr, key, keyLen) == 0)
+        huMetatag * metatatg = (huMetatag *) trove->metatags.buffer + i;
+        if (metatatg->key->str.size == keyLen &&
+            strncmp(metatatg->key->str.ptr, key, keyLen) == 0)
             { matches += 1; }
     }
 
     return matches;
 }
 
-huToken const * huGetTroveAnnotationWithKeyZ(huTrove const * trove, char const * key, huSize_t * cursor)
+huToken const * huGetTroveMetatagWithKeyZ(huTrove const * trove, char const * key, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (key  == NULL)
@@ -584,11 +584,11 @@ huToken const * huGetTroveAnnotationWithKeyZ(huTrove const * trove, char const *
     if (keyLenC > maxOfType(huSize_t))
         { return HU_NULLTOKEN; }
 
-    return huGetTroveAnnotationWithKeyN(trove, key, (huSize_t) keyLenC, cursor);
+    return huGetTroveMetatagWithKeyN(trove, key, (huSize_t) keyLenC, cursor);
 }
 
 
-huToken const * huGetTroveAnnotationWithKeyN(huTrove const * trove, char const * key, huSize_t keyLen, huSize_t * cursor)
+huToken const * huGetTroveMetatagWithKeyN(huTrove const * trove, char const * key, huSize_t keyLen, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || key  == NULL || keyLen < 0 || cursor == NULL || * cursor < 0)
@@ -596,12 +596,12 @@ huToken const * huGetTroveAnnotationWithKeyN(huTrove const * trove, char const *
 #endif
 
     huToken const * token = HU_NULLTOKEN;
-    for (; * cursor < trove->annotations.numElements; ++ * cursor)
+    for (; * cursor < trove->metatags.numElements; ++ * cursor)
     {
-        huAnnotation const * anno = (huAnnotation *) trove->annotations.buffer + * cursor;
-        if (anno->key->str.size == keyLen &&
-            strncmp(anno->key->str.ptr, key, keyLen) == 0)
-            { token = anno->value; break; }
+        huMetatag const * metatatg = (huMetatag *) trove->metatags.buffer + * cursor;
+        if (metatatg->key->str.size == keyLen &&
+            strncmp(metatatg->key->str.ptr, key, keyLen) == 0)
+            { token = metatatg->value; break; }
     }
 
     * cursor += 1;
@@ -609,7 +609,7 @@ huToken const * huGetTroveAnnotationWithKeyN(huTrove const * trove, char const *
 }
 
 
-huSize_t huGetNumTroveAnnotationsWithValueZ(huTrove const * trove, char const * value)
+huSize_t huGetNumTroveMetatagsWithValueZ(huTrove const * trove, char const * value)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (value == NULL)
@@ -620,11 +620,11 @@ huSize_t huGetNumTroveAnnotationsWithValueZ(huTrove const * trove, char const * 
     if (valueLenC > maxOfType(huSize_t))
         { return 0; }
 
-    return huGetNumTroveAnnotationsWithValueN(trove, value, (huSize_t) valueLenC);
+    return huGetNumTroveMetatagsWithValueN(trove, value, (huSize_t) valueLenC);
 }
 
 
-huSize_t huGetNumTroveAnnotationsWithValueN(huTrove const * trove, char const * value, huSize_t valueLen)
+huSize_t huGetNumTroveMetatagsWithValueN(huTrove const * trove, char const * value, huSize_t valueLen)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || value  == NULL || valueLen < 0)
@@ -632,11 +632,11 @@ huSize_t huGetNumTroveAnnotationsWithValueN(huTrove const * trove, char const * 
 #endif
 
     huSize_t matches = 0;
-    for (huSize_t i = 0; i < trove->annotations.numElements; ++i)
+    for (huSize_t i = 0; i < trove->metatags.numElements; ++i)
     {
-        huAnnotation * anno = (huAnnotation *) trove->annotations.buffer + i;
-        if (anno->value->str.size == valueLen &&
-            strncmp(anno->value->str.ptr, value, valueLen) == 0)
+        huMetatag * metatatg = (huMetatag *) trove->metatags.buffer + i;
+        if (metatatg->value->str.size == valueLen &&
+            strncmp(metatatg->value->str.ptr, value, valueLen) == 0)
             { matches += 1; }
     }
 
@@ -644,7 +644,7 @@ huSize_t huGetNumTroveAnnotationsWithValueN(huTrove const * trove, char const * 
 }
 
 
-huToken const * huGetTroveAnnotationWithValueZ(huTrove const * trove, char const * value, huSize_t * cursor)
+huToken const * huGetTroveMetatagWithValueZ(huTrove const * trove, char const * value, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (value  == NULL)
@@ -655,11 +655,11 @@ huToken const * huGetTroveAnnotationWithValueZ(huTrove const * trove, char const
     if (valueLenC > maxOfType(huSize_t))
         { return HU_NULLTOKEN; }
 
-    return huGetTroveAnnotationWithValueN(trove, value, (huSize_t) valueLenC, cursor);
+    return huGetTroveMetatagWithValueN(trove, value, (huSize_t) valueLenC, cursor);
 }
 
 
-huToken const * huGetTroveAnnotationWithValueN(huTrove const * trove, char const * value, huSize_t valueLen, huSize_t * cursor)
+huToken const * huGetTroveMetatagWithValueN(huTrove const * trove, char const * value, huSize_t valueLen, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || value  == NULL || valueLen < 0 || cursor == NULL || * cursor < 0)
@@ -667,12 +667,12 @@ huToken const * huGetTroveAnnotationWithValueN(huTrove const * trove, char const
 #endif
 
     huToken const * token = HU_NULLTOKEN;
-    for (; * cursor < trove->annotations.numElements; ++ * cursor)
+    for (; * cursor < trove->metatags.numElements; ++ * cursor)
     {
-        huAnnotation const * anno = (huAnnotation *) trove->annotations.buffer + * cursor;
-        if (anno->value->str.size == valueLen &&
-            strncmp(anno->value->str.ptr, value, valueLen) == 0)
-            { token = anno->key; break; }
+        huMetatag const * metatatg = (huMetatag *) trove->metatags.buffer + * cursor;
+        if (metatatg->value->str.size == valueLen &&
+            strncmp(metatatg->value->str.ptr, value, valueLen) == 0)
+            { token = metatatg->key; break; }
     }
 
     * cursor += 1;
@@ -707,7 +707,7 @@ huToken const * huGetTroveComment(huTrove const * trove, huSize_t commentIdx)
 }
 
 
-huNode const * huFindNodesWithAnnotationKeyZ(huTrove const * trove, char const * key, huSize_t * cursor)
+huNode const * huFindNodesWithMetatagKeyZ(huTrove const * trove, char const * key, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (key == NULL)
@@ -718,11 +718,11 @@ huNode const * huFindNodesWithAnnotationKeyZ(huTrove const * trove, char const *
     if (keyLenC > maxOfType(huSize_t))
         { return HU_NULLNODE; }
 
-    return huFindNodesWithAnnotationKeyN(trove, key, (huSize_t) keyLenC, cursor);
+    return huFindNodesWithMetatagKeyN(trove, key, (huSize_t) keyLenC, cursor);
 }
 
 
-huNode const * huFindNodesWithAnnotationKeyN(huTrove const * trove, char const * key, huSize_t keyLen, huSize_t * cursor)
+huNode const * huFindNodesWithMetatagKeyN(huTrove const * trove, char const * key, huSize_t keyLen, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || key == NULL || keyLen < 0 || cursor == NULL || * cursor < 0)
@@ -733,7 +733,7 @@ huNode const * huFindNodesWithAnnotationKeyN(huTrove const * trove, char const *
     for (; * cursor < numNodes; ++ * cursor)
     {
         huNode const * node = huGetNodeByIndex(trove, * cursor);
-        huSize_t numTokens = huGetNumAnnotationsWithKeyN(node, key, keyLen);
+        huSize_t numTokens = huGetNumMetatagsWithKeyN(node, key, keyLen);
         if (numTokens != 0)
         {
             * cursor += 1;
@@ -745,7 +745,7 @@ huNode const * huFindNodesWithAnnotationKeyN(huTrove const * trove, char const *
 }
 
 
-huNode const * huFindNodesWithAnnotationValueZ(huTrove const * trove, char const * value, huSize_t * cursor)
+huNode const * huFindNodesWithMetatagValueZ(huTrove const * trove, char const * value, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (value == NULL)
@@ -756,11 +756,11 @@ huNode const * huFindNodesWithAnnotationValueZ(huTrove const * trove, char const
     if (valueLenC > maxOfType(huSize_t))
         { return HU_NULLNODE; }
 
-    return huFindNodesWithAnnotationValueN(trove, value, (huSize_t) valueLenC, cursor);
+    return huFindNodesWithMetatagValueN(trove, value, (huSize_t) valueLenC, cursor);
 }
 
 
-huNode const * huFindNodesWithAnnotationValueN(huTrove const * trove, char const * value, huSize_t valueLen, huSize_t * cursor)
+huNode const * huFindNodesWithMetatagValueN(huTrove const * trove, char const * value, huSize_t valueLen, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || value == NULL || valueLen < 0 || cursor == NULL || * cursor < 0)
@@ -771,7 +771,7 @@ huNode const * huFindNodesWithAnnotationValueN(huTrove const * trove, char const
     for (; * cursor < numNodes; ++ * cursor)
     {
         huNode const * node = huGetNodeByIndex(trove, * cursor);
-		huSize_t na = huGetNumAnnotationsWithValueN(node, value, valueLen);
+		huSize_t na = huGetNumMetatagsWithValueN(node, value, valueLen);
         if (na > 0)
         {
             * cursor += 1;
@@ -783,7 +783,7 @@ huNode const * huFindNodesWithAnnotationValueN(huTrove const * trove, char const
 }
 
 
-huNode const * huFindNodesWithAnnotationKeyValueZZ(huTrove const * trove, char const * key, char const * value, huSize_t * cursor)
+huNode const * huFindNodesWithMetatagKeyValueZZ(huTrove const * trove, char const * key, char const * value, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (key == NULL || value == NULL)
@@ -798,11 +798,11 @@ huNode const * huFindNodesWithAnnotationKeyValueZZ(huTrove const * trove, char c
     if (valueLenC > maxOfType(huSize_t))
         { return HU_NULLNODE; }
 
-    return huFindNodesWithAnnotationKeyValueNN(trove, key, (huSize_t) keyLenC, value, (huSize_t) valueLenC, cursor);
+    return huFindNodesWithMetatagKeyValueNN(trove, key, (huSize_t) keyLenC, value, (huSize_t) valueLenC, cursor);
 }
 
 
-huNode const * huFindNodesWithAnnotationKeyValueNZ(huTrove const * trove, char const * key, huSize_t keyLen, char const * value, huSize_t * cursor)
+huNode const * huFindNodesWithMetatagKeyValueNZ(huTrove const * trove, char const * key, huSize_t keyLen, char const * value, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (key == NULL || keyLen < 0 || value == NULL)
@@ -813,11 +813,11 @@ huNode const * huFindNodesWithAnnotationKeyValueNZ(huTrove const * trove, char c
     if (valueLenC > maxOfType(huSize_t))
         { return HU_NULLNODE; }
 
-    return huFindNodesWithAnnotationKeyValueNN(trove, key, keyLen, value, (huSize_t) valueLenC, cursor);
+    return huFindNodesWithMetatagKeyValueNN(trove, key, keyLen, value, (huSize_t) valueLenC, cursor);
 }
 
 
-huNode const * huFindNodesWithAnnotationKeyValueZN(huTrove const * trove, char const * key, char const * value, huSize_t valueLen, huSize_t * cursor)
+huNode const * huFindNodesWithMetatagKeyValueZN(huTrove const * trove, char const * key, char const * value, huSize_t valueLen, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (key == NULL || value == NULL || valueLen < 0)
@@ -828,11 +828,11 @@ huNode const * huFindNodesWithAnnotationKeyValueZN(huTrove const * trove, char c
     if (keyLenC > maxOfType(huSize_t))
         { return HU_NULLNODE; }
 
-    return huFindNodesWithAnnotationKeyValueNN(trove, key, (huSize_t) keyLenC, value, valueLen, cursor);
+    return huFindNodesWithMetatagKeyValueNN(trove, key, (huSize_t) keyLenC, value, valueLen, cursor);
 }
 
 
-huNode const * huFindNodesWithAnnotationKeyValueNN(huTrove const * trove, char const * key, huSize_t keyLen, char const * value, huSize_t valueLen, huSize_t * cursor)
+huNode const * huFindNodesWithMetatagKeyValueNN(huTrove const * trove, char const * key, huSize_t keyLen, char const * value, huSize_t valueLen, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (trove == HU_NULLTROVE || key == NULL || keyLen < 0 || value == NULL || valueLen < 0 || cursor == NULL || * cursor < 0)
@@ -843,12 +843,12 @@ huNode const * huFindNodesWithAnnotationKeyValueNN(huTrove const * trove, char c
     for (; * cursor < numNodes; ++ * cursor)
     {
         huNode const * node = huGetNodeByIndex(trove, * cursor);
-		huSize_t annoCursor = 0;
-        huToken const * anno = huGetAnnotationWithKeyN(node, key, keyLen, & annoCursor);
-        if (anno != NULL)
+		huSize_t metatatgCursor = 0;
+        huToken const * metatatg = huGetMetatagWithKeyN(node, key, keyLen, & metatatgCursor);
+        if (metatatg != NULL)
         {
-            if (anno->str.size == valueLen &&
-                strncmp(anno->str.ptr, value, valueLen) == 0)
+            if (metatatg->str.size == valueLen &&
+                strncmp(metatatg->str.ptr, value, valueLen) == 0)
             {
                 * cursor += 1;
                 return node;

@@ -1312,7 +1312,7 @@ TEST(multipleNestedLists, values)
   }
 }
 
-TEST_GROUP(oneAnnoOnly)
+TEST_GROUP(oneMetatagOnly)
 {
   huTrove * trove = NULL;
 
@@ -1330,19 +1330,19 @@ R"(@a:b)"sv;
   }
 };
 
-TEST(oneAnnoOnly, values)
+TEST(oneMetatagOnly, values)
 {
   LONGS_EQUAL_TEXT(0, huGetNumErrors(trove), "GetNumErrors()");
-  LONGS_EQUAL_TEXT(1, huGetNumTroveAnnotations(trove), "getNumTAs()");
-  huAnnotation const * anno = huGetTroveAnnotation(trove, 0);
-  LONGS_EQUAL_TEXT(1, anno->key->str.size, "key len");
-  STRNCMP_EQUAL_TEXT("a", anno->key->str.ptr, 1, "key val");
-  LONGS_EQUAL_TEXT(1, anno->value->str.size, "val len");
-  STRNCMP_EQUAL_TEXT("b", anno->value->str.ptr, 1, "val val");
+  LONGS_EQUAL_TEXT(1, huGetNumTroveMetatags(trove), "getNumTAs()");
+  huMetatag const * metatag = huGetTroveMetatag(trove, 0);
+  LONGS_EQUAL_TEXT(1, metatag->key->str.size, "key len");
+  STRNCMP_EQUAL_TEXT("a", metatag->key->str.ptr, 1, "key val");
+  LONGS_EQUAL_TEXT(1, metatag->value->str.size, "val len");
+  STRNCMP_EQUAL_TEXT("b", metatag->value->str.ptr, 1, "val val");
 }
 
 
-TEST_GROUP(oneValueAnno)
+TEST_GROUP(oneValueMetatag)
 {
   huTrove * trove = NULL;
 
@@ -1360,19 +1360,19 @@ R"(foo   @ a : b)"sv;
   }
 };
 
-TEST(oneValueAnno, values)
+TEST(oneValueMetatag, values)
 {
   huNode const * node = huGetRootNode(trove);
-  LONGS_EQUAL_TEXT(1, huGetNumAnnotations(node), "num anno");
-  huAnnotation const * anno = huGetAnnotation(node, 0);
-  LONGS_EQUAL_TEXT(1, anno->key->str.size, "key len");
-  STRNCMP_EQUAL_TEXT("a", anno->key->str.ptr, 1, "key val");
-  LONGS_EQUAL_TEXT(1, anno->value->str.size, "val len");
-  STRNCMP_EQUAL_TEXT("b", anno->value->str.ptr, 1, "val val");
+  LONGS_EQUAL_TEXT(1, huGetNumMetatags(node), "num metatag");
+  huMetatag const * metatag = huGetMetatag(node, 0);
+  LONGS_EQUAL_TEXT(1, metatag->key->str.size, "key len");
+  STRNCMP_EQUAL_TEXT("a", metatag->key->str.ptr, 1, "key val");
+  LONGS_EQUAL_TEXT(1, metatag->value->str.size, "val len");
+  STRNCMP_EQUAL_TEXT("b", metatag->value->str.ptr, 1, "val val");
 }
 
 
-TEST_GROUP(oneValueTwoAnno)
+TEST_GROUP(oneValueTwoMetatag)
 {
   huTrove * trove = NULL;
 
@@ -1391,24 +1391,24 @@ R"(foo   @ a : b
   }
 };
 
-TEST(oneValueTwoAnno, values)
+TEST(oneValueTwoMetatag, values)
 {
   huNode const * node = huGetRootNode(trove);
-  LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
-  huAnnotation const * anno = huGetAnnotation(node, 0);
-  LONGS_EQUAL_TEXT(1, anno->key->str.size, "a key len");
-  STRNCMP_EQUAL_TEXT("a", anno->key->str.ptr, 1, "a key val");
-  LONGS_EQUAL_TEXT(1, anno->value->str.size, "b val len");
-  STRNCMP_EQUAL_TEXT("b", anno->value->str.ptr, 1, "b val val");
-  anno = huGetAnnotation(node, 1);
-  LONGS_EQUAL_TEXT(1, anno->key->str.size, "c key len");
-  STRNCMP_EQUAL_TEXT("c", anno->key->str.ptr, 1, "c key val");
-  LONGS_EQUAL_TEXT(1, anno->value->str.size, "d val len");
-  STRNCMP_EQUAL_TEXT("d", anno->value->str.ptr, 1, "d val val");
+  LONGS_EQUAL_TEXT(2, huGetNumMetatags(node), "num metatag");
+  huMetatag const * metatag = huGetMetatag(node, 0);
+  LONGS_EQUAL_TEXT(1, metatag->key->str.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", metatag->key->str.ptr, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, metatag->value->str.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", metatag->value->str.ptr, 1, "b val val");
+  metatag = huGetMetatag(node, 1);
+  LONGS_EQUAL_TEXT(1, metatag->key->str.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", metatag->key->str.ptr, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, metatag->value->str.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", metatag->value->str.ptr, 1, "d val val");
 }
 
 
-TEST_GROUP(oneValueTwoAnnoGroup)
+TEST_GROUP(oneValueTwoMetatagGroup)
 {
   huTrove * trove = NULL;
 
@@ -1427,24 +1427,24 @@ c : d} )"sv;
   }
 };
 
-TEST(oneValueTwoAnnoGroup, values)
+TEST(oneValueTwoMetatagGroup, values)
 {
   huNode const * node = huGetRootNode(trove);
-  LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
-  huAnnotation const * anno = huGetAnnotation(node, 0);
-  LONGS_EQUAL_TEXT(1, anno->key->str.size, "a key len");
-  STRNCMP_EQUAL_TEXT("a", anno->key->str.ptr, 1, "a key val");
-  LONGS_EQUAL_TEXT(1, anno->value->str.size, "b val len");
-  STRNCMP_EQUAL_TEXT("b", anno->value->str.ptr, 1, "b val val");
-  anno = huGetAnnotation(node, 1);
-  LONGS_EQUAL_TEXT(1, anno->key->str.size, "c key len");
-  STRNCMP_EQUAL_TEXT("c", anno->key->str.ptr, 1, "c key val");
-  LONGS_EQUAL_TEXT(1, anno->value->str.size, "d val len");
-  STRNCMP_EQUAL_TEXT("d", anno->value->str.ptr, 1, "d val val");
+  LONGS_EQUAL_TEXT(2, huGetNumMetatags(node), "num metatag");
+  huMetatag const * metatag = huGetMetatag(node, 0);
+  LONGS_EQUAL_TEXT(1, metatag->key->str.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", metatag->key->str.ptr, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, metatag->value->str.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", metatag->value->str.ptr, 1, "b val val");
+  metatag = huGetMetatag(node, 1);
+  LONGS_EQUAL_TEXT(1, metatag->key->str.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", metatag->key->str.ptr, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, metatag->value->str.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", metatag->value->str.ptr, 1, "d val val");
 }
 
 
-TEST_GROUP(oneEmptyListTwoAnnoGroup)
+TEST_GROUP(oneEmptyListTwoMetatagGroup)
 {
   huTrove * trove = NULL;
 
@@ -1463,24 +1463,24 @@ c : d} ])"sv;
   }
 };
 
-TEST(oneEmptyListTwoAnnoGroup, values)
+TEST(oneEmptyListTwoMetatagGroup, values)
 {
   huNode const * node = huGetRootNode(trove);
-  LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
-  huAnnotation const * anno = huGetAnnotation(node, 0);
-  LONGS_EQUAL_TEXT(1, anno->key->str.size, "a key len");
-  STRNCMP_EQUAL_TEXT("a", anno->key->str.ptr, 1, "a key val");
-  LONGS_EQUAL_TEXT(1, anno->value->str.size, "b val len");
-  STRNCMP_EQUAL_TEXT("b", anno->value->str.ptr, 1, "b val val");
-  anno = huGetAnnotation(node, 1);
-  LONGS_EQUAL_TEXT(1, anno->key->str.size, "c key len");
-  STRNCMP_EQUAL_TEXT("c", anno->key->str.ptr, 1, "c key val");
-  LONGS_EQUAL_TEXT(1, anno->value->str.size, "d val len");
-  STRNCMP_EQUAL_TEXT("d", anno->value->str.ptr, 1, "d val val");
+  LONGS_EQUAL_TEXT(2, huGetNumMetatags(node), "num metatag");
+  huMetatag const * metatag = huGetMetatag(node, 0);
+  LONGS_EQUAL_TEXT(1, metatag->key->str.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", metatag->key->str.ptr, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, metatag->value->str.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", metatag->value->str.ptr, 1, "b val val");
+  metatag = huGetMetatag(node, 1);
+  LONGS_EQUAL_TEXT(1, metatag->key->str.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", metatag->key->str.ptr, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, metatag->value->str.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", metatag->value->str.ptr, 1, "d val val");
 }
 
 
-TEST_GROUP(oneEmptyListTwoAnnoLast)
+TEST_GROUP(oneEmptyListTwoMetatagLast)
 {
   huTrove * trove = NULL;
 
@@ -1499,24 +1499,24 @@ R"([   @ a : b
   }
 };
 
-TEST(oneEmptyListTwoAnnoLast, values)
+TEST(oneEmptyListTwoMetatagLast, values)
 {
   huNode const * node = huGetRootNode(trove);
-  LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
-  huAnnotation const * anno = huGetAnnotation(node, 0);
-  LONGS_EQUAL_TEXT(1, anno->key->str.size, "a key len");
-  STRNCMP_EQUAL_TEXT("a", anno->key->str.ptr, 1, "a key val");
-  LONGS_EQUAL_TEXT(1, anno->value->str.size, "b val len");
-  STRNCMP_EQUAL_TEXT("b", anno->value->str.ptr, 1, "b val val");
-  anno = huGetAnnotation(node, 1);
-  LONGS_EQUAL_TEXT(1, anno->key->str.size, "c key len");
-  STRNCMP_EQUAL_TEXT("c", anno->key->str.ptr, 1, "c key val");
-  LONGS_EQUAL_TEXT(1, anno->value->str.size, "d val len");
-  STRNCMP_EQUAL_TEXT("d", anno->value->str.ptr, 1, "d val val");
+  LONGS_EQUAL_TEXT(2, huGetNumMetatags(node), "num metatag");
+  huMetatag const * metatag = huGetMetatag(node, 0);
+  LONGS_EQUAL_TEXT(1, metatag->key->str.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", metatag->key->str.ptr, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, metatag->value->str.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", metatag->value->str.ptr, 1, "b val val");
+  metatag = huGetMetatag(node, 1);
+  LONGS_EQUAL_TEXT(1, metatag->key->str.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", metatag->key->str.ptr, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, metatag->value->str.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", metatag->value->str.ptr, 1, "d val val");
 }
 
 
-TEST_GROUP(oneEmptyDictTwoAnnoGroup)
+TEST_GROUP(oneEmptyDictTwoMetatagGroup)
 {
   huTrove * trove = NULL;
 
@@ -1535,24 +1535,24 @@ c : d} })"sv;
   }
 };
 
-TEST(oneEmptyDictTwoAnnoGroup, values)
+TEST(oneEmptyDictTwoMetatagGroup, values)
 {
   huNode const * node = huGetRootNode(trove);
-  LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
-  huAnnotation const * anno = huGetAnnotation(node, 0);
-  LONGS_EQUAL_TEXT(1, anno->key->str.size, "a key len");
-  STRNCMP_EQUAL_TEXT("a", anno->key->str.ptr, 1, "a key val");
-  LONGS_EQUAL_TEXT(1, anno->value->str.size, "b val len");
-  STRNCMP_EQUAL_TEXT("b", anno->value->str.ptr, 1, "b val val");
-  anno = huGetAnnotation(node, 1);
-  LONGS_EQUAL_TEXT(1, anno->key->str.size, "c key len");
-  STRNCMP_EQUAL_TEXT("c", anno->key->str.ptr, 1, "c key val");
-  LONGS_EQUAL_TEXT(1, anno->value->str.size, "d val len");
-  STRNCMP_EQUAL_TEXT("d", anno->value->str.ptr, 1, "d val val");
+  LONGS_EQUAL_TEXT(2, huGetNumMetatags(node), "num metatag");
+  huMetatag const * metatag = huGetMetatag(node, 0);
+  LONGS_EQUAL_TEXT(1, metatag->key->str.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", metatag->key->str.ptr, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, metatag->value->str.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", metatag->value->str.ptr, 1, "b val val");
+  metatag = huGetMetatag(node, 1);
+  LONGS_EQUAL_TEXT(1, metatag->key->str.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", metatag->key->str.ptr, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, metatag->value->str.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", metatag->value->str.ptr, 1, "d val val");
 }
 
 
-TEST_GROUP(oneEmptyDictTwoAnnoLast)
+TEST_GROUP(oneEmptyDictTwoMetatagLast)
 {
   huTrove * trove = NULL;
 
@@ -1571,24 +1571,24 @@ c : d)"sv;
   }
 };
 
-TEST(oneEmptyDictTwoAnnoLast, values)
+TEST(oneEmptyDictTwoMetatagLast, values)
 {
   huNode const * node = huGetRootNode(trove);
-  LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
-  huAnnotation const * anno = huGetAnnotation(node, 0);
-  LONGS_EQUAL_TEXT(1, anno->key->str.size, "a key len");
-  STRNCMP_EQUAL_TEXT("a", anno->key->str.ptr, 1, "a key val");
-  LONGS_EQUAL_TEXT(1, anno->value->str.size, "b val len");
-  STRNCMP_EQUAL_TEXT("b", anno->value->str.ptr, 1, "b val val");
-  anno = huGetAnnotation(node, 1);
-  LONGS_EQUAL_TEXT(1, anno->key->str.size, "c key len");
-  STRNCMP_EQUAL_TEXT("c", anno->key->str.ptr, 1, "c key val");
-  LONGS_EQUAL_TEXT(1, anno->value->str.size, "d val len");
-  STRNCMP_EQUAL_TEXT("d", anno->value->str.ptr, 1, "d val val");
+  LONGS_EQUAL_TEXT(2, huGetNumMetatags(node), "num metatag");
+  huMetatag const * metatag = huGetMetatag(node, 0);
+  LONGS_EQUAL_TEXT(1, metatag->key->str.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", metatag->key->str.ptr, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, metatag->value->str.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", metatag->value->str.ptr, 1, "b val val");
+  metatag = huGetMetatag(node, 1);
+  LONGS_EQUAL_TEXT(1, metatag->key->str.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", metatag->key->str.ptr, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, metatag->value->str.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", metatag->value->str.ptr, 1, "d val val");
 }
 
 
-TEST_GROUP(oneValueListTwoAnnoGroup)
+TEST_GROUP(oneValueListTwoMetatagGroup)
 {
   huTrove * trove = NULL;
 
@@ -1607,25 +1607,25 @@ c : d} ])"sv;
   }
 };
 
-TEST(oneValueListTwoAnnoGroup, values)
+TEST(oneValueListTwoMetatagGroup, values)
 {
   huNode const * node = huGetRootNode(trove);
   node = huGetChildByIndex(node, 0);
-  LONGS_EQUAL_TEXT(2, huGetNumAnnotations(node), "num anno");
-  huAnnotation const * anno = huGetAnnotation(node, 0);
-  LONGS_EQUAL_TEXT(1, anno->key->str.size, "a key len");
-  STRNCMP_EQUAL_TEXT("a", anno->key->str.ptr, 1, "a key val");
-  LONGS_EQUAL_TEXT(1, anno->value->str.size, "b val len");
-  STRNCMP_EQUAL_TEXT("b", anno->value->str.ptr, 1, "b val val");
-  anno = huGetAnnotation(node, 1);
-  LONGS_EQUAL_TEXT(1, anno->key->str.size, "c key len");
-  STRNCMP_EQUAL_TEXT("c", anno->key->str.ptr, 1, "c key val");
-  LONGS_EQUAL_TEXT(1, anno->value->str.size, "d val len");
-  STRNCMP_EQUAL_TEXT("d", anno->value->str.ptr, 1, "d val val");
+  LONGS_EQUAL_TEXT(2, huGetNumMetatags(node), "num metatag");
+  huMetatag const * metatag = huGetMetatag(node, 0);
+  LONGS_EQUAL_TEXT(1, metatag->key->str.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", metatag->key->str.ptr, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, metatag->value->str.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", metatag->value->str.ptr, 1, "b val val");
+  metatag = huGetMetatag(node, 1);
+  LONGS_EQUAL_TEXT(1, metatag->key->str.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", metatag->key->str.ptr, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, metatag->value->str.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", metatag->value->str.ptr, 1, "d val val");
 }
 
 
-TEST_GROUP(oneValueDictFourAnno)
+TEST_GROUP(oneValueDictFourMetatag)
 {
   huTrove * trove = NULL;
 
@@ -1644,31 +1644,31 @@ R"({  foo @ a : b :
   }
 };
 
-TEST(oneValueDictFourAnno, values)
+TEST(oneValueDictFourMetatag, values)
 {
   huNode const * node = huGetRootNode(trove);
   node = huGetChildByIndex(node, 0);
-  LONGS_EQUAL_TEXT(4, huGetNumAnnotations(node), "num anno");
-  huAnnotation const * anno = huGetAnnotation(node, 0);
-  LONGS_EQUAL_TEXT(1, anno->key->str.size, "a key len");
-  STRNCMP_EQUAL_TEXT("a", anno->key->str.ptr, 1, "a key val");
-  LONGS_EQUAL_TEXT(1, anno->value->str.size, "b val len");
-  STRNCMP_EQUAL_TEXT("b", anno->value->str.ptr, 1, "b val val");
-  anno = huGetAnnotation(node, 1);
-  LONGS_EQUAL_TEXT(1, anno->key->str.size, "c key len");
-  STRNCMP_EQUAL_TEXT("c", anno->key->str.ptr, 1, "c key val");
-  LONGS_EQUAL_TEXT(1, anno->value->str.size, "d val len");
-  STRNCMP_EQUAL_TEXT("d", anno->value->str.ptr, 1, "d val val");
-  anno = huGetAnnotation(node, 2);
-  LONGS_EQUAL_TEXT(1, anno->key->str.size, "e key len");
-  STRNCMP_EQUAL_TEXT("e", anno->key->str.ptr, 1, "e key val");
-  LONGS_EQUAL_TEXT(1, anno->value->str.size, "f val len");
-  STRNCMP_EQUAL_TEXT("f", anno->value->str.ptr, 1, "f val val");
-  anno = huGetAnnotation(node, 3);
-  LONGS_EQUAL_TEXT(1, anno->key->str.size, "g key len");
-  STRNCMP_EQUAL_TEXT("g", anno->key->str.ptr, 1, "g key val");
-  LONGS_EQUAL_TEXT(1, anno->value->str.size, "h val len");
-  STRNCMP_EQUAL_TEXT("h", anno->value->str.ptr, 1, "h val val");
+  LONGS_EQUAL_TEXT(4, huGetNumMetatags(node), "num metatag");
+  huMetatag const * metatag = huGetMetatag(node, 0);
+  LONGS_EQUAL_TEXT(1, metatag->key->str.size, "a key len");
+  STRNCMP_EQUAL_TEXT("a", metatag->key->str.ptr, 1, "a key val");
+  LONGS_EQUAL_TEXT(1, metatag->value->str.size, "b val len");
+  STRNCMP_EQUAL_TEXT("b", metatag->value->str.ptr, 1, "b val val");
+  metatag = huGetMetatag(node, 1);
+  LONGS_EQUAL_TEXT(1, metatag->key->str.size, "c key len");
+  STRNCMP_EQUAL_TEXT("c", metatag->key->str.ptr, 1, "c key val");
+  LONGS_EQUAL_TEXT(1, metatag->value->str.size, "d val len");
+  STRNCMP_EQUAL_TEXT("d", metatag->value->str.ptr, 1, "d val val");
+  metatag = huGetMetatag(node, 2);
+  LONGS_EQUAL_TEXT(1, metatag->key->str.size, "e key len");
+  STRNCMP_EQUAL_TEXT("e", metatag->key->str.ptr, 1, "e key val");
+  LONGS_EQUAL_TEXT(1, metatag->value->str.size, "f val len");
+  STRNCMP_EQUAL_TEXT("f", metatag->value->str.ptr, 1, "f val val");
+  metatag = huGetMetatag(node, 3);
+  LONGS_EQUAL_TEXT(1, metatag->key->str.size, "g key len");
+  STRNCMP_EQUAL_TEXT("g", metatag->key->str.ptr, 1, "g key val");
+  LONGS_EQUAL_TEXT(1, metatag->value->str.size, "h val len");
+  STRNCMP_EQUAL_TEXT("h", metatag->value->str.ptr, 1, "h val val");
 }
 
 

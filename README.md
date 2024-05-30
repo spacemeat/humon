@@ -76,7 +76,7 @@ More useful Humon might look like this asset description for a material in a gam
         }
     }
 
-The `@` syntax is an *annotation*. We'll discuss that, but for now just think of it as a certain kind of metadata. Not all Humon source texts will use them.
+The `@` syntax is an *metatag*. We'll discuss that, but for now just think of it as a certain kind of metadata. Not all Humon source texts will use them.
 
 Using the APIs is straightforward. To get the image's (x, y) extents above, we might invoke the following in C:
 
@@ -155,10 +155,10 @@ Computing machines are the other primary customer. Software written against the 
 1. **We are serving humans who are serving machines with this language.**
 The APIs are the conjunction of human and machine. The machine has been taught how to use them. We can learn the same. API design must be convenient and unsurprising, consistent and unambiguous.
 1. **Humon is domain-neutral.**
-There are no assumptions made about the structure, use of the structure, or meaning of any keys or values or comments or annotations. Applications will use Humon to describe their own domain-specific structure, as determined by the app designer. A Humon source text that is syntactically legal per the language rules is valid Humon; whether it is a valid structure for the app using Humon is up to the app to determine.
+There are no assumptions made about the structure, use of the structure, or meaning of any keys or values or comments or metatags. Applications will use Humon to describe their own domain-specific structure, as determined by the app designer. A Humon source text that is syntactically legal per the language rules is valid Humon; whether it is a valid structure for the app using Humon is up to the app to determine.
 
 ### Principles in the language
-No more required quotes. Commas are optional. When you do quote keys or values, you can use any common quote character `` ' " ` ``. Custom tag quotes are supported. Keys and values are just text data. Quoted strings can contain newlines. Annotations and comments can provide "human hooks" into the data without the need to muck with the structure design, and without polluting the data structure expected by an application. Humon files are *intended* to be authored and modified in text editing tools, by humans, and also be simple enough for a machine to generate as well.
+No more required quotes. Commas are optional. When you do quote keys or values, you can use any common quote character `` ' " ` ``. Custom tag quotes are supported. Keys and values are just text data. Quoted strings can contain newlines. Metatags and comments can provide "human hooks" into the data without the need to muck with the structure design, and without polluting the data structure expected by an application. Humon files are *intended* to be authored and modified in text editing tools, by humans, and also be simple enough for a machine to generate as well.
 
 ### Principles in the APIs
 Most of the interesting use cases for Humon involve a machine reading data authored by either a machine or a human. The performance characteristics of the implementation reflect this; loaded Humon troves are *immutable*. Searching and scanning through Humon data is quick, and references to internal data do not go bad for the life of the trove.
@@ -201,7 +201,7 @@ So, this project proposes Humon as a replacement for those tasks that XML is per
 
 *string*: An array of one or more Unicode code points that represents a key or value. All strings in Humon follow the same rules: Unquoted strings are the longest sequence of non-whitespace characters delimited by Humon punctuation, whitespace, or comment sequences. Quoted strings are delimited by their quote characters only, and can contain newlines or anything else. There is no maximum length defined.
 
-*key*: An associated string for a dict's child node. Within a dict or an annotation, keys need not be unique.
+*key*: An associated string for a dict's child node. Within a dict or an metatag, keys need not be unique.
 
 *value*: A node that contains a single string, or that string.
 
@@ -209,7 +209,7 @@ So, this project proposes Humon as a replacement for those tasks that XML is per
 
 *comment*: A character string that decorates a source text, but is not part of the Humon dataset. They're mainly for humans to make notes, and you (probably) won't ever worry about them in code, but there are APIs to search for comments and get their associated nodes, in case that's useful.
 
-*annotation*: One of a collection of key:value string pairs associated to a node or a trove. They are exposed through separate APIs, and are globally searchable by key and/or value. Any node can have any number of annotations, and they can have nonunique keys.
+*metatag*: One of a collection of key:value string pairs associated to a node or a trove. They are exposed through separate APIs, and are globally searchable by key and/or value. Any node can have any number of metatags, and they can have nonunique keys.
 
 ### The principles applied to the language
 
@@ -228,7 +228,7 @@ You're the human. Use it the way you want.
 
 Humon is intended to be used to describe data in almost any structure. Few problems I can think of cannot be described by a structure like Humon (or JSON [or YAML (or XML)]). Humon seeks to be the least verbose of these, only stating the minimum about the structure it holds, and allowing the problem space it models to be whatever the human--you--want it to be.
 
-To that end, Humon makes no assumptions about the meaning of values. There are no keywords. There are no special meanings to any tags or annotations or the text of comments. There are no automatic annotations for special nodes or anything. Nothing for you to memorize. Humon has little understanding of anything at all, which is *freeing*. It's up to the application using Humon to decide everything about structure without worrying about stumbling on some forgotten language rule.
+To that end, Humon makes no assumptions about the meaning of values. There are no keywords. There are no special meanings to any tags or metatags or the text of comments. There are no automatic metatags for special nodes or anything. Nothing for you to memorize. Humon has little understanding of anything at all, which is *freeing*. It's up to the application using Humon to decide everything about structure without worrying about stumbling on some forgotten language rule.
 
 I mean, JSON does all this too. There's nothing revolutionary here, but the driving point is that Humon's syntax is *human-usable*, in an editing context.
 
@@ -236,10 +236,10 @@ I mean, JSON does all this too. There's nothing revolutionary here, but the driv
 Okay, let's state some explicit rules, then.
 
 **A trove contains zero or one root node.**
-A blank source text, or one with only comments and annotations (but no collections or values) contains no root node. Otherwise it must contain one top-level node, probably a list or dict with many children.
+A blank source text, or one with only comments and metatags (but no collections or values) contains no root node. Otherwise it must contain one top-level node, probably a list or dict with many children.
 
 **The root node is what it is, which is what you say it is.**
-There is no assumption made about the kind of the root node. If the first non-comment, non-annotation token in your source text is a `[`, then the root is a list; a `{` starts a dict. If it's a value, then it's the only one allowed, since value nodes don't have children and a trove can only have one root. (Not a terribly useful Humon trove, but legal. Eh.)
+There is no assumption made about the kind of the root node. If the first non-comment, non-metatag token in your source text is a `[`, then the root is a list; a `{` starts a dict. If it's a value, then it's the only one allowed, since value nodes don't have children and a trove can only have one root. (Not a terribly useful Humon trove, but legal. Eh.)
 
 **Lists are enclosed in [square brackets].**
 Any kind of node can occupy any entry in any list. Lists don't have to contain nodes of a single kind; mix and match as you see fit.
@@ -359,21 +359,21 @@ I find myself sometimes using commas when placing list or dict elements on one l
 **Comments have no meaning.**
 Any Unicode code points can be in any comments. Humon doesn't require your comments to contain any particular information. Because they have meaning to humans, they are not discarded by the parser; see below.
 
-**Annotations are their own thing, and exist out of band.**
-Annotations are the only sort of special syntax-y feature of Humon. The first working versions of the format didn't include them, but as I used Humon in those early days, I found that I wanted a convenient shorthand that was agnostic to the structure to provide context data, or specify certain rare conditions. Something formal and machineable, but that also didn't force modifications to the structure in place and were never strictly necessary. I settled on annotations.
+**Metatags are their own thing, and exist out of band.**
+Metatags are the only sort of special syntax-y feature of Humon. The first working versions of the format didn't include them, but as I used Humon in those early days, I found that I wanted a convenient shorthand that was agnostic to the structure to provide context data, or specify certain rare conditions. Something formal and machineable, but that also didn't force modifications to the structure in place and were never strictly necessary. I settled on metatags.
 
-Every node can have any number of annotations, which appear *after or within* the node--specifically, *after* any token belonging to or associated to a node. The trove can have them too, if an annotation appears before any other objects. Annotations begin with an `@` symbol, followed by either one key:value pair, or a dict of key:value pairs:
+Every node can have any number of metatags, which appear *after or within* the node--specifically, *after* any token belonging to or associated to a node. The trove can have them too, if an metatag appears before any other objects. Metatags begin with an `@` symbol, followed by either one key:value pair, or a dict of key:value pairs:
 
     [
         nostromo @ movie-ref: alien
         sulaco @ { movie-ref: aliens, movie-director: cameron }
     ] @ { exhaustive: probablyNot }
 
-Annotation values must be strings; an annotation value can't be a collection. That way lies some madness.
+Metatag values must be strings; an metatag value can't be a collection. That way lies some madness.
 
-Like dict entries, annotation keys can be nonunique among annotations associated to a particular node. Different nodes in a trove can obviously have annotations with identical keys.
+Like dict entries, metatag keys can be nonunique among metatags associated to a particular node. Different nodes in a trove can obviously have metatags with identical keys.
 
-Practically, annotations aren't a necessary part of Humon. All their data could be baked into normal lists or dicts, and that's a fine way to design, but it can get clunky in some cases.
+Practically, metatags aren't a necessary part of Humon. All their data could be baked into normal lists or dicts, and that's a fine way to design, but it can get clunky in some cases.
 
 **Humon reads UTF-8, UTF-16, and UTF-32.**
 Humon supports reading files or in-memory strings encoded as any of:
@@ -660,9 +660,9 @@ Now you can use it:
 
 C++ will deduce the type of `gccVersion` above from the `V3` template parameter passed to `hu::val<>`. `hu::val<T>` is a convenience which allows you to code the lookup and conversion in line, without grouping parentheses.
 
-### Getting annotation data
+### Getting metatag data
 
-Annotations are described in detail below. They're essentially per-node metadata. Examine a node's annotations in several ways:
+Metatags are described in detail below. They're essentially per-node metadata. Examine a node's metatags in several ways:
 
     {
         definitions: { 
@@ -682,32 +682,32 @@ Annotations are described in detail below. They're essentially per-node metadata
 
     auto node = trove.nodeByAddress("/definitions/player/maxHp/type");
 
-    int numAnnos = node.numAnnotations();               
-    for (int i = 0; i < numAnnos; ++i)
+    int numMetatags = node.numMetatags();               
+    for (int i = 0; i < numMetatags; ++i)
     {
-        auto [k, v] = node.annotation(i);               
+        auto [k, v] = node.metatag(i);               
         if (k == "numBits"sv) { /*...*/ }
         else if (k == "numBytes"sv) { /*...*/ }
     }
-    // or (slower; hu::Node::allAnnotations() allocates a std::vector):
-    for (auto [k, v] : node.allAnnotations())
+    // or (slower; hu::Node::allMetatags() allocates a std::vector):
+    for (auto [k, v] : node.allMetatags())
     {                                                   
         if (k == "numBits"sv) { /*...*/ }
         else if (k == "numBytes"sv) { /*...*/ }
     }
 
-    int numBits = node.numAnnotationsWithKey("numBits"sv);  // verify annotation by key
+    int numBits = node.numMetatagsWithKey("numBits"sv);  // verify metatag by key
                                                         
-    auto && annoValue = node.annotationsWithKey("numBits"sv);      // get annotation by key
+    auto && metatagValue = node.metatagsWithKey("numBits"sv);      // get metatag by key
                                                         
-    // many annotations in a single node might have the same value; run through them all
-    for (auto & annoKey: node.annotationsWithValue("32"sv))
+    // many metatags in a single node might have the same value; run through them all
+    for (auto & metatagKey: node.metatagsWithValue("32"sv))
     {
         //...
 
-Trove objects can have annotations too, separate from any node annotations, and feature similar APIs. There are also APIs for searching all a trove's nodes for annotations by key, value, or both; these return collections of `hu::Node`s.
+Trove objects can have metatags too, separate from any node metatags, and feature similar APIs. There are also APIs for searching all a trove's nodes for metatags by key, value, or both; these return collections of `hu::Node`s.
 
-    auto all32BitTypeNodes = trove.findNodesWithAnnotationKeyValue("numBits"sv, "32"sv);
+    auto all32BitTypeNodes = trove.findNodesWithMetatagKeyValue("numBits"sv, "32"sv);
     for (auto & node : all32BitTypeNodes)
     {
         //...
@@ -768,7 +768,7 @@ This is mostly for recording line numbers in token objects, for error reporting 
 Only whitespace characters like spaces, newlines, and commas are discarded from tracking in the tokenizer.
 
 **All tokens are part of some node, xor the trove.**
-During a load, a Humon source text is tokenized into an array of token objects, and then those tokens are parsed into a node hierarchy. Every single token object is owned by exactly one node, or by the trove itself in a few cases. A trove can completely reconstruct a Humon source text from the nodes and tokens, including reconstructing comments and annotations with their appropriate associations.
+During a load, a Humon source text is tokenized into an array of token objects, and then those tokens are parsed into a node hierarchy. Every single token object is owned by exactly one node, or by the trove itself in a few cases. A trove can completely reconstruct a Humon source text from the nodes and tokens, including reconstructing comments and metatags with their appropriate associations.
 
 **All keys and values are strings.**
 As stated, Humon makes no assumptions about the data type of a value. `"True"`, `"true"`, and `true` are all the same type of thing to Humon: a four-character string. (Though, of course, case is preserved and considered when searching.)
@@ -818,8 +818,8 @@ All comments are associated to either a node in the hierarchy, or the trove itse
             :   // ← element node
             // ↓ element node
             value // ← element node
-                // ← element node; the following annotation is considered part of it
-                @ { annoKey: annoValue } ← // element node
+                // ← element node; the following metatag is considered part of it
+                @ { metatagKey: metatagValue } ← // element node
         // ↓ root dict node
     }   // ← root dict node
     // ↓ trove
@@ -856,12 +856,12 @@ These rules allow you to write comments naturally within the structure of the so
 
 If you're never searching by comments, or are ignoring them altogether, then none of these rules really matter to you. But for such a mission, the associations can be handy. IDEs and document generators could machine on comments for smart document summaries, for example.
 
-> Usually you would prefer annotations for searchable metadata, as comments are kind of "more optional" and likely more ephemeral--nobody expects comments to be required in any file, especially for machining purposes, and it may not occur to someone to maintain them for functional reasons. But I'm not here to tell you what to do.
+> Usually you would prefer metatags for searchable metadata, as comments are kind of "more optional" and likely more ephemeral--nobody expects comments to be required in any file, especially for machining purposes, and it may not occur to someone to maintain them for functional reasons. But I'm not here to tell you what to do.
 
-**Annotations have context.**
-Like comments, annotations are associated with nodes or the trove. You can access annotations by key from a node, or search all annotations by key or value (or both) and get their associated nodes.
+**Metatags have context.**
+Like comments, metatags are associated with nodes or the trove. You can access metatags by key from a node, or search all metatags by key or value (or both) and get their associated nodes.
 
-Annotations are always *associated backward*. They modify the node owning the nearest non-comment token that appeared before the annotation, regardless of same-lineness. Any amount of whitespace or comments in between is ignored, as usual. If the previous token was a collection-starter or collection-ender (`[`, `{`, `]` or `}`), it modifies that list or dict node. In the following, `remoteStorage:true` annotates the player dict, not the userId value, because it follows the player dict's `{` opener:
+Metatags are always *associated backward*. They modify the node owning the nearest non-comment token that appeared before the metatag, regardless of same-lineness. Any amount of whitespace or comments in between is ignored, as usual. If the previous token was a collection-starter or collection-ender (`[`, `{`, `]` or `}`), it modifies that list or dict node. In the following, `remoteStorage:true` tags the player dict, not the userId value, because it follows the player dict's `{` opener:
 
     {
         player: {
@@ -872,9 +872,9 @@ Annotations are always *associated backward*. They modify the node owning the ne
         }
     }
 
-(Personally, I would place the annotation on the same line as the `player: {`, for clarity.)
+(Personally, I would place the metatag on the same line as the `player: {`, for clarity.)
 
-If no nodes appear before an annotation, it applies to the trove. A great way to begin a Humon file spec is by specifying annotations for the application version or config version for which the file is good. Maybe you're developing a code-generation suite cleverly called "hudo", and want to ensure the correct version of the engine is called to consume every model file, even older ones. Hudo could look for a version annotation on the trove, before examining any nodes, and use the appropriate engine version to interpret the structure. Here we'll reuse the `using V3 = Version<3>;` class from earlier:
+If no nodes appear before an metatag, it applies to the trove. A great way to begin a Humon file spec is by specifying metatags for the application version or config version for which the file is good. Maybe you're developing a code-generation suite cleverly called "hudo", and want to ensure the correct version of the engine is called to consume every model file, even older ones. Hudo could look for a version metatag on the trove, before examining any nodes, and use the appropriate engine version to interpret the structure. Here we'll reuse the `using V3 = Version<3>;` class from earlier:
 
     @{ app: hudo, hudo-version: 0.1.1 }
     {
@@ -890,14 +890,14 @@ If no nodes appear before an annotation, it applies to the trove. A great way to
     auto desRes = hu::Trove::fromFile("apps/readmeSrc/hudo.hu"sv);
     if (auto trove = get_if<hu::Trove>(& desRes))
     {
-uto && annos = trove->troveAnnotationsWithKey("app");
-        if (annos.size() == 0 || annos[0] != "hudo"sv)
+uto && metatags = trove->troveMetatagsWithKey("app");
+        if (metatags.size() == 0 || metatags[0] != "hudo"sv)
             { throw runtime_error("File is not a hudo file."); }
 
-nnos = trove->troveAnnotationsWithKey("hudo-version");
-f (annos.size() == 0)
-{ throw runtime_error("File has no version annotation."); }
-        auto versionString = annos[0];
+etatags = trove->troveMetatagsWithKey("hudo-version");
+f (metatags.size() == 0)
+{ throw runtime_error("File has no version metatag."); }
+        auto versionString = metatags[0];
         auto version = V3 { versionString.str() };
         if      (version < V3 { 0, 1, 0 }) { out << "Using version 0.0.x\n"; /*...*/ }
         else if (version < V3 { 0, 2, 0 }) { out << "Using version 0.1.x\n"; /*...*/ }
@@ -907,7 +907,7 @@ f (annos.size() == 0)
     $ runSample
     Using version 0.1.x
 
-Like asserted earlier, annotations are 100% open in their use. Humon doesn't use any annotation keys or values and doesn't interpret them. Applications can use them or not, but all annotations that are legal are guaranteed to be parsed, even if the application doesn't know about or use them at all. In this way you can embed metadata about objects in a Humon file, and even old versions of Humon apps will correctly read (and ignore) them, because all official versions of Humon always have.
+Like asserted earlier, metatags are 100% open in their use. Humon doesn't use any metatag keys or values and doesn't interpret them. Applications can use them or not, but all metatags that are legal are guaranteed to be parsed, even if the application doesn't know about or use them at all. In this way you can embed metadata about objects in a Humon file, and even old versions of Humon apps will correctly read (and ignore) them, because all official versions of Humon always have.
 
 ## <a name="buildingHumon">Building Humon
 Humon's C library requires a C99 compiler to build.

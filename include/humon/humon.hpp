@@ -64,7 +64,7 @@ namespace hu
         startDict = capi::HU_TOKENKIND_STARTDICT,       ///< The opening '{' of a dict.
         endDict = capi::HU_TOKENKIND_ENDDICT,           ///< The closing '}' of a dict.
         keyValueSep = capi::HU_TOKENKIND_KEYVALUESEP,   ///< The separating ':' of a key-value pair.
-        annotate = capi::HU_TOKENKIND_ANNOTATE,         ///< The annotation mark '@'.
+        metatag = capi::HU_TOKENKIND_METATAG,           ///< The metatag mark '@'.
         word = capi::HU_TOKENKIND_WORD,                 ///< Any key or value string, quoted or unquoted.
         comment = capi::HU_TOKENKIND_COMMENT            ///< Any comment token. An entire comment is considered one token.
     };
@@ -149,15 +149,15 @@ namespace hu
         puncList = capi::HU_COLORCODE_PUNCLIST,                     ///< List punctuation style. ([,])
         puncDict = capi::HU_COLORCODE_PUNCDICT,                     ///< Dict punctuation style. ({,})
         puncKeyValueSep = capi::HU_COLORCODE_PUNCKEYVALUESEP,       ///< Key-value separator style. (:)
-        puncAnnotate = capi::HU_COLORCODE_PUNCANNOTATE,             ///< Annotation mark style. (@)
-        puncAnnotateDict = capi::HU_COLORCODE_PUNCANNOTATEDICT,     ///< Annotation dict punctuation style. ({,})
-        puncAnnotateKeyValueSep =
-            capi::HU_COLORCODE_PUNCANNOTATEKEYVALUESEP,             ///< Annotation key-value separator style. (:)
+        puncMetatag = capi::HU_COLORCODE_PUNCMETATAG,               ///< Metatag mark style. (@)
+        puncMetatagDict = capi::HU_COLORCODE_PUNCMETATAGDICT,       ///< Metatag dict punctuation style. ({,})
+        puncMetatagKeyValueSep =
+            capi::HU_COLORCODE_PUNCMETATAGKEYVALUESEP,              ///< Metatag key-value separator style. (:)
         key = capi::HU_COLORCODE_KEY,                               ///< Key style.
         value = capi::HU_COLORCODE_VALUE,                           ///< Value style.
         comment = capi::HU_COLORCODE_COMMENT,                       ///< Comment style.
-        annoKey = capi::HU_COLORCODE_ANNOKEY,                       ///< Annotation key style.
-        annoValue = capi::HU_COLORCODE_ANNOVALUE,                   ///< Annotation value style.
+        metatagKey = capi::HU_COLORCODE_METATAGKEY,                       ///< Metatag key style.
+        metatagValue = capi::HU_COLORCODE_METATAGVALUE,                   ///< Metatag value style.
         whitespace = capi::HU_COLORCODE_WHITESPACE,                 ///< Whitespace style (including commas).
 
         numColors = capi::HU_COLORCODE_NUMCOLORS                    ///< One past the last style code.
@@ -442,7 +442,7 @@ namespace hu
     /** Humon nodes make up a hierarchical structure, stemming from a single root node.
      * Humon troves contain a reference to the root, and store all nodes in an indexable
      * array. A node is either a list, a dict, or a value node. Any number of comments
-     * and annotations can be associated to a node. */
+     * and metatags can be associated to a node. */
     class Node
     {
     public:
@@ -470,13 +470,13 @@ namespace hu
         NodeKind kind() const              ///< Returns the kind of node this is.
             { check(); return isValid() ? static_cast<NodeKind>(huGetNodeKind(cnode))
                                         : static_cast<NodeKind>(capi::HU_NODEKIND_NULL); }
-        Token firstToken() const           ///< Returns the first token which contributes to this node, including any annotation and comment tokens.
+        Token firstToken() const           ///< Returns the first token which contributes to this node, including any metatag and comment tokens.
             { check(); return Token(isValid() ? huGetFirstToken(cnode) : HU_NULLTOKEN); }
         Token firstValueToken() const      ///< Returns the first token of this node's actual value; for a container, it points to the opening brac(e|ket).
             { check(); return Token(isValid() ? huGetValueToken(cnode) : HU_NULLTOKEN); }
         Token lastValueToken() const       ///< Returns the last token of this node's actual value; for a container, it points to the closing brac(e|ket).
             { check(); return Token(isValid() ? huGetLastValueToken(cnode) : HU_NULLTOKEN); }
-        Token lastToken() const            ///< Returns the last token of this node, including any annotation and comment tokens.
+        Token lastToken() const            ///< Returns the last token of this node, including any metatag and comment tokens.
             { check(); return Token(isValid() ? huGetLastToken(cnode) : HU_NULLTOKEN); }
         Node parent() const                ///< Returns the parent node of this node, or the null node if this is the root.
             { check(); return Node(capi::huGetParent(cnode)); }
@@ -548,52 +548,52 @@ namespace hu
             { check(); return Token(isValid() ? huGetKeyToken(cnode) : HU_NULLTOKEN); }
         Token value() const                ///< Returns the first value token that encodes this node.
             { check(); return Token(isValid() ? huGetValueToken(cnode) : HU_NULLTOKEN); }
-        hu::size_t numAnnotations() const         ///< Returns the number of annotations associated to this node.
-            { check(); return capi::huGetNumAnnotations(cnode); }
+        hu::size_t numMetatags() const         ///< Returns the number of metatags associated to this node.
+            { check(); return capi::huGetNumMetatags(cnode); }
 
-        /// Returns the `idx`th annotation.
-        /** Returns a <Token, Token> referencing the key and value of the annotation
+        /// Returns the `idx`th metatag.
+        /** Returns a <Token, Token> referencing the key and value of the metatag
          * accessed by index. */
-        std::tuple<Token, Token> annotation(hu::size_t idx) const
+        std::tuple<Token, Token> metatag(hu::size_t idx) const
         {
             check();
-            auto canno = capi::huGetAnnotation(cnode, idx);
-            if (canno == nullptr)
+            auto cmetatag = capi::huGetMetatag(cnode, idx);
+            if (cmetatag == nullptr)
                 return { Token(HU_NULLTOKEN), Token(HU_NULLTOKEN) };
-            return { Token(canno->key), Token(canno->value) };
+            return { Token(cmetatag->key), Token(cmetatag->value) };
         }
 
-        /// Returns a new collection of all this node's annotations.
+        /// Returns a new collection of all this node's metatags.
         /** Creates a new vector of <Token, Token> tuples, each referencing the
-         * key and value of an annotation. */
-        [[nodiscard]] std::vector<std::tuple<Token, Token>> allAnnotations() const
+         * key and value of an metatag. */
+        [[nodiscard]] std::vector<std::tuple<Token, Token>> allMetatags() const
         {
             check();
             std::vector<std::tuple<Token, Token>> vec;
-            hu::size_t numAnnos = numAnnotations();
+            hu::size_t numAnnos = numMetatags();
             vec.reserve(numAnnos);
             for (hu::size_t i = 0; i < numAnnos; ++i)
-                { vec.push_back(annotation(i)); }
+                { vec.push_back(metatag(i)); }
             return vec;
         }
 
-        /// Returns the number of annotations associated to this node, with the specified key.
-        /** A node can have multiple annotations with the same key. This is legal in Humon, but
-         * rare. This function returns the number of annotations associated to this node with
+        /// Returns the number of metatags associated to this node, with the specified key.
+        /** A node can have multiple metatags with the same key. This is legal in Humon, but
+         * rare. This function returns the number of metatags associated to this node with
          * the specified key. */
-		hu::size_t numAnnotationsWithKey(std::string_view key) const
+		hu::size_t numMetatagsWithKey(std::string_view key) const
         {
             check();
             std::size_t sz = key.size();
             if (! validateSize(sz))
                 { return 0; }
-            return capi::huGetNumAnnotationsWithKeyN(cnode, key.data(), static_cast<hu::size_t>(sz));
+            return capi::huGetNumMetatagsWithKeyN(cnode, key.data(), static_cast<hu::size_t>(sz));
         }
 
-        /// Returns a new collection of all this node's annotations with the specified key.
-        /** Creates a new vector of Tokens, each referencing the key of an annotation that
+        /// Returns a new collection of all this node's metatags with the specified key.
+        /** Creates a new vector of Tokens, each referencing the key of an metatag that
          * has the specified key. */
-        [[nodiscard]] std::vector<Token> annotationsWithKey(std::string_view key) const
+        [[nodiscard]] std::vector<Token> metatagsWithKey(std::string_view key) const
         {
             check();
             std::vector<Token> vec;
@@ -605,7 +605,7 @@ namespace hu
             capi::huToken const * tok = HU_NULLTOKEN;
             do
             {
-                tok = capi::huGetAnnotationWithKeyN(cnode, key.data(), static_cast<hu::size_t>(sz), & cursor);
+                tok = capi::huGetMetatagWithKeyN(cnode, key.data(), static_cast<hu::size_t>(sz), & cursor);
                 if (tok)
                     { vec.push_back(tok); }
             } while (tok != HU_NULLTOKEN);
@@ -613,23 +613,23 @@ namespace hu
             return vec;
         }
 
-        /// Returns the number of annotations associated to this node, with the specified key.
-        /** A node can have multiple annotations, each with different keys which have the same
-         * value. This function returns the number of annotations associated to this node with
+        /// Returns the number of metatags associated to this node, with the specified key.
+        /** A node can have multiple metatags, each with different keys which have the same
+         * value. This function returns the number of metatags associated to this node with
          * the specified value. */
-        hu::size_t numAnnotationsWithValue(std::string_view value) const
+        hu::size_t numMetatagsWithValue(std::string_view value) const
         {
             check();
             std::size_t sz = value.size();
             if (! validateSize(sz))
                 { return 0; }
-            return capi::huGetNumAnnotationsWithValueN(cnode, value.data(), static_cast<hu::size_t>(sz));
+            return capi::huGetNumMetatagsWithValueN(cnode, value.data(), static_cast<hu::size_t>(sz));
         }
 
-        /// Returns a new collection of all this node's annotations with the specified value.
-        /** Creates a new vector of Tokens, each referencing the key of an annotation that
+        /// Returns a new collection of all this node's metatags with the specified value.
+        /** Creates a new vector of Tokens, each referencing the key of an metatag that
          * has the specified value. */
-        [[nodiscard]] std::vector<Token> annotationsWithValue(std::string_view value) const
+        [[nodiscard]] std::vector<Token> metatagsWithValue(std::string_view value) const
         {
             check();
             std::vector<Token> vec;
@@ -641,7 +641,7 @@ namespace hu
             capi::huToken const * tok = HU_NULLTOKEN;
             do
             {
-                tok = capi::huGetAnnotationWithValueN(cnode, value.data(), static_cast<hu::size_t>(sz), & cursor);
+                tok = capi::huGetMetatagWithValueN(cnode, value.data(), static_cast<hu::size_t>(sz), & cursor);
                 if (tok)
                     { vec.push_back(tok); }
             } while (tok != HU_NULLTOKEN);
@@ -796,7 +796,7 @@ namespace hu
 
         /// Returns the entire text contained by this node and all its children.
         /** The entire text of this node is returned, including all its children's
-         * texts, and any comments and annotations associated to this node. */
+         * texts, and any comments and metatags associated to this node. */
         std::string_view sourceText() const
         {
             check();
@@ -980,7 +980,7 @@ namespace hu
     /// Encodes a Humon trove.
     /** A trove contains all the tokens and nodes that make up a Humon text. You can
      * gain access to nodes in the hierarchy, and search for nodes with certain
-     * annotations or comment content. */
+     * metatags or comment content. */
     class Trove
     {
     public:
@@ -1212,42 +1212,42 @@ namespace hu
             return vec;
         }
 
-        /// Returns the number of annotations associated to this trove (not to any node).
-        hu::size_t numTroveAnnotations() const
-            { return capi::huGetNumTroveAnnotations(ctrove); }
+        /// Returns the number of metatags associated to this trove (not to any node).
+        hu::size_t numTroveMetatags() const
+            { return capi::huGetNumTroveMetatags(ctrove); }
 
-        /// Returns the `idx`th annotation associated to this trove (not to any node).
-        std::tuple<Token, Token> troveAnnotation(hu::size_t idx) const
+        /// Returns the `idx`th metatag associated to this trove (not to any node).
+        std::tuple<Token, Token> troveMetatag(hu::size_t idx) const
         {
-            auto canno = capi::huGetTroveAnnotation(ctrove, idx);
-            return { Token(canno->key), Token(canno->value) };
+            auto cmetatag = capi::huGetTroveMetatag(ctrove, idx);
+            return { Token(cmetatag->key), Token(cmetatag->value) };
         }
 
-        /// Returns a new collection of all annotations associated to this trove (not to any node).
-        [[nodiscard]] std::vector<std::tuple<Token, Token>> troveAnnotations() const
+        /// Returns a new collection of all metatags associated to this trove (not to any node).
+        [[nodiscard]] std::vector<std::tuple<Token, Token>> troveMetatags() const
         {
             std::vector<std::tuple<Token, Token>> vec;
-            auto numAnnos = numTroveAnnotations();
+            auto numAnnos = numTroveMetatags();
             vec.reserve(numAnnos);
             for (hu::size_t i = 0; i < numAnnos; ++i)
-                { vec.push_back(troveAnnotation(i)); }
+                { vec.push_back(troveMetatag(i)); }
             return vec;
         }
 
-        /// Return the number of trove annotations associated to this trove (not to any node) with
+        /// Return the number of trove metatags associated to this trove (not to any node) with
         /// the specified key.
-        hu::size_t numTroveAnnotationsWithKey(std::string_view key) const
+        hu::size_t numTroveMetatagsWithKey(std::string_view key) const
         {
             std::size_t sz = key.size();
             if (! validateSize(sz))
                 { return 0; }
-            return capi::huGetNumTroveAnnotationsWithKeyN(
+            return capi::huGetNumTroveMetatagsWithKeyN(
                 ctrove, key.data(), static_cast<hu::size_t>(sz));
         }
 
-        /// Returns a new collection of all the keys of annotations associated to this trove (not
+        /// Returns a new collection of all the keys of metatags associated to this trove (not
         /// to any node) with the specified key.
-        [[nodiscard]] std::vector<Token> troveAnnotationsWithKey(std::string_view key) const
+        [[nodiscard]] std::vector<Token> troveMetatagsWithKey(std::string_view key) const
         {
             check();
             std::vector<Token> vec;
@@ -1260,7 +1260,7 @@ namespace hu
             capi::huToken const * tok = HU_NULLTOKEN;
             do
             {
-                tok = capi::huGetTroveAnnotationWithKeyN(
+                tok = capi::huGetTroveMetatagWithKeyN(
                     ctrove, key.data(), static_cast<hu::size_t>(sz), & cursor);
                 if (tok)
                     { vec.push_back(tok); }
@@ -1269,20 +1269,20 @@ namespace hu
             return vec;
         }
 
-        /// Return the number of trove annotations associated to this trove (not to any node) with
+        /// Return the number of trove metatags associated to this trove (not to any node) with
         /// the specified value.
-        hu::size_t numTroveAnnotationsWithValue(std::string_view value) const
+        hu::size_t numTroveMetatagsWithValue(std::string_view value) const
         {
             std::size_t sz = value.size();
             if (! validateSize(sz))
                 { return 0; }
-            return capi::huGetNumTroveAnnotationsWithValueN(
+            return capi::huGetNumTroveMetatagsWithValueN(
                 ctrove, value.data(), static_cast<hu::size_t>(sz));
         }
 
-        /// Returns a new collection of all the keys of annotations associated to this trove (not
+        /// Returns a new collection of all the keys of metatags associated to this trove (not
         /// to any node) with the specified value.
-        [[nodiscard]] std::vector<Token> troveAnnotationsWithValue(std::string_view value) const
+        [[nodiscard]] std::vector<Token> troveMetatagsWithValue(std::string_view value) const
         {
             check();
             std::vector<Token> vec;
@@ -1295,7 +1295,7 @@ namespace hu
             capi::huToken const * tok = HU_NULLTOKEN;
             do
             {
-                tok = capi::huGetTroveAnnotationWithValueN(
+                tok = capi::huGetTroveMetatagWithValueN(
                     ctrove, value.data(), static_cast<hu::size_t>(sz), & cursor);
                 if (tok)
                     { vec.push_back(tok); }
@@ -1326,9 +1326,9 @@ namespace hu
             return vec;
         }
 
-        /// Returns a new collection of all nodes that are associated an annotation with
+        /// Returns a new collection of all nodes that are associated an metatag with
         /// the specified key.
-        [[nodiscard]] std::vector<Node> findNodesWithAnnotationKey(std::string_view key) const
+        [[nodiscard]] std::vector<Node> findNodesWithMetatagKey(std::string_view key) const
         {
             std::vector<Node> vec;
 
@@ -1340,7 +1340,7 @@ namespace hu
             capi::huNode const * node = HU_NULLNODE;
             do
             {
-                node = capi::huFindNodesWithAnnotationKeyN(
+                node = capi::huFindNodesWithMetatagKeyN(
                     ctrove, key.data(), static_cast<hu::size_t>(sz), & cursor);
                 if (node)
                     { vec.emplace_back(node); }
@@ -1348,9 +1348,9 @@ namespace hu
             return vec;
         }
 
-        /// Returns a new collection of all nodes that are associated an annotation with
+        /// Returns a new collection of all nodes that are associated an metatag with
         /// the specified value.
-        [[nodiscard]] std::vector<Node> findNodesWithAnnotationValue(std::string_view value) const
+        [[nodiscard]] std::vector<Node> findNodesWithMetatagValue(std::string_view value) const
         {
             std::vector<Node> vec;
 
@@ -1362,7 +1362,7 @@ namespace hu
             capi::huNode const * node = HU_NULLNODE;
             do
             {
-                node = capi::huFindNodesWithAnnotationValueN(
+                node = capi::huFindNodesWithMetatagValueN(
                     ctrove, value.data(), static_cast<hu::size_t>(sz), & cursor);
                 if (node)
                     { vec.emplace_back(node); }
@@ -1370,9 +1370,9 @@ namespace hu
             return vec;
         }
 
-        /// Returns a new collection of all nodes that are associated an annotation with
+        /// Returns a new collection of all nodes that are associated an metatag with
         /// the specified key and value.
-        [[nodiscard]] std::vector<Node> findNodesWithAnnotationKeyValue(std::string_view key, std::string_view value) const
+        [[nodiscard]] std::vector<Node> findNodesWithMetatagKeyValue(std::string_view key, std::string_view value) const
         {
             std::vector<Node> vec;
 
@@ -1388,7 +1388,7 @@ namespace hu
             capi::huNode const * node = HU_NULLNODE;
             do
             {
-                node = capi::huFindNodesWithAnnotationKeyValueNN(
+                node = capi::huFindNodesWithMetatagKeyValueNN(
                     ctrove, key.data(), static_cast<hu::size_t>(szk),
                     value.data(), static_cast<hu::size_t>(szv), & cursor);
                 if (node)
@@ -1419,7 +1419,7 @@ namespace hu
             return vec;
         }
 
-        /// Returns the entire source text of a trove (its text), including all nodes and all comments and annotations.
+        /// Returns the entire source text of a trove (its text), including all nodes and all comments and metatags.
         /** This function returns the stored text as a view. It does not allocate or copy memory,
          * and cannot format the string.*/
         std::string_view soureText() const

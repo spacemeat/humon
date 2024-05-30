@@ -324,7 +324,7 @@ int main(int argc, char ** argv)
 
     {
         auto src = R"(
-//!!! anno1
+//!!! metatag1
 {
     definitions: { 
         player: {
@@ -342,36 +342,36 @@ int main(int argc, char ** argv)
 )"sv;
 
         auto trove = move(get<hu::Trove>(hu::Trove::fromString(src)));
-//!!! anno2
+//!!! metatag2
         auto node = trove.nodeByAddress("/definitions/player/maxHp/type");
 
-        int numAnnos = node.numAnnotations();               /*!!!eol*/out << "num annos: " << numAnnos << "\n";
-        for (int i = 0; i < numAnnos; ++i)
+        int numMetatags = node.numMetatags();               /*!!!eol*/out << "num metatags: " << numMetatags << "\n";
+        for (int i = 0; i < numMetatags; ++i)
         {
-            auto [k, v] = node.annotation(i);               /*!!!eol*/out << "k: " << k << "  v: " << v << "\n";
+            auto [k, v] = node.metatag(i);               /*!!!eol*/out << "k: " << k << "  v: " << v << "\n";
             if (k == "numBits"sv) { /*...*/ }
             else if (k == "numBytes"sv) { /*...*/ }
         }
-        // or (slower; hu::Node::allAnnotations() allocates a std::vector):
-        for (auto [k, v] : node.allAnnotations())
+        // or (slower; hu::Node::allMetatags() allocates a std::vector):
+        for (auto [k, v] : node.allMetatags())
         {                                                   /*!!!eol*/out << "k: " << k << "  v: " << v << "\n";
             if (k == "numBits"sv) { /*...*/ }
             else if (k == "numBytes"sv) { /*...*/ }
         }
 
-        int numBits = node.numAnnotationsWithKey("numBits"sv);  // verify annotation by key
+        int numBits = node.numMetatagsWithKey("numBits"sv);  // verify metatag by key
                                                             /*!!!eol*/out << "numBits: " << numBits << "\n";
-        auto && annoValue = node.annotationsWithKey("numBits"sv);      // get annotation by key
-                                                            /*!!!eol*/out << "annoValue: " << annoValue[0] << "\n";
-        // many annotations in a single node might have the same value; run through them all
-        for (auto & annoKey: node.annotationsWithValue("32"sv))
+        auto && metatagValue = node.metatagsWithKey("numBits"sv);      // get metatag by key
+                                                            /*!!!eol*/out << "metatagValue: " << metatagValue[0] << "\n";
+        // many metatags in a single node might have the same value; run through them all
+        for (auto & metatagKey: node.metatagsWithValue("32"sv))
         {
             //...
 //!!!                                                            
-                                                            /*!!!eol*/out << "annoKey: " << annoKey << "\n";
+                                                            /*!!!eol*/out << "metatagKey: " << metatagKey << "\n";
         }
-//!!! anno3
-        auto all32BitTypeNodes = trove.findNodesWithAnnotationKeyValue("numBits"sv, "32"sv);
+//!!! metatag3
+        auto all32BitTypeNodes = trove.findNodesWithMetatagKeyValue("numBits"sv, "32"sv);
         for (auto & node : all32BitTypeNodes)
         {
             //...
@@ -413,14 +413,14 @@ int main(int argc, char ** argv)
         auto desRes = hu::Trove::fromFile("apps/readmeSrc/hudo.hu"sv);
         if (auto trove = get_if<hu::Trove>(& desRes))
         {
-			auto && annos = trove->troveAnnotationsWithKey("app");
-            if (annos.size() == 0 || annos[0] != "hudo"sv)
+			auto && metatags = trove->troveMetatagsWithKey("app");
+            if (metatags.size() == 0 || metatags[0] != "hudo"sv)
                 { throw runtime_error("File is not a hudo file."); }
 
-			annos = trove->troveAnnotationsWithKey("hudo-version");
-			if (annos.size() == 0)
-				{ throw runtime_error("File has no version annotation."); }
-            auto versionString = annos[0];
+			metatags = trove->troveMetatagsWithKey("hudo-version");
+			if (metatags.size() == 0)
+				{ throw runtime_error("File has no version metatag."); }
+            auto versionString = metatags[0];
             auto version = V3 { versionString.str() };
             if      (version < V3 { 0, 1, 0 }) { out << "Using version 0.0.x\n"; /*...*/ }
             else if (version < V3 { 0, 2, 0 }) { out << "Using version 0.1.x\n"; /*...*/ }

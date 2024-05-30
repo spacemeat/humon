@@ -1,11 +1,9 @@
 DONE THIS CHECKIN:
-P1 Replace "token stream" -- that's a terrible descriptor for "text".
-P1 Consider renaming "heredoc".
+P1 Consider renaming "annotations" to "metatags".
 
 TODO:
 P1 Put version number in windows bins
 P1 Consider \0 in text.
-P1 Consider renaming "annotations" to "tags".
 P1 Better C++ interfaces -- specifically, the return variant is painful.
 P1 write to any UTF mode
 P1 line/column tracking disablement

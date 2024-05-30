@@ -97,7 +97,7 @@ extern "C"
         HU_TOKENKIND_STARTDICT,     ///< The opening '{' of a dict.
         HU_TOKENKIND_ENDDICT,       ///< The closing '}' of a dict.
         HU_TOKENKIND_KEYVALUESEP,   ///< The separating ':' of a key-value pair.
-        HU_TOKENKIND_ANNOTATE,      ///< The annotation mark '@'.
+        HU_TOKENKIND_METATAG,      ///< The metatag mark '@'.
         HU_TOKENKIND_WORD,          ///< Any key or value string, quoted or unquoted.
         HU_TOKENKIND_COMMENT        ///< Any comment token. An entire comment is considered one token.
     } huTokenKind;
@@ -169,14 +169,14 @@ extern "C"
         HU_COLORCODE_PUNCLIST,                  ///< List punctuation style. ([,])
         HU_COLORCODE_PUNCDICT,                  ///< Dict punctuation style. ({,})
         HU_COLORCODE_PUNCKEYVALUESEP,           ///< Key-value separator style. (:)
-        HU_COLORCODE_PUNCANNOTATE,              ///< Annotation mark style. (@)
-        HU_COLORCODE_PUNCANNOTATEDICT,          ///< Annotation dict punctuation style. ({,})
-        HU_COLORCODE_PUNCANNOTATEKEYVALUESEP,   ///< Annotation key-value separator style. (:)
+        HU_COLORCODE_PUNCMETATAG,               ///< Metatag mark style. (@)
+        HU_COLORCODE_PUNCMETATAGDICT,           ///< Metatag dict punctuation style. ({,})
+        HU_COLORCODE_PUNCMETATAGKEYVALUESEP,    ///< Metatag key-value separator style. (:)
         HU_COLORCODE_KEY,                       ///< Key style.
         HU_COLORCODE_VALUE,                     ///< Value style.
         HU_COLORCODE_COMMENT,                   ///< Comment style.
-        HU_COLORCODE_ANNOKEY,                   ///< Annotation key style.
-        HU_COLORCODE_ANNOVALUE,                 ///< Annotation value style.
+        HU_COLORCODE_METATAGKEY,                ///< Metatag key style.
+        HU_COLORCODE_METATAGVALUE,              ///< Metatag value style.
         HU_COLORCODE_WHITESPACE,                ///< Whitespace style (including commas).
         HU_COLORCODE_NUMCOLORS                  ///< One past the last.
     } huColorCode;
@@ -261,14 +261,14 @@ extern "C"
 	/// Gets the ending column number of a token.
 	HUMON_PUBLIC huCol_t huGetEndColumn(huToken const * token);
 
-    /// Encodes an annotation entry for a node or trove.
-    /** Nodes and troves can have a plurality of annotations. They are always key-value string
-     * pairs, which are referenced by huAnnotation objets. */
-    typedef struct huAnnotation_tag
+    /// Encodes a metatag entry for a node or trove.
+    /** Nodes and troves can have a plurality of metatags. They are always key-value string
+     * pairs, which are referenced by huMetatag objets. */
+    typedef struct huMetatag_tag
     {
-        huToken const * key;    ///< The annotation key token.
-        huToken const * value;  ///< The annotation value token.
-    } huAnnotation;
+        huToken const * key;    ///< The metatag key token.
+        huToken const * value;  ///< The metatag value token.
+    } huMetatag;
 
     struct huNode_tag;
 
@@ -339,7 +339,7 @@ extern "C"
     /** Humon nodes make up a hierarchical structure, stemming from a single root node.
      * Humon troves contain a reference to the root, and store all nodes in an indexable
      * array. A node is either a list, a dict, or a value node. Any number of comments
-     * and annotations can be associated to a node. */
+     * and metatags can be associated to a node. */
     typedef struct huNode_tag huNode;
 
 	/// Gets the kind of a node.
@@ -414,45 +414,45 @@ extern "C"
     /// Returns the value token for this node.
 	HUMON_PUBLIC huToken const * huGetValue(huNode const * node);
 
-    /// Returns the entire nested text of a node, including child nodes and associated comments and annotations.
+    /// Returns the entire nested text of a node, including child nodes and associated comments and metatags.
 	HUMON_PUBLIC huStringView huGetSourceText(huNode const * node);
 
-    /// Returns the number of annotations associated to a node.
-	HUMON_PUBLIC huSize_t huGetNumAnnotations(huNode const * node);
-    /// Returns an annotation object associated to a node, by index.
-	HUMON_PUBLIC huAnnotation const * huGetAnnotation(huNode const * node, huSize_t annotationIdx);
+    /// Returns the number of metatags associated to a node.
+	HUMON_PUBLIC huSize_t huGetNumMetatags(huNode const * node);
+    /// Returns a metatag object associated to a node, by index.
+	HUMON_PUBLIC huMetatag const * huGetMetatag(huNode const * node, huSize_t metatagIdx);
 
-    /// Returns the number of annotations associated to a node with a specific value.
-	HUMON_PUBLIC huSize_t huGetNumAnnotationsWithKeyZ(huNode const * node, char const * key);
-    /// Returns the number of annotations associated to a node with a specific value.
-	HUMON_PUBLIC huSize_t huGetNumAnnotationsWithKeyN(huNode const * node, char const * key,
+    /// Returns the number of metatags associated to a node with a specific value.
+	HUMON_PUBLIC huSize_t huGetNumMetatagsWithKeyZ(huNode const * node, char const * key);
+    /// Returns the number of metatags associated to a node with a specific value.
+	HUMON_PUBLIC huSize_t huGetNumMetatagsWithKeyN(huNode const * node, char const * key,
 		huSize_t valueLen);
 
-    /// Returns the value token of an annoation object associated to a node, with the specified key.
-	HUMON_PUBLIC huToken const * huGetAnnotationWithKeyZ(huNode const * node, char const * key,
+    /// Returns the value token of a metatag object associated to a node, with the specified key.
+	HUMON_PUBLIC huToken const * huGetMetatagWithKeyZ(huNode const * node, char const * key,
 		huSize_t * cursor);
-    /// Returns the value token of an annoation object associated to a node, with the specified key.
-	HUMON_PUBLIC huToken const * huGetAnnotationWithKeyN(huNode const * node, char const * key,
+    /// Returns the value token of a metatag object associated to a node, with the specified key.
+	HUMON_PUBLIC huToken const * huGetMetatagWithKeyN(huNode const * node, char const * key,
 		huSize_t keyLen, huSize_t * cursor);
 
-    /// Returns the number of annotations associated to a node with a specific value.
-	HUMON_PUBLIC huSize_t huGetNumAnnotationsWithValueZ(huNode const * node, char const * value);
-    /// Returns the number of annotations associated to a node with a specific value.
-	HUMON_PUBLIC huSize_t huGetNumAnnotationsWithValueN(huNode const * node, char const * value,
+    /// Returns the number of metatags associated to a node with a specific value.
+	HUMON_PUBLIC huSize_t huGetNumMetatagsWithValueZ(huNode const * node, char const * value);
+    /// Returns the number of metatags associated to a node with a specific value.
+	HUMON_PUBLIC huSize_t huGetNumMetatagsWithValueN(huNode const * node, char const * value,
 		huSize_t valueLen);
-    /// Returns the key token of an annotation associated to a node, with the specified value and index.
-    /** Call this function continually to iterate over all the annotations. For `cursor`, be sure
+    /// Returns the key token of a metatag associated to a node, with the specified value and index.
+    /** Call this function continually to iterate over all the metatags. For `cursor`, be sure
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-	HUMON_PUBLIC huToken const * huGetAnnotationWithValueZ(huNode const * node, char const * value,
+	HUMON_PUBLIC huToken const * huGetMetatagWithValueZ(huNode const * node, char const * value,
 		huSize_t * cursor);
-    /// Returns the key token of an annotation associated to a node, with the specified value and index.
-    /** Call this function continually to iterate over all the annotations. For `cursor`, be sure
+    /// Returns the key token of a metatag associated to a node, with the specified value and index.
+    /** Call this function continually to iterate over all the metatags. For `cursor`, be sure
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-	HUMON_PUBLIC huToken const * huGetAnnotationWithValueN(huNode const * node, char const * value,
+	HUMON_PUBLIC huToken const * huGetMetatagWithValueN(huNode const * node, char const * value,
 		huSize_t valueLen, huSize_t * cursor);
 
     /// Returns the number of comments associated to a node.
@@ -539,51 +539,51 @@ extern "C"
     /// Returns an error from a trove by index.
 	HUMON_PUBLIC huError const * huGetError(huTrove const * trove, huSize_t errorIdx);
 
-    /// Returns the number of annotations associated to a trove.
-	HUMON_PUBLIC huSize_t huGetNumTroveAnnotations(huTrove const * trove);
-    /// Returns an annotation from a trove by index.
-	HUMON_PUBLIC huAnnotation const * huGetTroveAnnotation(huTrove const * trove,
-		huSize_t annotationIdx);
+    /// Returns the number of metatags associated to a trove.
+	HUMON_PUBLIC huSize_t huGetNumTroveMetatags(huTrove const * trove);
+    /// Returns a metatag from a trove by index.
+	HUMON_PUBLIC huMetatag const * huGetTroveMetatag(huTrove const * trove,
+		huSize_t metatagIdx);
 
-    /// Returns the number of annotations associated to a trove with a specific value.
-	HUMON_PUBLIC huSize_t huGetNumTroveAnnotationsWithKeyZ(huTrove const * trove, char const * key);
-    /// Returns the number of annotations associated to a trove with a specific value.
-	HUMON_PUBLIC huSize_t huGetNumTroveAnnotationsWithKeyN(huTrove const * trove, char const * key,
+    /// Returns the number of metatags associated to a trove with a specific value.
+	HUMON_PUBLIC huSize_t huGetNumTroveMetatagsWithKeyZ(huTrove const * trove, char const * key);
+    /// Returns the number of metatags associated to a trove with a specific value.
+	HUMON_PUBLIC huSize_t huGetNumTroveMetatagsWithKeyN(huTrove const * trove, char const * key,
 		huSize_t keyLen);
-    /// Returns an annoation value associated to a trove, by key and index.
-    /** Call this function continually to iterate over all the annotations. For `cursor`, be sure
+    /// Returns a metatag value associated to a trove, by key and index.
+    /** Call this function continually to iterate over all the metatags. For `cursor`, be sure
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-	HUMON_PUBLIC huToken const * huGetTroveAnnotationWithKeyZ(huTrove const * trove,
+	HUMON_PUBLIC huToken const * huGetTroveMetatagWithKeyZ(huTrove const * trove,
 	    char const * key, huSize_t * cursor);
-    /// Returns an annoation value associated to a trove, by key and index.
-    /** Call this function continually to iterate over all the annotations. For `cursor`, be sure
+    /// Returns a metatag value associated to a trove, by key and index.
+    /** Call this function continually to iterate over all the metatags. For `cursor`, be sure
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-	HUMON_PUBLIC huToken const * huGetTroveAnnotationWithKeyN(huTrove const * trove,
+	HUMON_PUBLIC huToken const * huGetTroveMetatagWithKeyN(huTrove const * trove,
 	    char const * key, huSize_t keyLen, huSize_t * cursor);
 
-    /// Returns the number of annotations associated to a trove with a specific value.
-	HUMON_PUBLIC huSize_t huGetNumTroveAnnotationsWithValueZ(huTrove const * trove,
+    /// Returns the number of metatags associated to a trove with a specific value.
+	HUMON_PUBLIC huSize_t huGetNumTroveMetatagsWithValueZ(huTrove const * trove,
 	    char const * value);
-    /// Returns the number of annotations associated to a trove with a specific value.
-	HUMON_PUBLIC huSize_t huGetNumTroveAnnotationsWithValueN(huTrove const * trove,
+    /// Returns the number of metatags associated to a trove with a specific value.
+	HUMON_PUBLIC huSize_t huGetNumTroveMetatagsWithValueN(huTrove const * trove,
 	    char const * value, huSize_t valueLen);
-    /// Returns an annoation key associated to a trove, by value and index.
-    /** Call this function continually to iterate over all the annotations. For `cursor`, be sure
+    /// Returns a metatag key associated to a trove, by value and index.
+    /** Call this function continually to iterate over all the metatags. For `cursor`, be sure
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-	HUMON_PUBLIC huToken const * huGetTroveAnnotationWithValueZ(huTrove const * trove,
+	HUMON_PUBLIC huToken const * huGetTroveMetatagWithValueZ(huTrove const * trove,
 		char const * value, huSize_t * cursor);
-    /// Returns an annoation key associated to a trove, by value and index.
-    /** Call this function continually to iterate over all the annotations. For `cursor`, be sure
+    /// Returns a metatag key associated to a trove, by value and index.
+    /** Call this function continually to iterate over all the metatags. For `cursor`, be sure
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-	HUMON_PUBLIC huToken const * huGetTroveAnnotationWithValueN(huTrove const * trove,
+	HUMON_PUBLIC huToken const * huGetTroveMetatagWithValueN(huTrove const * trove,
 		char const * value, huSize_t valueLen, huSize_t * cursor);
 
     /// Returns the number of comments associated to a trove.
@@ -591,61 +591,61 @@ extern "C"
     /// Returns a comment associated to a trove by index.
 	HUMON_PUBLIC huToken const * huGetTroveComment(huTrove const * trove, huSize_t commentIdx);
 
-    /// Returns a collection of all nodes in a trove with a specific annotation key.
-    /** Call this function continually to iterate over all the annotations. For `cursor`, be sure
+    /// Returns a collection of all nodes in a trove with a specific metatag key.
+    /** Call this function continually to iterate over all the metatags. For `cursor`, be sure
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-	HUMON_PUBLIC huNode const * huFindNodesWithAnnotationKeyZ(huTrove const * trove,
+	HUMON_PUBLIC huNode const * huFindNodesWithMetatagKeyZ(huTrove const * trove,
 		char const * key, huSize_t * cursor);
-    /// Returns a collection of all nodes in a trove with a specific annotation key.
-    /** Call this function continually to iterate over all the annotations. For `cursor`, be sure
+    /// Returns a collection of all nodes in a trove with a specific metatag key.
+    /** Call this function continually to iterate over all the metatags. For `cursor`, be sure
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-	HUMON_PUBLIC huNode const * huFindNodesWithAnnotationKeyN(huTrove const * trove,
+	HUMON_PUBLIC huNode const * huFindNodesWithMetatagKeyN(huTrove const * trove,
 		char const * key, huSize_t keyLen, huSize_t * cursor);
-    /// Returns a collection of all nodes in a trove with a specific annotation value.
-    /** Call this function continually to iterate over all the annotations. For `cursor`, be sure
+    /// Returns a collection of all nodes in a trove with a specific metatag value.
+    /** Call this function continually to iterate over all the metatags. For `cursor`, be sure
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-	HUMON_PUBLIC huNode const * huFindNodesWithAnnotationValueZ(huTrove const * trove,
+	HUMON_PUBLIC huNode const * huFindNodesWithMetatagValueZ(huTrove const * trove,
 		char const * value, huSize_t * cursor);
-    /// Returns a collection of all nodes in a trove with a specific annotation value.
-    /** Call this function continually to iterate over all the annotations. For `cursor`, be sure
+    /// Returns a collection of all nodes in a trove with a specific metatag value.
+    /** Call this function continually to iterate over all the metatags. For `cursor`, be sure
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-	HUMON_PUBLIC huNode const * huFindNodesWithAnnotationValueN(huTrove const * trove,
+	HUMON_PUBLIC huNode const * huFindNodesWithMetatagValueN(huTrove const * trove,
 		char const * value, huSize_t valueLen, huSize_t * cursor);
-    /// Returns a collection of all nodes in a trove with a specific annotation key and value.
-    /** Call this function continually to iterate over all the annotations. For `cursor`, be sure
+    /// Returns a collection of all nodes in a trove with a specific metatag key and value.
+    /** Call this function continually to iterate over all the metatags. For `cursor`, be sure
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-	HUMON_PUBLIC huNode const * huFindNodesWithAnnotationKeyValueZZ(huTrove const * trove,
+	HUMON_PUBLIC huNode const * huFindNodesWithMetatagKeyValueZZ(huTrove const * trove,
 		char const * key, char const * value, huSize_t * cursor);
-    /// Returns a collection of all nodes in a trove with a specific annotation key and value.
-    /** Call this function continually to iterate over all the annotations. For `cursor`, be sure
+    /// Returns a collection of all nodes in a trove with a specific metatag key and value.
+    /** Call this function continually to iterate over all the metatags. For `cursor`, be sure
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-	HUMON_PUBLIC huNode const * huFindNodesWithAnnotationKeyValueNZ(huTrove const * trove,
+	HUMON_PUBLIC huNode const * huFindNodesWithMetatagKeyValueNZ(huTrove const * trove,
 		char const * key, huSize_t keyLen, char const * value, huSize_t * cursor);
-    /// Returns a collection of all nodes in a trove with a specific annotation key and value.
-    /** Call this function continually to iterate over all the annotations. For `cursor`, be sure
+    /// Returns a collection of all nodes in a trove with a specific metatag key and value.
+    /** Call this function continually to iterate over all the metatags. For `cursor`, be sure
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-	HUMON_PUBLIC huNode const * huFindNodesWithAnnotationKeyValueZN(huTrove const * trove,
+	HUMON_PUBLIC huNode const * huFindNodesWithMetatagKeyValueZN(huTrove const * trove,
 		char const * key, char const * value, huSize_t valueLen, huSize_t * cursor);
-    /// Returns a collection of all nodes in a trove with a specific annotation key and value.
-    /** Call this function continually to iterate over all the annotations. For `cursor`, be sure
+    /// Returns a collection of all nodes in a trove with a specific metatag key and value.
+    /** Call this function continually to iterate over all the metatags. For `cursor`, be sure
      * to pass the address of an integer whose value is 0 for the first call; subsequent calls
      * must use the same integer for `cursor`; the value is otherwise opaque, and has no meaning
      * to the caller.*/
-	HUMON_PUBLIC huNode const * huFindNodesWithAnnotationKeyValueNN(huTrove const * trove,
+	HUMON_PUBLIC huNode const * huFindNodesWithMetatagKeyValueNN(huTrove const * trove,
 		char const * key, huSize_t keyLen, char const * value, huSize_t valueLen,
 		huSize_t * cursor);
     /// Returns a collection of all nodes in a trove with a comment which contains specific text.
@@ -663,7 +663,7 @@ extern "C"
 	HUMON_PUBLIC huNode const * huFindNodesByCommentContainingN(huTrove const * trove,
 		char const * containedText, huSize_t containedTextLen, huSize_t * cursor);
 
-    /// Returns the entire source text of a trove, including all nodes and all comments and annotations.
+    /// Returns the entire source text of a trove, including all nodes and all comments and metatags.
     /** This function returns the stored text as a view. It does not allocate or copy memory,
      * and cannot format the string.*/
 	HUMON_PUBLIC huStringView huGetTroveSourceText(huTrove const * trove);

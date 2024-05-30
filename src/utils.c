@@ -110,7 +110,7 @@ char const * huTokenKindToString(huTokenKind rhs)
     case HU_TOKENKIND_STARTDICT: return "startDict";
     case HU_TOKENKIND_ENDDICT: return "endDict";
     case HU_TOKENKIND_KEYVALUESEP: return "keyValueSep";
-    case HU_TOKENKIND_ANNOTATE: return "annotate";
+    case HU_TOKENKIND_METATAG: return "metatag";
     case HU_TOKENKIND_WORD: return "word";
     case HU_TOKENKIND_COMMENT: return "comment";
     default: return "!!unknown!!";

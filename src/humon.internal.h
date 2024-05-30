@@ -223,24 +223,24 @@ extern "C"
     /** Humon nodes make up a hierarchical structure, stemming from a single root node.
      * Humon troves contain a reference to the root, and store all nodes in an indexable
      * array. A node is either a list, a dict, or a value node. Any number of comments
-     * and annotations can be associated to a node. */
+     * and metatags can be associated to a node. */
     struct huNode_tag
     {
         struct huTrove_tag const * trove;   ///< The trove tracking this node.
         huSize_t nodeIdx;                   ///< The index of this node in its trove's tracking array.
         huNodeKind kind;                  ///< A huNodeKind value.
-        huToken const * firstToken;         ///< The first token which contributes to this node, including any annotation and comment tokens.
+        huToken const * firstToken;         ///< The first token which contributes to this node, including any metatag and comment tokens.
         huToken const * keyToken;           ///< The key token if the node is inside a dict.
 		huSize_t sharedKeyIdx;				///< The index of the node with the same key as other nodes, if inside a dict.
         huToken const * valueToken;         ///< The first token of this node's actual value; for a container, it points to the opening brac(e|ket).
         huToken const * lastValueToken;     ///< The last token of this node's actual value; for a container, it points to the closing brac(e|ket).
-        huToken const * lastToken;          ///< The last token of this node, including any annotation and comment tokens.
+        huToken const * lastToken;          ///< The last token of this node, including any metatag and comment tokens.
 
         huSize_t parentNodeIdx;             ///< The parent node's index, or -1 if this node is the root.
         huSize_t childOrdinal;              ///< The index of this node vis a vis its sibling nodes (starting at 0).
 
         huVector childNodeIdxs;             ///< Manages a huSize_t []. Stores the node inexes of each child node, if this node is a collection.
-        huVector annotations;               ///< Manages a huAnnotation []. Stores the annotations associated to this node.
+        huVector metatags;               ///< Manages a huMetatag []. Stores the metatags associated to this node.
         huVector comments;                  ///< Manages a huComment []. Stores the comments associated to this node.
     };
 
@@ -259,9 +259,9 @@ extern "C"
         huVector errors;                            ///< Manages a huError []. This is an array of errors encountered during load.
         huErrorResponse errorResponse;                 ///< How the trove respones to errors during load.
 		huCol_t inputTabSize;			            ///< The tab length Humon uses to compute column values for tokens.
-        huVector annotations;                       ///< Manages a huAnnotation []. Contains the annotations associated to the trove.
+        huVector metatags;                       ///< Manages a huMetatag []. Contains the metatags associated to the trove.
         huVector comments;                          ///< Manages a huComment[]. Contains the comments associated to the trove.
-        huToken const * lastAnnoToken;              ///< Token referencing the last token of any trove annotations.
+        huToken const * lastMetatagToken;              ///< Token referencing the last token of any trove metatags.
         huBufferManagement bufferManagement;              ///< How to manage the input buffer. (One of huBufferManagement.)
     };
 

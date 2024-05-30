@@ -8,12 +8,12 @@ typedef enum parseState_tag
     PS_IN_DICT_EXPECT_KEY_OR_END,
     PS_IN_DICT_EXPECT_KVS,
     PS_IN_DICT_EXPECT_START_OR_VALUE,
-    PS_IN_ANNO_EXPECT_DICTSTART_OR_KEY,
-    PS_IN_ANNO_EXPECT_KVS,
-    PS_IN_ANNO_EXPECT_VALUE,
-    PS_IN_ANNODICT_EXPECT_KEY_OR_END,
-    PS_IN_ANNODICT_EXPECT_KVS,
-    PS_IN_ANNODICT_EXPECT_VALUE,
+    PS_IN_METATAG_EXPECT_DICTSTART_OR_KEY,
+    PS_IN_METATAG_EXPECT_KVS,
+    PS_IN_METATAG_EXPECT_VALUE,
+    PS_IN_METATAGDICT_EXPECT_KEY_OR_END,
+    PS_IN_METATAGDICT_EXPECT_KVS,
+    PS_IN_METATAGDICT_EXPECT_VALUE,
     PS_DONE
 } parseState;
 
@@ -27,12 +27,12 @@ char const * parseStateToString(parseState rhs)
     case PS_IN_DICT_EXPECT_KEY_OR_END: return "inDict-keyOrEnd";
     case PS_IN_DICT_EXPECT_KVS: return "inDict-kvs";
     case PS_IN_DICT_EXPECT_START_OR_VALUE: return "startDict-startOrValue";
-    case PS_IN_ANNO_EXPECT_DICTSTART_OR_KEY: return "anno-dictStartOrKey";
-    case PS_IN_ANNO_EXPECT_KVS: return "anno-key";
-    case PS_IN_ANNO_EXPECT_VALUE: return "anno-value";
-    case PS_IN_ANNODICT_EXPECT_KEY_OR_END: return "annoDict-keyOrEnd";
-    case PS_IN_ANNODICT_EXPECT_KVS: return "annoDict-kvs";
-    case PS_IN_ANNODICT_EXPECT_VALUE: return "annoDict-value";
+    case PS_IN_METATAG_EXPECT_DICTSTART_OR_KEY: return "metatag-dictStartOrKey";
+    case PS_IN_METATAG_EXPECT_KVS: return "metatag-key";
+    case PS_IN_METATAG_EXPECT_VALUE: return "metatag-value";
+    case PS_IN_METATAGDICT_EXPECT_KEY_OR_END: return "metatagDict-keyOrEnd";
+    case PS_IN_METATAGDICT_EXPECT_KVS: return "metatagDict-kvs";
+    case PS_IN_METATAGDICT_EXPECT_VALUE: return "metatagDict-value";
     default: return "!!unknown!!";
     }
 }
@@ -42,8 +42,8 @@ void ensureContains(huTrove * trove, huNode * node, huToken const * token)
 {
     if (node == HU_NULLNODE)
     {
-        if (token > trove->lastAnnoToken)
-            { trove->lastAnnoToken = token; }
+        if (token > trove->lastMetatagToken)
+            { trove->lastMetatagToken = token; }
     }
 
     else if (token < node->firstToken)
@@ -189,33 +189,33 @@ void addChildNode(huNode * node, huNode * child)
 }
 
 
-void addAnnotation(huTrove * trove, huNode * node, huToken const * keyToken)
+void addMetatag(huTrove * trove, huNode * node, huToken const * keyToken)
 {
-    huAnnotation * anno = NULL;
+    huMetatag * metatag = NULL;
     huSize_t num = 1;
     if (node)
-        { anno = growVector(& node->annotations, & num); }
+        { metatag = growVector(& node->metatags, & num); }
     else
-        { anno = growVector(& trove->annotations, & num); }
+        { metatag = growVector(& trove->metatags, & num); }
 
     if (num)
     {
-        anno->key = keyToken;
-        anno->value = NULL;
+        metatag->key = keyToken;
+        metatag->value = NULL;
 
         ensureContains(trove, node, keyToken);
     }
 }
 
 
-void setLastAnnotationValue(huTrove * trove, huNode * node, huToken const * valueToken)
+void setLastMetatagValue(huTrove * trove, huNode * node, huToken const * valueToken)
 {
-    huAnnotation * anno = NULL;
+    huMetatag * metatag = NULL;
     if (node)
-        { anno = getVectorElement(& node->annotations, getVectorSize(& node->annotations) - 1); }
+        { metatag = getVectorElement(& node->metatags, getVectorSize(& node->metatags) - 1); }
     else
-        { anno = getVectorElement(& trove->annotations, getVectorSize(& trove->annotations) - 1); }
-    anno->value = valueToken;
+        { metatag = getVectorElement(& trove->metatags, getVectorSize(& trove->metatags) - 1); }
+    metatag->value = valueToken;
 
     ensureContains(trove, node, valueToken);
 }
@@ -265,8 +265,8 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
                 if (nodeCreatedThisState &&
                     tok->line == nodeCreatedThisState->lastToken->line)
                     { associateComment(trove, nodeCreatedThisState, tok); }
-                else if (trove->lastAnnoToken &&
-                    tok->line == trove->lastAnnoToken->line)
+                else if (trove->lastMetatagToken &&
+                    tok->line == trove->lastMetatagToken->line)
                     { associateComment(trove, NULL, tok); }
                 else
                     { enqueueComment(commentQueue, tok); }
@@ -336,16 +336,16 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
                 }
                 break;
 
-            case HU_TOKENKIND_ANNOTATE:
+            case HU_TOKENKIND_METATAG:
                 // if nodeCreatedThisState, assign comment queue to it
-                // else assign comment queue to the trove (we encountered a trove annotation)
-                // recursive(PS_IN_ANNO_EXPECT_DICTSTART_OR_KEY, nodeCreatedThisState)
+                // else assign comment queue to the trove (we encountered a trove metatag)
+                // recursive(PS_IN_METATAG_EXPECT_DICTSTART_OR_KEY, nodeCreatedThisState)
 
-                // NOTE: nodeCreatedThisState will be NULL if we're in a trove annotation!
+                // NOTE: nodeCreatedThisState will be NULL if we're in a trove metatag!
                 associateEnqueuedComments(trove, nodeCreatedThisState, commentQueue);
                 ensureContains(trove, nodeCreatedThisState, tok);
                 parseTroveRecursive(trove, tokenIdx, nodeCreatedThisState, depth + 1,
-                    PS_IN_ANNO_EXPECT_DICTSTART_OR_KEY, commentQueue);
+                    PS_IN_METATAG_EXPECT_DICTSTART_OR_KEY, commentQueue);
                 break;
 
             default:
@@ -438,18 +438,18 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
                 }
                 break;
 
-            case HU_TOKENKIND_ANNOTATE:
+            case HU_TOKENKIND_METATAG:
                 // if nodeCreatedThisState, assign comment queue to it
                 // else assign comment queue to parentNode
-                // recursive(PS_IN_ANNO_EXPECT_DICTSTART_OR_KEY, nodeCreatedThisState || parentNode)
+                // recursive(PS_IN_METATAG_EXPECT_DICTSTART_OR_KEY, nodeCreatedThisState || parentNode)
                 {
-                    huNode * annoTarget = nodeCreatedThisState;
-                    if (annoTarget == NULL)
-                        { annoTarget = parentNode; }
-                    ensureContains(trove, annoTarget, tok);
-                    associateEnqueuedComments(trove, annoTarget, commentQueue);
-                    parseTroveRecursive(trove, tokenIdx, annoTarget, depth + 1,
-                        PS_IN_ANNO_EXPECT_DICTSTART_OR_KEY, commentQueue);
+                    huNode * metatagTarget = nodeCreatedThisState;
+                    if (metatagTarget == NULL)
+                        { metatagTarget = parentNode; }
+                    ensureContains(trove, metatagTarget, tok);
+                    associateEnqueuedComments(trove, metatagTarget, commentQueue);
+                    parseTroveRecursive(trove, tokenIdx, metatagTarget, depth + 1,
+                        PS_IN_METATAG_EXPECT_DICTSTART_OR_KEY, commentQueue);
                 }
                 break;
 
@@ -517,17 +517,17 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
                 }
                 break;
 
-            case HU_TOKENKIND_ANNOTATE:
+            case HU_TOKENKIND_METATAG:
                 // if nodeCreatedThisState, assign comment queue to it
-                // recursive(PS_IN_ANNO_EXPECT_DICTSTART_OR_KEY, nodeCreatedThisState || parentNode)
+                // recursive(PS_IN_METATAG_EXPECT_DICTSTART_OR_KEY, nodeCreatedThisState || parentNode)
                 {
-                    huNode * annoTarget = nodeCreatedThisState;
-                    if (annoTarget == NULL)
-                        { annoTarget = parentNode; }
-                    ensureContains(trove, annoTarget, tok);
-                    associateEnqueuedComments(trove, annoTarget, commentQueue);
-                    parseTroveRecursive(trove, tokenIdx, annoTarget, depth + 1,
-                        PS_IN_ANNO_EXPECT_DICTSTART_OR_KEY, commentQueue);
+                    huNode * metatagTarget = nodeCreatedThisState;
+                    if (metatagTarget == NULL)
+                        { metatagTarget = parentNode; }
+                    ensureContains(trove, metatagTarget, tok);
+                    associateEnqueuedComments(trove, metatagTarget, commentQueue);
+                    parseTroveRecursive(trove, tokenIdx, metatagTarget, depth + 1,
+                        PS_IN_METATAG_EXPECT_DICTSTART_OR_KEY, commentQueue);
                 }
                 break;
 
@@ -570,11 +570,11 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
                 }
                 return;
 
-            case HU_TOKENKIND_ANNOTATE:
-                // recursive(PS_IN_ANNO_EXPECT_DICTSTART_OR_KEY, parentNode)
+            case HU_TOKENKIND_METATAG:
+                // recursive(PS_IN_METATAG_EXPECT_DICTSTART_OR_KEY, parentNode)
                 ensureContains(trove, parentNode, tok);
                 parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1,
-                    PS_IN_ANNO_EXPECT_DICTSTART_OR_KEY, commentQueue);
+                    PS_IN_METATAG_EXPECT_DICTSTART_OR_KEY, commentQueue);
                 break;
 
             default:
@@ -634,11 +634,11 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
                 setLastValueToken(parentNode, tok);
                 return;
 
-            case HU_TOKENKIND_ANNOTATE:
-                // recursive(PS_IN_ANNO_EXPECT_DICTSTART_OR_KEY, parentNode)
+            case HU_TOKENKIND_METATAG:
+                // recursive(PS_IN_METATAG_EXPECT_DICTSTART_OR_KEY, parentNode)
                 ensureContains(trove, parentNode, tok);
                 parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1,
-                    PS_IN_ANNO_EXPECT_DICTSTART_OR_KEY, commentQueue);
+                    PS_IN_METATAG_EXPECT_DICTSTART_OR_KEY, commentQueue);
                 break;
 
             default:
@@ -648,7 +648,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
             }
             break;
 
-        case PS_IN_ANNO_EXPECT_DICTSTART_OR_KEY:
+        case PS_IN_METATAG_EXPECT_DICTSTART_OR_KEY:
             switch (tok->kind)
             {
             case HU_TOKENKIND_EOF:
@@ -661,19 +661,19 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
                 break;
 
             case HU_TOKENKIND_STARTDICT:
-                // recursive(PS_IN_ANNODICT_EXPECT_KEY_OR_END, parentNode)
+                // recursive(PS_IN_METATAGDICT_EXPECT_KEY_OR_END, parentNode)
                 ensureContains(trove, parentNode, tok);
                 parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1,
-                    PS_IN_ANNODICT_EXPECT_KEY_OR_END, commentQueue);
+                    PS_IN_METATAGDICT_EXPECT_KEY_OR_END, commentQueue);
                 return;
 
             case HU_TOKENKIND_WORD:
-                // make new anno with key, null value
-                // assign anno to parentNode
-                // recursive(PS_IN_ANNO_EXPECT_KVS, parentNode)
-                addAnnotation(trove, parentNode, tok);
+                // make new metatag with key, null value
+                // assign metatag to parentNode
+                // recursive(PS_IN_METATAG_EXPECT_KVS, parentNode)
+                addMetatag(trove, parentNode, tok);
                 parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1,
-                    PS_IN_ANNO_EXPECT_KVS, commentQueue);
+                    PS_IN_METATAG_EXPECT_KVS, commentQueue);
                 return;
 
             default:
@@ -683,7 +683,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
             }
             break;
 
-        case PS_IN_ANNO_EXPECT_KVS:
+        case PS_IN_METATAG_EXPECT_KVS:
             switch (tok->kind)
             {
             case HU_TOKENKIND_EOF:
@@ -696,10 +696,10 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
                 break;
 
             case HU_TOKENKIND_KEYVALUESEP:
-                // recursive(PS_IN_ANNO_EXPECT_VALUE, parentNode)
+                // recursive(PS_IN_METATAG_EXPECT_VALUE, parentNode)
                 ensureContains(trove, parentNode, tok);
                 parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1,
-                    PS_IN_ANNO_EXPECT_VALUE, commentQueue);
+                    PS_IN_METATAG_EXPECT_VALUE, commentQueue);
                 return;
 
             default:
@@ -709,7 +709,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
             }
             break;
 
-        case PS_IN_ANNO_EXPECT_VALUE:
+        case PS_IN_METATAG_EXPECT_VALUE:
             switch (tok->kind)
             {
             case HU_TOKENKIND_EOF:
@@ -722,8 +722,8 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
                 break;
 
             case HU_TOKENKIND_WORD:
-                // get parentNode's last anno, assign value to it
-                setLastAnnotationValue(trove, parentNode, tok);
+                // get parentNode's last metatag, assign value to it
+                setLastMetatagValue(trove, parentNode, tok);
                 return;
 
             default:
@@ -733,7 +733,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
             }
             break;
 
-        case PS_IN_ANNODICT_EXPECT_KEY_OR_END:
+        case PS_IN_METATAGDICT_EXPECT_KEY_OR_END:
             switch (tok->kind)
             {
             case HU_TOKENKIND_EOF:
@@ -746,12 +746,12 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
                 break;
 
             case HU_TOKENKIND_WORD:
-                // make new anno with key, null value
-                // assign anno to parentNode
-                // recursive(PS_IN_ANNODICT_EXPECT_KVS, parentNode)
-                addAnnotation(trove, parentNode, tok);
+                // make new metatag with key, null value
+                // assign metatag to parentNode
+                // recursive(PS_IN_METATAGDICT_EXPECT_KVS, parentNode)
+                addMetatag(trove, parentNode, tok);
                 parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1,
-                    PS_IN_ANNODICT_EXPECT_KVS, commentQueue);
+                    PS_IN_METATAGDICT_EXPECT_KVS, commentQueue);
                 break;
 
             case HU_TOKENKIND_ENDDICT:
@@ -765,7 +765,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
             }
             break;
 
-        case PS_IN_ANNODICT_EXPECT_KVS:
+        case PS_IN_METATAGDICT_EXPECT_KVS:
             switch (tok->kind)
             {
             case HU_TOKENKIND_EOF:
@@ -778,10 +778,10 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
                 break;
 
             case HU_TOKENKIND_KEYVALUESEP:
-                // recursive(PS_IN_ANNODICT_EXPECT_VALUE, parentNode)
+                // recursive(PS_IN_METATAGDICT_EXPECT_VALUE, parentNode)
                 ensureContains(trove, parentNode, tok);
                 parseTroveRecursive(trove, tokenIdx, parentNode, depth + 1,
-                    PS_IN_ANNODICT_EXPECT_VALUE, commentQueue);
+                    PS_IN_METATAGDICT_EXPECT_VALUE, commentQueue);
                 return;
 
             default:
@@ -791,7 +791,7 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
             }
             break;
 
-        case PS_IN_ANNODICT_EXPECT_VALUE:
+        case PS_IN_METATAGDICT_EXPECT_VALUE:
             switch (tok->kind)
             {
             case HU_TOKENKIND_EOF:
@@ -804,8 +804,8 @@ void parseTroveRecursive(huTrove * trove, huSize_t * tokenIdx, huNode * parentNo
                 break;
 
             case HU_TOKENKIND_WORD:
-                // get parentNode's last anno, assign value to it
-                setLastAnnotationValue(trove, parentNode, tok);
+                // get parentNode's last metatag, assign value to it
+                setLastMetatagValue(trove, parentNode, tok);
                 return;
 
             default:

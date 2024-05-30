@@ -183,13 +183,13 @@ static huSize_t printAllTrailingComments(PrintTracker * printer, huNode const * 
 }
 
 
-static void printAnnotations(PrintTracker * printer, huVector const * annotations, bool isTroveAnnotations)
+static void printMetatags(PrintTracker * printer, huVector const * metatags, bool isTroveMetatags)
 {
-    huSize_t numAnnos = getVectorSize(annotations);
+    huSize_t numAnnos = getVectorSize(metatags);
     if (numAnnos == 0)
         { return; }
 
-    // if we're printing an annotation on a new line (because of a comment, say)
+    // if we're printing an metatag on a new line (because of a comment, say)
     if (printer->lastPrintWasNewline)
     {
         if (printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY && printer->currentDepth > 0)
@@ -202,36 +202,36 @@ static void printAnnotations(PrintTracker * printer, huVector const * annotation
     else
     {
         if (printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY &&
-            (printer->currentDepth > 0 || isTroveAnnotations == false))
+            (printer->currentDepth > 0 || isTroveMetatags == false))
             { appendWs(printer, 1); }
     }
 
-    appendColoredString(printer, "@", 1, HU_COLORCODE_PUNCANNOTATE);
+    appendColoredString(printer, "@", 1, HU_COLORCODE_PUNCMETATAG);
     if (printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
         { appendWs(printer, 1); }
 
     if (numAnnos > 1)
     {
-        appendColoredString(printer, "{", 1, HU_COLORCODE_PUNCANNOTATEDICT);
+        appendColoredString(printer, "{", 1, HU_COLORCODE_PUNCMETATAGDICT);
         if (printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
             { appendWs(printer, 1); }
     }
-    for (huSize_t annoIdx = 0; annoIdx < numAnnos; ++annoIdx)
+    for (huSize_t metatagIdx = 0; metatagIdx < numAnnos; ++metatagIdx)
     {
-        if (annoIdx > 0 && printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
+        if (metatagIdx > 0 && printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
             { ensureWs(printer); }
-        huAnnotation * anno = getVectorElement(annotations, annoIdx);
-        appendColoredToken(printer, anno->key, HU_COLORCODE_ANNOKEY);
-        appendColoredString(printer, ":", 1, HU_COLORCODE_PUNCANNOTATEKEYVALUESEP);
+        huMetatag * metatag = getVectorElement(metatags, metatagIdx);
+        appendColoredToken(printer, metatag->key, HU_COLORCODE_METATAGKEY);
+        appendColoredString(printer, ":", 1, HU_COLORCODE_PUNCMETATAGKEYVALUESEP);
         if (printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
             { appendWs(printer, 1); }
-        appendColoredToken(printer, anno->value, HU_COLORCODE_ANNOVALUE);
+        appendColoredToken(printer, metatag->value, HU_COLORCODE_METATAGVALUE);
     }
     if (numAnnos > 1)
     {
         if (printer->serializeOptions->whitespaceFormat == HU_WHITESPACEFORMAT_PRETTY)
             { appendWs(printer, 1); }
-        appendColoredString(printer, "}", 1, HU_COLORCODE_PUNCANNOTATEDICT);
+        appendColoredString(printer, "}", 1, HU_COLORCODE_PUNCMETATAGDICT);
     }
 
     printer->lastPrintWasIndent = false;
@@ -272,7 +272,7 @@ static void printNode(PrintTracker * printer, huNode const * node)
     if (node->kind == HU_NODEKIND_LIST)
     {
         appendColoredString(printer, "[", 1, HU_COLORCODE_PUNCLIST);
-        printAnnotations(printer, & node->annotations, false);
+        printMetatags(printer, & node->metatags, false);
         commentIdx = printAllTrailingComments(printer, node, node->valueToken, commentIdx);
 
         // print children
@@ -302,7 +302,7 @@ static void printNode(PrintTracker * printer, huNode const * node)
     else if (node->kind == HU_NODEKIND_DICT)
     {
         appendColoredString(printer, "{", 1, HU_COLORCODE_PUNCDICT);
-        printAnnotations(printer, & node->annotations, false);
+        printMetatags(printer, & node->metatags, false);
         commentIdx = printAllTrailingComments(printer, node, node->valueToken, commentIdx);
 
         // print children
@@ -328,12 +328,12 @@ static void printNode(PrintTracker * printer, huNode const * node)
     else if (node->kind == HU_NODEKIND_VALUE)
     {
         appendColoredToken(printer, node->valueToken, HU_COLORCODE_VALUE);
-        printAnnotations(printer, & node->annotations, false);
+        printMetatags(printer, & node->metatags, false);
     }
 
     //  print any same-line comments
-    //  print comments preceding any annos
-    //  print annos
+    //  print comments preceding any metatags
+    //  print metatags
     commentIdx = printAllTrailingComments(printer, node, node->lastValueToken, commentIdx);
     huSize_t startIdx = commentIdx;
     for (; commentIdx < numComments; ++commentIdx)
@@ -369,17 +369,17 @@ void troveToPrettyString(huTrove const * trove, huVector * str, huSerializeOptio
     appendColor(& printer, HU_COLORCODE_TOKENSTREAMBEGIN);
 
     // Print trove comments that precede the root node token; These are comments that appear before
-    // or amidst trove annotations, before the root. These will all be the first trove comments, so
+    // or amidst trove metatags, before the root. These will all be the first trove comments, so
     // just start scumming from 0.
     huSize_t troveCommentIdx = 0;
     huSize_t numTroveComments = huGetNumTroveComments(trove);
-    huSize_t numTroveAnnotations = huGetNumTroveAnnotations(trove);
-    if (numTroveAnnotations > 0)
+    huSize_t numTroveMetatags = huGetNumTroveMetatags(trove);
+    if (numTroveMetatags > 0)
     {
         for (; troveCommentIdx < numTroveComments; ++troveCommentIdx)
         {
             huToken const * comm = huGetTroveComment(trove, troveCommentIdx);
-            if (comm->line <= trove->lastAnnoToken->line)
+            if (comm->line <= trove->lastMetatagToken->line)
             {
                 // print comment
                 printForwardComment(& printer, comm);
@@ -389,8 +389,8 @@ void troveToPrettyString(huTrove const * trove, huVector * str, huSerializeOptio
         }
     }
 
-    // Print trove annotations
-    printAnnotations(& printer, & trove->annotations, true);
+    // Print trove metatags
+    printMetatags(& printer, & trove->metatags, true);
 
     // print root node
     if (trove->nodes.numElements > 0)
@@ -429,14 +429,14 @@ void huFillAnsiColorTable(huStringView table[])
     setTableEntry(table, HU_COLORCODE_PUNCLIST, ansi_white);
     setTableEntry(table, HU_COLORCODE_PUNCDICT, ansi_white);
     setTableEntry(table, HU_COLORCODE_PUNCKEYVALUESEP, ansi_white);
-    setTableEntry(table, HU_COLORCODE_PUNCANNOTATE, ansi_darkBlue);
-    setTableEntry(table, HU_COLORCODE_PUNCANNOTATEDICT, ansi_darkBlue);
-    setTableEntry(table, HU_COLORCODE_PUNCANNOTATEKEYVALUESEP, ansi_darkBlue);
+    setTableEntry(table, HU_COLORCODE_PUNCMETATAG, ansi_darkBlue);
+    setTableEntry(table, HU_COLORCODE_PUNCMETATAGDICT, ansi_darkBlue);
+    setTableEntry(table, HU_COLORCODE_PUNCMETATAGKEYVALUESEP, ansi_darkBlue);
     setTableEntry(table, HU_COLORCODE_KEY, ansi_darkCyan);
     setTableEntry(table, HU_COLORCODE_VALUE, ansi_lightCyan);
     setTableEntry(table, HU_COLORCODE_COMMENT, ansi_darkGreen);
-    setTableEntry(table, HU_COLORCODE_ANNOKEY, ansi_darkMagenta);
-    setTableEntry(table, HU_COLORCODE_ANNOVALUE, ansi_lightMagenta);
+    setTableEntry(table, HU_COLORCODE_METATAGKEY, ansi_darkMagenta);
+    setTableEntry(table, HU_COLORCODE_METATAGVALUE, ansi_lightMagenta);
     setTableEntry(table, HU_COLORCODE_WHITESPACE, ansi_darkGray);
 }
 

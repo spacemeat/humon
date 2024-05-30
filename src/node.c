@@ -17,7 +17,7 @@ void initNode(huNode * node, huTrove const * trove)
     node->childOrdinal = 0;
     node->parentNodeIdx = -1;
     initGrowableVector(& node->childNodeIdxs, sizeof(huSize_t), & trove->allocator);
-    initGrowableVector(& node->annotations, sizeof(huAnnotation), & trove->allocator);
+    initGrowableVector(& node->metatags, sizeof(huMetatag), & trove->allocator);
     initGrowableVector(& node->comments, sizeof(huComment), & trove->allocator);
 }
 
@@ -30,7 +30,7 @@ void destroyNode(huNode const * node)
 #endif
 
     destroyVector(& node->childNodeIdxs);
-    destroyVector(& node->annotations);
+    destroyVector(& node->metatags);
     destroyVector(& node->comments);
 }
 
@@ -918,32 +918,32 @@ huStringView huGetSourceText(huNode const * node)
 }
 
 
-huSize_t huGetNumAnnotations(huNode const * node)
+huSize_t huGetNumMetatags(huNode const * node)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (node == HU_NULLNODE)
         { return 0; }
 #endif
 
-    return node->annotations.numElements;
+    return node->metatags.numElements;
 }
 
 
-huAnnotation const * huGetAnnotation(huNode const * node, huSize_t annotationIdx)
+huMetatag const * huGetMetatag(huNode const * node, huSize_t metatagIdx)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (node == HU_NULLNODE || annotationIdx < 0)
+    if (node == HU_NULLNODE || metatagIdx < 0)
         { return NULL; }
 #endif
 
-    if (annotationIdx < node->annotations.numElements)
-        { return (huAnnotation *) node->annotations.buffer + annotationIdx; }
+    if (metatagIdx < node->metatags.numElements)
+        { return (huMetatag *) node->metatags.buffer + metatagIdx; }
     else
         { return NULL; }
 }
 
 
-HUMON_PUBLIC huSize_t huGetNumAnnotationsWithKeyZ(huNode const * node, char const * key)
+HUMON_PUBLIC huSize_t huGetNumMetatagsWithKeyZ(huNode const * node, char const * key)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (key == NULL)
@@ -954,10 +954,10 @@ HUMON_PUBLIC huSize_t huGetNumAnnotationsWithKeyZ(huNode const * node, char cons
     if (keyLenC > maxOfType(huSize_t))
         { return 0; }
 
-    return huGetNumAnnotationsWithKeyN(node, key, (huSize_t) keyLenC);
+    return huGetNumMetatagsWithKeyN(node, key, (huSize_t) keyLenC);
 }
 
-HUMON_PUBLIC huSize_t huGetNumAnnotationsWithKeyN(huNode const * node, char const * key, huSize_t keyLen)
+HUMON_PUBLIC huSize_t huGetNumMetatagsWithKeyN(huNode const * node, char const * key, huSize_t keyLen)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (node == HU_NULLNODE || key == NULL || keyLen < 0)
@@ -965,11 +965,11 @@ HUMON_PUBLIC huSize_t huGetNumAnnotationsWithKeyN(huNode const * node, char cons
 #endif
 
     huSize_t matches = 0;
-    for (huSize_t i = 0; i < node->annotations.numElements; ++i)
+    for (huSize_t i = 0; i < node->metatags.numElements; ++i)
     {
-        huAnnotation const * anno = (huAnnotation const *) node->annotations.buffer + i;
-        if (keyLen == anno->key->str.size &&
-            strncmp(anno->key->str.ptr, key, keyLen) == 0)
+        huMetatag const * metatag = (huMetatag const *) node->metatags.buffer + i;
+        if (keyLen == metatag->key->str.size &&
+            strncmp(metatag->key->str.ptr, key, keyLen) == 0)
             { matches += 1; }
     }
 
@@ -977,7 +977,7 @@ HUMON_PUBLIC huSize_t huGetNumAnnotationsWithKeyN(huNode const * node, char cons
 }
 
 
-huToken const * huGetAnnotationWithKeyZ(huNode const * node, char const * key, huSize_t * cursor)
+huToken const * huGetMetatagWithKeyZ(huNode const * node, char const * key, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (key == NULL)
@@ -988,25 +988,25 @@ huToken const * huGetAnnotationWithKeyZ(huNode const * node, char const * key, h
     if (keyLenC > maxOfType(huSize_t))
         { return HU_NULLTOKEN; }
 
-    return huGetAnnotationWithKeyN(node, key, (huSize_t) keyLenC, cursor);
+    return huGetMetatagWithKeyN(node, key, (huSize_t) keyLenC, cursor);
 }
 
 
-huToken const * huGetAnnotationWithKeyN(huNode const * node, char const * key, huSize_t keyLen, huSize_t * cursor)
+huToken const * huGetMetatagWithKeyN(huNode const * node, char const * key, huSize_t keyLen, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (node == HU_NULLNODE || key == NULL || keyLen < 0 || cursor == NULL || * cursor < 0)
         { return HU_NULLTOKEN; }
 #endif
 
-    for (; * cursor < node->annotations.numElements; ++ * cursor)
+    for (; * cursor < node->metatags.numElements; ++ * cursor)
     {
-        huAnnotation const * anno = (huAnnotation *) node->annotations.buffer + * cursor;
-        if (keyLen == anno->key->str.size &&
-            strncmp(anno->key->str.ptr, key, keyLen) == 0)
+        huMetatag const * metatag = (huMetatag *) node->metatags.buffer + * cursor;
+        if (keyLen == metatag->key->str.size &&
+            strncmp(metatag->key->str.ptr, key, keyLen) == 0)
         {
             * cursor += 1;
-            return anno->value;
+            return metatag->value;
         }
     }
 
@@ -1014,7 +1014,7 @@ huToken const * huGetAnnotationWithKeyN(huNode const * node, char const * key, h
 }
 
 
-huSize_t huGetNumAnnotationsWithValueZ(huNode const * node, char const * value)
+huSize_t huGetNumMetatagsWithValueZ(huNode const * node, char const * value)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (value == NULL)
@@ -1025,11 +1025,11 @@ huSize_t huGetNumAnnotationsWithValueZ(huNode const * node, char const * value)
     if (valueLenC > maxOfType(huSize_t))
         { return 0; }
 
-    return huGetNumAnnotationsWithValueN(node, value, (huSize_t) valueLenC);
+    return huGetNumMetatagsWithValueN(node, value, (huSize_t) valueLenC);
 }
 
 
-huSize_t huGetNumAnnotationsWithValueN(huNode const * node, char const * value, huSize_t valueLen)
+huSize_t huGetNumMetatagsWithValueN(huNode const * node, char const * value, huSize_t valueLen)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (node == HU_NULLNODE || value == NULL || valueLen < 0)
@@ -1037,11 +1037,11 @@ huSize_t huGetNumAnnotationsWithValueN(huNode const * node, char const * value, 
 #endif
 
     huSize_t matches = 0;
-    for (huSize_t i = 0; i < node->annotations.numElements; ++i)
+    for (huSize_t i = 0; i < node->metatags.numElements; ++i)
     {
-        huAnnotation const * anno = (huAnnotation const *) node->annotations.buffer + i;
-        if (valueLen == anno->value->str.size &&
-            strncmp(anno->value->str.ptr, value, valueLen) == 0)
+        huMetatag const * metatag = (huMetatag const *) node->metatags.buffer + i;
+        if (valueLen == metatag->value->str.size &&
+            strncmp(metatag->value->str.ptr, value, valueLen) == 0)
             { matches += 1; }
     }
 
@@ -1049,7 +1049,7 @@ huSize_t huGetNumAnnotationsWithValueN(huNode const * node, char const * value, 
 }
 
 
-huToken const * huGetAnnotationWithValueZ(huNode const * node, char const * value, huSize_t * cursor)
+huToken const * huGetMetatagWithValueZ(huNode const * node, char const * value, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (value == NULL)
@@ -1060,25 +1060,25 @@ huToken const * huGetAnnotationWithValueZ(huNode const * node, char const * valu
     if (valueLenC > maxOfType(huSize_t))
         { return HU_NULLTOKEN; }
 
-    return huGetAnnotationWithValueN(node, value, (huSize_t) valueLenC, cursor);
+    return huGetMetatagWithValueN(node, value, (huSize_t) valueLenC, cursor);
 }
 
 
-huToken const * huGetAnnotationWithValueN(huNode const * node, char const * value, huSize_t valueLen, huSize_t * cursor)
+huToken const * huGetMetatagWithValueN(huNode const * node, char const * value, huSize_t valueLen, huSize_t * cursor)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (node == HU_NULLNODE || value == NULL || valueLen < 0 || cursor == NULL || * cursor < 0)
         { return HU_NULLTOKEN; }
 #endif
 
-    for (; * cursor < node->annotations.numElements; ++ * cursor)
+    for (; * cursor < node->metatags.numElements; ++ * cursor)
     {
-        huAnnotation const * anno = (huAnnotation *) node->annotations.buffer + * cursor;
-        if (valueLen == anno->value->str.size &&
-            strncmp(anno->value->str.ptr, value, valueLen) == 0)
+        huMetatag const * metatag = (huMetatag *) node->metatags.buffer + * cursor;
+        if (valueLen == metatag->value->str.size &&
+            strncmp(metatag->value->str.ptr, value, valueLen) == 0)
         {
             * cursor += 1;
-            return anno->key;
+            return metatag->key;
         }
     }
 

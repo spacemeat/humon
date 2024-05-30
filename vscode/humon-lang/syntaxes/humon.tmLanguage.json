@@ -37,7 +37,7 @@
 			"match": ","
 		},
 
-		"annotation": {
+		"metatag": {
 			"name": "keyword.control.humon",
 			"match": "@"
 		},
@@ -152,7 +152,7 @@
 		"node": {
 			"name": "meta.structure.node.humon",
 			"patterns": [{
-					"include": "#annotation"
+					"include": "#metatag"
 				}, {
 					"include": "#value"
 				}, {
@@ -168,7 +168,7 @@
 		}, {
 			"include": "#comma"
 		}, {
-			"include": "#annotation"
+			"include": "#metatag"
 		}, {
 			"include": "#node"
 		}

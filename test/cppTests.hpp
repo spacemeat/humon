@@ -125,66 +125,66 @@ TEST(cppSugar, sugar)
     CHECK_TEXT(spuriousNode.isNullish(), "wildly wrong path");    
 }
 
-TEST(cppSugar, annos)
+TEST(cppSugar, metatags)
 {
-    LONGS_EQUAL(3, m.trove.numTroveAnnotations());
-    LONGS_EQUAL(1, m.trove.numTroveAnnotationsWithKey("tx"));
-    LONGS_EQUAL(1, m.trove.numTroveAnnotationsWithKey("ta"));
-    LONGS_EQUAL(1, m.trove.numTroveAnnotationsWithKey("tb"));
-    LONGS_EQUAL(0, m.trove.numTroveAnnotationsWithKey("foo"));
-    LONGS_EQUAL(2, m.trove.numTroveAnnotationsWithValue("ta"));
-    LONGS_EQUAL(1, m.trove.numTroveAnnotationsWithValue("tb"));
+    LONGS_EQUAL(3, m.trove.numTroveMetatags());
+    LONGS_EQUAL(1, m.trove.numTroveMetatagsWithKey("tx"));
+    LONGS_EQUAL(1, m.trove.numTroveMetatagsWithKey("ta"));
+    LONGS_EQUAL(1, m.trove.numTroveMetatagsWithKey("tb"));
+    LONGS_EQUAL(0, m.trove.numTroveMetatagsWithKey("foo"));
+    LONGS_EQUAL(2, m.trove.numTroveMetatagsWithValue("ta"));
+    LONGS_EQUAL(1, m.trove.numTroveMetatagsWithValue("tb"));
 
-    auto tas = m.trove.troveAnnotationsWithValue("ta");
+    auto tas = m.trove.troveMetatagsWithValue("ta");
     LONGS_EQUAL(2, tas.size());
     LONGS_EQUAL(2, tas[0].str().size());
     MEMCMP_EQUAL("tx", tas[0].str().data(), 2);
     LONGS_EQUAL(2, tas[1].str().size());
     MEMCMP_EQUAL("ta", tas[1].str().data(), 2);
     
-    tas = m.trove.troveAnnotationsWithValue("tb");
+    tas = m.trove.troveMetatagsWithValue("tb");
     LONGS_EQUAL(1, tas.size());
     LONGS_EQUAL(2, tas[0].str().size());
     MEMCMP_EQUAL("tb", tas[0].str().data(), 2);
 
-    auto nodes = m.trove.findNodesWithAnnotationKey("a");
+    auto nodes = m.trove.findNodesWithMetatagKey("a");
     LONGS_EQUAL(1, nodes.size());
     CHECK_EQUAL(m.a, nodes[0]);
 
-    nodes = m.trove.findNodesWithAnnotationKey("b");
+    nodes = m.trove.findNodesWithMetatagKey("b");
     LONGS_EQUAL(2, nodes.size());
     CHECK_EQUAL(m.bp, nodes[0]);
     CHECK_EQUAL(m.b, nodes[1]);
 
-    nodes = m.trove.findNodesWithAnnotationKey("c");
+    nodes = m.trove.findNodesWithMetatagKey("c");
     LONGS_EQUAL(3, nodes.size());
     CHECK_EQUAL(m.cpp, nodes[0]);
     CHECK_EQUAL(m.cp, nodes[1]);
     CHECK_EQUAL(m.c, nodes[2]);
 
-    nodes = m.trove.findNodesWithAnnotationValue("a");
+    nodes = m.trove.findNodesWithMetatagValue("a");
     LONGS_EQUAL(1, nodes.size());
     CHECK_EQUAL(m.a, nodes[0]);
 
-    nodes = m.trove.findNodesWithAnnotationValue("b");
+    nodes = m.trove.findNodesWithMetatagValue("b");
     LONGS_EQUAL(1, nodes.size());
     CHECK_EQUAL(m.b, nodes[0]);
 
-    nodes = m.trove.findNodesWithAnnotationValue("c");
+    nodes = m.trove.findNodesWithMetatagValue("c");
     LONGS_EQUAL(1, nodes.size());
     CHECK_EQUAL(m.c, nodes[0]);
 
-    nodes = m.trove.findNodesWithAnnotationValue("value");
+    nodes = m.trove.findNodesWithMetatagValue("value");
     LONGS_EQUAL(3, nodes.size());
     CHECK_EQUAL(m.a, nodes[0]);
     CHECK_EQUAL(m.b, nodes[1]);
     CHECK_EQUAL(m.c, nodes[2]);
 
-    nodes = m.trove.findNodesWithAnnotationKeyValue("a", "a");
+    nodes = m.trove.findNodesWithMetatagKeyValue("a", "a");
     LONGS_EQUAL(1, nodes.size());
     CHECK_EQUAL(m.a, nodes[0]);
 
-    nodes = m.trove.findNodesWithAnnotationKeyValue("type", "value");
+    nodes = m.trove.findNodesWithMetatagKeyValue("type", "value");
     LONGS_EQUAL(3, nodes.size());
     CHECK_EQUAL(m.a, nodes[0]);
     CHECK_EQUAL(m.b, nodes[1]);
