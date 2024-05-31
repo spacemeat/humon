@@ -46,6 +46,6 @@ build/
 python/build/
 docs/
 gen-*
-
+usage_cpp_got.txt
 *.pyc
 .venv/

@@ -69,8 +69,8 @@ metatagValue: 32
 metatagKey: numBits
 node: /definitions/player/maxHp/type
 node: /definitions/player/damage/type
-[97m{[36mdefinitions[97m:[97m{[36mplayer[97m:[97m{[36mmaxHp[97m:[97m{[36mtype[97m:[96mint[34m@[34m{[35mnumBits[34m:[95m32 [35mnumBytes[34m:[95m4[34m}[97m}[36mdamage[97m:[97m{[36mtype[97m:[96mint[34m@[34m{[35mnumBits[34m:[95m32 [35mnumBytes[34m:[95m4[34m}[97m}[97m}[97m}[97m}
-[0m[97m{
+[97m{[36mdefinitions[97m:[97m{[36mplayer[97m:[97m{[36mmaxHp[97m:[97m{[36mtype[97m:[96mint[34m@[34m{[35mnumBits[34m:[95m32 [35mnumBytes[34m:[95m4[34m}[97m}[36mdamage[97m:[97m{[36mtype[97m:[96mint[34m@[34m{[35mnumBits[34m:[95m32 [35mnumBytes[34m:[95m4[34m}[97m}[97m}[97m}[97m}[0m
+[97m{
     [36mdefinitions[97m: [97m{
         [36mplayer[97m: [97m{
             [36mmaxHp[97m: [97m{

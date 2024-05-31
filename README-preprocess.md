@@ -63,36 +63,44 @@ More useful Humon might look like this asset description for a material in a gam
 
 !!! src: apps/readmeSrc/materials.hu
 
-The `@` syntax is an *metatag*. We'll discuss that, but for now just think of it as a certain kind of metadata. Not all Humon source texts will use them.
+The `@` syntax is an *metatag*. We'll discuss that, but for now just think of it as key:value pairs on nodes. Not all Humon source texts will use them.
 
 Using the APIs is straightforward. To get the image's (x, y) extents above, we might invoke the following in C:
 
+```c
     #include <humon/humon.h>
     ...
 !!! src: apps/readmeSrc/usage.c; frag: materials; indent: -1
+```
 
 or in C++:
 
+```c++
     #include <humon/humon.hpp>
     ...
 !!! src: apps/readmeSrc/usage.cpp; frag: materials; indent: -2
+```
 
 ### Installation
 If you're just using Humon files with some application you've installed, you don't need to do anything. However, the project contains a directory called `vscode/humon-lang` which contains a TextMate colorizer for VS Code. You can copy the `humon-lang` directory into your `~/.vscode/extensions` directory, and VS Code will make files with a ".hu" extension a bit more colorful.
 
 Building Humon in Linux is easy enough, but you need to have Python 3.7.5 or newer installed. Starting from the Humon project directory, you can build the binaries with gcc:
 
-    ~/src/humon$ ./build-linux.py
+```
+~/src/humon$ ./build-linux.py
+```
 
 or, if you want to use clang:
 
-    ~/src/humon$ ./build-linux.py -clang
+```
+~/src/humon$ ./build-linux.py -clang
+```
 
 > Currently the clang build uses gcc's standard library. A better build experience is in the works, but in the meantime it's trivial to modify the `build-linux.py` script to use whatever library you have.
 
 In Windows, you can open the root-level `humon.sln` file in Visual Studio 2017 or newer, and build the targets you like.
 
-There are a number of build options available to get just what you want: 32-bit architecture, debug vs release builds, and a few switches to customize the runtime. See [this here section here](#buildingHumon).
+There are a number of build options available to get just what you want: 32-bit architecture, debug vs release builds, and a few switches to customize the runtime. See [this here section right here](#buildingHumon).
 
 > A new build system is in the works. It does build, but the binaries are placed in a different tree, and installation is not yet inmplemented. See [Pyke](https://github.com/spacemeat/pyke) and the [makefile](make.py) for this. Soon the nasty bash scripts will be a thing of the past.
 
@@ -101,7 +109,9 @@ When you've successfully built, there will be an appropriate binary of interest 
 
 In Linux, you can install Humon into your system by invoking
 
-    ~/src/humon$ sudo install-linux.py
+```
+~/src/humon$ sudo install-linux.py
+```
 
 This will place the built headers and libraries and the [hux tool](#hux) into the appropriate places so build tools can find them.
 
@@ -110,7 +120,7 @@ As an alternative to installing, you can simply copy the lib from `build/bin` an
 If you're building a Windows project in Visual Studio, and you want to use the static library, simply `#include <humon/humon.h>` or `#includde <humon/humon.hpp>`, and link against the lib. If you want to use the DLL, define the HUMON_USING_DLL preprocessor symbol (either with a preceding `#define` or by passing `-DHUMON_USING_DLL` to the build) and link against the import lib.
 
 ### Humon version
-Humon is still in its 0 major version, as it is still changing its API to eventually settle down. While it's not yet in version 1, the version increases are somewhat arbitrary.
+Humon is still in its 0 major version, as it is still changing its API to eventually settle down. As long as it's not yet in version 1, the version increases are somewhat arbitrary.
 
 Once mature, Humon will use semver in its language/API versioning scheme: `major.minor.patch` For changes that do not affect the API or correct behavior, the patch is incremented. For changes that only add to the API but do not break builds or behaviors, the minor value is incremented. For breaking changes, the major value is incremented. The version refers to the C/C++ API version; the Humon *format* is considered stable.
 
@@ -187,7 +197,9 @@ So, this project proposes Humon as a replacement for those tasks that XML is per
 #### Brevity and simplicity
 Punctuation in Humon consists of:
 
-    [ ] { } : " ' ` ^ @ // /* */
+```
+[ ] { } : " ' ` ^ @ // /* */
+```
 
 As stated, there are three kinds of nodes in a Humon source text: lists, dicts, and values. These correspond to the same object kinds in JSON, conceptually: A list stores a plurality of other nodes in ordered sequence. A dictionary stores a plurality of nodes in ordered sequence, each associated with a key. A value stores a single string. This structure allows for an arbitrary data hierarchy.
 
@@ -227,43 +239,51 @@ There is no notion of backslashing or other escape sequences. What you see is wh
 
 You can use any quote character (`'`, `"`, `` ` ``) to begin a string. It doesn't matter which you use; they all work the same way. A quoted string value starts after the quote, and ends just before the next corresponding quote. Quoted strings can span multiple lines of text. Newlines are included in the string.
 
-    "Fiery the angels rose, & as they rose deep thunder roll'd
-    Around their shores: indignant burning with the fires of Orc."
+```
+{
+    words: "Fiery the angels rose, & as they rose deep thunder roll'd
+Around their shores: indignant burning with the fires of Orc."
+}
+```
 
 Humon also supports tagged quotes. These are good for inserting code snippets or other wild and wacky text in languages that may use your quote characters. (JavaScript and JSX and such wind up using all three. Markdown also comes to mind...) They're also good when generating Humon programmatically, and you don't know exactly what quotes characters are in there and you don't really want to check:
 
-    {
-        min: ^EOT^
-        if ($1 < $2)
-            { return $1; }
-        else
-            { return $2; }
-    ^EOT^
-    }
+```
+{
+    min: ^EOT^
+    if ($1 < $2)
+        { return $1; }
+    else
+        { return $2; }
+^EOT^
+}
+```
 
 The tagged quote starts with a `^` followed by zero or more characters, followed by another `^`. The resulting value token contains all the subsequent text until the next matching `^`-enclosed tag in the source text. The tags otherwise have no meaning, and can be reused. The tag can be zero characters long, which is my usual; I generally use a named tag only if I need to disambiguate the tag from a double-caret sequence inside the token (which I never have).
 
 The specific whitespacing of tag-quoted values is nuanced. That's because our (really, my) expectation is a little nuanced too. The following example illustrates:
 
-    {
-        min: ^^
-        if ($1 < $2)
-            { return $1; }
-        else
-            { return $2; }
-    ^^
+```
+{
+    min: ^^
+    if ($1 < $2)
+        { return $1; }
+    else
+        { return $2; }
+^^
 
-        max: ^^
+    max: ^^
 
-        if ($1 >= $2)
-            { return $1; }
-        else
-            { return $2; }
-    ^^
+    if ($1 >= $2)
+        { return $1; }
+    else
+        { return $2; }
+^^
 
-        neg: ^^return -$1;^^
-        inv: ^^        return 1/$1;^^
-    }
+    neg: ^^return -$1;^^
+    inv: ^^        return 1/$1;^^
+}
+```
 
 Above, `min`'s value starts at the first whitespace character in the line with 'if'. `max`'s value starts at the newline *before* the first 'i' in its 'if', and that newline is included it in the token. In the case that the token starts on the same line as the tagged quote as in `neg` and `inv`, the token includes all the characters between the tags, including preceding and trailing whitespace.
 
@@ -276,17 +296,19 @@ A value is a contiguous non-punctuation, non-whitespace string of Unicode code p
 
 They can be numbers of course, but that's just a string to Humon. The rules for value strings also fully apply to keys. Examples below specify valid keys:
 
-    {
-        this: okay
-        this one: nope      // Syntax error
-        ^^this one^^: sure
-        "this one here": "it's fine"
-        "this
-    one": yes
-        1: "fine, but remember: numbers are just strings to Humon and they won't be sorted"
-        Δημοσθένους: "Unicode is fully recognized."
-        ^WHY^No really, why allow this?^WHY^: "Why not?"
-    }
+```
+{
+    this: okay
+    this one: nope      // Syntax error
+    ^^this one^^: sure
+    "this one here": "it's fine"
+    "this
+one": yes
+    1: "fine, but remember: numbers are just strings to Humon and they won't be sorted"
+    Δημοσθένους: "Unicode is fully recognized."
+    ^WHY^No really, why allow this?^WHY^: "Why not?"
+}
+```
 
 **Whitespace is ignored.**
 The tokenizer ignores whitespace that isn't contained in a quoted string or comment. Whitespace characters are not captured by tokens. All Unicode whitespace code points are recognized as whitespace.
@@ -294,36 +316,38 @@ The tokenizer ignores whitespace that isn't contained in a quoted string or comm
 **Commas are whitespace.**
 Commas are regarded by the tokenizer as whitespace. They are completely optional. The following Humon objects are identical:
 
-    [resistors caps ICs diodes MOSFETs]
-    [resistors,caps,ICs,diodes,MOSFETs]
-    [resistors, caps, ICs, diodes, MOSFETs]     // [1]
-    [
-        resistors
-        caps
-        ICs
-        diodes
-        MOSFETs
-    ]
-    [
-        resistors,
-        caps,
-        ICs,
-        diodes,
-        MOSFETs,
-    ]
-    [
-        resistors,
-        caps,
-        ICs,
-        diodes,
-        MOSFETs
-    ]
-    [resistors, caps, ICs, diodes, MOSFETs,]
-    ,,,[,resistors,
-    caps    ,
-         ICs, ,
-                 diodes
-               MOSFETs,,,,,,, ],,,
+```
+[resistors caps ICs diodes MOSFETs]
+[resistors,caps,ICs,diodes,MOSFETs]
+[resistors, caps, ICs, diodes, MOSFETs]     // [1]
+[
+    resistors
+    caps
+    ICs
+    diodes
+    MOSFETs
+]
+[
+    resistors,
+    caps,
+    ICs,
+    diodes,
+    MOSFETs,
+]
+[
+    resistors,
+    caps,
+    ICs,
+    diodes,
+    MOSFETs
+]
+[resistors, caps, ICs, diodes, MOSFETs,]
+,,,[,resistors,
+caps    ,
+     ICs, ,
+             diodes
+           MOSFETs,,,,,,, ],,,
+```
 
 I find myself sometimes using commas when placing list or dict elements on one line, as on line `[1]` above, and not using them elsewise. In other words, what comes natural to my typing is legal Humon, and requires no grammarizing. I like designing structure without worrying about the punctuation; indeed, this little nit was one of the main motivations behind Humon's development.
 
@@ -335,10 +359,12 @@ Metatags are the only sort of special syntax-y feature of Humon. The first worki
 
 Every node can have any number of metatags, which appear *after or within* the node--specifically, *after* any token belonging to or associated to a node. The trove can have them too, if an metatag appears before any other objects. Metatags begin with an `@` symbol, followed by either one key:value pair, or a dict of key:value pairs:
 
-    [
-        nostromo @ movie-ref: alien
-        sulaco @ { movie-ref: aliens, movie-director: cameron }
-    ] @ { exhaustive: probablyNot }
+```
+[
+    nostromo @ movie-ref: alien
+    sulaco @ { movie-ref: aliens, movie-director: cameron }
+] @ { exhaustive: probablyNot }
+```
 
 Metatag values must be strings; an metatag value can't be a collection. That way lies some madness.
 
@@ -360,7 +386,9 @@ Some wrongly-encoded characters (aliases or overlong encodings in some UTF-n for
 
 If you know your source data is UTF-8, and you know it contains only legal code units or you don't care, you can turn off strict Unicode checking. This allows Humon to indiscriminately load byte data without checking for overlong sequences, etc. It's a little faster. If you're accepting a source text generated by a user, especially a remote user, consider always checking legality. A proper Unicode application should not emit these illegal codes.
 
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: materials2; indent: -2
+```
 
 Either way, special Unicode code points like continuations are simply considered word characters for keys or values or comments, and Humon doesn't *ever* check for Unicode's notions of semantic correctness for sequences of code points. To Humon, any code point is either whitespace, language punctuation (which is only ever a single UTF-8 byte), or a word-token character. That's all the tokenizer understands.
 
@@ -386,7 +414,9 @@ Start with `#include <humon/humon.hpp>`. The interface is contained in a namespa
 
 To deserialize a Humon source text, invoke one of `hu::Trove`'s static member functions:
 
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: statics; indent: -2
+```
 
 These each return a `std::variant<hu::Trove, hu::ErrorCode>` object. Once you have a trove, all the loading from source is finished, and it's fully ready to use. You'll use the trove to get access to nodes and their data.
 
@@ -397,7 +427,9 @@ The `hu::Trove` class is move-constructable and move-assignable. When it is dest
 #### Loading options
 There are some options you can give the loader:
 
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: loadOptions; indent: -2
+```
 
 The object constructed in the call is a `hu::DeserializeOptions`, which takes four values:
 * a `hu::Encoding` specifying the anticipated Unicode encoding of the input. For loading from files, this defaults to `hu::Encoding::unknown`, in which case Humon will attempt to guess the encoding. For loading from memory, it defaults to `hu::Encoding::utf8`.
@@ -409,33 +441,47 @@ The object constructed in the call is a `hu::DeserializeOptions`, which takes fo
 
 There are several ways to access a node. To get the root node, which is always at node index 0:
 
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: roots; indent: -2
+```
 
 These each return a `hu::Node` object that represents the root node. To get a node deeper in the tree:
 
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: drill; indent: -2
+```
 
 > Internally, a `hu::Trove` object just manages a pointer to a `capi::huTrove`, which is created on the heap. Moves are shallow, and all the member functions call C API functions on the stored pointer. `hu::Node` objects also just manage pointers, and are movable and copyable. Since underlying Humon objects are immutable and immovable, the C++ objects can be lightweight and breezy.
 
 To check whether a node has a particular child node, use the `%` operator on the node with the desired key or index. This returns a bool which indicates whether the given key or index is valid. Note that for indices, this produces `true` if the given index is strictly smaller than the number of children, and is inclusive of index 0.
 
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: child1; indent: -2
+```
 
 It's more efficient to store a reference to a node than to look it up successive times. Above, we're essentially looking up `/foo` twice. Better to get the base object and store it:
 
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: child2; indent: -2
+```
 
 Humon APIs don't throw, but rather return nullish* objects, which have implicit `operator bool()`s for checking nullity. So even better than above:
 
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: child3; indent: -2
+```
 
 Or even,
 
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: child4; indent: -2
+```
 
 And, if you intend to actually use the data (probably, right?), it may be even better to just ask for it all the way without checking anything:
 
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: child5; indent: -2
+```
 
 Above, `foosStuff` will be a nullish object if any part of the path doesn't actually exist in the Humon source. It's all in one succinct line of code, though this is harder to debug; if the path is invalid, it may be hard to check which part of the path fell off of reality. So use this compact query style with caution.
 
@@ -443,13 +489,17 @@ Above, `foosStuff` will be a nullish object if any part of the path doesn't actu
 
 Up to now, we've mostly been using `operator /` to get nodes. But there's a string-based addressing method as well. Every node has a unique address based on the progression of keys and indices used to get to it from the trove or another node. You can get a node's address easily enough:
 
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: child6; indent: -2
+```
 
 Node addresses are computed, not stored in the trove; as a result, the return value is a `std::string` rather than a `std::string_view` peering into the source text. More on that in a sec.
 
 The address of a node looks like:
 
-    /foo/20/baz/3
+```
+/foo/20/baz/3
+```
 
 The `/`s delimit the terms, and each term is either a key or integer index.
 
@@ -457,48 +507,62 @@ In Humon, dicts maintain their ordering like lists. When crafting an address str
 
 You can look up a node by its address:
 
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: child7; indent: -2
+```
 
 You get a node object back, which is valid if the address is valid or nullish if not.
 
 There are some finnicky bits about node addresses when considering that a dict's keys can be numbers in a source text. They're still just string keys to Humon. But, `hu::Trove::nodeByAddress(address)` and `hu::Node::nodeByAddress(address)` interpret numeric terms in the address as indices. If you intend them to be read as keys, enquote that term in the address:
 
-    /foo/'20'/baz/
+```
+/foo/'20'/baz/
+```
 
 Since keys can be nonunique in Humon, you can disambiguate a key in an address like:
 
-    /foo/bar:23/baz
+```
+/foo/bar:23/baz
+```
 
 The foo dictionary has at least 24 child nodes with the key 'bar'.
 
 `hu::Node::address()` always returns an address that is legal to use in `hu::Trove::nodeByAddress()` to find the node again. `hu::Node::address()` will appropriately single-enquote terms (`'`) if the key is numeric, and will tag-quote strings with `/`s or `:`s in them to disambiguate such keys in the address format.
 
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: addressWeird1
 
-    ...
+    ///...
 
 !!! src: apps/readmeSrc/usage.cpp; frag: addressWeird2; indent: -2
+```
 
-    ...
-
-    $ runSample
-    required's address: /bufferSources/^^res/"game_assets"/meshes.hu^^/required
+```
+$ runSample
+required's address: /bufferSources/^^res/"game_assets"/meshes.hu^^/required
+```
 
 A relative address can be used to get from one node to another:
 
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: addressWeird3; indent: -2
+```
 
 Notice the relative path does not start with `/`. The relative address is followed from the node, not from the root.
 
 There are also explicit member functions for getting nodes by child index or key or parentage:
 
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: getNode; indent: -2
+```
 
 ### Getting node data
 
 So you've got a value node. Whooptie-doo. To get a value from it:
 
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: getValue; indent: -2
+```
 
 > There are numerous Humon APIs that return a `std::string_view`, which might raise some of y'all's flags--`std::string_view`s do not own their own data. But remember, Humon objects are immutable and don't ever move in memory; the C++ objects just wrap heap pointers. Once the trove is loaded, none of its references go bad until the trove is destroyed. The returned `std::string_view`s point to memory that is static and good until the trove is gone, so in the case of Humon APIs, returning a `std::string_view` is copacetic. Just keep the trove around.
 
@@ -508,6 +572,7 @@ In example [2] above, the `hu::val<T>` type is defined to extract typed data fro
 
 You can also define your own specialization of `hu::val<T>` for your own type. Start with the type you'd like to deserialize:
 
+```c++
     template<int NumComponents>
     class Version
     {
@@ -522,18 +587,23 @@ You can also define your own specialization of `hu::val<T>` for your own type. S
     };
 
     using V3 = Version<3>;
+```
 
 And define the specialized extractor:
 
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: val1
+```
 
 Now you can use it:
 
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: val2; indent: -1
 
-    ...
+    ///...
 
 !!! src: apps/readmeSrc/usage.cpp; frag: val3; indent: -2
+```
 
 C++ will deduce the type of `gccVersion` above from the `V3` template parameter passed to `hu::val<>`. `hu::val<T>` is a convenience which allows you to code the lookup and conversion in line, without grouping parentheses.
 
@@ -541,15 +611,19 @@ C++ will deduce the type of `gccVersion` above from the `V3` template parameter 
 
 Metatags are described in detail below. They're essentially per-node metadata. Examine a node's metatags in several ways:
 
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: metatag1
 
-    ...
+    ///...
 
 !!! src: apps/readmeSrc/usage.cpp; frag: metatag2; indent: -2
+```
 
 Trove objects can have metatags too, separate from any node metatags, and feature similar APIs. There are also APIs for searching all a trove's nodes for metatags by key, value, or both; these return collections of `hu::Node`s.
 
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: metatag3; indent: -2
+```
 
 Similar APIs also exist for nodes and troves that search comment content and return associated nodes. See the API spec for these.
 
@@ -562,13 +636,17 @@ There are APIs for serializing a trove back to memory or a file. There are three
 
 You can generate a Humon source text from a `hu::Trove` like so:
 
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: print1; indent: -2
+```
 
 This will generate an uncolored, well-formatted source text, or an error code. These are returned as a `std::variant<std::string, hu::ErrorCode>`. The `hu::SerializeOptions` class has formatting options to customize the source text to your liking.
 
 There are sugar functions to make it even easier:
 
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: print2; indent: -2
+```
 
 For printing with colors, specify a color table of type `hu::ColorTable`, which is just a type alias for `std::array<std::string_view, hu::capi::HU_COLORCODE_NUMCOLORS>`. You can set these values manually; each string corresponds index-wise to color codes in `hu::ColorCode`, and is inserted just before the appropriate token in the printed source text. There are a few special values: `hu::ColorCode::sourceTextBegin` which is placed before all other characters, `hu::ColorCode::tokenEnd` which is placed after *each* colored token, and `hu::ColorCode::sourceTextEnd` which is placed after the *last* token in the source text.
 
@@ -576,7 +654,9 @@ For printing with colors, specify a color table of type `hu::ColorTable`, which 
 
 Humon provides a function to make a `hu::ColorTable` with ANSI terminal color codes. This is useful for command-line printing of Humon content.
 
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: print3; indent: -2
+```
 
 ### The principles applied to the C-family APIs
 Maybe you'd call them behaviors, but they embody the Humon principles.
@@ -612,8 +692,10 @@ You can turn turn on exceptions for the C++ API. Before your `#include <humon/hu
 
 So, if you want bad lookups to throw exceptions, but all other functions to behave normally, you'd do this:
 
+```c++
     #define HUMON_USE_NODE_PATH_EXCEPTIONS
     #include <humon/humon.hpp>
+```
 
 **Objects in dicts remain in serial order.**
 This is different from some JSON libraries, that don't preserve the order of key-object pairs in dicts. Humon guarantees that, when you access a dict's children by index (as you would a list), they'll be returned in the order you expect.
@@ -630,47 +712,49 @@ Humon doesn't know or care about your comments, as already stated. But it doesn'
 
 All comments are associated to either a node in the hierarchy, or the trove itself. Humon tries to be smart about associating comments. Here's an example; the comments indicate to which token and node they associate:
 
-    // ↓ root dict node
-    // ↓ root dict node
-    {   // ← root dict node
+```
+// ↓ root dict node
+// ↓ root dict node
+{   // ← root dict node
+    // ↓ element node
+    key     // ← element node
+        :   // ← element node
         // ↓ element node
-        key     // ← element node
-            :   // ← element node
-            // ↓ element node
-            value // ← element node
-                // ← element node; the following metatag is considered part of it
-                @ { metatagKey: metatagValue } ← // element node
-        // ↓ root dict node
-    }   // ← root dict node
-    // ↓ trove
+        value // ← element node
+            // ← element node; the following metatag is considered part of it
+            @ { metatagKey: metatagValue } ← // element node
+    // ↓ root dict node
+}   // ← root dict node
+// ↓ trove
+```
 
 You can get the comments on any node or the trove, and you can search for a comment and get its associated node back though APIs. Comments are associated to nodes per the following rules:
 
 1. Any comment that starts on a line of text that contains no other non-comment tokens before it is *associated forward*. That means the next non-comment token encountered in the source text specifies the node to which the comment will be associated. If there are no non-comment tokens left in the stream, the comment applies to the trove.
 
-'''
-    [
-        // craftsman
-        "table saw"
-        // delta
-        "drill press"
-        // dewalt
-        "chop saw"
-        // makita
-        "impact driver"
-    ]
-'''
+```
+[
+    // craftsman
+    "table saw"
+    // delta
+    "drill press"
+    // dewalt
+    "chop saw"
+    // makita
+    "impact driver"
+]
+```
 
 1. Any comment that appears on the same line of text *after* a non-comment token is *associated backward*. That means a comment which trails a value or punctuation symbol on the same line of text is associated to that value or collection, respectively. These are mainly for comments that trail elements in a vertical list:
 
-'''
-    [
-        "table saw"     // craftsman
-        "drill press"   // delta
-        "chop saw"      // dewalt
-        "impact driver" // makita
-    ]
-'''
+```
+[
+    "table saw"     // craftsman
+    "drill press"   // delta
+    "chop saw"      // dewalt
+    "impact driver" // makita
+]
+```
 
 These rules allow you to write comments naturally within the structure of the source text, and their associations will be what you'd expect a human to interpret as well.
 
@@ -683,27 +767,33 @@ Like comments, metatags are associated with nodes or the trove. You can access m
 
 Metatags are always *associated backward*. They modify the node owning the nearest non-comment token that appeared before the metatag, regardless of same-lineness. Any amount of whitespace or comments in between is ignored, as usual. If the previous token was a collection-starter or collection-ender (`[`, `{`, `]` or `}`), it modifies that list or dict node. In the following, `remoteStorage:true` tags the player dict, not the userId value, because it follows the player dict's `{` opener:
 
-    {
-        player: {
-            @remoteStorage: true
-            userId:     int
-            username:   string
-            friends:    { type:vector of:string }
-        }
+```
+{
+    player: {
+        @remoteStorage: true
+        userId:     int
+        username:   string
+        friends:    { type:vector of:string }
     }
+}
+```
 
 (Personally, I would place the metatag on the same line as the `player: {`, for clarity.)
 
 If no nodes appear before an metatag, it applies to the trove. A great way to begin a Humon file spec is by specifying metatags for the application version or config version for which the file is good. Maybe you're developing a code-generation suite cleverly called "hudo", and want to ensure the correct version of the engine is called to consume every model file, even older ones. Hudo could look for a version metatag on the trove, before examining any nodes, and use the appropriate engine version to interpret the structure. Here we'll reuse the `using V3 = Version<3>;` class from earlier:
 
+```
 !!! src: apps/readmeSrc/hudo.hu
+```
 
-    ...
-
+```c++
 !!! src: apps/readmeSrc/usage.cpp; frag: hudo; indent: -2
+```
 
-    $ runSample
-    Using version 0.1.x
+```
+$ runSample
+Using version 0.1.x
+```
 
 Like asserted earlier, metatags are 100% open in their use. Humon doesn't use any metatag keys or values and doesn't interpret them. Applications can use them or not, but all metatags that are legal are guaranteed to be parsed, even if the application doesn't know about or use them at all. In this way you can embed metadata about objects in a Humon file, and even old versions of Humon apps will correctly read (and ignore) them, because all official versions of Humon always have.
 
@@ -753,11 +843,15 @@ These files are built in Visual Studio 2017+:
 
 The tests are built along with the libraries. Run them *from the project root*:
 
-    ~/src/humon$ build/bin/test
+```
+~/src/humon$ build/bin/test
+```
 
 or
 
-    PS C:\Users\you\src\humon> build\bin\humon-test.Win64.Debug.exe
+```
+PS C:\Users\you\src\humon> build\bin\humon-test.Win64.Debug.exe
+```
 
 or run the test project directly from Visual Studio. See [Testing Humon](#testingHumon) for details.
 
@@ -809,7 +903,9 @@ Pass `-noLineCol` (which then passes `-DHUMON_NOLINECOL` to the build tool) to t
 ## <a name="testingHumon">Testing Humon builds
 You can run the unit tests from a shell at the Humon project root, as mentioned above:
 
-    ~/src/humon$ build/bin/test
+```
+~/src/humon$ build/bin/test
+```
 
 The test code under `{humon}/test` is organized in a file/group/test hierarchy, and coincidentally look a lot like CPPUTest files. Files under `{humon}/test/ztest/` are for the test harness and some generated test framework code.
 
@@ -819,25 +915,29 @@ The test runs a bunch of checks to test the Humon API's correctness. You can foc
 
 It's important to note that changing some build parameters will invalidate some tests. Specifically, if you set `-noChecks` in the build process, you'll want to disable running the `pathological` tests which test for behavior with invalid parameters.
 
-    ~/src/humon$ build-linux.py -noChecks
-    ~/src/humon$ build/bin/test -xt pathological
+```
+~/src/humon$ build-linux.py -noChecks
+~/src/humon$ build/bin/test -xt pathological
+```
 
 There's a convenient script in the project directory that runs the tests for all targeted builds. After building with `-buildAll`, test all the targets at once:
 
-    ~/src/humon$ build-linux.py -buildAll
-    Building static library libhumon-gcc-32-d.a
-    ...
-    ~/src/humon$ ./runAllTests.py
+```
+~/src/humon$ build-linux.py -buildAll
+Building static library libhumon-gcc-32-d.a
+...
+~/src/humon$ ./runAllTests.py
+```
 
 ## <a name="hux">The `hux` utility
 `hux` is a command line tool for printing (perhaps with color), validating, and whitespace-formatting Humon data. It can load files, stdin, or Humon tokens from the command line, and has formatting, tab, newline, and colorization options which match the API's printing functions. `hux` will also display a list of errors if the data cannot be loaded. `hux` is installed when you install Humon. Try it out; use `hux -?` to see what it can do.
 
 ## The future of Humonity
 Near-future features include:
-* Language bindings for Python (in the works now)
+* Language bindings for (Python)[https://github.com/spacemeat/humon-py] is in alpha.
 * Language bindings for .NET
 * Language bindings for Node
 * Language bindings for Rust
 * Single-header-ify the C++
 * Constexpr All The Things in the single-header version. Kind of a research project.
-* Better build process. Considering CMake, but that's not set in stone. Frankly, it is not my very favorite.
+* Better build process. (Pyke)[https://github.com/spacemeat/pyke] is nearly ready to go.

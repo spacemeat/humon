@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include <iomanip>
 #include <humon/humon.hpp>
 
 using namespace std;
@@ -243,8 +244,8 @@ int main(int argc, char ** argv)
     }
 
     {
-        auto src = R"(
 //!!! addressWeird1
+        auto src = R"(
 {
     bufferSources: {
         'res/"game_assets"/meshes.hu': {
@@ -265,9 +266,8 @@ int main(int argc, char ** argv)
         }
     }
 }
-//!!!
 )"sv;
-
+//!!!
 //!!! addressWeird2
         auto trove = get<hu::Trove>(hu::Trove::fromString(src));
         auto requiredNode = trove / 0 / 0 / "required";             /*!!!eol*/out << "required's address: " << requiredNode.address() << "\n";
@@ -306,15 +306,15 @@ int main(int argc, char ** argv)
     }
 
     {
+//!!! val2
         auto src = R"(
 {
-//!!! val2
     dependencies: {
         gcc: 9.2.1
     }
-//!!!
 }
 )"sv;
+//!!!
 
         auto trove = get<hu::Trove>(hu::Trove::fromString(src));
 //!!! val3
@@ -323,8 +323,8 @@ int main(int argc, char ** argv)
     }
 
     {
-        auto src = R"(
 //!!! metatag1
+        auto src = R"(
 {
     definitions: { 
         player: {
@@ -338,11 +338,13 @@ int main(int argc, char ** argv)
         }
     }
 }
-//!!!
 )"sv;
-
-        auto trove = move(get<hu::Trove>(hu::Trove::fromString(src)));
+//!!!
 //!!! metatag2
+        auto trove = move(get<hu::Trove>(hu::Trove::fromString(src)));
+
+		//...
+
         auto node = trove.nodeByAddress("/definitions/player/maxHp/type");
 
         int numMetatags = node.numMetatags();               /*!!!eol*/out << "num metatags: " << numMetatags << "\n";
@@ -399,7 +401,7 @@ int main(int argc, char ** argv)
         // You can specify minimal whitespace and still use a color table for the tokens--see below.
         tokStr = trove.toMinimalString(colorTable, false, "\n");
         if (auto str = get_if<std::string>(& tokStr))
-            { out << * str; }
+            { out << * str << "\n"; }
 
         // Pretty. Use an indentation of 4 spaces to format nested depths.
         tokStr = trove.toPrettyString(4, false, colorTable, false, "\n");
@@ -438,13 +440,43 @@ int main(int argc, char ** argv)
     }
     else
     {
+        ofstream gotStr("apps/readmeSrc/usage_cpp_got.txt");
+        gotStr << out.str();
+
         ifstream expStr("apps/readmeSrc/usage_cpp_out.txt");
-        string expected((istreambuf_iterator<char>(expStr)), istreambuf_iterator<char>());
-        auto output = out.str();
-        if (expected == output)
+		istringstream iss(out.str());
+		auto done = false;
+		int line = 1;
+		bool is_different = false;
+		ostringstream oss;
+		while (! done)
+		{
+			string exp, got;
+			std::getline(expStr, exp);
+			std::getline(iss, got);
+			if (exp == got)
+			{
+				oss << std::setw(3) << line << "     " << got.data() << "\n";
+				//printf("%3d     %s\n", line, got.data());
+			}
+			else
+			{
+				oss << std::setw(3) << line << " :(  " << got.data() << "\n";
+				//printf("%3d :(  %s\n", line, got.data());
+				is_different = true;
+			}
+
+			line += 1;
+			if (expStr.eof() || iss.eof())
+			{
+				done = true;
+			}
+		}
+
+        if (is_different == false)
             { printf("Copasetic, my sisters and brothers.\n"); return 0; }
         else
-            { printf("Epic fail: \n%s\n----vs----\n%s", expected.data(), output.data()); return 1; }
+			{ printf("Epic fail:\n%s", oss.str().data()); return 1; }
     }
 
     return 0;
