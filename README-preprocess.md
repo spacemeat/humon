@@ -934,10 +934,10 @@ Building static library libhumon-gcc-32-d.a
 
 ## The future of Humonity
 Near-future features include:
-* Language bindings for (Python)[https://github.com/spacemeat/humon-py] is in alpha.
+* Language bindings for [Python](https://github.com/spacemeat/humon-py) is in alpha.
 * Language bindings for .NET
 * Language bindings for Node
 * Language bindings for Rust
 * Single-header-ify the C++
 * Constexpr All The Things in the single-header version. Kind of a research project.
-* Better build process. (Pyke)[https://github.com/spacemeat/pyke] is nearly ready to go.
+* Better build process. [Pyke](https://github.com/spacemeat/pyke) is nearly ready to go.
