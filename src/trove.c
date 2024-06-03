@@ -1132,6 +1132,7 @@ huErrorCode huSerializeTroveToFile(huTrove const * trove, char const * path, huS
         { ourFree(& trove->allocator, str); return HU_ERROR_BADFILE; }
 
     huSize_t writeLength = (huSize_t) fwrite(str, sizeof(char), strLength, fp);
+	fclose(fp);
     ourFree(& trove->allocator, str);
     if (writeLength != strLength)
         { return HU_ERROR_BADFILE; }
