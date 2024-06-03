@@ -234,15 +234,12 @@ int main(int argc, char ** argv)
     case InputType::cmdLine:
         {
             std::ostringstream oss;
-            if (inputType == InputType::cmdLine)
-            {
-                for (++i; i < argc; ++i)
-                {
-                    oss << argv[i];
-                    if (i < argc - 1)
-                        { oss << " " ;}
-                }
-            }
+			for (++i; i < argc; ++i)
+			{
+				oss << argv[i];
+				if (i < argc - 1)
+					{ oss << " " ;}
+			}
             desRes = Trove::fromString(oss.str(), {Encoding::unknown}, ErrorResponse::mum);
         }
         break;
