@@ -177,7 +177,7 @@ void addChildNode(huNode * node, huNode * child)
 {
     child->parentNodeIdx = node->nodeIdx;
     appendToVector(& node->childNodeIdxs, & child->nodeIdx, 1);
-    child->childOrdinal = node->childNodeIdxs.numElements - 1;
+    child->childIndex = node->childNodeIdxs.numElements - 1;
 
 #ifdef HUMON_CAVEPERSON_DEBUGGING
     char address[HUMON_ADDRESS_BLOCKSIZE];

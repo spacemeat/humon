@@ -7,6 +7,8 @@
 #include <string_view>
 #include <tuple>
 #include <fstream>
+#include <iostream>
+#include <iterator>
 #include <sstream>
 #include <memory>
 #include <vector>
@@ -480,8 +482,8 @@ namespace hu
             { check(); return Token(isValid() ? huGetLastToken(cnode) : HU_NULLTOKEN); }
         Node parent() const                ///< Returns the parent node of this node, or the null node if this is the root.
             { check(); return Node(capi::huGetParent(cnode)); }
-        hu::size_t childOrdinal() const           ///< Returns the index of this node vis a vis its sibling nodes (starting at 0).
-            { check(); return isValid() ? huGetChildOrdinal(cnode) : -1; }
+        hu::size_t childIndex() const           ///< Returns the index of this node vis a vis its sibling nodes (starting at 0).
+            { check(); return isValid() ? huGetChildIndex(cnode) : -1; }
         hu::size_t numChildren() const            ///< Returns the number of children of this node.
             { check(); return capi::huGetNumChildren(cnode); }
 

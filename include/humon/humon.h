@@ -364,14 +364,14 @@ extern "C"
 	HUMON_PUBLIC huToken const * huGetLastToken(huNode const * node);
 
 	/// Gets the child index of a node.
-	HUMON_PUBLIC huSize_t huGetChildOrdinal(huNode const * node);
+	HUMON_PUBLIC huSize_t huGetChildIndex(huNode const * node);
 
     /// Gets a pointer to a node's parent.
 	HUMON_PUBLIC huNode const * huGetParent(huNode const * node);
     /// Gets the number of children a node has.
 	HUMON_PUBLIC huSize_t huGetNumChildren(huNode const * node);
     /// Gets a child of a node by child index.
-	HUMON_PUBLIC huNode const * huGetChildByIndex(huNode const * node, huSize_t childOrdinal);
+	HUMON_PUBLIC huNode const * huGetChildByIndex(huNode const * node, huSize_t childIndex);
     /// Gets a child of a node by key.
 	HUMON_PUBLIC huNode const * huGetChildByKeyZ(huNode const * node, char const * key);
     /// Gets a child of a node by key.

@@ -237,7 +237,7 @@ extern "C"
         huToken const * lastToken;          ///< The last token of this node, including any metatag and comment tokens.
 
         huSize_t parentNodeIdx;             ///< The parent node's index, or -1 if this node is the root.
-        huSize_t childOrdinal;              ///< The index of this node vis a vis its sibling nodes (starting at 0).
+        huSize_t childIndex;              ///< The index of this node vis a vis its sibling nodes (starting at 0).
 
         huVector childNodeIdxs;             ///< Manages a huSize_t []. Stores the node inexes of each child node, if this node is a collection.
         huVector metatags;               ///< Manages a huMetatag []. Stores the metatags associated to this node.

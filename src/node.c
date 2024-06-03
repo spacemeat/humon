@@ -14,7 +14,7 @@ void initNode(huNode * node, huTrove const * trove)
     node->valueToken = HU_NULLTOKEN;
     node->lastValueToken = HU_NULLTOKEN;
     node->lastToken = HU_NULLTOKEN;
-    node->childOrdinal = 0;
+    node->childIndex = 0;
     node->parentNodeIdx = -1;
     initGrowableVector(& node->childNodeIdxs, sizeof(huSize_t), & trove->allocator);
     initGrowableVector(& node->metatags, sizeof(huMetatag), & trove->allocator);
@@ -112,14 +112,14 @@ huToken const * huGetLastToken(huNode const * node)
 }
 
 
-huSize_t huGetChildOrdinal(huNode const * node)
+huSize_t huGetChildIndex(huNode const * node)
 {
 #ifdef HUMON_CHECK_PARAMS
     if (node == HU_NULLNODE)
         { return -1; }
 #endif
 
-	return node->childOrdinal;
+	return node->childIndex;
 }
 
 
@@ -145,18 +145,18 @@ huSize_t huGetNumChildren(huNode const * node)
 }
 
 
-huNode const * huGetChildByIndex(huNode const * node, huSize_t childOrdinal)
+huNode const * huGetChildByIndex(huNode const * node, huSize_t childIndex)
 {
 #ifdef HUMON_CHECK_PARAMS
-    if (node == HU_NULLNODE || childOrdinal < 0)
+    if (node == HU_NULLNODE || childIndex < 0)
         { return HU_NULLNODE; }
 #endif
 
-    if (childOrdinal >= huGetNumChildren(node))
+    if (childIndex >= huGetNumChildren(node))
         { return HU_NULLNODE; }
 
     return huGetNodeByIndex(node->trove,
-        * (huSize_t *) getVectorElement(& node->childNodeIdxs, childOrdinal));
+        * (huSize_t *) getVectorElement(& node->childNodeIdxs, childIndex));
 }
 
 
@@ -223,9 +223,9 @@ huNode const * huGetNextSibling(huNode const * node)
     {
         huNode const * parentNode = huGetParent(node);
 
-        if (huGetNumChildren(parentNode) > node->childOrdinal + 1)
+        if (huGetNumChildren(parentNode) > node->childIndex + 1)
         {
-           return huGetChildByIndex(parentNode, node->childOrdinal + 1);
+           return huGetChildByIndex(parentNode, node->childIndex + 1);
         }
     }
 
@@ -308,7 +308,7 @@ huNode const * huGetNextSiblingWithKeyN(huNode const * node, char const * key, h
 
     huSize_t numChildren = huGetNumChildren(parentNode);
 
-    for (huSize_t i = node->childOrdinal + 1; i < numChildren; ++i)
+    for (huSize_t i = node->childIndex + 1; i < numChildren; ++i)
     {
         huNode const * childNode = huGetChildByIndex(parentNode, i);
         if (keyLen == childNode->keyToken->str.size &&
@@ -721,14 +721,14 @@ static void getNodeAddressRec(huNode const * node, PrintTracker * printer)
 
     if (parentNode->kind == HU_NODEKIND_LIST)
     {
-        huSize_t numBytes = log10i(node->childOrdinal) + 1;
+        huSize_t numBytes = log10i(node->childIndex) + 1;
         char * nn = growVector(str, & numBytes);
 
         // If we're printing the string and not just counting,
         if (str->elementSize > 0)
         {
             nn += numBytes; // set nn to past the end of the new bits so we can print it in reverse
-            huSize_t cv = node->childOrdinal;
+            huSize_t cv = node->childIndex;
             for (huSize_t i = 0; i < numBytes; ++i)
             {
                 nn -= 1;
