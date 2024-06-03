@@ -478,7 +478,7 @@ huNode const * huGetNodeByAddressN(huTrove const * trove, char const * address, 
     char const * wordStart = scanner.curCursor->character;
 
     huNode const * root = huGetRootNode(trove);
-    if (root->kind == HU_NODEKIND_NULL)
+    if (root == HU_NULLNODE || root->kind == HU_NODEKIND_NULL)
         { return HU_NULLNODE; }
 
     return huGetNodeByRelativeAddressN(root, wordStart, addressLen - scanner.len);

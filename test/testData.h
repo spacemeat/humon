@@ -5,6 +5,26 @@
 
 using namespace std::literals;
 
+struct htd_inane
+{
+	std::string_view ts = 
+R"(//nuthin)"sv;
+
+    int error = HU_ERROR_NOERROR;
+    huTrove * trove = NULL;
+
+    void setup()
+    {
+        error = huDeserializeTroveN(& trove, ts.data(), (int)ts.size(), NULL, HU_ERRORRESPONSE_STDERRANSICOLOR);
+	}
+
+	void teardown()
+	{
+        huDestroyTrove(trove);
+	}
+};
+
+
 struct htd_listOfLists
 {
     std::string_view ts = 

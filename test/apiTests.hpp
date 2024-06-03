@@ -3062,12 +3062,14 @@ TEST(huGetTroveComment, pathological)
 
 TEST_GROUP(huGetNodeByAddress)
 {
+	htd_inane inane;
     htd_listOfLists l;
     htd_dictOfDicts d;
 	htd_sharedKeys t;
 
     void setup()
     {
+		inane.setup();
         l.setup();
         d.setup();
 		t.setup();
@@ -3075,6 +3077,7 @@ TEST_GROUP(huGetNodeByAddress)
 
     void teardown()
     {
+		inane.teardown();
         d.teardown();
         l.teardown();
 		t.teardown();
@@ -3143,6 +3146,7 @@ TEST(huGetNodeByAddress, sharedKeyIndex)
 
 TEST(huGetNodeByAddress, pathological)
 {
+	POINTERS_EQUAL_TEXT(HU_NULLNODE, huGetNodeByAddressZ(inane.trove, "/"), "no root node");
     POINTERS_EQUAL_TEXT(HU_NULLNODE, huGetNodeByAddressZ(NULL, "/"), "NULL gnbfa '/' == null");
     POINTERS_EQUAL_TEXT(HU_NULLNODE, huGetNodeByAddressZ(HU_NULLTROVE, "/"), "null gnbfa '/' == c");
     POINTERS_EQUAL_TEXT(HU_NULLNODE, huGetNodeByAddressZ(l.trove, "/.."), "l gnbfa '/..' == null");
