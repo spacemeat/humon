@@ -9,7 +9,8 @@ class ZTestMaker(p.CommandPhase):
         super().__init__(None, dependencies)
         self.options |= {
             'name': 'gen_test',
-            'command': 'cd {project_anchor}/test && ./ztestMaker.py'
+            'run_dir': '{project_anchor}/test',
+            'posix_command': './ztestMaker.py'
         }
         self.options |= (options or {})
 
@@ -41,7 +42,7 @@ class UpdateReadme(p.CommandPhase):
         super().__init__(None, dependencies)
         self.options |= {
             'name': 'gen_test',
-            'command': 'cd {project_anchor} && ./updateReadme.py'
+            'posix_command': './updateReadme.py'
         }
         self.options |= (options or {})
 
@@ -78,7 +79,7 @@ class MakeDocsForC(p.CommandPhase):
         super().__init__(None, dependencies)
         self.options |= {
             'name': 'make_docs_for_c',
-            'command': '( cat dox-humon-c ; echo "PROJECT_NUMBER={version}" ) | doxygen -',
+            'posix_command': '( cat dox-humon-c ; echo "PROJECT_NUMBER={version}" ) | doxygen -',
         }
         self.options |= (options or {})
 
@@ -109,7 +110,7 @@ class MakeDocsForCpp(p.CommandPhase):
         super().__init__(None, dependencies)
         self.options |= {
             'name': 'make_docs_for_cpp',
-            'command': '( cat dox-humon-cpp ; echo "PROJECT_NUMBER={version}" ) | doxygen -',
+            'posix_command': '( cat dox-humon-cpp ; echo "PROJECT_NUMBER={version}" ) | doxygen -',
         }
         self.options |= (options or {})
 
@@ -164,6 +165,7 @@ compile_humon_lib_static = p.CompilePhase({
 })
 
 link_static_lib = p.ArchivePhase({
+    'name': 'humon_static_lib',
     'group': STATIC_LIB,
     'archive_basename': 'humon'
 }, compile_humon_lib_static)
@@ -175,6 +177,7 @@ compile_humon_lib_shared = compile_humon_lib_static.clone({
 })
 
 link_shared_lib = p.LinkToSharedObjectPhase({
+    'name': 'humon_shared_lib',
     'group': SHARED_LIB,
     'shared_object_basename': 'humon'
 }, compile_humon_lib_shared)
@@ -193,13 +196,13 @@ compile_test = p.CompilePhase({
 }, generate_test)
 
 link_test_static = p.LinkToExePhase({
+    'name': 'humon_test_static',
     'group': TEST,
-    'name': 'humon_test_static'
 }, [link_static_lib, compile_test])
 
 link_test_shared = p.LinkToExePhase({
+    'name': 'humon_test_shared',
     'group': TEST,
-    'name': 'humon_test_shared'
 }, [link_shared_lib, compile_test])
 
 # -- hux
@@ -261,13 +264,13 @@ update_readme = UpdateReadme({
 whereis_doxygen = p.CommandPhase({
     'name': 'find_doxygen',
     'group': DOCS,
-    'command': 'whereis doxygen'
+    'posix_command': 'whereis doxygen'
 })
 
 make_doc_dir = p.CommandPhase({
     'name': 'make_doc_dir',
     'group': DOCS,
-    'command': 'mkdir -p {build_anchor}/docs'
+    'posix_command': 'mkdir -p {build_anchor}/docs'
 }, whereis_doxygen)
 
 docs_for_c = MakeDocsForC({'group': DOCS}, make_doc_dir)

@@ -76,7 +76,7 @@ def generateRunner(srcFile, testGroups):
             test.setup();
             test.runTest();
             test.teardown();
-            return std::move(test);
+            return test;
         }}
 '''
 
