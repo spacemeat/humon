@@ -142,7 +142,7 @@ DOCS = 'docs'
 # -- static lib
 
 compile_humon_lib_static = p.CompilePhase({
-    'name': 'humon',
+    'name': 'humon_compile',
     'group': STATIC_LIB,
     'language': 'c',
     'language_version': '11',
@@ -165,7 +165,7 @@ compile_humon_lib_static = p.CompilePhase({
 })
 
 link_static_lib = p.ArchivePhase({
-    'name': 'humon_static_lib',
+    'name': 'humon_archive',
     'group': STATIC_LIB,
     'archive_basename': 'humon'
 }, compile_humon_lib_static)
@@ -177,7 +177,7 @@ compile_humon_lib_shared = compile_humon_lib_static.clone({
 })
 
 link_shared_lib = p.LinkToSharedObjectPhase({
-    'name': 'humon_shared_lib',
+    'name': 'humon_link_to_so',
     'group': SHARED_LIB,
     'shared_object_basename': 'humon'
 }, compile_humon_lib_shared)
@@ -187,6 +187,7 @@ link_shared_lib = p.LinkToSharedObjectPhase({
 generate_test = ZTestMaker({'group': TEST})
 
 compile_test = p.CompilePhase({
+    'name': 'compile',
     'group': TEST,
     'language': 'c++',
     'language_version': '17',
@@ -196,18 +197,21 @@ compile_test = p.CompilePhase({
 }, generate_test)
 
 link_test_static = p.LinkToExePhase({
-    'name': 'humon_test_static',
+    'name': 'link_to_exe_static',
     'group': TEST,
+    'exe_basename': 'humon_test_static',
 }, [link_static_lib, compile_test])
 
 link_test_shared = p.LinkToExePhase({
-    'name': 'humon_test_shared',
+    'name': 'link_to_exe_shared',
     'group': TEST,
+    'exe_basename': 'humon_test_shared',
 }, [link_shared_lib, compile_test])
 
 # -- hux
 
 compile_hux_static = p.CompilePhase({
+    'name': 'hux_compile',
     'group': STATIC_LIB,
     'language': 'c++',
     'language_version': '17',
@@ -216,9 +220,10 @@ compile_hux_static = p.CompilePhase({
 })
 
 link_hux_static = p.LinkToExePhase({
-    'name': 'hux',
+    'name': 'hux_link_to_exe_static',
     'group': STATIC_LIB,
-    'exe_dir': 'bin'
+    'exe_basename': 'hux',
+    'exe_dir': 'bin/static'
 }, [link_static_lib, compile_hux_static])
 
 compile_hux_shared = compile_hux_static.clone({
@@ -226,15 +231,16 @@ compile_hux_shared = compile_hux_static.clone({
 })
 
 link_hux_shared = p.LinkToExePhase({
+    'name': 'hux_link_to_exe_shared',
     'group': SHARED_LIB,
-    'name': 'hux',
-    'exe_dir': 'bin'
+    'exe_basename': 'hux',
+    'exe_dir': 'bin/shared'
 }, [link_shared_lib, compile_hux_static])
 
 # -- readme
 
 build_readme_c = p.CompileAndLinkToExePhase({
-    'name': 'readmeSrc-c',
+    'name': 'readmeSrc-c_compile_link',
     'group': README,
     'language': 'c',
     'language_version': '11',
@@ -244,7 +250,7 @@ build_readme_c = p.CompileAndLinkToExePhase({
 }, link_shared_lib)
 
 build_readme_cpp = p.CompileAndLinkToExePhase({
-    'name': 'readmeSrc-cpp',
+    'name': 'readmeSrc-cpp_compile_link',
     'group': README,
     'language': 'c++',
     'language_version': '17',
